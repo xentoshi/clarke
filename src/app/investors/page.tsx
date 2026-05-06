@@ -14,7 +14,7 @@ export default function InvestorsPage() {
       <div className="mb-10">
         <h1 className="text-2xl font-bold text-white mb-2">Investors</h1>
         <p className="text-zinc-500 text-sm">
-          The funds and individuals backing companies building the space industry — {investors.length} VCs, corporate arms, and influential angels.
+          The funds and individuals backing companies building the space industry {investors.length} VCs, corporate arms, and influential angels.
         </p>
       </div>
       <InvestorsClient />

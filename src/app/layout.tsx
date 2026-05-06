@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Script from "next/script";
 import AppShell from "@/components/AppShell";
+import SolanaWalletProvider from "@/components/WalletProvider";
 import { Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
 
 const spaceGrotesk = Space_Grotesk({
@@ -16,8 +17,13 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Frontier — Multiplanetary Infrastructure",
-  description: "The directory of every company building the infrastructure for humanity beyond Earth.",
+  title: "Clarke - Orbital Slot Registry",
+  description: "The first transparent market for geostationary orbital slots. Browse, tokenize, and invest in GEO orbital positions on Solana.",
+  icons: {
+    icon: [{ url: "/logo.png", type: "image/png" }],
+    apple: "/logo.png",
+    shortcut: "/logo.png",
+  },
 };
 
 const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN ?? "";
@@ -33,7 +39,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             strategy="afterInteractive"
           />
         )}
-        <AppShell>{children}</AppShell>
+        <SolanaWalletProvider>
+          <AppShell>{children}</AppShell>
+        </SolanaWalletProvider>
       </body>
     </html>
   );

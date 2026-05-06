@@ -1,5 +1,12 @@
 export type Stage = "public" | "series-c+" | "series-b" | "series-a" | "seed" | "stealth";
 
+export const verticalAccent: Record<Vertical, string> = {
+  launch: "#f97316", lunar: "#818cf8", habitation: "#60a5fa",
+  propulsion: "#a78bfa", power: "#fbbf24", isru: "#a3e635",
+  manufacturing: "#22d3ee", food: "#4ade80", robotics: "#38bdf8",
+  comms: "#2dd4bf", observation: "#c084fc", suits: "#fb7185", mining: "#facc15",
+};
+
 export type Vertical =
   | "launch"
   | "lunar"
@@ -111,7 +118,7 @@ export const companies: Company[] = [
     hq: "Cedar Park, TX",
     website: "https://firefly.com",
     funding: "$300M+",
-    notable: "Blue Ghost landed on Moon in March 2025 — first commercial lunar landing success",
+    notable: "Blue Ghost landed on Moon in March 2025 first commercial lunar landing success",
     twitter: "https://x.com/Firefly_Space",
     linkedin: "https://www.linkedin.com/company/firefly-aerospace",
     crunchbase: "https://www.crunchbase.com/organization/firefly-aerospace",
@@ -196,14 +203,14 @@ export const companies: Company[] = [
   {
     name: "Intuitive Machines",
     slug: "intuitive-machines",
-    description: "NOVA-C lander (landed Feb 2024 and March 2025 — first US lunar landing since Apollo).",
+    description: "NOVA-C lander (landed Feb 2024 and March 2025 first US lunar landing since Apollo).",
     vertical: "lunar",
     stage: "public",
     founded: 2013,
     hq: "Houston, TX",
     website: "https://intuitivemachines.com",
     ticker: "LUNR",
-    notable: "IM-1 mission Feb 2024 — first commercial and US lunar landing since Apollo 17",
+    notable: "IM-1 mission Feb 2024 first commercial and US lunar landing since Apollo 17",
     twitter: "https://x.com/Int_Machines",
     linkedin: "https://www.linkedin.com/company/intuitive-machines",
     crunchbase: "https://www.crunchbase.com/organization/intuitive-machines",
@@ -326,7 +333,7 @@ export const companies: Company[] = [
     hq: "Austin, TX",
     website: "https://iconbuild.com",
     funding: "$451M",
-    notable: "NASA contract for Project Olympus — 3D printing on the Moon using local materials",
+    notable: "NASA contract for Project Olympus 3D printing on the Moon using local materials",
     twitter: "https://x.com/ICONbuilds",
     linkedin: "https://www.linkedin.com/company/icon-build",
     crunchbase: "https://www.crunchbase.com/organization/icon-build",
@@ -395,7 +402,7 @@ export const companies: Company[] = [
     hq: "Paris, France",
     website: "https://thrustme.fr",
     funding: "$20M",
-    notable: "First iodine propulsion system in orbit (2021) — dense, non-toxic propellant for smallsats",
+    notable: "First iodine propulsion system in orbit (2021) dense, non-toxic propellant for smallsats",
     crunchbase: "https://www.crunchbase.com/organization/thrustme",
   },
   {
@@ -408,7 +415,7 @@ export const companies: Company[] = [
     hq: "Wiener Neustadt, Austria",
     website: "https://enpulsion.com",
     funding: "$15M",
-    notable: "Field-emission electric propulsion (FEEP) using liquid indium — highest thrust density for micro/nano satellites",
+    notable: "Field-emission electric propulsion (FEEP) using liquid indium highest thrust density for micro/nano satellites",
   },
   {
     name: "Phase Four",
@@ -420,7 +427,7 @@ export const companies: Company[] = [
     hq: "El Segundo, CA",
     website: "https://phase4.com",
     funding: "$30M",
-    notable: "Radio frequency electrothermal thruster using xenon or krypton — no cathodes, fewer failure modes",
+    notable: "Radio frequency electrothermal thruster using xenon or krypton no cathodes, fewer failure modes",
     crunchbase: "https://www.crunchbase.com/organization/phase-four",
   },
   {
@@ -432,7 +439,7 @@ export const companies: Company[] = [
     founded: 2020,
     hq: "Kashiwa, Japan",
     website: "https://pale-blue.jp",
-    notable: "Water as propellant — safe to handle, no toxic chemicals, ideal for university and commercial smallsats",
+    notable: "Water as propellant safe to handle, no toxic chemicals, ideal for university and commercial smallsats",
   },
   {
     name: "Accion Systems",
@@ -484,7 +491,7 @@ export const companies: Company[] = [
     hq: "Seattle, WA",
     website: "https://zenopower.com",
     funding: "$50M",
-    notable: "DoE and NASA contracts for next-gen RTGs — enabling operations through 14-day lunar nights",
+    notable: "DoE and NASA contracts for next-gen RTGs enabling operations through 14-day lunar nights",
     crunchbase: "https://www.crunchbase.com/organization/zeno-power",
   },
   {
@@ -572,7 +579,7 @@ export const companies: Company[] = [
   {
     name: "OxEon Energy",
     slug: "oxeon-energy",
-    description: "Solid oxide electrolysis cells (MOXIE heritage — made oxygen on Mars 2021).",
+    description: "Solid oxide electrolysis cells (MOXIE heritage made oxygen on Mars 2021).",
     vertical: "isru",
     stage: "series-a",
     founded: 2016,
@@ -652,7 +659,7 @@ export const companies: Company[] = [
     hq: "El Segundo, CA",
     website: "https://vardaspace.com",
     funding: "$90M",
-    notable: "First commercial in-space manufacturing reentry completed 2024 — ritonavir crystals grown in orbit",
+    notable: "First commercial in-space manufacturing reentry completed 2024 ritonavir crystals grown in orbit",
     crunchbase: "https://www.crunchbase.com/organization/varda-space-industries",
   },
   {
@@ -677,7 +684,7 @@ export const companies: Company[] = [
     founded: 2009,
     hq: "Houston, TX",
     website: "https://nanoracks.com",
-    notable: "Acquired by Voyager Space; operates Bishop Airlock on ISS — commercial external platform",
+    notable: "Acquired by Voyager Space; operates Bishop Airlock on ISS commercial external platform",
     crunchbase: "https://www.crunchbase.com/organization/nanoracks",
   },
 
@@ -718,7 +725,7 @@ export const companies: Company[] = [
     hq: "San Francisco, CA",
     website: "https://airprotein.com",
     funding: "$32M",
-    notable: "NASA-inspired technology; produces complete protein from CO2, O2, and N2 — no land or sunlight",
+    notable: "NASA-inspired technology; produces complete protein from CO2, O2, and N2 no land or sunlight",
     crunchbase: "https://www.crunchbase.com/organization/air-protein",
   },
   {
@@ -770,7 +777,7 @@ export const companies: Company[] = [
     hq: "Brampton, Canada",
     website: "https://mdaspace.com",
     ticker: "MDA.TO",
-    notable: "Canadarm3 for NASA Gateway — AI-autonomous robotic arm requiring no Earth operator for routine tasks",
+    notable: "Canadarm3 for NASA Gateway AI-autonomous robotic arm requiring no Earth operator for routine tasks",
     twitter: "https://x.com/MDA_Space",
     linkedin: "https://www.linkedin.com/company/mda-space",
   },
@@ -836,7 +843,7 @@ export const companies: Company[] = [
     hq: "Lausanne, Switzerland",
     website: "https://clearspace.today",
     funding: "$27M",
-    notable: "ESA contract for ClearSpace-1 — will capture and deorbit VESPA rocket body in 2026",
+    notable: "ESA contract for ClearSpace-1 will capture and deorbit VESPA rocket body in 2026",
     crunchbase: "https://www.crunchbase.com/organization/clearspace",
   },
 
@@ -897,7 +904,7 @@ export const companies: Company[] = [
     hq: "Carlsbad, CA",
     website: "https://viasat.com",
     ticker: "VSAT",
-    notable: "ViaSat-3 constellation — highest capacity commercial satellite ever built",
+    notable: "ViaSat-3 constellation highest capacity commercial satellite ever built",
     twitter: "https://x.com/ViaSat",
     linkedin: "https://www.linkedin.com/company/viasat",
   },
@@ -963,7 +970,7 @@ export const companies: Company[] = [
     hq: "Santa Barbara, CA",
     website: "https://umbra.space",
     funding: "$67M",
-    notable: "25cm resolution SAR — highest commercially available; open data archive program",
+    notable: "25cm resolution SAR highest commercially available; open data archive program",
     crunchbase: "https://www.crunchbase.com/organization/umbra-lab",
   },
   {
@@ -1017,7 +1024,7 @@ export const companies: Company[] = [
     hq: "Boulder, CO",
     website: "https://albedo.com",
     funding: "$35M",
-    notable: "Operating at 300km altitude for 10cm resolution — highest-resolution commercial imaging planned",
+    notable: "Operating at 300km altitude for 10cm resolution highest-resolution commercial imaging planned",
     crunchbase: "https://www.crunchbase.com/organization/albedo-space",
   },
   {
@@ -1045,7 +1052,7 @@ export const companies: Company[] = [
     hq: "Houston, TX",
     website: "https://axiomspace.com",
     funding: "$350M+",
-    notable: "NASA contract for Artemis lunar surface EVA suits — replaces 40-year-old EMU design",
+    notable: "NASA contract for Artemis lunar surface EVA suits replaces 40-year-old EMU design",
     twitter: "https://x.com/Axiom_Space",
   },
   {
@@ -1120,7 +1127,7 @@ export const companies: Company[] = [
     website: "https://karmanplus.com",
     notable: "Developing autonomous mining systems for near-Earth asteroid resource extraction",
   },
-  // Public — additional tracked stocks
+  // Public additional tracked stocks
   {
     name: "Lockheed Martin",
     slug: "lockheed-martin",
@@ -1131,7 +1138,7 @@ export const companies: Company[] = [
     hq: "Bethesda, MD",
     website: "https://www.lockheedmartin.com/space",
     ticker: "LMT",
-    notable: "Building Orion — the capsule that will carry astronauts to the Moon and eventually Mars.",
+    notable: "Building Orion the capsule that will carry astronauts to the Moon and eventually Mars.",
     twitter: "https://twitter.com/LMSpace",
     linkedin: "https://www.linkedin.com/company/lockheed-martin",
   },
@@ -1145,14 +1152,14 @@ export const companies: Company[] = [
     hq: "Arlington, VA",
     website: "https://www.boeing.com/space",
     ticker: "BA",
-    notable: "CST-100 Starliner — Boeing's commercial crew vehicle for NASA astronaut transport to the ISS.",
+    notable: "CST-100 Starliner Boeing's commercial crew vehicle for NASA astronaut transport to the ISS.",
     twitter: "https://twitter.com/BoeingSpace",
     linkedin: "https://www.linkedin.com/company/boeing",
   },
   {
     name: "Iridium",
     slug: "iridium",
-    description: "Operates the only truly global satellite network — 66 LEO satellites providing voice and data coverage across every inch of Earth.",
+    description: "Operates the only truly global satellite network 66 LEO satellites providing voice and data coverage across every inch of Earth.",
     vertical: "comms",
     stage: "public",
     founded: 1991,

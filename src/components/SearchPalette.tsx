@@ -4,9 +4,10 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { companies, verticalLabels } from "@/data/companies";
 import { narratives } from "@/data/narratives";
+import { slots } from "@/data/orbital-slots";
 
 type Result = {
-  type: "company" | "narrative" | "vertical";
+  type: "company" | "narrative" | "vertical" | "slot";
   label: string;
   sub: string;
   href: string;
@@ -16,12 +17,14 @@ const typeColors: Record<Result["type"], string> = {
   company: "text-violet-400",
   narrative: "text-emerald-400",
   vertical: "text-amber-400",
+  slot: "text-sky-400",
 };
 
 const typeLabels: Record<Result["type"], string> = {
   company: "Company",
   narrative: "Narrative",
   vertical: "Vertical",
+  slot: "Orbital",
 };
 
 function search(q: string): Result[] {
@@ -31,13 +34,18 @@ function search(q: string): Result[] {
   return [
     ...companies
       .filter((c) => c.name.toLowerCase().includes(lq) || c.description.toLowerCase().includes(lq))
-      .slice(0, 6)
+      .slice(0, 5)
       .map((c) => ({ type: "company" as const, label: c.name, sub: c.description, href: `/companies/${c.slug}` })),
+
+    ...slots
+      .filter((s) => s.label.toLowerCase().includes(lq) || s.operator.toLowerCase().includes(lq) || s.country.toLowerCase().includes(lq))
+      .slice(0, 3)
+      .map((s) => ({ type: "slot" as const, label: s.label, sub: `${s.operator} · ${s.valueEstimate}`, href: `/orbital` })),
 
     ...narratives
       .filter((n) => n.title.toLowerCase().includes(lq) || n.tagline.toLowerCase().includes(lq))
       .slice(0, 3)
-      .map((n) => ({ type: "narrative" as const, label: n.title, sub: n.tagline, href: `/narratives/${n.slug}` })),
+      .map((n) => ({ type: "narrative" as const, label: n.title, sub: n.tagline, href: `/docs` })),
 
     ...Object.entries(verticalLabels)
       .filter(([, label]) => label.toLowerCase().includes(lq))

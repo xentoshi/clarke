@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export const metadata = buildMeta({
   title: "About",
-  description: "Frontier — the directory of companies building the multiplanetary future.",
+  description: "Clarke the directory of companies building the multiplanetary future.",
   tag: "About",
 });
 
@@ -18,7 +18,7 @@ export default function AboutPage() {
           Companies building the multiplanetary future.
         </h1>
         <p className="text-zinc-400 text-lg leading-relaxed">
-          Frontier is a directory of the companies, technologies, and verticals required for humanity to become a multiplanetary species — from launch vehicles to life support, from ISRU to suits.
+          Clarke is a directory of the companies, technologies, and verticals required for humanity to become a multiplanetary species from launch vehicles to life support, from ISRU to suits.
         </p>
       </div>
 
@@ -39,12 +39,12 @@ export default function AboutPage() {
         <h2 className="text-xs uppercase tracking-widest text-zinc-500 mb-6 font-medium">What&apos;s here</h2>
         <div className="space-y-3">
           {[
-            { href: "/companies", title: "Companies", desc: `${companies.length}+ companies across ${verticalCount} verticals — launch, lunar, habitation, propulsion, power, ISRU, manufacturing, food, robotics, comms, observation, suits, mining.` },
+            { href: "/companies", title: "Companies", desc: `${companies.length}+ companies across ${verticalCount} verticals launch, lunar, habitation, propulsion, power, ISRU, manufacturing, food, robotics, comms, observation, suits, mining.` },
             { href: "/stocks", title: "Stocks", desc: "Live prices for every publicly traded company in the directory." },
-            { href: "/narratives", title: "Narratives", desc: "Investment theses for the verticals — what the opportunity is, why now, what needs to happen." },
+            { href: "/docs", title: "Narratives", desc: "Investment theses for the verticals what the opportunity is, why now, what needs to happen." },
             { href: "/investors", title: "Investors", desc: "The funds and people backing these companies." },
             { href: "/events", title: "Events", desc: "Conferences, launches, and milestones to track." },
-            { href: "/solana", title: "Solana × Hardware", desc: "The intersection of decentralized networks and physical hardware." },
+            { href: "/orbital", title: "Orbital Slots", desc: "The first tokenized market for GEO orbital positions on Solana." },
             { href: "/api-docs", title: "API", desc: "Machine-readable company data." },
           ].map((item) => (
             <Link key={item.href} href={item.href}
@@ -58,7 +58,7 @@ export default function AboutPage() {
 
       <div className="border-l-2 border-zinc-700 pl-6">
         <p className="text-zinc-300 text-base leading-relaxed italic">
-          &ldquo;The goal is for Frontier to be the most accurate, primary-source directory of companies building the infrastructure for life beyond Earth.&rdquo;
+          &ldquo;The goal is for Clarke to be the most accurate, primary-source directory of companies building the infrastructure for life beyond Earth.&rdquo;
         </p>
       </div>
     </div>

@@ -17,7 +17,7 @@ export const investors: Investor[] = [
     type: "vc",
     aum: "$35B+",
     focus: ["Space", "Launch", "Deep Tech", "Defense"],
-    thesis: "American dynamism — backing companies rebuilding physical industries with software. Believes the next wave of wealth creation is in hard tech and space infrastructure, not pure software.",
+    thesis: "American dynamism backing companies rebuilding physical industries with software. Believes the next wave of wealth creation is in hard tech and space infrastructure, not pure software.",
     notableBets: [
       { company: "Axiom Space", round: "Series C", vertical: "Space Habitation" },
       { company: "Anduril", round: "Series E", vertical: "Defense" },
@@ -32,7 +32,7 @@ export const investors: Investor[] = [
     type: "vc",
     aum: "$11B+",
     focus: ["Space", "Launch", "Deep Tech", "Biotech"],
-    thesis: "We wanted flying cars, instead we got 140 characters. Bets on transformative technology that others consider impossible — the earliest major backer of SpaceX when every other VC passed.",
+    thesis: "We wanted flying cars, instead we got 140 characters. Bets on transformative technology that others consider impossible the earliest major backer of SpaceX when every other VC passed.",
     notableBets: [
       { company: "SpaceX", round: "Series A", vertical: "Launch" },
       { company: "Anduril", round: "Series F", vertical: "Defense" },
@@ -62,7 +62,7 @@ export const investors: Investor[] = [
     type: "vc",
     aum: "$15B+",
     focus: ["Space Power", "Nuclear", "Deep Tech", "ISRU"],
-    thesis: "High-risk, high-impact investments in breakthrough technologies. Vinod Khosla believes energy and space infrastructure — including advanced fission and in-space resource extraction — will define the next century.",
+    thesis: "High-risk, high-impact investments in breakthrough technologies. Vinod Khosla believes energy and space infrastructure including advanced fission and in-space resource extraction will define the next century.",
     notableBets: [
       { company: "Oklo", round: "Series B", vertical: "Space Power" },
       { company: "Commonwealth Fusion Systems", round: "Series B", vertical: "Power" },
@@ -77,7 +77,7 @@ export const investors: Investor[] = [
     type: "vc",
     aum: "$2B+",
     focus: ["Space Manufacturing", "Launch", "Deep Tech", "Hardware"],
-    thesis: "Focused exclusively on 'hard tech' — companies solving physical-world problems. Increasingly active in space manufacturing and launch infrastructure as the sector matures past early-stage risk.",
+    thesis: "Focused exclusively on 'hard tech' companies solving physical-world problems. Increasingly active in space manufacturing and launch infrastructure as the sector matures past early-stage risk.",
     notableBets: [
       { company: "Relativity Space", round: "Series C", vertical: "Launch" },
       { company: "Bright Machines", round: "Series A", vertical: "Manufacturing" },
@@ -92,7 +92,7 @@ export const investors: Investor[] = [
     type: "vc",
     aum: "$50B+",
     focus: ["Space", "Deep Tech", "AI"],
-    thesis: "Growth-stage technology investing globally. Follows the momentum into space as the sector transitions from pure government to commercial — backing high-growth companies at the intersection of software and space infrastructure.",
+    thesis: "Growth-stage technology investing globally. Follows the momentum into space as the sector transitions from pure government to commercial backing high-growth companies at the intersection of software and space infrastructure.",
     notableBets: [
       { company: "SpaceX", round: "Growth", vertical: "Launch" },
       { company: "Axiom Space", round: "Series B", vertical: "Space Habitation" },
@@ -131,7 +131,7 @@ export const investors: Investor[] = [
     slug: "in-q-tel",
     type: "sovereign",
     focus: ["Earth Observation", "Space", "Launch", "Defense", "AI Hardware"],
-    thesis: "CIA's venture arm. Invests in technologies critical to US national security. Being IQT-backed is a strong signal of defense applicability. Early backer of Planet Labs, Capella Space, and Spire Global — all now publicly traded.",
+    thesis: "CIA's venture arm. Invests in technologies critical to US national security. Being IQT-backed is a strong signal of defense applicability. Early backer of Planet Labs, Capella Space, and Spire Global all now publicly traded.",
     notableBets: [
       { company: "Planet Labs", round: "Series B", vertical: "Earth Observation" },
       { company: "Capella Space", round: "Series B", vertical: "Earth Observation" },
@@ -158,7 +158,7 @@ export const investors: Investor[] = [
     type: "vc",
     aum: "$85B+",
     focus: ["Space", "Deep Tech", "AI Hardware", "Launch"],
-    thesis: "The dominant generalist VC with increasing hard tech exposure. Following the commercial space build-out as a multi-decade infrastructure opportunity — similar to the internet infrastructure bets of the 1990s.",
+    thesis: "The dominant generalist VC with increasing hard tech exposure. Following the commercial space build-out as a multi-decade infrastructure opportunity similar to the internet infrastructure bets of the 1990s.",
     notableBets: [
       { company: "SpaceX", round: "Growth", vertical: "Launch" },
       { company: "Physical Intelligence (π)", round: "Series B", vertical: "Robotics" },
@@ -172,7 +172,7 @@ export const investors: Investor[] = [
     type: "vc",
     aum: "$25B+",
     focus: ["Space", "Defense", "Deep Tech", "Launch"],
-    thesis: "Resilience investing — backing companies that strengthen national infrastructure, defense, and industrial capacity. Views commercial space as critical national infrastructure requiring the same urgency as semiconductor independence.",
+    thesis: "Resilience investing backing companies that strengthen national infrastructure, defense, and industrial capacity. Views commercial space as critical national infrastructure requiring the same urgency as semiconductor independence.",
     notableBets: [
       { company: "Stoke Space", round: "Series A", vertical: "Launch" },
       { company: "Anduril", round: "Series D", vertical: "Defense" },

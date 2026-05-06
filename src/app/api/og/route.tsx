@@ -5,9 +5,9 @@ export const runtime = "edge";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const title = searchParams.get("title") ?? "Frontier";
-  const sub = searchParams.get("sub") ?? "Multiplanetary Infrastructure Directory";
-  const tag = searchParams.get("tag") ?? "";
+  const title = (searchParams.get("title") ?? "Clarke").slice(0, 80);
+  const sub = (searchParams.get("sub") ?? "The first transparent market for orbital slots").slice(0, 160);
+  const tag = (searchParams.get("tag") ?? "").slice(0, 40);
 
   return new ImageResponse(
     (
@@ -34,10 +34,10 @@ export async function GET(req: NextRequest) {
         />
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <span style={{ color: "#ffffff", fontSize: "22px", fontWeight: "bold", letterSpacing: "4px" }}>
-            FRONTIER
+            CLARKE
           </span>
           <span style={{ color: "#3f3f46", fontSize: "12px", letterSpacing: "3px", textTransform: "uppercase" }}>
-            Multiplanetary Infrastructure
+            Space Infrastructure
           </span>
         </div>
 
@@ -56,8 +56,8 @@ export async function GET(req: NextRequest) {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ color: "#3f3f46", fontSize: "13px" }}>frontier.space</span>
-          <span style={{ color: "#3f3f46", fontSize: "13px" }}>84 companies · 13 verticals</span>
+          <span style={{ color: "#3f3f46", fontSize: "13px" }}>clarke.space</span>
+          <span style={{ color: "#3f3f46", fontSize: "13px" }}>Orbital Slot Registry</span>
         </div>
       </div>
     ),

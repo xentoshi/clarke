@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   if (ticker !== null) results = results.filter((c) => !!c.ticker);
 
   const payload = {
-    _note: `Hardware Markets company dataset. Hardware and robotics companies across ${Object.keys(verticalLabels).length} verticals. See sigma.fyi/companies for the full interface.`,
+    _note: `Clarke space infrastructure dataset. ${results.length} companies across ${Object.keys(verticalLabels).length} verticals. See /api-docs for full documentation.`,
     generated: new Date().toISOString(),
     version: "1",
     count: results.length,

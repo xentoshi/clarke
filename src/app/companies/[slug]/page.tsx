@@ -5,11 +5,23 @@ import VerticalBadge from "@/components/VerticalBadge";
 import TradingViewChart from "@/components/TradingViewChart";
 import CompanyLogo from "@/components/CompanyLogo";
 import Link from "next/link";
+import { buildMeta } from "@/lib/metadata";
 
 export const revalidate = 300;
 
 export function generateStaticParams() {
   return companies.map((c) => ({ slug: c.slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const company = companies.find((c) => c.slug === slug);
+  if (!company) return {};
+  return buildMeta({
+    title: company.name,
+    description: `${company.description} — ${company.hq} · Est. ${company.founded}`,
+    tag: verticalLabels[company.vertical],
+  });
 }
 
 export default async function CompanyPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -67,11 +79,11 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
                 </div>
                 <div className="flex justify-between">
                   <span className="text-zinc-600">52w High</span>
-                  <span className="font-mono text-zinc-400">${quote.high52w?.toFixed(2) ?? "—"}</span>
+                  <span className="font-mono text-zinc-400">${quote.high52w?.toFixed(2) ?? "-"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-zinc-600">52w Low</span>
-                  <span className="font-mono text-zinc-400">${quote.low52w?.toFixed(2) ?? "—"}</span>
+                  <span className="font-mono text-zinc-400">${quote.low52w?.toFixed(2) ?? "-"}</span>
                 </div>
               </div>
               <a href={`https://www.tradingview.com/symbols/${company.ticker}/`} target="_blank" rel="noopener noreferrer"

@@ -1,24 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import dynamic from "next/dynamic";
 
 const SearchPalette = dynamic(() => import("./SearchPalette"), { ssr: false });
 
 const primaryLinks = [
+  { href: "/orbital", label: "Orbital Slots" },
   { href: "/companies", label: "Companies" },
-  { href: "/narratives", label: "Narratives" },
   { href: "/stocks", label: "Stocks" },
-  { href: "/solana", label: "Solana × Hardware" },
+  { href: "/investors", label: "Investors" },
 ];
 
 const moreLinks = [
-  { href: "/investors", label: "Investors" },
   { href: "/events", label: "Events" },
   { href: "/api-docs", label: "API" },
+  { href: "/docs", label: "Docs" },
   { href: "/about", label: "About" },
 ];
 
@@ -56,11 +56,11 @@ export default function Nav() {
     <>
       <header className="border-b border-white/[0.05] bg-[#060608]/95 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <Image src="/logo.png" alt="Frontier" width={28} height={28} className="rounded-sm" />
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <Image src="/logo.png" alt="Clarke" width={32} height={32} />
             <div className="flex flex-col">
-              <span className="text-white font-bold text-base tracking-[0.15em] leading-none">FRONTIER</span>
-              <span className="text-white/20 text-[10px] tracking-widest uppercase hidden sm:block leading-none mt-0.5 font-mono">Space Industry</span>
+              <span className="text-white font-bold text-base tracking-[0.15em] leading-none">CLARKE</span>
+              <span className="text-white/20 text-[10px] tracking-widest uppercase hidden sm:block leading-none mt-0.5 font-mono">Space Infrastructure</span>
             </div>
           </Link>
 

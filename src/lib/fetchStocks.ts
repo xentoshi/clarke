@@ -46,12 +46,46 @@ export async function fetchQuote(ticker: string): Promise<StockQuote | null> {
 }
 
 export async function fetchAllQuotes(tickers: string[]): Promise<StockQuote[]> {
-  const results = await Promise.all(tickers.map(fetchQuote));
-  return results.filter((r): r is StockQuote => r !== null);
+  if (tickers.length === 0) return [];
+  try {
+    const symbols = tickers.join(",");
+    const res = await fetch(
+      `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,marketCap,fiftyTwoWeekHigh,fiftyTwoWeekLow,regularMarketVolume,shortName`,
+      {
+        headers: { "User-Agent": "Mozilla/5.0" },
+        next: { revalidate: 300 },
+      }
+    );
+    if (!res.ok) throw new Error(`Yahoo Finance v7 returned ${res.status}`);
+    const json = await res.json();
+    const quotes: unknown[] = json?.quoteResponse?.result ?? [];
+    return quotes
+      .filter((q): q is Record<string, unknown> => typeof q === "object" && q !== null)
+      .map((q) => {
+        const price = (q.regularMarketPrice as number) ?? 0;
+        const change = (q.regularMarketChange as number) ?? 0;
+        const changePercent = (q.regularMarketChangePercent as number) ?? 0;
+        return {
+          ticker: q.symbol as string,
+          name: (q.shortName as string) ?? (q.symbol as string),
+          price,
+          change,
+          changePercent,
+          marketCap: q.marketCap as number | undefined,
+          high52w: q.fiftyTwoWeekHigh as number | undefined,
+          low52w: q.fiftyTwoWeekLow as number | undefined,
+          volume: q.regularMarketVolume as number | undefined,
+        };
+      });
+  } catch {
+    // Fall back to individual requests if the batch endpoint fails
+    const results = await Promise.all(tickers.map(fetchQuote));
+    return results.filter((r): r is StockQuote => r !== null);
+  }
 }
 
 export function formatMarketCap(val?: number): string {
-  if (!val) return "—";
+  if (!val) return "-";
   if (val >= 1e12) return `$${(val / 1e12).toFixed(2)}T`;
   if (val >= 1e9) return `$${(val / 1e9).toFixed(2)}B`;
   if (val >= 1e6) return `$${(val / 1e6).toFixed(2)}M`;
@@ -59,7 +93,7 @@ export function formatMarketCap(val?: number): string {
 }
 
 export function formatVolume(val?: number): string {
-  if (!val) return "—";
+  if (!val) return "-";
   if (val >= 1e6) return `${(val / 1e6).toFixed(1)}M`;
   if (val >= 1e3) return `${(val / 1e3).toFixed(0)}K`;
   return val.toString();

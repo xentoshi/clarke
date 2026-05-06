@@ -32,7 +32,7 @@ export const solanaHardwareProjects: SolanaHardwareProject[] = [
   {
     name: "Helium",
     slug: "helium",
-    description: "Decentralized wireless infrastructure — IoT (LoRaWAN) and mobile (5G) hotspot networks rewarding operators with HNT tokens. Migrated to Solana in April 2023.",
+    description: "Decentralized wireless infrastructure IoT (LoRaWAN) and mobile (5G) hotspot networks rewarding operators with HNT tokens. Migrated to Solana in April 2023.",
     category: "depin",
     token: "HNT",
     website: "https://helium.com",
@@ -46,7 +46,7 @@ export const solanaHardwareProjects: SolanaHardwareProject[] = [
   {
     name: "Hivemapper",
     slug: "hivemapper",
-    description: "Dashcam-based decentralized mapping network — drivers earn HONEY tokens for contributing street-level imagery used to train and update the Hivemapper map.",
+    description: "Dashcam-based decentralized mapping network drivers earn HONEY tokens for contributing street-level imagery used to train and update the Hivemapper map.",
     category: "mapping",
     token: "HONEY",
     website: "https://hivemapper.com",
@@ -55,12 +55,12 @@ export const solanaHardwareProjects: SolanaHardwareProject[] = [
     hardwareType: "4K dashcams (Bee / Bee Pro)",
     founded: 2021,
     hq: "San Francisco, CA",
-    notable: "Covered 30%+ of roads Google Maps has mapped — at a fraction of the cost",
+    notable: "Covered 30%+ of roads Google Maps has mapped at a fraction of the cost",
   },
   {
     name: "GEODNET",
     slug: "geodnet",
-    description: "Decentralized GNSS (GPS) correction network — station operators earn GEOD tokens for providing centimeter-level positioning data used in precision agriculture, autonomous vehicles, and construction.",
+    description: "Decentralized GNSS (GPS) correction network station operators earn GEOD tokens for providing centimeter-level positioning data used in precision agriculture, autonomous vehicles, and construction.",
     category: "sensor",
     token: "GEOD",
     website: "https://geodnet.com",
@@ -74,7 +74,7 @@ export const solanaHardwareProjects: SolanaHardwareProject[] = [
   {
     name: "Render Network",
     slug: "render-network",
-    description: "Distributed GPU rendering and AI compute marketplace — GPU owners contribute idle capacity and earn RENDER tokens. Migrated from Ethereum to Solana in 2023.",
+    description: "Distributed GPU rendering and AI compute marketplace GPU owners contribute idle capacity and earn RENDER tokens. Migrated from Ethereum to Solana in 2023.",
     category: "compute",
     token: "RENDER",
     website: "https://rendernetwork.com",
@@ -88,7 +88,7 @@ export const solanaHardwareProjects: SolanaHardwareProject[] = [
   {
     name: "io.net",
     slug: "io-net",
-    description: "Decentralized GPU network aggregating underutilized compute from data centers, crypto miners, and consumer devices — targeting AI/ML training and inference workloads.",
+    description: "Decentralized GPU network aggregating underutilized compute from data centers, crypto miners, and consumer devices targeting AI/ML training and inference workloads.",
     category: "compute",
     token: "IO",
     website: "https://io.net",
@@ -102,7 +102,7 @@ export const solanaHardwareProjects: SolanaHardwareProject[] = [
   {
     name: "Solana Mobile",
     slug: "solana-mobile",
-    description: "Android smartphones with native Solana integration — Seed Vault secure enclave for private key storage, Mobile Wallet Adapter protocol, and dApp store. Saga sold out; Chapter 2 announced.",
+    description: "Android smartphones with native Solana integration Seed Vault secure enclave for private key storage, Mobile Wallet Adapter protocol, and dApp store. Saga sold out; Chapter 2 announced.",
     category: "mobile",
     website: "https://solanamobile.com",
     twitter: "https://twitter.com/solanamobile",
@@ -115,7 +115,7 @@ export const solanaHardwareProjects: SolanaHardwareProject[] = [
   {
     name: "NATIX Network",
     slug: "natix",
-    description: "Decentralized traffic and street data network — drivers use the NATIX Drive& app on any dashcam or phone camera to contribute spatial data and earn tokens on Solana.",
+    description: "Decentralized traffic and street data network drivers use the NATIX Drive& app on any dashcam or phone camera to contribute spatial data and earn tokens on Solana.",
     category: "mapping",
     token: "NATIX",
     website: "https://natix.network",
@@ -129,7 +129,7 @@ export const solanaHardwareProjects: SolanaHardwareProject[] = [
   {
     name: "Ambient",
     slug: "ambient-weather",
-    description: "Decentralized environmental monitoring network — personal weather station operators earn tokens for contributing hyperlocal climate data on Solana.",
+    description: "Decentralized environmental monitoring network personal weather station operators earn tokens for contributing hyperlocal climate data on Solana.",
     category: "sensor",
     token: "AMB",
     website: "https://ambientweather.net",

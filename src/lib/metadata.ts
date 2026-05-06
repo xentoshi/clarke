@@ -11,7 +11,7 @@ export function buildMeta({
   description: string;
   tag?: string;
 }): Metadata {
-  const fullTitle = `${title} — Frontier`;
+  const fullTitle = `${title} Clarke`;
   const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(title)}&sub=${encodeURIComponent(description)}&tag=${encodeURIComponent(tag)}`;
 
   return {
@@ -21,7 +21,7 @@ export function buildMeta({
       title: fullTitle,
       description,
       images: [{ url: ogUrl, width: 1200, height: 630, alt: title }],
-      siteName: "Frontier",
+      siteName: "Clarke",
       type: "website",
     },
     twitter: {

@@ -137,7 +137,7 @@ export default async function StocksPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className="font-mono text-white text-sm">
-                      {q ? `$${q.price.toFixed(2)}` : <span className="text-zinc-700">—</span>}
+                      {q ? `$${q.price.toFixed(2)}` : <span className="text-zinc-700">-</span>}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -147,7 +147,7 @@ export default async function StocksPage() {
                         <div>{isUp ? "+" : ""}{q.changePercent.toFixed(2)}%</div>
                       </div>
                     ) : (
-                      <span className="text-zinc-700 font-mono text-xs">—</span>
+                      <span className="text-zinc-700 font-mono text-xs">-</span>
                     )}
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
@@ -156,17 +156,17 @@ export default async function StocksPage() {
                         <path d={path} fill="none" stroke={sparkColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     ) : (
-                      <span className="text-zinc-700 text-xs block text-center">—</span>
+                      <span className="text-zinc-700 text-xs block text-center">-</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-zinc-400 text-xs hidden md:table-cell">
                     {formatMarketCap(q?.marketCap)}
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-zinc-500 text-xs hidden lg:table-cell">
-                    {q?.high52w ? `$${q.high52w.toFixed(2)}` : "—"}
+                    {q?.high52w ? `$${q.high52w.toFixed(2)}` : "-"}
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-zinc-500 text-xs hidden lg:table-cell">
-                    {q?.low52w ? `$${q.low52w.toFixed(2)}` : "—"}
+                    {q?.low52w ? `$${q.low52w.toFixed(2)}` : "-"}
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-zinc-500 text-xs hidden md:table-cell">
                     {formatVolume(q?.volume)}

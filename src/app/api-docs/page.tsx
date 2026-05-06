@@ -13,7 +13,7 @@ const endpoints = [
   {
     method: "GET",
     path: "/api/companies",
-    description: "Full company dataset — name, slug, vertical, stage, HQ, ticker, website.",
+    description: "Full company dataset name, slug, vertical, stage, HQ, ticker, website.",
     params: [
       { name: "vertical", desc: "launch | lunar | habitation | propulsion | power | isru | manufacturing | food | robotics | comms | observation | suits | mining" },
       { name: "stage", desc: "public | series-c+ | series-b | series-a | seed | stealth" },
@@ -26,7 +26,7 @@ const endpoints = [
   {
     method: "GET",
     path: "/api/quotes",
-    description: "Live stock quotes for all tracked public companies — price, change, market cap, volume, 52w high/low.",
+    description: "Live stock quotes for all tracked public companies price, change, market cap, volume, 52w high/low.",
     params: [],
     example: "/api/quotes",
     count: `${stocks.length} tickers`,

@@ -3,7 +3,7 @@ import OrbitalClient from "./OrbitalClient";
 
 export const metadata = buildMeta({
   title: "Orbital Slots",
-  description: "Geostationary orbit — ~1,800 positions, each worth hundreds of millions. Browse the registry and invest in tokenized GEO slots on Solana.",
+  description: "Geostationary orbit: ~1,800 positions, each worth hundreds of millions. Browse the registry and invest in tokenized GEO slots on Solana.",
   tag: "GEO Registry",
 });
 

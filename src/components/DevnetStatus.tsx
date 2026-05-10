@@ -9,6 +9,7 @@ export default function DevnetStatus() {
   const [balance, setBalance] = useState<number | null>(null);
   const [airdropping, setAirdropping] = useState(false);
   const [done, setDone] = useState(false);
+  const [airdropErr, setAirdropErr] = useState(false);
 
   useEffect(() => {
     if (!connected || !publicKey) { setBalance(null); return; }
@@ -19,6 +20,7 @@ export default function DevnetStatus() {
   async function airdrop() {
     if (!publicKey) return;
     setAirdropping(true);
+    setAirdropErr(false);
     try {
       const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
       const sig = await connection.requestAirdrop(publicKey, 1 * LAMPORTS_PER_SOL);
@@ -26,6 +28,8 @@ export default function DevnetStatus() {
       const b = await connection.getBalance(publicKey);
       setBalance(b / LAMPORTS_PER_SOL);
       setDone(true);
+    } catch {
+      setAirdropErr(true);
     } finally {
       setAirdropping(false);
     }
@@ -49,6 +53,12 @@ export default function DevnetStatus() {
         </button>
       )}
       {done && <span className="text-emerald-400">+1 SOL airdropped ✓</span>}
+      {airdropErr && (
+        <a href="https://faucet.solana.com" target="_blank" rel="noopener noreferrer"
+          className="text-red-400 hover:text-red-300 transition-colors">
+          Airdrop rate-limited · use faucet.solana.com →
+        </a>
+      )}
     </div>
   );
 }

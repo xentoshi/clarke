@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { stocks } from "@/data/stocks";
-import { companies } from "@/data/companies";
 import { fetchAllQuotes, formatMarketCap } from "@/lib/fetchStocks";
 import { fetchSparkline, sparklinePath } from "@/lib/fetchSparkline";
 
@@ -21,7 +20,6 @@ export default async function MarketOverview() {
 
   const quoteMap = new Map(quotes.map((q) => [q.ticker, q]));
   const sparklineMap = new Map(sparklines.map((s) => [s.ticker, s.values]));
-  const companyMap = new Map(companies.filter((c) => c.ticker).map((c) => [c.ticker!, c]));
 
   const totalMarketCap = quotes.reduce((sum, q) => sum + (q.marketCap ?? 0), 0);
   const gainers = quotes.filter((q) => q.changePercent > 0).length;
@@ -37,7 +35,7 @@ export default async function MarketOverview() {
         <Link href="/stocks" className="text-xs text-zinc-600 hover:text-white transition-colors">All stocks →</Link>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
         <div className="border border-zinc-800 rounded-lg p-3 bg-zinc-900/20">
           <div className="text-zinc-600 text-xs font-mono mb-1">COMBINED MCAP</div>
           <div className="text-white text-sm font-mono font-bold">{formatMarketCap(totalMarketCap)}</div>
@@ -60,16 +58,14 @@ export default async function MarketOverview() {
           {FEATURED.map((ticker) => {
             const q = quoteMap.get(ticker);
             const stock = featured.find((s) => s.ticker === ticker);
-            const company = companyMap.get(ticker);
             const vals = sparklineMap.get(ticker) ?? [];
             if (!q || !stock) return null;
             const up = q.changePercent >= 0;
             const path = sparklinePath(vals, 72, 24);
-            const href = company ? `/companies/${company.slug}` : `/stocks`;
             return (
               <Link
                 key={ticker}
-                href={href}
+                href="/stocks"
                 className="grid grid-cols-[1fr_auto_auto_auto] gap-4 items-center px-4 py-3 hover:bg-zinc-900/40 transition-colors group"
               >
                 <div className="min-w-0">

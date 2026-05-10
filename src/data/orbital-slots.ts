@@ -17,12 +17,15 @@ export interface OrbitalSlot {
   launched?: number;
   tokenization?: {
     status: TokenizationStatus;
+    ticker: string;        // e.g. $ASTRA19
+    tokenName: string;     // e.g. "Astra 19.2°E Yield Token"
     totalTokens: number;
-    tokenPrice: string; // per token
+    tokenPrice: string;
     minInvestment: string;
     leaseYield: string;
     availableTokens: number;
     soldTokens: number;
+    what: string;          // plain-English description of what the token represents
   };
 }
 
@@ -42,12 +45,15 @@ export const slots: OrbitalSlot[] = [
     launched: 1988,
     tokenization: {
       status: "listed",
+      ticker: "$ASTRA19",
+      tokenName: "Astra 19.2°E Yield Token",
       totalTokens: 1000000,
-      tokenPrice: "$400",
-      minInvestment: "$50",
+      tokenPrice: "0.0004 SOL",
+      minInvestment: "0.1 SOL",
       leaseYield: "6.2% APY",
       availableTokens: 312000,
       soldTokens: 688000,
+      what: "Each $ASTRA19 token represents a fractional claim on transponder lease revenue from the 19.2°E geostationary orbital position, operated by SES and home to Astra 1N. Sky Deutschland, Sky UK, and 120M+ European homes receive their satellite TV signal through this slot.",
     },
   },
   {
@@ -63,6 +69,18 @@ export const slots: OrbitalSlot[] = [
     valueEstimate: "$300M+",
     description: "Primary slot for Sky UK. Serves 11M+ Sky subscribers. Losing this slot would effectively destroy British satellite broadcasting.",
     launched: 1993,
+    tokenization: {
+      status: "listed",
+      ticker: "$SES28",
+      tokenName: "SES 28.2°E Yield Token",
+      totalTokens: 750000,
+      tokenPrice: "0.0004 SOL",
+      minInvestment: "0.1 SOL",
+      leaseYield: "5.9% APY",
+      availableTokens: 750000,
+      soldTokens: 0,
+      what: "Each $SES28 token represents a fractional claim on transponder lease revenue from the 28.2°E orbital position, the primary slot for Sky UK. 11M+ Sky subscribers receive their signal exclusively through this position. There is no viable alternative orbital position for Sky's coverage footprint.",
+    },
   },
   {
     id: "13e",
@@ -93,12 +111,15 @@ export const slots: OrbitalSlot[] = [
     launched: 2010,
     tokenization: {
       status: "listed",
-      totalTokens: 1000000,
-      tokenPrice: "$350",
-      minInvestment: "$50",
+      ticker: "$SATMEX101",
+      tokenName: "SES 101°W Yield Token",
+      totalTokens: 500000,
+      tokenPrice: "0.0004 SOL",
+      minInvestment: "0.1 SOL",
       leaseYield: "5.8% APY",
-      availableTokens: 890000,
+      availableTokens: 390000,
       soldTokens: 110000,
+      what: "Each $SATMEX101 token represents a fractional claim on transponder lease revenue from the 101°W orbital position over North America, operated by SES. C-band and Ku-band capacity serves major US cable operators and broadcasters across the continental United States and Caribbean.",
     },
   },
   {

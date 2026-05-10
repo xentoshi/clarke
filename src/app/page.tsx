@@ -1,204 +1,158 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { companies, verticalLabels, verticalAccent, Vertical } from "@/data/companies";
 import { slots } from "@/data/orbital-slots";
 import MarketOverview from "@/components/MarketOverview";
+import EmailCapture from "@/components/EmailCapture";
 import { buildMeta } from "@/lib/metadata";
 
 export const metadata: Metadata = buildMeta({
   title: "Clarke",
-  description: "The first transparent market for geostationary orbital slots. Browse, tokenize, and invest in GEO orbital positions on Solana.",
-  tag: "Space Infrastructure",
+  description: "Orbital slots generate $4.2B per year in lease revenue. Clarke puts that yield on Solana.",
+  tag: "RWA · Solana",
 });
 
-const verticals = Object.keys(verticalLabels) as Vertical[];
-
-const US_STATES = new Set(["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"]);
-const publicCount = companies.filter((c) => c.stage === "public").length;
-const countryCount = new Set(companies.map((c) => {
-  const last = c.hq.split(", ").pop() ?? "";
-  return US_STATES.has(last) ? "USA" : last;
-})).size;
 const listedSlots = slots.filter((s) => s.tokenization?.status === "listed").length;
-const activeSlots = slots.filter((s) => s.status === "active").length;
-const squattedPct = Math.round((slots.filter((s) => s.status === "squatted").length / slots.length) * 100);
 
 export default function HomePage() {
   return (
-    <div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
-      {/* ── HERO ── */}
-      <div className="relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-
-          {/* Mission strip */}
-          <div className="border-b border-white/[0.06] h-9 flex items-center justify-between">
-            <div className="flex items-center gap-3 font-mono text-xs">
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 live-dot" />
-                <span className="text-amber-400/70 tracking-widest uppercase">Mission Active</span>
-              </div>
-              <span className="text-white/15 hidden sm:block">·</span>
-              <span className="text-white/30 hidden sm:block tracking-widest">CLARKE SPACE DIRECTORY</span>
-            </div>
-            <span className="font-mono text-xs text-white/20 hidden sm:block tracking-widest">EST. 2025</span>
-          </div>
-
-          {/* Hero content */}
-          <div className="py-20 sm:py-28 flex flex-col items-center text-center">
-            <h1 className="text-3xl sm:text-5xl font-bold text-white mb-6 leading-tight max-w-3xl tracking-tight">
-              The first transparent market<br className="hidden sm:block" /> for orbital slots
-            </h1>
-            <p className="text-zinc-400 text-base sm:text-lg max-w-xl leading-relaxed mb-10">
-              ~1,800 geostationary positions. Each worth $100M–$500M.
-              Allocated at zero cost. Traded in the dark. Completely inaccessible.
-              <span className="text-white"> Clarke changes that.</span>
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/orbital"
-                className="px-6 py-3 bg-white text-black rounded-xl font-bold text-sm hover:bg-zinc-200 transition-colors">
-                Explore the registry →
-              </Link>
-              <Link href="/orbital/list"
-                className="px-6 py-3 border border-zinc-700 text-zinc-300 rounded-xl font-medium text-sm hover:border-zinc-500 hover:text-white transition-colors">
-                I'm an operator
-              </Link>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="flex items-stretch border-b border-white/[0.08] divide-x divide-white/[0.08] mb-20">
-            {[
-              { value: "~1,800", label: "GEO Slots" },
-              { value: `${activeSlots}`, label: "Active" },
-              { value: `${squattedPct}%`, label: "Squatted" },
-              { value: `${listedSlots}`, label: "Listed on Clarke" },
-              { value: "$4.2B+", label: "Market Value" },
-            ].map((s) => (
-              <div key={s.label} className="px-6 py-5 first:pl-0">
-                <div className="text-2xl font-bold font-mono text-white">{s.value}</div>
-                <div className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-mono mt-1">{s.label}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Problem cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/[0.04] mb-20">
-            {[
-              {
-                num: "01",
-                title: "No price discovery",
-                body: "GEO slot deals happen in private rooms. No one outside knows what a position is worth until a deal leaks years later.",
-              },
-              {
-                num: "02",
-                title: "No liquidity",
-                body: "Transferring a slot takes months of legal work, ITU coordination, and regulatory approvals in multiple jurisdictions.",
-              },
-              {
-                num: "03",
-                title: "No access",
-                body: "Only nation-states and billion-dollar satellite companies participate. The entire market is invisible and closed.",
-              },
-            ].map((c) => (
-              <div key={c.num} className="bg-black/30 backdrop-blur-sm p-6">
-                <div className="text-white/15 text-xs font-mono mb-4">{c.num}</div>
-                <div className="text-white font-bold text-sm mb-2">{c.title}</div>
-                <p className="text-white/30 text-xs leading-relaxed">{c.body}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Clarke belt teaser */}
-          <div className="border border-white/[0.06] rounded-2xl p-8 bg-black/20 backdrop-blur-sm mb-20 flex flex-col sm:flex-row items-center gap-8">
-            <div className="flex-1">
-              <div className="text-white/25 text-xs font-mono mb-3 tracking-widest">// CLARKE BELT · 35,786 KM</div>
-              <h2 className="text-white font-bold text-xl mb-3">
-                Arthur C. Clarke described geostationary orbit in 1945.
-              </h2>
-              <p className="text-white/40 text-sm leading-relaxed mb-6">
-                The ring of satellites above Earth's equator is named after him.
-                Clarke tokenizes the orbital positions that make it possible -
-                bringing transparency, liquidity, and access to the most valuable
-                real estate in existence.
-              </p>
-              <Link href="/orbital" className="text-white/60 text-sm hover:text-white transition-colors font-medium">
-                View the registry →
-              </Link>
-            </div>
-            <div className="shrink-0 w-full sm:w-64 border border-white/[0.08] rounded-xl p-4 bg-black/30">
-              {slots.filter((s) => s.tokenization?.status === "listed").map((s) => (
-                <div key={s.id} className="flex items-center justify-between py-2 border-b border-white/[0.06] last:border-0">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    <span className="text-white font-mono text-xs font-bold">{s.label}</span>
-                    <span className="text-white/30 text-xs">{s.operator}</span>
-                  </div>
-                  <span className="text-emerald-400/70 text-[10px] font-mono">{s.tokenization?.leaseYield}</span>
-                </div>
-              ))}
-              <Link href="/orbital"
-                className="block text-center text-white/30 text-xs mt-3 hover:text-white/70 transition-colors">
-                + {slots.length - listedSlots} more slots →
-              </Link>
-            </div>
-          </div>
+      {/* Hero */}
+      <div className="pt-20 sm:pt-32 pb-20 flex flex-col items-center text-center">
+        <h1 className="text-3xl sm:text-6xl font-bold text-white mb-6 leading-[1.08] max-w-4xl tracking-tight">
+          Every ship, flight, and oil rig<br className="hidden sm:block" /> depends on orbital slots.
+        </h1>
+        <p className="text-zinc-400 text-base sm:text-lg max-w-xl leading-relaxed mb-10">
+          Satellite operators earn $4.2B per year leasing geostationary orbital positions under long-term fixed contracts.
+          Clarke puts that yield on Solana.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Link href="/orbital"
+            className="px-8 py-3.5 bg-white text-black rounded-xl font-bold text-sm hover:bg-zinc-200 transition-colors">
+            View open offerings →
+          </Link>
+          <Link href="/orbital/list"
+            className="px-8 py-3.5 border border-zinc-700 text-zinc-300 rounded-xl font-medium text-sm hover:border-zinc-500 hover:text-white transition-colors">
+            I operate a satellite
+          </Link>
         </div>
       </div>
 
-      {/* ── DIRECTORY ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 space-y-16">
-
-        {/* Verticals */}
-        <div>
-          <div className="flex items-center justify-between mb-8">
-            <span className="text-[10px] font-mono text-white/40 uppercase tracking-[0.25em]">{verticals.length} Verticals</span>
-            <Link href="/companies" className="text-[10px] font-mono text-white/30 hover:text-white/70 transition-colors tracking-widest">
-              All {companies.length} →
-            </Link>
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.06] mb-24 rounded-xl overflow-hidden">
+        {[
+          { value: "~1,800", label: "GEO slots" },
+          { value: "$4.2B+", label: "Annual lease revenue" },
+          { value: "15yr",   label: "Avg. contract length" },
+          { value: `${listedSlots}`,    label: "Listed on Clarke" },
+        ].map((s) => (
+          <div key={s.label} className="bg-zinc-950 px-6 py-6 text-center sm:text-left">
+            <div className="text-2xl sm:text-3xl font-bold font-mono text-white mb-1">{s.value}</div>
+            <div className="text-[10px] text-white/35 uppercase tracking-[0.2em] font-mono">{s.label}</div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {verticals.map((v, i) => {
-              const vCompanies = companies.filter((c) => c.vertical === v);
-              const top = vCompanies.slice(0, 2).map((c) => c.name);
-              return (
-                <Link key={v} href={`/companies?vertical=${v}`}
-                  className="group border border-zinc-800 rounded-xl bg-zinc-900/10 hover:border-zinc-600 hover:bg-zinc-900/25 transition-colors p-5 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: verticalAccent[v], opacity: 0.7 }} />
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-white/25 text-[10px] font-mono tracking-widest">{String(i + 1).padStart(2, "0")}</span>
-                    <span className="text-white/30 text-[10px] font-mono">{vCompanies.length}</span>
-                  </div>
-                  <div className="text-white text-sm font-semibold mb-2 leading-tight group-hover:text-white/80 transition-colors">
-                    {verticalLabels[v]}
-                  </div>
-                  <p className="text-white/30 text-xs leading-relaxed line-clamp-2">
-                    {top.join(" · ")}{vCompanies.length > 2 ? ` +${vCompanies.length - 2}` : ""}
-                  </p>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
+        ))}
+      </div>
 
-        <MarketOverview />
-
-        {/* Bottom CTAs */}
+      {/* How it works */}
+      <div className="mb-24">
+        <div className="text-white/30 text-[11px] font-mono tracking-[0.3em] uppercase mb-4">How it works</div>
+        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-12">Three steps.</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/[0.04]">
           {[
-            { href: "/orbital", title: "Orbital Slots →", desc: "The first tokenized market for GEO orbital positions. Browse listed slots and invest on Solana." },
-            { href: "/orbital/list", title: "List a Slot →", desc: "Satellite operator? List your orbital position for fractional investment on Clarke." },
-            { href: "/docs", title: "Documentation →", desc: "Data sources, methodology, ITU filing structure, and the tokenization thesis." },
+            { num: "01", title: "Operator lists a slot", body: "A satellite operator submits their orbital position to Clarke. Clarke verifies the lease contract and creates an on-chain offering." },
+            { num: "02", title: "Yield shares issued on Solana", body: "The slot's lease revenue is fractionalized into on-chain positions. Each share is a fractional claim on quarterly transponder lease payments." },
+            { num: "03", title: "Yield flows quarterly", body: "Lease payments hit the on-chain offering every quarter. Yield share holders claim their cut directly to any Solana wallet." },
           ].map((c) => (
-            <Link key={c.href} href={c.href}
-              className="group bg-black/50 backdrop-blur-sm hover:bg-black/60 transition-colors p-6">
-              <div className="font-bold text-white text-sm mb-2 group-hover:text-white/70 transition-colors">{c.title}</div>
-              <p className="text-white/25 text-xs leading-relaxed">{c.desc}</p>
-            </Link>
+            <div key={c.num} className="bg-black/20 p-8">
+              <div className="text-white/15 text-xs font-mono mb-6">{c.num}</div>
+              <div className="text-white font-bold text-base mb-3">{c.title}</div>
+              <p className="text-white/40 text-sm leading-relaxed">{c.body}</p>
+            </div>
           ))}
         </div>
-
       </div>
+
+      {/* Why it works */}
+      <div className="mb-24">
+        <div className="text-white/30 text-[11px] font-mono tracking-[0.3em] uppercase mb-4">Why it works</div>
+        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-12">Why it works.</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {[
+            { title: "Fixed supply", body: "There are ~1,800 GEO slots. No new ones can be created. Prime positions are fully occupied. Broadcasters have no alternative." },
+            { title: "Captive demand", body: "Sky TV has leased the same Astra slots since the 1990s. Moving to a different orbit means re-pointing millions of customer dishes. It does not happen." },
+            { title: "Contracted revenue", body: "These are not ad revenues or subscriptions. They are fixed-rate, 15-year transponder lease contracts. The cash flow is predictable by design." },
+            { title: "5–9% annual yield", body: "Operators charge 5–9% of slot value per year in lease fees. On a $400M slot that is $20–36M per year. Yield share holders receive their cut each quarter." },
+          ].map((c) => (
+            <div key={c.title} className="border border-zinc-800 rounded-xl p-6 bg-zinc-900/10">
+              <div className="text-white font-semibold text-sm mb-3">{c.title}</div>
+              <p className="text-zinc-500 text-xs leading-relaxed">{c.body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Live offerings */}
+      <div className="border border-white/[0.06] rounded-2xl p-8 bg-black/20 mb-24 flex flex-col sm:flex-row items-start gap-8">
+        <div className="flex-1">
+          <div className="text-white/25 text-xs font-mono mb-3 tracking-widest">// PROOF OF CONCEPT · SOLANA DEVNET</div>
+          <h2 className="text-white font-bold text-xl mb-3">Three slots on devnet.</h2>
+          <p className="text-white/40 text-sm leading-relaxed mb-6 max-w-sm">
+            $ASTRA19, $SES28, and $SATMEX101 are deployed on Solana devnet for testing. Connect a wallet, get free devnet SOL, and try the full invest and yield flow.
+          </p>
+          <Link href="/orbital" className="inline-block px-5 py-2.5 bg-white text-black rounded-lg text-sm font-bold hover:bg-zinc-200 transition-colors">
+            View offerings →
+          </Link>
+        </div>
+        <div className="shrink-0 w-full sm:w-64 border border-white/[0.08] rounded-xl p-4 bg-black/30">
+          {slots.filter((s) => s.tokenization?.status === "listed").map((s) => (
+            <div key={s.id} className="py-2.5 border-b border-white/[0.06] last:border-0">
+              <div className="flex items-center justify-between mb-0.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span className="text-white font-mono text-xs font-bold">{s.tokenization?.ticker}</span>
+                  <span className="text-white/30 text-xs">{s.label}</span>
+                </div>
+                <span className="text-emerald-400 text-[10px] font-mono">{s.tokenization?.leaseYield}</span>
+              </div>
+              <p className="text-white/20 text-[10px] pl-3.5">{s.operator} · {s.valueEstimate}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Space markets */}
+      <div className="mb-24">
+        <div className="text-white/30 text-[11px] font-mono tracking-[0.3em] uppercase mb-4">Space markets</div>
+        <MarketOverview />
+      </div>
+
+      {/* Email */}
+      <div className="border border-white/[0.06] rounded-2xl p-10 bg-black/20 mb-24 text-center">
+        <div className="text-white/25 text-xs font-mono mb-4 tracking-widest">// GET NOTIFIED</div>
+        <h2 className="text-white font-bold text-2xl mb-3">Be first when the raise opens.</h2>
+        <p className="text-zinc-500 text-sm mb-8 max-w-sm mx-auto">
+          Clarke is preparing the first mainnet SPV. Get notified when it opens.
+        </p>
+        <div className="flex justify-center">
+          <EmailCapture label="Join the list" />
+        </div>
+      </div>
+
+      {/* CTAs */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/[0.04] mb-24">
+        {[
+          { href: "/orbital",      title: "Open offerings →",  desc: "Browse the GEO registry and invest in yield positions." },
+          { href: "/portfolio",    title: "My portfolio →",    desc: "View your positions and claim accrued yield." },
+          { href: "/orbital/list", title: "Operators →",       desc: "Raise upfront capital against your transponder lease revenue." },
+        ].map((c) => (
+          <Link key={c.href} href={c.href}
+            className="group bg-black/50 hover:bg-black/70 transition-colors p-8">
+            <div className="font-bold text-white text-sm mb-2 group-hover:text-white/70 transition-colors">{c.title}</div>
+            <p className="text-white/25 text-xs leading-relaxed">{c.desc}</p>
+          </Link>
+        ))}
+      </div>
+
     </div>
   );
 }

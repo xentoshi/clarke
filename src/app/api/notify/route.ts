@@ -1,51 +1,82 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// In-memory cache for the current process lifetime — used only for deduplication
-// within a single server instance. Not durable across deploys or serverless cold starts.
-// For production, replace with a persistent store (DB, KV, etc.) and remove this.
-const seen = new Set<string>();
+const ALLOWED_TYPES = new Set(["waitlist", "slot_listing_inquiry", "slot_notify"]);
+const MAX_STRING = 500;
+
+function sanitize(val: unknown): string {
+  return typeof val === "string" ? val.slice(0, MAX_STRING) : "";
+}
+
+// Simple in-memory rate limit: max 5 requests per IP per minute
+const ipLog = new Map<string, { count: number; reset: number }>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = ipLog.get(ip);
+  if (!entry || now > entry.reset) {
+    ipLog.set(ip, { count: 1, reset: now + 60_000 });
+    return false;
+  }
+  if (entry.count >= 5) return true;
+  entry.count++;
+  return false;
+}
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => null);
-  const { email, slotId } = body ?? {};
-
-  const validEmail = typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validSlot = typeof slotId === "string" && slotId.length > 0 && slotId.length <= 64;
-  if (!validEmail || !validSlot) {
-    return NextResponse.json({ error: "Invalid fields" }, { status: 400 });
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (isRateLimited(ip)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const key = `${email}::${slotId}`;
-  const alreadyRegistered = seen.has(key);
-  if (!alreadyRegistered) seen.add(key);
+  // Reject oversized bodies before parsing
+  const contentLength = Number(req.headers.get("content-length") ?? 0);
+  if (contentLength > 4096) {
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  }
 
-  // Forward to a contact email via a transactional service if configured.
-  // Set NOTIFY_WEBHOOK_URL to a Zapier / Make / Resend webhook to persist signups.
-  const webhookUrl = process.env.NOTIFY_WEBHOOK_URL;
-  if (webhookUrl && !alreadyRegistered) {
+  let raw: unknown;
+  try {
+    raw = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
+
+  const body = raw as Record<string, unknown>;
+  const type = sanitize(body.type) || "waitlist";
+
+  if (!ALLOWED_TYPES.has(type)) {
+    return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+  }
+
+  // Sanitize all string fields — drop anything non-string
+  const safe: Record<string, string> = { type };
+  for (const [k, v] of Object.entries(body)) {
+    if (typeof v === "string") safe[k] = v.slice(0, MAX_STRING);
+  }
+
+  // Validate email if present
+  if (safe.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(safe.email)) {
+    return NextResponse.json({ error: "Invalid email" }, { status: 400 });
+  }
+
+  const webhook = process.env.NOTIFY_WEBHOOK_URL;
+  if (webhook) {
     try {
-      await fetch(webhookUrl, {
+      await fetch(webhook, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, slotId, ts: new Date().toISOString() }),
+        body: JSON.stringify(safe),
       });
-    } catch {
-      // Non-fatal — log and continue so the user still sees success
-      console.error("[notify] webhook delivery failed for", email, slotId);
+    } catch (e) {
+      console.error("[notify] webhook failed:", e);
     }
-  }
-
-  if (!alreadyRegistered) {
-    console.log(`[notify] signup: ${email} → slot ${slotId}`);
+  } else {
+    console.log("[notify] submission:", JSON.stringify(safe));
   }
 
   return NextResponse.json({ ok: true });
-}
-
-export async function GET(req: NextRequest) {
-  const slotId = req.nextUrl.searchParams.get("slotId");
-  const count = slotId
-    ? [...seen].filter((k) => k.endsWith(`::${slotId}`)).length
-    : seen.size;
-  return NextResponse.json({ count });
 }

@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
 import { stocks } from "@/data/stocks";
-import { companies } from "@/data/companies";
 
 export const metadata = buildMeta({
   title: "Stocks",
@@ -61,23 +59,27 @@ export default async function StocksPage() {
 
   const quoteMap = new Map(quotes.map((q) => [q.ticker, q]));
   const sparklineMap = new Map(sparklines.map((s) => [s.ticker, s.values]));
-  const tickerToSlug = new Map(companies.filter((c) => c.ticker).map((c) => [c.ticker!, c.slug]));
   const heatmapData = groupByVertical(stocks, quoteMap);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
       <div className="mb-10">
-        <h1 className="text-2xl font-bold text-white mb-2">Stocks</h1>
-        <p className="text-zinc-500 text-sm">
-          Publicly traded space industry · prices refresh every 5 min · not financial advice
+        <h1 className="text-2xl font-bold text-white mb-2">Space Markets</h1>
+        <p className="text-zinc-500 text-sm mb-4">
+          Publicly traded satellite and space infrastructure companies. Prices refresh every 5 min. Not financial advice.
         </p>
+        <div className="border border-zinc-800 rounded-xl px-5 py-4 bg-zinc-900/10 max-w-2xl">
+          <p className="text-zinc-500 text-xs leading-relaxed">
+            GEO satellite operators like Viasat are direct candidates to list orbital slots on Clarke, raising upfront capital against their contracted transponder lease revenue. The broader sector represents the infrastructure that Clarke's underlying assets support.
+          </p>
+        </div>
       </div>
 
       {/* Sector Heatmap */}
       {heatmapData.length > 0 && (
         <div className="mb-10">
           <h2 className="text-xs uppercase tracking-widest text-zinc-500 mb-4 font-medium">Sector Performance · Today</h2>
-          <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-7 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-2">
             {heatmapData.map((d) => (
               <HeatmapCell key={d.vertical} {...d} />
             ))}
@@ -86,8 +88,8 @@ export default async function StocksPage() {
       )}
 
       {/* Table */}
-      <div className="border border-zinc-800 rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="border border-zinc-800 rounded-lg overflow-x-auto">
+        <table className="w-full text-sm min-w-[600px]">
           <thead>
             <tr className="border-b border-zinc-800 bg-zinc-900/50">
               <th className="text-left px-4 py-3 text-zinc-500 text-xs uppercase tracking-wider font-medium">Ticker</th>
@@ -126,14 +128,9 @@ export default async function StocksPage() {
                       {stock.ticker}
                     </a>
                   </td>
-                  <td className="px-4 py-3 text-zinc-400 text-xs hidden sm:table-cell">
-                    {tickerToSlug.has(stock.ticker) ? (
-                      <Link href={`/companies/${tickerToSlug.get(stock.ticker)}`} className="hover:text-white transition-colors">
-                        {stock.name}
-                      </Link>
-                    ) : (
-                      stock.name
-                    )}
+                  <td className="px-4 py-3 hidden sm:table-cell">
+                    <div className="text-zinc-300 text-xs font-medium">{stock.name}</div>
+                    <div className="text-zinc-600 text-xs mt-0.5 max-w-sm leading-relaxed">{stock.description}</div>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className="font-mono text-white text-sm">
@@ -181,6 +178,37 @@ export default async function StocksPage() {
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Company profiles */}
+      <div className="mt-16">
+        <h2 className="text-xs uppercase tracking-widest text-zinc-500 mb-6 font-medium">Company Profiles</h2>
+        <div className="space-y-4">
+          {stocks.map((stock) => (
+            <div key={stock.ticker} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <a
+                      href={`https://www.tradingview.com/symbols/${stock.ticker}/`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="text-white font-mono font-bold text-sm hover:text-zinc-300 transition-colors"
+                    >
+                      {stock.ticker}
+                    </a>
+                    <span className="text-zinc-400 text-sm">{stock.name}</span>
+                    <span className="text-xs text-zinc-600 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded">{stock.vertical}</span>
+                  </div>
+                  <p className="text-zinc-500 text-xs leading-relaxed mb-3">{stock.detail}</p>
+                </div>
+              </div>
+              <div className="border-t border-zinc-800/60 pt-3">
+                <span className="text-[10px] text-emerald-400/60 font-mono uppercase tracking-widest">Clarke relevance</span>
+                <p className="text-zinc-600 text-xs leading-relaxed mt-1">{stock.clarkeRelevance}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

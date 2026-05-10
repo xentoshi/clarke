@@ -1,27 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey, Transaction, TransactionInstruction, SystemProgram } from "@solana/web3.js";
 import { slots, statusColors, statusLabels, bandColors } from "@/data/orbital-slots";
 import type { OrbitalSlot, SlotStatus } from "@/data/orbital-slots";
 import DevnetStatus from "@/components/DevnetStatus";
+import { offeringPda, positionPda, fetchOffering, PROGRAM_ID } from "@/lib/program";
 
 const CX = 260;
 const CY = 260;
 const R_ORBIT = 200;
 const R_EARTH = 52;
 
-const DEVNET_TREASURY = new PublicKey("EzE2zGnbJvE2ABcMPCiJuBoeyZhXMcf7BCQF4oQPY8eo");
+const r4 = (n: number) => Math.round(n * 10000) / 10000;
 
 function lonToAngle(lon: number) {
   return ((lon - 90) * Math.PI) / 180;
 }
 function slotPos(lon: number) {
   const a = lonToAngle(lon);
-  return { x: CX + R_ORBIT * Math.cos(a), y: CY + R_ORBIT * Math.sin(a) };
+  return { x: r4(CX + R_ORBIT * Math.cos(a)), y: r4(CY + R_ORBIT * Math.sin(a)) };
 }
 
 const statusDot: Record<SlotStatus, string> = {
@@ -50,21 +51,43 @@ const faq = [
   },
   {
     q: "Is this live on mainnet?",
-    a: "Clarke's orbital slot tokenization is currently a proof of concept running on Solana devnet. Transactions are real and verifiable on Solana Explorer. Mainnet deployment requires working with satellite operators to establish the legal SPV structure.",
+    a: "Clarke is a proof of concept on Solana devnet. Transactions are real on-chain interactions, verifiable on Solana Explorer. Mainnet deployment requires working with satellite operators to establish the legal SPV structure. No real money is involved.",
   },
 ];
 
 export default function OrbitalClient() {
-  const [hovered, setHovered] = useState<OrbitalSlot | null>(null);
   const [selected, setSelected] = useState<OrbitalSlot | null>(null);
   const [filter, setFilter] = useState<SlotStatus | "all">("all");
-  const [investAmount, setInvestAmount] = useState("50");
+  const [investAmount, setInvestAmount] = useState("0.1");
   const [txStatus, setTxStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [txSig, setTxSig] = useState("");
+  const [txError, setTxError] = useState("");
+  const [txTokens, setTxTokens] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifySlot, setNotifySlot] = useState<string | null>(null);
   const [notifyDone, setNotifyDone] = useState<Record<string, boolean>>({});
+  const [solBalance, setSolBalance] = useState<number | null>(null);
+  const [liveSold, setLiveSold] = useState<Record<string, number>>({});
+
+  const { connection } = useConnection();
+  const { connected, publicKey, signTransaction } = useWallet();
+  const { setVisible } = useWalletModal();
+
+  useEffect(() => {
+    if (!connected || !publicKey) { setSolBalance(null); return; }
+    const refresh = () => connection.getBalance(publicKey).then((b) => setSolBalance(b / LAMPORTS_PER_SOL));
+    refresh();
+    const id = setInterval(refresh, 10_000);
+    return () => clearInterval(id);
+  }, [connected, publicKey, connection]);
+
+  useEffect(() => {
+    if (!selected?.tokenization) return;
+    fetchOffering(connection, selected.id).then((o) => {
+      if (o) setLiveSold((prev) => ({ ...prev, [selected.id]: o.soldTokens.toNumber() }));
+    });
+  }, [selected, connection]);
 
   async function handleNotify(slotId: string) {
     if (!notifyEmail) return;
@@ -78,26 +101,70 @@ export default function OrbitalClient() {
     setNotifyEmail("");
   }
 
-  const { connection } = useConnection();
-  const { connected, publicKey, sendTransaction } = useWallet();
-  const { setVisible } = useWalletModal();
-
-  const active = selected ?? hovered;
+  const active = selected;
   const filtered = filter === "all" ? slots : slots.filter((s) => s.status === filter);
 
   async function handleBuy() {
-    if (!connected || !publicKey) { setVisible(true); return; }
+    if (!connected || !publicKey || !signTransaction) { setVisible(true); return; }
+    const slot = selected;
+    if (!slot?.tokenization) return;
+
+    const solAmount = parseFloat(investAmount);
+    if (!isFinite(solAmount) || solAmount <= 0) {
+      setTxError("Enter a valid amount.");
+      setTxStatus("error");
+      return;
+    }
+
     setTxStatus("sending");
     try {
-      const lamports = Math.round(0.001 * LAMPORTS_PER_SOL);
-      const tx = new Transaction().add(
-        SystemProgram.transfer({ fromPubkey: publicKey, toPubkey: DEVNET_TREASURY, lamports })
-      );
-      const sig = await sendTransaction(tx, connection);
-      await connection.confirmTransaction(sig, "confirmed");
+      const offeringKey = offeringPda(slot.id);
+      const onChain = await fetchOffering(connection, slot.id);
+      if (!onChain) {
+        setTxError("This offering hasn't been seeded on-chain yet.");
+        setTxStatus("error");
+        return;
+      }
+      const posKey = positionPda(publicKey, offeringKey);
+      const tokenPriceLamports = onChain.tokenPriceLamports.toNumber();
+      const tokenAmount = Math.max(1, Math.floor((solAmount * LAMPORTS_PER_SOL) / tokenPriceLamports));
+
+      // Build invest instruction manually — avoids Anchor 0.29/0.32 IDL compat issues.
+      // Discriminator = first 8 bytes of SHA-256("global:invest")
+      const discHash = await crypto.subtle.digest("SHA-256", Buffer.from("global:invest"));
+      const discriminator = new Uint8Array(discHash).slice(0, 8);
+      const amountBuf = new ArrayBuffer(8);
+      new DataView(amountBuf).setBigUint64(0, BigInt(tokenAmount), true);
+      const data = Buffer.from([...discriminator, ...new Uint8Array(amountBuf)]);
+
+      const ix = new TransactionInstruction({
+        programId: PROGRAM_ID,
+        keys: [
+          { pubkey: publicKey, isSigner: true, isWritable: true },
+          { pubkey: offeringKey, isSigner: false, isWritable: true },
+          { pubkey: onChain.treasury, isSigner: false, isWritable: true },
+          { pubkey: posKey, isSigner: false, isWritable: true },
+          { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+        ],
+        data,
+      });
+
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
+      const tx = new Transaction({ feePayer: publicKey, recentBlockhash: blockhash }).add(ix);
+      const signed = await signTransaction(tx);
+      const sig = await connection.sendRawTransaction(signed.serialize(), { skipPreflight: false, preflightCommitment: "confirmed" });
+      await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
       setTxSig(sig);
+      setTxTokens(tokenAmount);
       setTxStatus("success");
-    } catch {
+      // Refresh balance and live sold count
+      connection.getBalance(publicKey).then((b) => setSolBalance(b / LAMPORTS_PER_SOL));
+      fetchOffering(connection, slot.id).then((o) => {
+        if (o) setLiveSold((prev) => ({ ...prev, [slot.id]: o.soldTokens.toNumber() }));
+      });
+    } catch (e) {
+      console.error(e);
+      setTxError("Transaction failed. Check the browser console for details.");
       setTxStatus("error");
     }
   }
@@ -114,8 +181,8 @@ export default function OrbitalClient() {
           { label: "Squatted / Filed", value: "45%" },
           { label: "Est. Market Value", value: "$4.2B+" },
         ].map((s) => (
-          <div key={s.label} className="border border-zinc-800 rounded-xl p-4 bg-zinc-900/10">
-            <div className="text-2xl font-bold font-mono text-white mb-1">{s.value}</div>
+          <div key={s.label} className="border border-zinc-800 rounded-xl p-3 sm:p-4 bg-zinc-900/10">
+            <div className="text-xl sm:text-2xl font-bold font-mono text-white mb-1">{s.value}</div>
             <div className="text-zinc-600 text-xs">{s.label}</div>
           </div>
         ))}
@@ -126,6 +193,36 @@ export default function OrbitalClient() {
         <div className="border border-zinc-800 rounded-xl p-6">
           <div className="text-zinc-600 text-xs font-mono mb-4 uppercase tracking-widest">Clarke Belt · GEO Ring · 35,786 km</div>
           <svg viewBox={`0 0 ${CX * 2} ${CY * 2}`} className="w-full" style={{ maxHeight: 480 }}>
+            <defs>
+              {/* Lit side: bright upper-left */}
+              <radialGradient id="gLit" cx="236" cy="238" r="55" gradientUnits="userSpaceOnUse">
+                <stop offset="0%"   stopColor="#1a3a5c"/>
+                <stop offset="45%"  stopColor="#0a1e38"/>
+                <stop offset="100%" stopColor="#03080f"/>
+              </radialGradient>
+              {/* Specular glint */}
+              <radialGradient id="gSpec" cx="241" cy="240" r="26" gradientUnits="userSpaceOnUse">
+                <stop offset="0%"   stopColor="rgba(200,230,255,0.28)"/>
+                <stop offset="100%" stopColor="transparent"/>
+              </radialGradient>
+              {/* Night-side terminator: darkens lower-right */}
+              <radialGradient id="gDark" cx="284" cy="280" r="62" gradientUnits="userSpaceOnUse">
+                <stop offset="0%"   stopColor="rgba(0,0,4,0.88)"/>
+                <stop offset="55%"  stopColor="rgba(0,0,4,0.45)"/>
+                <stop offset="85%"  stopColor="rgba(0,0,4,0.06)"/>
+                <stop offset="100%" stopColor="transparent"/>
+              </radialGradient>
+              {/* Atmosphere halo just outside the sphere */}
+              <radialGradient id="gHalo" cx="260" cy="260" r="62" gradientUnits="userSpaceOnUse">
+                <stop offset="80%"  stopColor="transparent"/>
+                <stop offset="90%"  stopColor="rgba(80,170,255,0.22)"/>
+                <stop offset="100%" stopColor="transparent"/>
+              </radialGradient>
+              <clipPath id="earthClip">
+                <circle cx={CX} cy={CY} r={R_EARTH}/>
+              </clipPath>
+            </defs>
+
             {[0.5, 0.75, 1.0, 1.25].map((s) => (
               <circle key={s} cx={CX} cy={CY} r={R_ORBIT * s} fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth={1} />
             ))}
@@ -133,19 +230,31 @@ export default function OrbitalClient() {
               const a = lonToAngle(lon);
               return (
                 <line key={lon}
-                  x1={CX + (R_EARTH + 8) * Math.cos(a)} y1={CY + (R_EARTH + 8) * Math.sin(a)}
-                  x2={CX + (R_ORBIT + 20) * Math.cos(a)} y2={CY + (R_ORBIT + 20) * Math.sin(a)}
+                  x1={r4(CX + (R_EARTH + 8) * Math.cos(a))} y1={r4(CY + (R_EARTH + 8) * Math.sin(a))}
+                  x2={r4(CX + (R_ORBIT + 20) * Math.cos(a))} y2={r4(CY + (R_ORBIT + 20) * Math.sin(a))}
                   stroke="rgba(255,255,255,0.04)" strokeWidth={1} strokeDasharray="2,4" />
               );
             })}
             <circle cx={CX} cy={CY} r={R_ORBIT} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={1.5} />
-            <circle cx={CX} cy={CY} r={R_EARTH} fill="rgba(14,165,233,0.08)" stroke="rgba(14,165,233,0.25)" strokeWidth={1} />
-            <circle cx={CX} cy={CY} r={R_EARTH - 10} fill="rgba(14,165,233,0.04)" stroke="none" />
-            <text x={CX} y={CY + 4} textAnchor="middle" fill="rgba(255,255,255,0.2)" fontSize={9} fontFamily="monospace">EARTH</text>
+
+            {/* Atmosphere halo (outside sphere) */}
+            <circle cx={CX} cy={CY} r={R_EARTH + 8} fill="url(#gHalo)"/>
+
+            {/* Sphere base */}
+            <circle cx={CX} cy={CY} r={R_EARTH} fill="url(#gLit)"/>
+
+            {/* Night-side terminator */}
+            <circle cx={CX} cy={CY} r={R_EARTH} fill="url(#gDark)" clipPath="url(#earthClip)"/>
+
+            {/* Specular glint on lit side */}
+            <circle cx={CX} cy={CY} r={R_EARTH} fill="url(#gSpec)"/>
+
+            {/* Thin atmosphere rim */}
+            <circle cx={CX} cy={CY} r={R_EARTH} fill="none" stroke="rgba(100,190,255,0.35)" strokeWidth={1.5}/>
             {[-90, 0, 90, 180].map((lon) => {
               const a = lonToAngle(lon);
               return (
-                <text key={lon} x={CX + (R_ORBIT + 32) * Math.cos(a)} y={CY + (R_ORBIT + 32) * Math.sin(a) + 3}
+                <text key={lon} x={r4(CX + (R_ORBIT + 32) * Math.cos(a))} y={r4(CY + (R_ORBIT + 32) * Math.sin(a) + 3)}
                   textAnchor="middle" fill="rgba(255,255,255,0.18)" fontSize={8} fontFamily="monospace">
                   {lon === 0 ? "0°" : lon > 0 ? `${lon}°E` : `${Math.abs(lon)}°W`}
                 </text>
@@ -157,22 +266,25 @@ export default function OrbitalClient() {
               const color = statusDot[slot.status];
               return (
                 <g key={slot.id} style={{ cursor: "pointer" }}
-                  onMouseEnter={() => setHovered(slot)}
-                  onMouseLeave={() => setHovered(null)}
                   onClick={() => setSelected(selected?.id === slot.id ? null : slot)}>
                   {isHot && <circle cx={x} cy={y} r={10} fill={color} opacity={0.15} />}
                   <circle cx={x} cy={y} r={isHot ? 5 : 4} fill={color} opacity={isHot ? 1 : 0.7}
                     stroke={isHot ? "white" : "transparent"} strokeWidth={1} />
-                  {isHot && (
-                    <>
-                      <line x1={x} y1={y} x2={CX} y2={CY} stroke={color} strokeWidth={0.5} opacity={0.2} strokeDasharray="3,3" />
-                      <text x={x + (x > CX ? 8 : -8)} y={y + 4} textAnchor={x > CX ? "start" : "end"}
-                        fill="white" fontSize={8} fontFamily="monospace" fontWeight="bold">{slot.label}</text>
-                    </>
-                  )}
                 </g>
               );
             })}
+            {/* Overlay: line + label rendered above all dots, no pointer events so they don't steal hover */}
+            {active && (() => {
+              const { x, y } = slotPos(active.longitude);
+              const color = statusDot[active.status];
+              return (
+                <g pointerEvents="none">
+                  <line x1={x} y1={y} x2={CX} y2={CY} stroke={color} strokeWidth={0.5} opacity={0.2} strokeDasharray="3,3" />
+                  <text x={x + (x > CX ? 8 : -8)} y={y + 4} textAnchor={x > CX ? "start" : "end"}
+                    fill="white" fontSize={8} fontFamily="monospace" fontWeight="bold">{active.label}</text>
+                </g>
+              );
+            })()}
           </svg>
           <div className="flex flex-wrap gap-3 mt-4">
             {(["active", "filed", "squatted", "inactive"] as SlotStatus[]).map((s) => (
@@ -230,11 +342,19 @@ export default function OrbitalClient() {
               <div className="pt-4 border-t border-zinc-800">
                 {active.tokenization?.status === "listed" ? (
                   <>
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      <span className="text-emerald-400 text-xs font-medium">Listed · Solana devnet</span>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span className="text-emerald-400 text-xs font-medium">Devnet · proof of concept</span>
+                      </div>
+                      <span className="text-white font-mono font-bold text-sm">{active.tokenization.ticker}</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 mb-4">
+                    {active.tokenization.what && (
+                      <p className="text-zinc-600 text-xs leading-relaxed mb-4 border-l border-zinc-800 pl-3">
+                        {active.tokenization.what}
+                      </p>
+                    )}
+                    <div className="grid grid-cols-1 xs:grid-cols-3 sm:grid-cols-3 gap-2 mb-4">
                       {[
                         { label: "Token price", value: active.tokenization.tokenPrice },
                         { label: "Min. invest", value: active.tokenization.minInvestment },
@@ -247,49 +367,119 @@ export default function OrbitalClient() {
                       ))}
                     </div>
                     <div className="mb-4">
-                      <div className="flex justify-between text-xs text-zinc-600 mb-1.5">
-                        <span>{((active.tokenization.soldTokens / active.tokenization.totalTokens) * 100).toFixed(0)}% sold</span>
-                        <span>{active.tokenization.availableTokens.toLocaleString()} tokens left</span>
-                      </div>
-                      <div className="w-full bg-zinc-800 rounded-full h-1.5">
-                        <div className="bg-emerald-500 h-1.5 rounded-full"
-                          style={{ width: `${(active.tokenization.soldTokens / active.tokenization.totalTokens) * 100}%` }} />
-                      </div>
+                      {(() => {
+                        const sold = liveSold[active.id] ?? active.tokenization.soldTokens;
+                        const total = active.tokenization.totalTokens;
+                        const pct = (sold / total) * 100;
+                        return (
+                          <>
+                            <div className="flex justify-between text-xs text-zinc-600 mb-1.5">
+                              <span>{pct < 0.1 ? pct.toFixed(2) : pct < 1 ? pct.toFixed(1) : pct.toFixed(0)}% sold</span>
+                              <span>{(total - sold).toLocaleString()} tokens left</span>
+                            </div>
+                            <div className="w-full bg-zinc-800 rounded-full h-1.5">
+                              <div className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500"
+                                style={{ width: `${pct}%`, minWidth: sold > 0 ? "3px" : "0" }} />
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                     {txStatus === "success" ? (
-                      <div className="border border-emerald-800 rounded-lg p-4 bg-emerald-950/30 text-center">
-                        <div className="text-emerald-400 text-sm font-bold mb-1">Transaction confirmed on devnet</div>
-                        <a href={`https://explorer.solana.com/tx/${txSig}?cluster=devnet`}
-                          target="_blank" rel="noopener noreferrer"
-                          className="text-zinc-400 text-xs hover:text-white transition-colors underline underline-offset-2">
-                          View on Solana Explorer →
-                        </a>
+                      <div className="border border-emerald-800 rounded-lg p-4 bg-emerald-950/20">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          <span className="text-emerald-400 text-xs font-medium">Transaction confirmed · Solana devnet</span>
+                        </div>
+                        <div className="space-y-2 mb-4">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-zinc-500">Token</span>
+                            <span className="text-white font-mono font-bold">{active.tokenization?.ticker}</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-zinc-500">Amount</span>
+                            <span className="text-white font-mono">{txTokens.toLocaleString()} tokens</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-zinc-500">Slot</span>
+                            <span className="text-white font-mono">{active.label} · {active.operator}</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-zinc-500">Yield rate</span>
+                            <span className="text-emerald-400 font-mono">{active.tokenization?.leaseYield}</span>
+                          </div>
+                        </div>
+                        <p className="text-zinc-600 text-xs leading-relaxed mb-3">
+                          {active.tokenization?.what}
+                        </p>
+                        <div className="flex gap-3">
+                          <a href={`https://explorer.solana.com/tx/${txSig}?cluster=devnet`}
+                            target="_blank" rel="noopener noreferrer"
+                            className="text-zinc-500 text-xs hover:text-white transition-colors">
+                            Solana Explorer →
+                          </a>
+                          <Link href="/portfolio" className="text-emerald-400 text-xs hover:text-emerald-300 transition-colors">
+                            View in portfolio →
+                          </Link>
+                        </div>
                       </div>
                     ) : (
                       <>
-                        {connected && (
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="text-zinc-500 text-xs shrink-0">$</span>
-                            <input type="number" min={50} value={investAmount}
-                              onChange={(e) => setInvestAmount(e.target.value)}
-                              className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm font-mono focus:outline-none focus:border-zinc-500" />
-                            <span className="text-zinc-600 text-xs shrink-0">
-                              {Math.floor(Number(investAmount) / parseFloat(active.tokenization.tokenPrice.replace(/[^0-9.]/g, "")))} tokens
-                            </span>
-                          </div>
-                        )}
+                        {connected && (() => {
+                          const FEE_BUFFER = 0.005; // reserve for tx fee + position rent
+                          const maxInvest = solBalance !== null ? Math.max(0, solBalance - FEE_BUFFER) : null;
+                          const solAmt = Number(investAmount);
+                          const tooLow = solBalance !== null && solAmt > (solBalance - FEE_BUFFER);
+                          const tokenEst = Math.max(1, Math.floor(solAmt / parseFloat(active.tokenization.tokenPrice.replace(/[^0-9.]/g, "") || "1")));
+                          return (
+                            <div className="mb-3">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-zinc-500 text-xs">Amount</span>
+                                <div className="flex items-center gap-2">
+                                  {solBalance !== null && (
+                                    <span className="text-zinc-600 text-xs font-mono">
+                                      Balance: <span className="text-zinc-400">{solBalance.toFixed(3)} SOL</span>
+                                    </span>
+                                  )}
+                                  {maxInvest !== null && maxInvest > 0 && (
+                                    <button
+                                      onClick={() => setInvestAmount(maxInvest.toFixed(3))}
+                                      className="text-zinc-600 text-xs font-mono hover:text-zinc-300 transition-colors border border-zinc-800 px-1.5 py-0.5 rounded"
+                                    >
+                                      Max
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-zinc-500 text-xs shrink-0">SOL</span>
+                                <input type="number" min={0.001} step={0.001} value={investAmount}
+                                  onChange={(e) => setInvestAmount(e.target.value)}
+                                  className={`flex-1 bg-zinc-900 border rounded-lg px-3 py-2 text-white text-sm font-mono focus:outline-none transition-colors ${tooLow ? "border-red-700 focus:border-red-500" : "border-zinc-700 focus:border-zinc-500"}`} />
+                                <span className="text-zinc-600 text-xs shrink-0 font-mono">
+                                  {tokenEst} {active.tokenization.ticker}
+                                </span>
+                              </div>
+                              {tooLow && (
+                                <p className="text-red-400 text-xs mt-1.5 font-mono">
+                                  Insufficient balance. Max: {maxInvest?.toFixed(3)} SOL (keeping {FEE_BUFFER} for fees)
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })()}
                         <button onClick={connected ? handleBuy : () => setVisible(true)}
-                          disabled={txStatus === "sending"}
+                          disabled={txStatus === "sending" || (connected && solBalance !== null && Number(investAmount) > solBalance - 0.005)}
                           className="w-full py-2.5 bg-white text-black rounded-lg text-sm font-bold hover:bg-zinc-200 transition-colors disabled:opacity-50">
                           {txStatus === "sending" ? "Sending…" : connected ? "Confirm on devnet →" : "Connect wallet to invest →"}
                         </button>
                         {connected && (
                           <p className="text-zinc-700 text-xs text-center mt-2 font-mono">
-                            {publicKey?.toBase58().slice(0, 8)}…{publicKey?.toBase58().slice(-6)} · devnet · 0.001 SOL fee
+                            {publicKey?.toBase58().slice(0, 8)}…{publicKey?.toBase58().slice(-6)} · devnet
                           </p>
                         )}
                         {txStatus === "error" && (
-                          <p className="text-red-400 text-xs text-center mt-2">Transaction failed. Check your devnet SOL balance.</p>
+                          <p className="text-red-400 text-xs text-center mt-2">{txError}</p>
                         )}
                       </>
                     )}
@@ -334,7 +524,7 @@ export default function OrbitalClient() {
           ) : (
             <div className="border border-zinc-800 rounded-xl p-6 bg-zinc-900/10 flex items-center justify-center min-h-48">
               <p className="text-zinc-600 text-sm text-center">
-                Click or hover a slot on the ring<br />to view details
+                Click a slot on the ring or list<br />to view details
               </p>
             </div>
           )}
@@ -355,8 +545,6 @@ export default function OrbitalClient() {
               {filtered.map((slot) => (
                 <button key={slot.id}
                   onClick={() => setSelected(selected?.id === slot.id ? null : slot)}
-                  onMouseEnter={() => setHovered(slot)}
-                  onMouseLeave={() => setHovered(null)}
                   className={`w-full text-left border rounded-lg px-3 py-2.5 transition-colors group ${
                     selected?.id === slot.id
                       ? "border-zinc-600 bg-zinc-900/30"

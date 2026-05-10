@@ -2,55 +2,56 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { companies, verticalLabels } from "@/data/companies";
-import { narratives } from "@/data/narratives";
 import { slots } from "@/data/orbital-slots";
+import { stocks } from "@/data/stocks";
 
 type Result = {
-  type: "company" | "narrative" | "vertical" | "slot";
+  type: "slot" | "stock" | "page";
   label: string;
   sub: string;
   href: string;
 };
 
 const typeColors: Record<Result["type"], string> = {
-  company: "text-violet-400",
-  narrative: "text-emerald-400",
-  vertical: "text-amber-400",
   slot: "text-sky-400",
+  stock: "text-emerald-400",
+  page: "text-zinc-500",
 };
 
 const typeLabels: Record<Result["type"], string> = {
-  company: "Company",
-  narrative: "Narrative",
-  vertical: "Vertical",
   slot: "Orbital",
+  stock: "Stock",
+  page: "Page",
 };
+
+const pages = [
+  { label: "Orbital Slots", sub: "Browse and invest in tokenized GEO slots", href: "/orbital" },
+  { label: "Portfolio", sub: "View positions and claim yield", href: "/portfolio" },
+  { label: "Space Markets", sub: "Live prices for satellite companies", href: "/stocks" },
+  { label: "Docs", sub: "Technical reference", href: "/docs" },
+  { label: "About Clarke", sub: "How it works and why", href: "/about" },
+  { label: "List a Slot", sub: "Operators: raise capital against your slot", href: "/orbital/list" },
+];
 
 function search(q: string): Result[] {
   if (!q.trim()) return [];
   const lq = q.toLowerCase();
 
   return [
-    ...companies
-      .filter((c) => c.name.toLowerCase().includes(lq) || c.description.toLowerCase().includes(lq))
-      .slice(0, 5)
-      .map((c) => ({ type: "company" as const, label: c.name, sub: c.description, href: `/companies/${c.slug}` })),
-
     ...slots
       .filter((s) => s.label.toLowerCase().includes(lq) || s.operator.toLowerCase().includes(lq) || s.country.toLowerCase().includes(lq))
-      .slice(0, 3)
-      .map((s) => ({ type: "slot" as const, label: s.label, sub: `${s.operator} · ${s.valueEstimate}`, href: `/orbital` })),
+      .slice(0, 4)
+      .map((s) => ({ type: "slot" as const, label: s.label, sub: `${s.operator} · ${s.valueEstimate}`, href: "/orbital" })),
 
-    ...narratives
-      .filter((n) => n.title.toLowerCase().includes(lq) || n.tagline.toLowerCase().includes(lq))
-      .slice(0, 3)
-      .map((n) => ({ type: "narrative" as const, label: n.title, sub: n.tagline, href: `/docs` })),
+    ...stocks
+      .filter((s) => s.ticker.toLowerCase().includes(lq) || s.name.toLowerCase().includes(lq))
+      .slice(0, 4)
+      .map((s) => ({ type: "stock" as const, label: s.ticker, sub: s.name, href: "/stocks" })),
 
-    ...Object.entries(verticalLabels)
-      .filter(([, label]) => label.toLowerCase().includes(lq))
+    ...pages
+      .filter((p) => p.label.toLowerCase().includes(lq) || p.sub.toLowerCase().includes(lq))
       .slice(0, 3)
-      .map(([key, label]) => ({ type: "vertical" as const, label, sub: `${companies.filter(c => c.vertical === key).length} companies`, href: `/companies?vertical=${key}` })),
+      .map((p) => ({ type: "page" as const, ...p })),
   ].slice(0, 12);
 }
 
@@ -93,7 +94,7 @@ export default function SearchPalette({ onClose }: { onClose: () => void }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search companies, narratives, verticals..."
+            placeholder="Search slots, stocks, pages..."
             className="flex-1 bg-transparent text-white text-sm placeholder-zinc-600 focus:outline-none"
           />
           <kbd className="text-xs text-zinc-600 bg-zinc-800 px-1.5 py-0.5 rounded font-mono">ESC</kbd>
@@ -115,7 +116,7 @@ export default function SearchPalette({ onClose }: { onClose: () => void }) {
         )}
 
         {query && results.length === 0 && <div className="py-10 text-center text-zinc-600 text-sm">No results for "{query}"</div>}
-        {!query && <div className="py-6 text-center text-zinc-700 text-xs">Search companies, narratives, and verticals</div>}
+        {!query && <div className="py-6 text-center text-zinc-700 text-xs">Search orbital slots, stocks, and pages</div>}
       </div>
     </div>
   );

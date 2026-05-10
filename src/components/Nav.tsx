@@ -5,19 +5,26 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
+
+// Always use the public devnet faucet for airdrops — RPC providers like Helius block requestAirdrop
+const FAUCET_CONNECTION = new Connection("https://api.devnet.solana.com", "confirmed");
 
 const SearchPalette = dynamic(() => import("./SearchPalette"), { ssr: false });
+const WalletMultiButton = dynamic(
+  () => import("@solana/wallet-adapter-react-ui").then((m) => m.WalletMultiButton),
+  { ssr: false }
+);
 
 const primaryLinks = [
   { href: "/orbital", label: "Orbital Slots" },
-  { href: "/companies", label: "Companies" },
+  { href: "/portfolio", label: "Portfolio" },
   { href: "/stocks", label: "Stocks" },
-  { href: "/investors", label: "Investors" },
 ];
 
 const moreLinks = [
-  { href: "/events", label: "Events" },
-  { href: "/api-docs", label: "API" },
+  { href: "/operator", label: "Operator" },
   { href: "/docs", label: "Docs" },
   { href: "/about", label: "About" },
 ];
@@ -29,9 +36,28 @@ export default function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [airdropping, setAirdropping] = useState(false);
+  const [airdropFailed, setAirdropFailed] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
+  const { connected, publicKey } = useWallet();
+
+  async function handleAirdrop() {
+    if (!publicKey || airdropping) return;
+    setAirdropping(true);
+    setAirdropFailed(false);
+    try {
+      const sig = await FAUCET_CONNECTION.requestAirdrop(publicKey, 2 * LAMPORTS_PER_SOL);
+      await FAUCET_CONNECTION.confirmTransaction(sig, "confirmed");
+    } catch (e) {
+      console.error("Airdrop failed:", e);
+      setAirdropFailed(true);
+    } finally {
+      setAirdropping(false);
+    }
+  }
 
   useEffect(() => { setMobileOpen(false); setMoreOpen(false); }, [pathname]);
+  useEffect(() => { setAirdropFailed(false); }, [publicKey]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -57,7 +83,7 @@ export default function Nav() {
       <header className="border-b border-white/[0.05] bg-[#060608]/95 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <Image src="/logo.png" alt="Clarke" width={32} height={32} />
+            <Image src="/logo.svg" alt="Clarke" width={32} height={32} />
             <div className="flex flex-col">
               <span className="text-white font-bold text-base tracking-[0.15em] leading-none">CLARKE</span>
               <span className="text-white/20 text-[10px] tracking-widest uppercase hidden sm:block leading-none mt-0.5 font-mono">Space Infrastructure</span>
@@ -94,14 +120,50 @@ export default function Nav() {
 
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.03] border border-white/[0.07] rounded-sm text-white/30 hover:text-white/70 hover:border-white/15 transition-colors">
+              className="flex items-center gap-2 px-3 py-2 sm:py-1.5 bg-white/[0.03] border border-white/[0.07] rounded-sm text-white/30 hover:text-white/70 hover:border-white/15 transition-colors">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <span className="hidden sm:block text-xs">Search</span>
               <kbd className="hidden sm:block text-xs bg-zinc-800 px-1 py-0.5 rounded font-mono">⌘K</kbd>
             </button>
-            <button onClick={() => setMobileOpen((o) => !o)} className="lg:hidden p-2 text-zinc-400 hover:text-white transition-colors">
+
+            {connected && (
+              airdropFailed ? (
+                <a
+                  href="https://faucet.solana.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Devnet faucet rate-limited — get SOL at faucet.solana.com"
+                  className="hidden sm:flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 bg-red-500/10 border border-red-500/20
+                             text-red-400 text-xs rounded-sm hover:bg-red-500/20 transition-colors"
+                >
+                  Rate limited · faucet.solana.com ↗
+                </a>
+              ) : (
+                <button
+                  onClick={handleAirdrop}
+                  disabled={airdropping}
+                  title="Airdrop 2 devnet SOL"
+                  className="hidden sm:flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 bg-emerald-500/10 border border-emerald-500/20
+                             text-emerald-400 text-xs rounded-sm hover:bg-emerald-500/20 transition-colors disabled:opacity-40"
+                >
+                  {airdropping ? "…" : "⬇ SOL"}
+                </button>
+              )
+            )}
+
+            <WalletMultiButton style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "2px",
+              fontSize: "12px",
+              height: "32px",
+              padding: "0 12px",
+              color: "rgba(255,255,255,0.5)",
+            }} />
+
+            <button onClick={() => setMobileOpen((o) => !o)} className="lg:hidden p-2.5 sm:p-2 text-zinc-400 hover:text-white transition-colors">
               {mobileOpen
                 ? <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>}

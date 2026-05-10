@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" width="900" height="520" font-family="'Courier New', monospace">
+
+  <!-- Background -->
+  <rect width="900" height="520" fill="#09090b"/>
+
+  <!-- Title -->
+  <text x="450" y="44" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold" letter-spacing="4" opacity="0.3">HOW CLARKE WORKS</text>
+
+  <!-- ─── ACTOR BOXES ─── -->
+
+  <!-- Operator box -->
+  <rect x="40" y="90" width="180" height="100" rx="12" fill="#111113" stroke="#27272a" stroke-width="1.5"/>
+  <text x="130" y="126" text-anchor="middle" fill="#a1a1aa" font-size="9" letter-spacing="3">OPERATOR</text>
+  <text x="130" y="150" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">Satellite</text>
+  <text x="130" y="168" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">Operator</text>
+
+  <!-- Clarke box (center) -->
+  <rect x="360" y="70" width="180" height="140" rx="12" fill="#0f0f12" stroke="#3f3f46" stroke-width="1.5"/>
+  <text x="450" y="106" text-anchor="middle" fill="#a1a1aa" font-size="9" letter-spacing="3">PROTOCOL</text>
+  <text x="450" y="132" text-anchor="middle" fill="#ffffff" font-size="16" font-weight="bold">Clarke</text>
+  <rect x="390" y="145" width="120" height="22" rx="6" fill="#18181b" stroke="#27272a" stroke-width="1"/>
+  <text x="450" y="160" text-anchor="middle" fill="#52525b" font-size="9" letter-spacing="2">SOLANA DEVNET</text>
+
+  <!-- Investor box -->
+  <rect x="680" y="90" width="180" height="100" rx="12" fill="#111113" stroke="#27272a" stroke-width="1.5"/>
+  <text x="770" y="126" text-anchor="middle" fill="#a1a1aa" font-size="9" letter-spacing="3">INVESTOR</text>
+  <text x="770" y="150" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">Solana</text>
+  <text x="770" y="168" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">Wallet</text>
+
+  <!-- ─── FLOW ARROWS (top row: left to right) ─── -->
+
+  <!-- 1. Operator → Clarke: submit slot -->
+  <line x1="222" y1="130" x2="358" y2="130" stroke="#3f3f46" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="358,125 370,130 358,135" fill="#3f3f46"/>
+  <rect x="240" y="108" width="102" height="26" rx="5" fill="#09090b"/>
+  <text x="291" y="123" text-anchor="middle" fill="#71717a" font-size="10">Submit slot +</text>
+  <text x="291" y="136" text-anchor="middle" fill="#71717a" font-size="10">lease contract</text>
+
+  <!-- 2. Clarke → Investor: issue yield shares -->
+  <line x1="542" y1="120" x2="678" y2="120" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="678,115 690,120 678,125" fill="#22c55e"/>
+  <rect x="548" y="100" width="120" height="26" rx="5" fill="#09090b"/>
+  <text x="608" y="115" text-anchor="middle" fill="#22c55e" font-size="10">Issue yield</text>
+  <text x="608" y="128" text-anchor="middle" fill="#22c55e" font-size="10">shares on-chain</text>
+
+  <!-- ─── BOTTOM SECTION: Quarterly flow ─── -->
+
+  <!-- Divider -->
+  <line x1="60" y1="270" x2="840" y2="270" stroke="#1c1c1f" stroke-width="1"/>
+  <text x="450" y="263" text-anchor="middle" fill="#3f3f46" font-size="9" letter-spacing="3">QUARTERLY CYCLE</text>
+
+  <!-- Lease Revenue box (left) -->
+  <rect x="40" y="295" width="180" height="90" rx="12" fill="#111113" stroke="#27272a" stroke-width="1.5"/>
+  <text x="130" y="326" text-anchor="middle" fill="#a1a1aa" font-size="9" letter-spacing="2">REVENUE SOURCE</text>
+  <text x="130" y="350" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">Transponder</text>
+  <text x="130" y="368" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">Lease Payments</text>
+
+  <!-- On-chain pool box (center) -->
+  <rect x="360" y="285" width="180" height="110" rx="12" fill="#0f0f12" stroke="#3f3f46" stroke-width="1.5"/>
+  <text x="450" y="316" text-anchor="middle" fill="#a1a1aa" font-size="9" letter-spacing="2">ON-CHAIN POOL</text>
+  <text x="450" y="342" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">Yield Pool</text>
+  <text x="450" y="363" text-anchor="middle" fill="#22c55e" font-size="11">5 – 9% annual</text>
+  <text x="450" y="380" text-anchor="middle" fill="#52525b" font-size="9">per slot value</text>
+
+  <!-- Wallet payout box (right) -->
+  <rect x="680" y="295" width="180" height="90" rx="12" fill="#111113" stroke="#27272a" stroke-width="1.5"/>
+  <text x="770" y="326" text-anchor="middle" fill="#a1a1aa" font-size="9" letter-spacing="2">PAYOUT</text>
+  <text x="770" y="350" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">Claim Yield</text>
+  <text x="770" y="368" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">Each Quarter</text>
+
+  <!-- Arrow: Lease → Pool -->
+  <line x1="222" y1="340" x2="358" y2="340" stroke="#3f3f46" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="358,335 370,340 358,345" fill="#3f3f46"/>
+
+  <!-- Arrow: Pool → Wallet (yield) -->
+  <line x1="542" y1="340" x2="678" y2="340" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="678,335 690,340 678,345" fill="#22c55e"/>
+  <text x="610" y="333" text-anchor="middle" fill="#22c55e" font-size="10">SOL to wallet</text>
+
+  <!-- ─── INVESTOR BUY ARROW (downward from investor box to pool) ─── -->
+  <!-- Vertical line from investor box down, then across -->
+  <path d="M770 192 L770 248 L608 248 L608 283" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="603,283 608,295 613,283" fill="#818cf8"/>
+  <rect x="648" y="232" width="106" height="22" rx="5" fill="#09090b"/>
+  <text x="701" y="247" text-anchor="middle" fill="#818cf8" font-size="10">Buy shares with SOL</text>
+
+  <!-- ─── LEGEND ─── -->
+  <rect x="40" y="430" width="820" height="60" rx="10" fill="#111113" stroke="#1c1c1f" stroke-width="1"/>
+
+  <line x1="70" y1="460" x2="100" y2="460" stroke="#3f3f46" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="110" y="464" fill="#71717a" font-size="10">Submission / verification</text>
+
+  <line x1="270" y1="460" x2="300" y2="460" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="310" y="464" fill="#818cf8" font-size="10">Investment flow (SOL in)</text>
+
+  <line x1="490" y1="460" x2="520" y2="460" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="530" y="464" fill="#22c55e" font-size="10">Yield flow (SOL out, quarterly)</text>
+
+</svg>

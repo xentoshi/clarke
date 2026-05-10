@@ -1,0 +1,496 @@
+{
+  "version": "0.1.0",
+  "name": "clarke_program",
+  "instructions": [
+    {
+      "name": "initialize",
+      "docs": [
+        "One-time initialization. Sets the program-wide admin authority.",
+        "Will fail if called a second time (init ensures the PDA can only be",
+        "created once)."
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "transferAuthority",
+      "docs": [
+        "Admin transfers the program authority to a new address."
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "newAdmin",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "createOffering",
+      "docs": [
+        "Admin creates a tokenized offering for an orbital slot.",
+        "Gated by the global ProgramAuthority — no other wallet can call this."
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Verified against the global ProgramAuthority — only the admin can create offerings."
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "offering",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "slotId",
+          "type": "string"
+        },
+        {
+          "name": "longitudeX10",
+          "type": "i32"
+        },
+        {
+          "name": "ituRef",
+          "type": "string"
+        },
+        {
+          "name": "totalTokens",
+          "type": "u64"
+        },
+        {
+          "name": "tokenPriceLamports",
+          "type": "u64"
+        },
+        {
+          "name": "yieldShareBps",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "invest",
+      "docs": [
+        "Investor buys tokens. SOL goes directly to the operator treasury."
+      ],
+      "accounts": [
+        {
+          "name": "investor",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "offering",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treasury",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "position",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "tokenAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "distributeYield",
+      "docs": [
+        "Admin deposits transponder lease revenue into the offering PDA.",
+        "The yield_share_bps portion accumulates for token holders to claim."
+      ],
+      "accounts": [
+        {
+          "name": "distributor",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "offering",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "claimYield",
+      "docs": [
+        "Investor claims their accumulated yield from the offering PDA."
+      ],
+      "accounts": [
+        {
+          "name": "investor",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "offering",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "position",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "setOfferingStatus",
+      "docs": [
+        "Admin pauses or closes an offering."
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "offering",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "status",
+          "type": {
+            "defined": "OfferingStatus"
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ProgramAuthority",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SlotOffering",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "publicKey"
+          },
+          {
+            "name": "treasury",
+            "type": "publicKey"
+          },
+          {
+            "name": "slotId",
+            "type": "string"
+          },
+          {
+            "name": "longitudeX10",
+            "type": "i32"
+          },
+          {
+            "name": "ituRef",
+            "type": "string"
+          },
+          {
+            "name": "totalTokens",
+            "type": "u64"
+          },
+          {
+            "name": "tokenPriceLamports",
+            "type": "u64"
+          },
+          {
+            "name": "soldTokens",
+            "type": "u64"
+          },
+          {
+            "name": "yieldShareBps",
+            "type": "u16"
+          },
+          {
+            "name": "yieldPerTokenAcc",
+            "type": "u128"
+          },
+          {
+            "name": "totalYieldDistributed",
+            "type": "u64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": "OfferingStatus"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InvestorPosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "investor",
+            "type": "publicKey"
+          },
+          {
+            "name": "offering",
+            "type": "publicKey"
+          },
+          {
+            "name": "tokens",
+            "type": "u64"
+          },
+          {
+            "name": "investedLamports",
+            "type": "u64"
+          },
+          {
+            "name": "yieldDebt",
+            "type": "u128"
+          },
+          {
+            "name": "yieldClaimable",
+            "type": "u64"
+          },
+          {
+            "name": "yieldClaimed",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "OfferingStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Paused"
+          },
+          {
+            "name": "Closed"
+          }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "InvestEvent",
+      "fields": [
+        {
+          "name": "investor",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "slotId",
+          "type": "string",
+          "index": false
+        },
+        {
+          "name": "tokens",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "lamports",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "YieldDistributedEvent",
+      "fields": [
+        {
+          "name": "slotId",
+          "type": "string",
+          "index": false
+        },
+        {
+          "name": "amount",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "YieldClaimedEvent",
+      "fields": [
+        {
+          "name": "investor",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "slotId",
+          "type": "string",
+          "index": false
+        },
+        {
+          "name": "amount",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidAmount",
+      "msg": "Amount must be greater than zero"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidBps",
+      "msg": "Basis points must be <= 10,000"
+    },
+    {
+      "code": 6002,
+      "name": "OfferingNotActive",
+      "msg": "This offering is not active"
+    },
+    {
+      "code": 6003,
+      "name": "SoldOut",
+      "msg": "All tokens have been sold"
+    },
+    {
+      "code": 6004,
+      "name": "NoTokensSold",
+      "msg": "No tokens have been sold yet"
+    },
+    {
+      "code": 6005,
+      "name": "NoYieldAvailable",
+      "msg": "No yield available to claim"
+    },
+    {
+      "code": 6006,
+      "name": "InsufficientYieldBalance",
+      "msg": "Yield vault balance insufficient — would drain below rent-exempt minimum"
+    },
+    {
+      "code": 6007,
+      "name": "WrongTreasury",
+      "msg": "Treasury does not match the offering"
+    },
+    {
+      "code": 6008,
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
+    },
+    {
+      "code": 6009,
+      "name": "StringTooLong",
+      "msg": "String too long"
+    },
+    {
+      "code": 6010,
+      "name": "Overflow",
+      "msg": "Arithmetic overflow"
+    }
+  ]
+}

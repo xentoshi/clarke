@@ -11,7 +11,7 @@ export function buildMeta({
   description: string;
   tag?: string;
 }): Metadata {
-  const fullTitle = `${title} Clarke`;
+  const fullTitle = `${title} · Clarke`;
   const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(title)}&sub=${encodeURIComponent(description)}&tag=${encodeURIComponent(tag)}`;
 
   return {

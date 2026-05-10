@@ -40,3 +40,16 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 subscribers.json
+
+# Anchor — contains API keys and absolute wallet paths
+Anchor.toml
+
+# Claude Code project data
+.claude/
+
+# Solana build artifacts
+target/
+.anchor/
+
+# Cargo lockfile is pinned for the toolchain workaround — commit it
+# Cargo.lock  <- intentionally tracked

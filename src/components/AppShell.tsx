@@ -1,5 +1,4 @@
 import Nav from "@/components/Nav";
-import Ticker from "@/components/Ticker";
 import Link from "next/link";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -20,7 +19,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* All content sits above the fixed images */}
       <div className="relative z-10 flex flex-col min-h-screen">
-        <Ticker />
         <Nav />
         <main className="flex-1">{children}</main>
 

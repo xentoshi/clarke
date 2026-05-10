@@ -41,7 +41,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "Astra 1N",
     coverage: ["Europe", "North Africa"],
     valueEstimate: "$400M+",
-    description: "Most valuable GEO slot in Europe. Serves Sky Deutschland, Sky UK uplink, and 120M+ homes. Anchor of European direct-to-home broadcasting.",
+    description: "Most heavily loaded orbital position in Europe. Serves enterprise data networks, government relay links, and broadband connectivity across Europe and North Africa. One of the highest-revenue Ku-band positions in the world.",
     launched: 1988,
     tokenization: {
       status: "listed",
@@ -53,7 +53,7 @@ export const slots: OrbitalSlot[] = [
       leaseYield: "6.2% APY",
       availableTokens: 312000,
       soldTokens: 688000,
-      what: "Each $ASTRA19 token represents a fractional claim on transponder lease revenue from the 19.2°E geostationary orbital position, operated by SES and home to Astra 1N. Sky Deutschland, Sky UK, and 120M+ European homes receive their satellite TV signal through this slot.",
+      what: "Each $ASTRA19 token represents a fractional claim on transponder lease revenue from the 19.2°E geostationary orbital position, operated by SES. One of the highest-traffic Ku/Ka positions in Europe, carrying enterprise data, government relay, and broadband connectivity across Europe and North Africa under long-term fixed contracts.",
     },
   },
   {
@@ -67,7 +67,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "Astra 2E",
     coverage: ["UK", "Ireland", "Europe"],
     valueEstimate: "$300M+",
-    description: "Primary slot for Sky UK. Serves 11M+ Sky subscribers. Losing this slot would effectively destroy British satellite broadcasting.",
+    description: "UK and Ireland's primary fixed satellite position. Serves maritime communications across the North Atlantic, UK government and defense relay links, and enterprise connectivity for the British Isles. Operators here have held continuous contracts since the early 1990s.",
     launched: 1993,
     tokenization: {
       status: "listed",
@@ -79,7 +79,7 @@ export const slots: OrbitalSlot[] = [
       leaseYield: "5.9% APY",
       availableTokens: 750000,
       soldTokens: 0,
-      what: "Each $SES28 token represents a fractional claim on transponder lease revenue from the 28.2°E orbital position, the primary slot for Sky UK. 11M+ Sky subscribers receive their signal exclusively through this position. There is no viable alternative orbital position for Sky's coverage footprint.",
+      what: "Each $SES28 token represents a fractional claim on transponder lease revenue from the 28.2°E orbital position, operated by SES. The primary fixed satellite position for the UK and Ireland, carrying government relay, maritime comms across the North Atlantic, and enterprise data links under contracts that have run continuously since the early 1990s.",
     },
   },
   {
@@ -93,7 +93,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "Eutelsat 13B",
     coverage: ["Europe", "Middle East", "Africa"],
     valueEstimate: "$250M+",
-    description: "Hot Bird platform. Major European DTH slot serving 6,900+ TV channels. Dominant position for Eastern European and Middle Eastern broadcasting.",
+    description: "Major European hub covering Europe, Middle East, and Africa. Primary relay point for government networks, enterprise data distribution, and connectivity into Sub-Saharan Africa. One of the busiest positions in the eastern hemisphere.",
     launched: 1995,
   },
   {
@@ -107,7 +107,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "SES-1",
     coverage: ["North America", "Caribbean"],
     valueEstimate: "$350M+",
-    description: "Premium North American slot. Serves major US cable operators and broadcasters. C-band capacity supports legacy infrastructure nationwide.",
+    description: "Premium North American C/Ku position. C-band capacity underpins financial data distribution, enterprise networks, and rural broadband across the continental US. Ku-band serves aviation and maritime operators across the Gulf of Mexico.",
     launched: 2010,
     tokenization: {
       status: "listed",
@@ -119,7 +119,7 @@ export const slots: OrbitalSlot[] = [
       leaseYield: "5.8% APY",
       availableTokens: 390000,
       soldTokens: 110000,
-      what: "Each $SATMEX101 token represents a fractional claim on transponder lease revenue from the 101°W orbital position over North America, operated by SES. C-band and Ku-band capacity serves major US cable operators and broadcasters across the continental United States and Caribbean.",
+      what: "Each $SATMEX101 token represents a fractional claim on transponder lease revenue from the 101°W orbital position over North America, operated by SES. C-band capacity carries enterprise data networks and financial distribution infrastructure; Ku-band serves aviation and maritime connectivity across the Gulf of Mexico and Caribbean under long-term fixed contracts.",
     },
   },
   {
@@ -133,7 +133,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "EchoStar 14",
     coverage: ["North America"],
     valueEstimate: "$280M+",
-    description: "Core Dish Network DTH slot. Serves millions of US satellite TV subscribers. One of the most congested orbital positions in the western hemisphere.",
+    description: "Western US and Pacific coverage. Serves enterprise broadband, emergency response communications, and connectivity for remote communities in Alaska, Hawaii, and the US Pacific territories. One of the most congested arcs in the western hemisphere.",
     launched: 1999,
   },
   {
@@ -161,7 +161,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "Intelsat 34",
     coverage: ["South America", "Caribbean"],
     valueEstimate: "$220M+",
-    description: "Dominant Brazilian market slot. Covers all of South America. Essential for Brazilian pay-TV infrastructure serving 200M+ people.",
+    description: "South American backbone position. C-band serves oil and gas platforms off the Brazilian coast, maritime operations across the South Atlantic, and enterprise networks spanning the continent. No fiber alternative exists for most of its coverage footprint.",
     launched: 2015,
   },
   {
@@ -175,7 +175,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "Türksat 4A",
     coverage: ["Turkey", "Europe", "Middle East", "Central Asia"],
     valueEstimate: "$180M+",
-    description: "Strategic Turkish state slot covering a vast arc from Europe to Central Asia. Government-controlled, used for national broadcasting and defense.",
+    description: "Turkish state-controlled slot spanning Europe to Central Asia. Primary link for government and defense communications, maritime operations in the Black Sea and Caspian Sea, and enterprise connectivity across the landlocked Central Asian republics.",
     launched: 2014,
   },
   {
@@ -203,7 +203,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "N-SAT-110",
     coverage: ["Japan", "East Asia"],
     valueEstimate: "$200M+",
-    description: "Primary Japanese DTH slot. Backbone of Sky PerfecTV! serving 3.4M subscribers. One of Asia's most valuable fixed satellite positions.",
+    description: "Japan and East Asia Ku-band position. Serves maritime communications across the North Pacific shipping lanes, government and defense relay links, and enterprise connectivity for Japan's remote island territories. One of Asia's most valuable fixed satellite positions.",
     launched: 2000,
   },
   {
@@ -217,7 +217,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "Optus D2",
     coverage: ["Australia", "New Zealand", "Pacific Islands"],
     valueEstimate: "$150M+",
-    description: "Primary Australian broadcasting slot. Serves Foxtel and regional Pacific operators. Covers one of the most geographically isolated satellite markets.",
+    description: "Australia and Pacific Islands primary satellite position. Serves maritime routes across the South Pacific, emergency response communications, government relay, and broadband for remote communities with no fiber alternative across one of the most geographically isolated regions on Earth.",
     launched: 2007,
   },
   {
@@ -231,7 +231,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "Eutelsat 36B",
     coverage: ["Russia", "Africa", "Middle East"],
     valueEstimate: "$170M+",
-    description: "Major Russian and African coverage slot. Serves NTV-Plus Russian platform. Strategic position over Eastern Europe and Sub-Saharan Africa.",
+    description: "Covers Russia and Sub-Saharan Africa. Serves government and defense relay across Siberia and Central Russia, oil and gas connectivity for Russian energy infrastructure, and enterprise networks across East Africa where terrestrial alternatives are limited.",
     launched: 2009,
   },
   {
@@ -245,7 +245,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "Measat 3b",
     coverage: ["Southeast Asia", "South Asia", "Middle East"],
     valueEstimate: "$140M+",
-    description: "Strategic Southeast Asian slot. ASTRO Malaysia's primary broadcasting position. Covers the densest population corridor on Earth.",
+    description: "Southeast Asia and South Asia coverage. Serves maritime connectivity across the Bay of Bengal and Strait of Malacca — one of the world's busiest shipping corridors — alongside government networks and enterprise data links across the densest population corridor on Earth.",
     launched: 2006,
   },
   {
@@ -301,7 +301,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "INSAT 4A",
     coverage: ["South Asia", "Southeast Asia"],
     valueEstimate: "$160M+",
-    description: "Indian state-owned strategic slot. Covers 1.4 billion people. Used for DTH broadcasting (Tata Sky, Dish TV), weather monitoring, and government communications.",
+    description: "Indian state strategic position covering 1.4 billion people. Carries government communications, weather monitoring for the Indian Ocean region, rural broadband under national connectivity programs, and maritime relay for one of the world's busiest ocean trade routes.",
     launched: 2005,
   },
   {
@@ -329,7 +329,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "AsiaSat 5",
     coverage: ["Asia", "Middle East", "Australia"],
     valueEstimate: "$130M+",
-    description: "Pan-Asian coverage satellite. Owned by CITIC and General Electric Capital. Serves cable operators across 53 countries with C-band footprint.",
+    description: "Pan-Asian C-band position covering 53 countries. Serves enterprise data networks, government relay, and connectivity infrastructure across the Asia-Pacific region. C-band penetrates weather and terrain conditions where Ku-band cannot.",
     launched: 2009,
   },
   {
@@ -413,7 +413,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "Eutelsat 7C",
     coverage: ["Europe", "Africa", "Middle East"],
     valueEstimate: "$165M+",
-    description: "Major African broadcasting slot. Serves 10,000+ TV channels to Sub-Saharan Africa. Canal+ primary distribution point for French-speaking Africa.",
+    description: "Major African and Middle Eastern coverage slot. Serves maritime routes along the West African coast, oil and gas connectivity in the Gulf of Guinea, government networks, and enterprise broadband across francophone Africa where terrestrial infrastructure remains sparse.",
     launched: 2019,
   },
 ];

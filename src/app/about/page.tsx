@@ -14,9 +14,6 @@ export default function AboutPage() {
 
       {/* Hero */}
       <div className="mb-20">
-        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-8 leading-tight">
-          The infrastructure keeping the world connected generates $4.2B per year. None of it is on-chain.
-        </h1>
         <p className="text-zinc-400 text-lg leading-relaxed mb-4">
           Every container ship crossing an ocean, every commercial flight, every oil platform, every military operation in a remote location depends on geostationary orbital slots. Satellite operators like SES and Eutelsat hold these positions and charge annual lease fees to anyone who needs them. 15-year fixed contracts. The cash flows have been running since the 1980s.
         </p>
@@ -129,7 +126,7 @@ export default function AboutPage() {
             { q: "Why would an operator share their revenue?", a: "They get cash today instead of waiting 15 years. An operator with a $20M/year lease contract can raise a lump sum against those future payments. They use that capital now to fund a new satellite launch, expand operations, or reduce debt. The trade is simple: a share of future revenue in exchange for upfront capital." },
             { q: "What do I actually own?", a: "A token representing fractional economic rights to lease revenue from one specific orbital position. Not the satellite, not the government filing. The right to receive a share of what broadcasters pay to use that slot's transponders." },
             { q: "Who is paying the lease?", a: "Broadcasters. Sky, DirecTV, Canal+. They pay annual transponder fees under long-term fixed contracts. They have been paying the same operators for decades and have no practical alternative." },
-            { q: "Why can they not move to a different satellite?", a: "Their coverage depends on geography. A satellite at 19.2°E covers essentially all of Europe. Moving to a different longitude means re-pointing millions of customer dishes across the continent. It does not happen." },
+            { q: "Why can they not move to a different satellite?", a: "Their operations are built around a specific orbital position. Ships, aircraft, oil platforms, and ground stations are configured to point at a fixed longitude. Moving to a different slot means recoordinating ground infrastructure across dozens of countries, re-filing with the ITU, and rebuilding years of spectrum coordination agreements. It simply does not happen." },
             { q: "Is the yield guaranteed?", a: "No. The risk is operator default, satellite failure, or contract non-renewal. Clarke lists only operating slots with verified lease contracts. The risk profile is closer to real estate rental income than to equity or speculation." },
           ].map((item) => (
             <div key={item.q} className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/10">

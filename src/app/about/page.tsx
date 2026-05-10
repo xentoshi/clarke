@@ -56,9 +56,8 @@ export default function AboutPage() {
         <div className="grid grid-cols-2 gap-4 mb-6">
           {[
             { value: "~1,800", label: "GEO slots globally" },
-            { value: "$4.2B+", label: "Annual lease revenue" },
-            { value: "15yr",   label: "Avg. contract length" },
-            { value: "5–9%",   label: "Annual yield on value" },
+            { value: "$0",   label: "Currently on-chain" },
+            { value: "15yr", label: "Avg. contract length" },
           ].map((s) => (
             <div key={s.label} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
               <div className="text-2xl font-bold font-mono text-white mb-1">{s.value}</div>

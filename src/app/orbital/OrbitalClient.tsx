@@ -35,7 +35,7 @@ const statusDot: Record<SlotStatus, string> = {
 const faq = [
   {
     q: "How is yield calculated?",
-    a: "Satellite operators pay an annual lease fee to use an orbital position typically 5–9% of the slot's market value. That revenue is distributed pro-rata to token holders each quarter. At a $400M slot value with 6.2% yield, every $1,000 invested returns ~$62/year.",
+    a: "Satellite operators charge annual lease fees to use an orbital position. That revenue is distributed pro-rata to token holders each quarter based on the yield share percentage set when the offering is created. The displayed APY for each listing reflects the terms agreed with the operator.",
   },
   {
     q: "What is Ku-band vs Ka-band?",
@@ -179,7 +179,7 @@ export default function OrbitalClient() {
           { label: "GEO Slots Available", value: "~1,800" },
           { label: "Currently Active", value: "541" },
           { label: "Squatted / Filed", value: "45%" },
-          { label: "Est. Market Value", value: "$4.2B+" },
+          { label: "On-Chain Today", value: "$0" },
         ].map((s) => (
           <div key={s.label} className="border border-zinc-800 rounded-xl p-3 sm:p-4 bg-zinc-900/10">
             <div className="text-xl sm:text-2xl font-bold font-mono text-white mb-1">{s.value}</div>

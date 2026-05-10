@@ -7,7 +7,7 @@ import { buildMeta } from "@/lib/metadata";
 
 export const metadata: Metadata = buildMeta({
   title: "Clarke",
-  description: "Orbital slots generate $4.2B per year in lease revenue. Clarke puts that yield on Solana.",
+  description: "Geostationary orbital slots are the most defensible infrastructure in existence. Clarke puts fractional ownership on Solana.",
   tag: "RWA · Solana",
 });
 
@@ -23,8 +23,8 @@ export default function HomePage() {
           Every ship, flight, and oil rig<br className="hidden sm:block" /> depends on orbital slots.
         </h1>
         <p className="text-zinc-400 text-base sm:text-lg max-w-xl leading-relaxed mb-10">
-          Satellite operators earn $4.2B per year leasing geostationary orbital positions under long-term fixed contracts.
-          Clarke puts that yield on Solana.
+          Geostationary orbital positions are leased under long-term fixed contracts to the world's most critical infrastructure operators.
+          Clarke puts fractional ownership on Solana.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <Link href="/orbital"
@@ -42,7 +42,7 @@ export default function HomePage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.06] mb-24 rounded-xl overflow-hidden">
         {[
           { value: "~1,800", label: "GEO slots" },
-          { value: "$4.2B+", label: "Annual lease revenue" },
+          { value: "$0",     label: "Currently on-chain" },
           { value: "15yr",   label: "Avg. contract length" },
           { value: `${listedSlots}`,    label: "Listed on Clarke" },
         ].map((s) => (
@@ -78,10 +78,10 @@ export default function HomePage() {
         <h2 className="text-2xl sm:text-3xl font-bold text-white mb-12">Why it works.</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {[
-            { title: "Fixed supply", body: "There are ~1,800 GEO slots. No new ones can be created. Prime positions are fully occupied. Broadcasters have no alternative." },
-            { title: "Captive demand", body: "Sky TV has leased the same Astra slots since the 1990s. Moving to a different orbit means re-pointing millions of customer dishes. It does not happen." },
-            { title: "Contracted revenue", body: "These are not ad revenues or subscriptions. They are fixed-rate, 15-year transponder lease contracts. The cash flow is predictable by design." },
-            { title: "5–9% annual yield", body: "Operators charge 5–9% of slot value per year in lease fees. On a $400M slot that is $20–36M per year. Yield share holders receive their cut each quarter." },
+            { title: "Fixed supply", body: "There are ~1,800 GEO slots. No new ones can be created. The ITU allocates positions along a fixed arc — prime locations have been fully occupied for decades." },
+            { title: "Captive demand", body: "Ships, aircraft, oil platforms, and ground stations are built around specific orbital positions. Moving to a different slot means years of ITU recoordination. It does not happen." },
+            { title: "Contracted revenue", body: "These are not ad revenues or subscriptions. They are fixed-rate, long-term transponder lease contracts. The cash flow is predictable by design." },
+            { title: "No public market", body: "Every deal happens in private between a handful of operators. No price discovery. No retail access. No on-chain presence. Clarke changes that." },
           ].map((c) => (
             <div key={c.title} className="border border-zinc-800 rounded-xl p-6 bg-zinc-900/10">
               <div className="text-white font-semibold text-sm mb-3">{c.title}</div>

@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560" font-family="'Courier New', monospace">
+
+  <!-- Background -->
+  <rect width="960" height="560" fill="#09090b"/>
+
+  <!-- Zone separators -->
+  <line x1="255" y1="44" x2="255" y2="520" stroke="#1c1c1f" stroke-width="1"/>
+  <line x1="572" y1="44" x2="572" y2="520" stroke="#1c1c1f" stroke-width="1"/>
+
+  <!-- Zone labels -->
+  <text x="128" y="30" text-anchor="middle" fill="#3f3f46" font-size="9" letter-spacing="3">ALLOCATION CHAIN</text>
+  <text x="414" y="30" text-anchor="middle" fill="#3f3f46" font-size="9" letter-spacing="3">COMMERCIAL LAYER</text>
+  <text x="716" y="30" text-anchor="middle" fill="#3f3f46" font-size="9" letter-spacing="3">CLARKE LAYER</text>
+
+  <!-- ── BOX 1: ITU / UN ── -->
+  <rect x="28" y="52" width="200" height="72" rx="10" fill="#111113" stroke="#27272a" stroke-width="1.5"/>
+  <text x="128" y="82" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">ITU / UN</text>
+  <text x="128" y="100" text-anchor="middle" fill="#52525b" font-size="10">Coordinates global spectrum</text>
+  <text x="128" y="114" text-anchor="middle" fill="#52525b" font-size="10">Allocates orbital positions</text>
+
+  <!-- ── BOX 2: Member State ── -->
+  <rect x="28" y="210" width="200" height="72" rx="10" fill="#111113" stroke="#27272a" stroke-width="1.5"/>
+  <text x="128" y="240" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">Member State</text>
+  <text x="128" y="258" text-anchor="middle" fill="#52525b" font-size="10">e.g. Luxembourg, USA</text>
+  <text x="128" y="272" text-anchor="middle" fill="#52525b" font-size="10">Holds the ITU filing</text>
+
+  <!-- ── BOX 3: Satellite Operator ── -->
+  <rect x="284" y="140" width="200" height="80" rx="10" fill="#111113" stroke="#3f3f46" stroke-width="1.5"/>
+  <text x="384" y="172" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">Satellite Operator</text>
+  <text x="384" y="190" text-anchor="middle" fill="#52525b" font-size="10">SES, Eutelsat, Intelsat</text>
+  <text x="384" y="206" text-anchor="middle" fill="#52525b" font-size="10">Launches + operates satellite</text>
+
+  <!-- ── BOX 4: Transponder Tenant ── -->
+  <rect x="284" y="390" width="200" height="72" rx="10" fill="#111113" stroke="#27272a" stroke-width="1.5"/>
+  <text x="384" y="420" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">Transponder Tenant</text>
+  <text x="384" y="438" text-anchor="middle" fill="#52525b" font-size="10">Maritime, aviation, gov, telecom</text>
+  <text x="384" y="452" text-anchor="middle" fill="#52525b" font-size="10">Signs 10–15yr lease</text>
+
+  <!-- ── BOX 5: Clarke SPV ── -->
+  <rect x="600" y="52" width="200" height="72" rx="10" fill="#111113" stroke="#818cf8" stroke-width="1.5"/>
+  <text x="700" y="82" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">Clarke SPV</text>
+  <text x="700" y="100" text-anchor="middle" fill="#818cf8" font-size="10">Cayman Islands entity</text>
+  <text x="700" y="114" text-anchor="middle" fill="#818cf8" font-size="10">Holds revenue share right</text>
+
+  <!-- ── BOX 6: Solana Program ── -->
+  <rect x="600" y="220" width="200" height="72" rx="10" fill="#111113" stroke="#818cf8" stroke-width="1.5"/>
+  <text x="700" y="250" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">Solana Program</text>
+  <text x="700" y="268" text-anchor="middle" fill="#818cf8" font-size="10">On-chain yield vault</text>
+  <text x="700" y="282" text-anchor="middle" fill="#818cf8" font-size="10">clarke-program on devnet</text>
+
+  <!-- ── BOX 7: Investor ── -->
+  <rect x="600" y="390" width="200" height="72" rx="10" fill="#111113" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="700" y="420" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">Investor Wallet</text>
+  <text x="700" y="438" text-anchor="middle" fill="#22c55e" font-size="10">Holds yield tokens</text>
+  <text x="700" y="452" text-anchor="middle" fill="#22c55e" font-size="10">Claims SOL quarterly</text>
+
+  <!-- ── ARROW 1: ITU → State ── -->
+  <line x1="128" y1="124" x2="128" y2="208" stroke="#3f3f46" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="123,208 128,220 133,208" fill="#3f3f46"/>
+  <rect x="134" y="152" width="88" height="18" rx="4" fill="#09090b"/>
+  <text x="178" y="164" text-anchor="middle" fill="#52525b" font-size="9">Allocates position</text>
+
+  <!-- ── ARROW 2: State → Operator ── -->
+  <line x1="228" y1="246" x2="282" y2="195" stroke="#3f3f46" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="276,191 286,188 283,200" fill="#3f3f46"/>
+  <rect x="222" y="200" width="74" height="18" rx="4" fill="#09090b"/>
+  <text x="259" y="212" text-anchor="middle" fill="#52525b" font-size="9">Licenses slot</text>
+
+  <!-- ── ARROW 3: Tenant → Operator (money up, GREEN) ── -->
+  <line x1="384" y1="388" x2="384" y2="222" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="379,222 384,210 389,222" fill="#22c55e"/>
+  <rect x="392" y="290" width="126" height="18" rx="4" fill="#09090b"/>
+  <text x="455" y="302" text-anchor="middle" fill="#22c55e" font-size="9">Annual lease payments</text>
+
+  <!-- ── ARROW 4: Operator → SPV (PURPLE) ── -->
+  <line x1="484" y1="175" x2="598" y2="115" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="591,110 602,108 597,120" fill="#818cf8"/>
+  <rect x="496" y="122" width="108" height="18" rx="4" fill="#09090b"/>
+  <text x="550" y="134" text-anchor="middle" fill="#818cf8" font-size="9">Revenue share agreement</text>
+
+  <!-- ── ARROW 5: SPV → Solana ── -->
+  <line x1="700" y1="124" x2="700" y2="218" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="695,218 700,230 705,218" fill="#818cf8"/>
+  <rect x="708" y="162" width="96" height="18" rx="4" fill="#09090b"/>
+  <text x="756" y="174" text-anchor="middle" fill="#818cf8" font-size="9">Distributes on-chain</text>
+
+  <!-- ── ARROW 6: Investor → Solana (SOL in, left offset) ── -->
+  <line x1="676" y1="388" x2="676" y2="294" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="671,294 676,282 681,294" fill="#a78bfa"/>
+  <rect x="596" y="328" width="72" height="18" rx="4" fill="#09090b"/>
+  <text x="632" y="340" text-anchor="middle" fill="#a78bfa" font-size="9">SOL in (buy)</text>
+
+  <!-- ── ARROW 7: Solana → Investor (yield out, right offset) ── -->
+  <line x1="724" y1="294" x2="724" y2="388" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="719,388 724,400 729,388" fill="#22c55e"/>
+  <rect x="730" y="328" width="88" height="18" rx="4" fill="#09090b"/>
+  <text x="774" y="340" text-anchor="middle" fill="#22c55e" font-size="9">Yield quarterly</text>
+
+  <!-- ── LEGEND ── -->
+  <rect x="28" y="500" width="904" height="44" rx="8" fill="#111113" stroke="#1c1c1f" stroke-width="1"/>
+  <line x1="52" y1="522" x2="78" y2="522" stroke="#3f3f46" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="88" y="526" fill="#52525b" font-size="9">Legal / allocation flow</text>
+  <line x1="220" y1="522" x2="246" y2="522" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="256" y="526" fill="#22c55e" font-size="9">Lease payments (cash in)</text>
+  <line x1="420" y1="522" x2="446" y2="522" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="456" y="526" fill="#818cf8" font-size="9">Clarke / on-chain flow</text>
+  <line x1="610" y1="522" x2="636" y2="522" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="646" y="526" fill="#a78bfa" font-size="9">Investor buys tokens</text>
+  <line x1="778" y1="522" x2="804" y2="522" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="814" y="526" fill="#22c55e" font-size="9">Yield out (quarterly)</text>
+
+</svg>

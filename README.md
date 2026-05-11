@@ -2,9 +2,15 @@
 
 **The first on-chain market for geostationary orbital slot lease revenue.**
 
-Satellite operators like SES and Eutelsat hold positions along geostationary orbit and earn $4.2B per year in transponder lease revenue under 15-year fixed contracts. Clarke tokenizes that yield on Solana. Operators raise upfront capital. Investors receive quarterly lease revenue directly to their wallet.
+There are only 1,800 geostationary orbital slots in existence. Clarke tokenizes them on Solana. Operators list their slot, investors buy a piece and earn yield from the rent.
 
 Live on Solana devnet: [clarkebelt.finance](https://clarkebelt.finance)
+
+---
+
+## How it works
+
+![Clarke structure](./public/clarke-structure.svg)
 
 ---
 

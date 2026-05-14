@@ -29,7 +29,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <div className="col-span-2 sm:col-span-1">
                   <div className="font-bold text-white text-lg mb-2">CLARKE</div>
                   <p className="text-white/40 text-xs leading-relaxed">
-                    The first on-chain market for geostationary orbital slot lease revenue.
+                    The data and intelligence layer for orbital infrastructure.
                   </p>
                 </div>
                 <div>

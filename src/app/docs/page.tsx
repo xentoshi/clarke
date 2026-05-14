@@ -59,7 +59,7 @@ export default function DocsPage() {
         <p className="text-zinc-600 text-xs font-mono mb-3">// DOCUMENTATION</p>
         <h1 className="text-2xl font-bold text-white mb-3">Docs</h1>
         <p className="text-zinc-500 text-sm max-w-2xl leading-relaxed">
-          Technical reference for Clarke: how the on-chain program works, where the orbital slot data comes from, and how the legal structure is designed.
+          Technical reference for Clarke: how the on-chain program works, where the orbital slot data comes from, and how the legal structure is designed. Clarke is building capital markets for orbital infrastructure — this is the engineering and methodology behind it.
         </p>
       </div>
 
@@ -101,7 +101,7 @@ export default function DocsPage() {
               ))}
             </div>
             <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-              Clarke is the first on-chain market for geostationary orbital slot lease revenue. Satellite operators list their slots. Investors buy fractional tokens representing a claim on quarterly transponder lease payments. Yield is distributed and claimed entirely on Solana.
+              Clarke is building capital markets for orbital infrastructure — the registry, pricing layer, and exchange for orbital slots across GEO, LEO, and MEO. The on-chain program is a proof of concept for fractional positions in orbital slot revenue, currently running on Solana devnet with three GEO slots modeled as a technical demonstration.
             </p>
             <p className="text-zinc-500 text-sm leading-relaxed">
               Named after Arthur C. Clarke, who first described geostationary orbit in 1945. The Clarke Belt, the ring of satellites 35,786 km above the equator, is named in his honor.

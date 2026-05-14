@@ -4,6 +4,15 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "images.nasa.gov" },
+      { protocol: "https", hostname: "www.nasa.gov" },
+      { protocol: "https", hostname: "live.staticflickr.com" },
+      { protocol: "https", hostname: "upload.wikimedia.org" },
+      { protocol: "https", hostname: "www.esa.int" },
+    ],
+  },
   async headers() {
     return [
       {

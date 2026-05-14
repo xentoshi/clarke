@@ -1,109 +1,250 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { slots } from "@/data/orbital-slots";
-import MarketOverview from "@/components/MarketOverview";
 import EmailCapture from "@/components/EmailCapture";
+import OrbitalDiagram from "@/components/OrbitalDiagram";
 import { buildMeta } from "@/lib/metadata";
+import { companies } from "@/data/companies";
 
 export const metadata: Metadata = buildMeta({
   title: "Clarke",
-  description: "Geostationary orbital slots are the most defensible infrastructure in existence. Clarke puts fractional ownership on Solana.",
-  tag: "RWA · Solana",
+  description: "Capital markets for orbital infrastructure. Clarke maps the market behind the next layer of global infrastructure.",
+  tag: "Orbital Infrastructure",
 });
 
 const listedSlots = slots.filter((s) => s.tokenization?.status === "listed").length;
 
+function Label({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="text-white/30 text-[11px] font-mono tracking-[0.3em] uppercase mb-4">{children}</div>
+  );
+}
+
+function SectionDivider() {
+  return <div className="border-t border-white/[0.05] my-20" />;
+}
+
 export default function HomePage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6">
 
       {/* Hero */}
-      <div className="pt-20 sm:pt-32 pb-20 flex flex-col items-center text-center">
-        <h1 className="text-3xl sm:text-6xl font-bold text-white mb-6 leading-[1.08] max-w-4xl tracking-tight">
-          Every ship, flight, and oil rig<br className="hidden sm:block" /> depends on orbital slots.
+      <div className="pt-20 sm:pt-32 pb-24">
+        <h1 className="text-3xl sm:text-5xl font-bold text-white mb-5 leading-[1.08] tracking-tight">
+          Capital markets for orbital infrastructure.
         </h1>
-        <p className="text-zinc-400 text-base sm:text-lg max-w-xl leading-relaxed mb-10">
-          Geostationary orbital positions are leased under long-term fixed contracts to the world's most critical infrastructure operators.
-          Clarke puts fractional ownership on Solana.
+        <p className="text-zinc-400 text-base sm:text-lg leading-relaxed mb-10 max-w-xl">
+          Orbit is becoming the next layer of global infrastructure. Clarke maps the market behind it.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <Link href="/orbital"
             className="px-8 py-3.5 bg-white text-black rounded-xl font-bold text-sm hover:bg-zinc-200 transition-colors">
-            View open offerings →
+            Browse the registry →
           </Link>
-          <Link href="/orbital/list"
+          <Link href="/data"
             className="px-8 py-3.5 border border-zinc-700 text-zinc-300 rounded-xl font-medium text-sm hover:border-zinc-500 hover:text-white transition-colors">
-            I operate a satellite
+            View data sources
           </Link>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.06] mb-24 rounded-xl overflow-hidden">
-        {[
-          { value: "~1,800", label: "GEO slots" },
-          { value: "$0",     label: "Currently on-chain" },
-          { value: "15yr",   label: "Avg. contract length" },
-          { value: `${listedSlots}`,    label: "Listed on Clarke" },
-        ].map((s) => (
-          <div key={s.label} className="bg-zinc-950 px-6 py-6 text-center sm:text-left">
-            <div className="text-2xl sm:text-3xl font-bold font-mono text-white mb-1">{s.value}</div>
-            <div className="text-[10px] text-white/35 uppercase tracking-[0.2em] font-mono">{s.label}</div>
-          </div>
-        ))}
+      <SectionDivider />
+
+      {/* What is orbital infrastructure */}
+      <div className="mb-20">
+        <Label>What is orbital infrastructure?</Label>
+        <p className="text-zinc-300 text-base leading-relaxed mb-4">
+          Satellites power GPS, global internet, broadcast television, weather forecasting, navigation,
+          and military communications. The physical and regulatory systems underlying this (satellites,
+          orbital positions, spectrum rights, and operating licenses) form a global infrastructure layer
+          worth hundreds of billions of dollars.
+        </p>
+        <p className="text-zinc-400 text-sm leading-relaxed">
+          Prices are buried across private transactions, ITU filings, spectrum coordination agreements,
+          SEC disclosures, and satellite acquisitions. Clarke aggregates and normalizes this fragmented
+          market into a single intelligence and pricing layer.
+        </p>
       </div>
 
-      {/* How it works */}
-      <div className="mb-24">
-        <div className="text-white/30 text-[11px] font-mono tracking-[0.3em] uppercase mb-4">How it works</div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-12">Three steps.</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/[0.04]">
+      <SectionDivider />
+
+      {/* What is an orbital slot */}
+      <div className="mb-20">
+        <Label>What is an orbital slot?</Label>
+        <p className="text-zinc-300 text-base leading-relaxed mb-4">
+          Most commercial communications satellites operate in geostationary orbit (GEO), a narrow
+          ring approximately 35,786 km above Earth where satellites move at the same speed Earth
+          rotates. From the ground, they appear fixed in the sky.
+        </p>
+        <p className="text-zinc-400 text-sm leading-relaxed mb-6">
+          Because satellites operating too closely together interfere with one another, only a limited
+          number of commercially viable positions exist within this orbital ring. These positions are
+          known as orbital slots.
+        </p>
+        <p className="text-zinc-400 text-sm leading-relaxed">
+          Orbital positions are coordinated internationally through the International Telecommunication
+          Union and licensed through national regulators. Operators regularly acquire, lease, transfer,
+          and consolidate these rights through private agreements and corporate transactions. Prime GEO
+          coverage regions serving North America, Europe, and Asia can underpin infrastructure worth
+          billions of dollars over a satellite's lifetime.
+        </p>
+      </div>
+
+      <SectionDivider />
+
+      {/* GEO / LEO / MEO */}
+      <div className="mb-20">
+        <Label>GEO, LEO, and MEO</Label>
+        <p className="text-zinc-400 text-sm leading-relaxed mb-8">
+          Not all orbital regimes work the same way. Each has different physics, economics, and scarcity models.
+        </p>
+
+        <OrbitalDiagram />
+
+        <div className="space-y-px bg-white/[0.04] rounded-xl overflow-hidden mt-8">
           {[
-            { num: "01", title: "Operator lists a slot", body: "A satellite operator submits their orbital position to Clarke. Clarke verifies the lease contract and creates an on-chain offering." },
-            { num: "02", title: "Yield shares issued on Solana", body: "The slot's lease revenue is fractionalized into on-chain positions. Each share is a fractional claim on quarterly transponder lease payments." },
-            { num: "03", title: "Yield flows quarterly", body: "Lease payments hit the on-chain offering every quarter. Yield share holders claim their cut directly to any Solana wallet." },
-          ].map((c) => (
-            <div key={c.num} className="bg-black/20 p-8">
-              <div className="text-white/15 text-xs font-mono mb-6">{c.num}</div>
-              <div className="text-white font-bold text-base mb-3">{c.title}</div>
-              <p className="text-white/40 text-sm leading-relaxed">{c.body}</p>
+            {
+              orbit: "GEO",
+              name: "Geostationary Orbit",
+              alt: "35,786 km",
+              tag: "The most economically concentrated orbital regime.",
+              body: "Satellites in GEO remain fixed relative to Earth, allowing continuous coverage over the same geographic region. GEO powers television broadcasting, weather systems, military communications, and long-duration telecommunications infrastructure. Scarcity in GEO comes from fixed positional constraints and spectrum coordination. This is the primary market Clarke focuses on.",
+            },
+            {
+              orbit: "LEO",
+              name: "Low Earth Orbit",
+              alt: "200–2,000 km",
+              tag: "The fastest-growing orbital regime.",
+              body: "LEO satellites move rapidly relative to Earth, requiring large constellations for continuous coverage. SpaceX's Starlink, Amazon Kuiper, and OneWeb all operate in LEO. The scarce assets in LEO are not fixed positions, but spectrum rights, orbital shell access, launch cadence, and congestion management.",
+            },
+            {
+              orbit: "MEO",
+              name: "Medium Earth Orbit",
+              alt: "2,000–36,000 km",
+              tag: "Primarily used for navigation infrastructure.",
+              body: "MEO hosts GPS, Galileo, and BeiDou navigation systems. MEO occupies the middle ground between GEO persistence and LEO latency.",
+            },
+          ].map((o) => (
+            <div key={o.orbit} className="bg-zinc-950 p-6 sm:p-8">
+              <div className="flex items-baseline gap-3 mb-1">
+                <span className="text-white font-bold font-mono text-sm">{o.orbit}</span>
+                <span className="text-zinc-500 text-xs">{o.name}</span>
+                <span className="text-zinc-600 text-xs font-mono ml-auto">{o.alt}</span>
+              </div>
+              <p className="text-white/50 text-xs mb-3">{o.tag}</p>
+              <p className="text-zinc-500 text-xs leading-relaxed">{o.body}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Why it works */}
-      <div className="mb-24">
-        <div className="text-white/30 text-[11px] font-mono tracking-[0.3em] uppercase mb-4">Why it works</div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-12">Why it works.</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {[
-            { title: "Fixed supply", body: "There are ~1,800 GEO slots. No new ones can be created. The ITU allocates positions along a fixed arc — prime locations have been fully occupied for decades." },
-            { title: "Captive demand", body: "Ships, aircraft, oil platforms, and ground stations are built around specific orbital positions. Moving to a different slot means years of ITU recoordination. It does not happen." },
-            { title: "Contracted revenue", body: "These are not ad revenues or subscriptions. They are fixed-rate, long-term transponder lease contracts. The cash flow is predictable by design." },
-            { title: "No public market", body: "Every deal happens in private between a handful of operators. No price discovery. No retail access. No on-chain presence. Clarke changes that." },
-          ].map((c) => (
-            <div key={c.title} className="border border-zinc-800 rounded-xl p-6 bg-zinc-900/10">
-              <div className="text-white font-semibold text-sm mb-3">{c.title}</div>
-              <p className="text-zinc-500 text-xs leading-relaxed">{c.body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      <SectionDivider />
 
-      {/* Live offerings */}
-      <div className="border border-white/[0.06] rounded-2xl p-8 bg-black/20 mb-24 flex flex-col sm:flex-row items-start gap-8">
-        <div className="flex-1">
-          <div className="text-white/25 text-xs font-mono mb-3 tracking-widest">// PROOF OF CONCEPT · SOLANA DEVNET</div>
-          <h2 className="text-white font-bold text-xl mb-3">Three slots on devnet.</h2>
-          <p className="text-white/40 text-sm leading-relaxed mb-6 max-w-sm">
-            $ASTRA19, $SES28, and $SATMEX101 are deployed on Solana devnet for testing. Connect a wallet, get free devnet SOL, and try the full invest and yield flow.
+      {/* Can it be priced and traded */}
+      <div className="mb-20">
+        <Label>Can orbital infrastructure be priced and traded?</Label>
+
+        <div className="mb-10">
+          <h3 className="text-white font-semibold text-base mb-3">Pricing</h3>
+          <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+            Orbital infrastructure changes hands constantly through satellite acquisitions, spectrum
+            leasing, hosted payload agreements, coordination settlements, fleet consolidations, and
+            regulatory transfers. But there is no unified market data layer, no public pricing index,
+            and no canonical registry of ownership, congestion, utilization, or implied asset value.
+            Clarke is building the first one.
           </p>
-          <Link href="/orbital" className="inline-block px-5 py-2.5 bg-white text-black rounded-lg text-sm font-bold hover:bg-zinc-200 transition-colors">
-            View offerings →
-          </Link>
         </div>
-        <div className="shrink-0 w-full sm:w-64 border border-white/[0.08] rounded-xl p-4 bg-black/30">
+
+        <div>
+          <h3 className="text-white font-semibold text-base mb-3">Trading</h3>
+          <p className="text-zinc-400 text-sm leading-relaxed">
+            Orbital rights are tied to international coordination frameworks, national licensing
+            regimes, and spectrum approvals. The economic interests surrounding these assets already
+            move through private markets, however, and Clarke's long-term thesis is that orbital
+            infrastructure will evolve into a recognizable capital market, with registries, indices,
+            leasing markets, liquidity layers, and exchange infrastructure, as the systems surrounding
+            it come to resemble the financial infrastructure that developed around terrestrial real
+            estate, spectrum, energy, and telecommunications networks.
+          </p>
+        </div>
+      </div>
+
+      <SectionDivider />
+
+      {/* Why now */}
+      <div className="mb-20">
+        <Label>Why now?</Label>
+        <p className="text-zinc-400 text-sm leading-relaxed">
+          Launch costs have collapsed, orbital congestion is accelerating, and space infrastructure
+          is becoming commercially indispensable. Orbit is now large enough, scarce enough, and
+          economically important enough to support dedicated market infrastructure.
+        </p>
+      </div>
+
+      <SectionDivider />
+
+      {/* What Clarke is */}
+      <div className="mb-20">
+        <Label>What Clarke is</Label>
+        <p className="text-zinc-300 text-base leading-relaxed mb-6">
+          Clarke is the market intelligence and registry layer for orbital infrastructure.
+        </p>
+        <p className="text-zinc-400 text-sm leading-relaxed mb-4">The platform maps:</p>
+        <ul className="space-y-1.5 mb-8">
+          {[
+            "orbital occupancy",
+            "spectrum coordination",
+            "infrastructure ownership",
+            "congestion risk",
+            "operator relationships",
+            "historical transactions",
+            "implied asset valuations",
+          ].map((item) => (
+            <li key={item} className="flex items-center gap-2 text-zinc-500 text-sm">
+              <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0" />
+              {item}
+            </li>
+          ))}
+        </ul>
+        <p className="text-zinc-500 text-sm leading-relaxed mb-8">
+          Built from public ITU, FCC, SEC, and operator data that has never been normalized into
+          a single system.
+        </p>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-px bg-white/[0.06] rounded-xl overflow-hidden mb-8">
+          {[
+            { value: "27,000+", label: "Tracked objects" },
+            { value: `${companies.length}`, label: "Companies indexed" },
+            { value: `${listedSlots}`, label: "On-chain (devnet)" },
+          ].map((s) => (
+            <div key={s.label} className="bg-zinc-950 px-6 py-6 text-center">
+              <div className="text-2xl sm:text-3xl font-bold font-mono text-white mb-1">{s.value}</div>
+              <div className="text-[10px] text-white/35 uppercase tracking-[0.2em] font-mono">{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+          Clarke covers all major orbital regimes, beginning with GEO, where scarcity is fixed,
+          infrastructure values are highest, and the market structure is most mature.
+        </p>
+        <p className="text-zinc-400 text-sm leading-relaxed">
+          Over time, Clarke aims to become the financial coordination layer for the orbital economy.
+        </p>
+      </div>
+
+      <SectionDivider />
+
+      {/* Devnet demo */}
+      <div className="border border-white/[0.06] rounded-2xl p-8 bg-black/20 mb-20">
+        <div className="text-white/25 text-xs font-mono mb-3 tracking-widest">// PROOF OF CONCEPT · SOLANA DEVNET</div>
+        <h2 className="text-white font-bold text-lg mb-3">Three GEO slots on devnet.</h2>
+        <p className="text-white/40 text-sm leading-relaxed mb-6">
+          $ASTRA19, $SES28, and $SATMEX101 are modeled on Solana devnet. Connect a wallet,
+          get free devnet SOL, and try the invest and yield flow end-to-end.
+        </p>
+        <div className="border border-white/[0.06] rounded-xl p-4 bg-black/20 mb-6">
           {slots.filter((s) => s.tokenization?.status === "listed").map((s) => (
             <div key={s.id} className="py-2.5 border-b border-white/[0.06] last:border-0">
               <div className="flex items-center justify-between mb-0.5">
@@ -118,39 +259,21 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Space markets */}
-      <div className="mb-24">
-        <div className="text-white/30 text-[11px] font-mono tracking-[0.3em] uppercase mb-4">Space markets</div>
-        <MarketOverview />
+        <Link href="/orbital" className="inline-block px-5 py-2.5 bg-white text-black rounded-lg text-sm font-bold hover:bg-zinc-200 transition-colors">
+          View the registry →
+        </Link>
       </div>
 
       {/* Email */}
       <div className="border border-white/[0.06] rounded-2xl p-10 bg-black/20 mb-24 text-center">
         <div className="text-white/25 text-xs font-mono mb-4 tracking-widest">// GET NOTIFIED</div>
-        <h2 className="text-white font-bold text-2xl mb-3">Be first when the raise opens.</h2>
+        <h2 className="text-white font-bold text-xl mb-3">Be first when the market opens.</h2>
         <p className="text-zinc-500 text-sm mb-8 max-w-sm mx-auto">
-          Clarke is preparing the first mainnet SPV. Get notified when it opens.
+          Live pricing data, real operator partnerships, and the first tradeable orbital positions.
         </p>
         <div className="flex justify-center">
           <EmailCapture label="Join the list" />
         </div>
-      </div>
-
-      {/* CTAs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/[0.04] mb-24">
-        {[
-          { href: "/orbital",      title: "Open offerings →",  desc: "Browse the GEO registry and invest in yield positions." },
-          { href: "/portfolio",    title: "My portfolio →",    desc: "View your positions and claim accrued yield." },
-          { href: "/orbital/list", title: "Operators →",       desc: "Raise upfront capital against your transponder lease revenue." },
-        ].map((c) => (
-          <Link key={c.href} href={c.href}
-            className="group bg-black/50 hover:bg-black/70 transition-colors p-8">
-            <div className="font-bold text-white text-sm mb-2 group-hover:text-white/70 transition-colors">{c.title}</div>
-            <p className="text-white/25 text-xs leading-relaxed">{c.desc}</p>
-          </Link>
-        ))}
       </div>
 
     </div>

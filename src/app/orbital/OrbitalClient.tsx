@@ -56,13 +56,21 @@ const faq = [
 ];
 
 export default function OrbitalClient() {
-  const [selected, setSelected] = useState<OrbitalSlot | null>(null);
+  const [selected, setSelectedRaw] = useState<OrbitalSlot | null>(null);
   const [filter, setFilter] = useState<SlotStatus | "all">("all");
   const [investAmount, setInvestAmount] = useState("0.1");
   const [txStatus, setTxStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [txSig, setTxSig] = useState("");
   const [txError, setTxError] = useState("");
   const [txTokens, setTxTokens] = useState(0);
+
+  const setSelected = (slot: OrbitalSlot | null) => {
+    setSelectedRaw(slot);
+    setTxStatus("idle");
+    setTxSig("");
+    setTxError("");
+    setTxTokens(0);
+  };
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifySlot, setNotifySlot] = useState<string | null>(null);

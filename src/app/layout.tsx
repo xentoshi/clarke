@@ -17,8 +17,8 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Clarke · Orbital Slot Registry",
-  description: "The first transparent market for geostationary orbital slots. Browse, tokenize, and invest in GEO orbital positions on Solana.",
+  title: "Clarke · Orbital Infrastructure",
+  description: "The data and intelligence layer for orbital infrastructure. Registry, pricing, and market tools for assets across GEO, LEO, and MEO.",
   icons: {
     icon: "/logo.svg",
     shortcut: "/logo.svg",

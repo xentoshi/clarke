@@ -19,12 +19,15 @@ const WalletMultiButton = dynamic(
 
 const primaryLinks = [
   { href: "/orbital", label: "Orbital Slots" },
+  { href: "/companies", label: "Companies" },
   { href: "/portfolio", label: "Portfolio" },
   { href: "/stocks", label: "Stocks" },
 ];
 
 const moreLinks = [
   { href: "/operator", label: "Operator" },
+  { href: "/blog", label: "Blog" },
+  { href: "/data", label: "Data Sources" },
   { href: "/docs", label: "Docs" },
   { href: "/about", label: "About" },
 ];
@@ -86,7 +89,7 @@ export default function Nav() {
             <Image src="/logo.svg" alt="Clarke" width={32} height={32} />
             <div className="flex flex-col">
               <span className="text-white font-bold text-base tracking-[0.15em] leading-none">CLARKE</span>
-              <span className="text-white/20 text-[10px] tracking-widest uppercase hidden sm:block leading-none mt-0.5 font-mono">Space Infrastructure</span>
+              <span className="text-white/20 text-[10px] tracking-widest uppercase hidden sm:block leading-none mt-0.5 font-mono">Orbital Infrastructure</span>
             </div>
           </Link>
 

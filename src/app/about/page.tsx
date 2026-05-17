@@ -20,9 +20,19 @@ export default function AboutPage() {
           in the most valuable orbital ring. They are allocated by international treaty, held by governments
           and operators, and worth hundreds of millions each. They cannot be created. They can be transferred.
         </p>
-        <p className="text-zinc-500 text-base leading-relaxed">
+        <p className="text-zinc-500 text-base leading-relaxed mb-8">
           Clarke is the first market for them — the registry, the pricing layer, and eventually the exchange.
         </p>
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-500 text-xs font-mono shrink-0">x</div>
+          <p className="text-zinc-600 text-sm">
+            Built by{" "}
+            <a href="https://x.com/xentoshi" target="_blank" rel="noopener noreferrer"
+              className="text-zinc-400 hover:text-white transition-colors">
+              @xentoshi
+            </a>
+          </p>
+        </div>
       </div>
 
       {/* The opportunity */}

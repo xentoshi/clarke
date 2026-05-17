@@ -3,6 +3,7 @@ import "./globals.css";
 import Script from "next/script";
 import AppShell from "@/components/AppShell";
 import SolanaWalletProvider from "@/components/WalletProvider";
+import Analytics from "@/components/Analytics";
 import { Manrope, IBM_Plex_Mono } from "next/font/google";
 
 const manrope = Manrope({
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             strategy="afterInteractive"
           />
         )}
+        <Analytics />
         <SolanaWalletProvider>
           <AppShell>{children}</AppShell>
         </SolanaWalletProvider>

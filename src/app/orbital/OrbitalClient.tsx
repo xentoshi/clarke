@@ -306,10 +306,10 @@ export default function OrbitalClient() {
                 </button>
               ))}
             </div>
-            <div className="border border-zinc-800 rounded-xl overflow-hidden">
+            <div className="border border-zinc-800 rounded-xl overflow-hidden max-h-80 overflow-y-auto">
               <table className="w-full">
-                <thead>
-                  <tr className="border-b border-zinc-800 bg-zinc-900/40">
+                <thead className="sticky top-0 z-10">
+                  <tr className="border-b border-zinc-800 bg-zinc-950">
                     <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Slot</th>
                     <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden sm:table-cell">Operator</th>
                     <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Value</th>

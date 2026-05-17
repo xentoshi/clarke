@@ -20,6 +20,8 @@ const VERTICAL_ORDER = [
   "Launch",
   "Manufacturing",
   "Ground Systems",
+  "Lunar & Exploration",
+  "Space Power",
 ];
 
 export default async function StocksPage() {

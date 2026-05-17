@@ -47,6 +47,9 @@ Anchor.toml
 # Claude Code project data
 .claude/
 
+# Private design docs
+docs/superpowers/
+
 # Solana build artifacts
 target/
 .anchor/

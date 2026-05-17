@@ -6,10 +6,12 @@ export function buildMeta({
   title,
   description,
   tag = "",
+  path,
 }: {
   title: string;
   description: string;
   tag?: string;
+  path?: string;
 }): Metadata {
   const fullTitle = `${title} · Clarke`;
   const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(title)}&sub=${encodeURIComponent(description)}&tag=${encodeURIComponent(tag)}`;
@@ -17,6 +19,9 @@ export function buildMeta({
   return {
     title: fullTitle,
     description,
+    alternates: {
+      canonical: path ? `${baseUrl}${path}` : baseUrl,
+    },
     openGraph: {
       title: fullTitle,
       description,

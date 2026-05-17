@@ -65,11 +65,18 @@ export async function POST(req: NextRequest) {
 
   const webhook = process.env.NOTIFY_WEBHOOK_URL;
   if (webhook) {
+    const label = safe.type === "waitlist" ? "🛰 Early access signup"
+      : safe.type === "slot_listing_inquiry" ? "📡 Operator inquiry"
+      : "🔔 Slot notify";
+    const lines = [`**${label}**`];
+    if (safe.email) lines.push(`Email: \`${safe.email}\``);
+    if (safe.slotId) lines.push(`Slot: \`${safe.slotId}\``);
+    const isDiscord = webhook.includes("discord.com");
     try {
       await fetch(webhook, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(safe),
+        body: JSON.stringify(isDiscord ? { content: lines.join("\n") } : safe),
       });
     } catch (e) {
       console.error("[notify] webhook failed:", e);

@@ -50,6 +50,9 @@ Anchor.toml
 # Private design docs
 docs/superpowers/
 
+# Solana wallet keypairs — never commit
+*.keypair.json
+
 # Solana build artifacts
 target/
 .anchor/

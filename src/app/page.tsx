@@ -5,6 +5,7 @@ import EmailCapture from "@/components/EmailCapture";
 import OrbitalDiagram from "@/components/OrbitalDiagram";
 import { buildMeta } from "@/lib/metadata";
 import { companies } from "@/data/companies";
+import { getSatelliteStats } from "@/lib/satellites";
 
 export const metadata: Metadata = buildMeta({
   title: "Clarke",
@@ -25,6 +26,8 @@ function SectionDivider() {
 }
 
 export default function HomePage() {
+  const dbStats = getSatelliteStats();
+  const geoTracked = dbStats.geoCount > 0 ? `${dbStats.geoCount}+` : "590+";
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6">
 
@@ -214,7 +217,7 @@ export default function HomePage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-px bg-white/[0.06] rounded-xl overflow-hidden mb-8">
           {[
-            { value: "27,000+", label: "Tracked objects" },
+            { value: geoTracked, label: "GEO satellites tracked" },
             { value: `${companies.length}`, label: "Companies indexed" },
             { value: `${listedSlots}`, label: "On-chain (devnet)" },
           ].map((s) => (

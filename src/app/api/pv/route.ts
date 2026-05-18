@@ -38,7 +38,14 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const secret = process.env.PV_SECRET;
+  if (secret) {
+    const auth = req.headers.get("authorization") ?? "";
+    if (auth !== `Bearer ${secret}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
   const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
   const last50 = recent.slice(-50).reverse();
   return NextResponse.json({ counts: Object.fromEntries(sorted), recent: last50, total: [...counts.values()].reduce((a, b) => a + b, 0) });

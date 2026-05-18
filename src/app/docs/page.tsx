@@ -1,5 +1,6 @@
 import { buildMeta } from "@/lib/metadata";
 import { slots } from "@/data/orbital-slots";
+import { getSatelliteStats, getFccCount } from "@/lib/satellites";
 
 export const metadata = buildMeta({
   title: "Docs",
@@ -9,16 +10,18 @@ export const metadata = buildMeta({
 });
 
 const sections = [
-  { id: "overview",       label: "Overview" },
-  { id: "orbital-slots", label: "Orbital Slots" },
-  { id: "data-sources",  label: "Data Sources" },
-  { id: "methodology",   label: "Methodology" },
-  { id: "how-it-works",  label: "How It Works" },
-  { id: "tokens",        label: "Slot Tokens" },
-  { id: "fees",          label: "Fee Structure" },
-  { id: "legal",         label: "Legal Structure" },
-  { id: "program",       label: "On-Chain Program" },
-  { id: "yield",         label: "Yield Accounting" },
+  { id: "overview",            label: "Overview" },
+  { id: "orbital-slots",       label: "Orbital Slots" },
+  { id: "data-sources",        label: "Data Sources" },
+  { id: "registry-methodology",label: "Registry Methodology" },
+  { id: "data-quality",        label: "Data Quality" },
+  { id: "methodology",         label: "Methodology" },
+  { id: "how-it-works",        label: "How It Works" },
+  { id: "tokens",              label: "Slot Tokens" },
+  { id: "fees",                label: "Fee Structure" },
+  { id: "legal",               label: "Legal Structure" },
+  { id: "program",             label: "On-Chain Program" },
+  { id: "yield",               label: "Yield Accounting" },
 ];
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
@@ -51,7 +54,9 @@ function DataSourceCard({ name, url, type, description, license }: {
 }
 
 export default function DocsPage() {
-  const activeSlots = slots.filter(s => s.status === "active").length;
+  const dbStats = getSatelliteStats();
+  const geoCount = dbStats.geoCount > 0 ? dbStats.geoCount : 590;
+  const fccCount = getFccCount();
   const listedSlots = slots.filter(s => s.tokenization?.status === "listed").length;
 
   return (
@@ -91,9 +96,9 @@ export default function DocsPage() {
           <Section id="overview" title="Overview">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               {[
-                { value: slots.length,  label: "Orbital slots tracked" },
-                { value: activeSlots,   label: "Active satellites" },
-                { value: listedSlots,   label: "Listed on Clarke" },
+                { value: geoCount,    label: "GEO satellites tracked" },
+                { value: fccCount,    label: "FCC authorizations" },
+                { value: listedSlots, label: "On devnet" },
               ].map((s) => (
                 <div key={s.label} className="border border-zinc-800 rounded-xl p-4 bg-zinc-900/10 text-center">
                   <div className="text-2xl font-bold font-mono text-white">{s.value}</div>
@@ -154,22 +159,53 @@ export default function DocsPage() {
 
           <Section id="data-sources" title="Data Sources">
             <p className="text-zinc-500 text-sm leading-relaxed mb-6">
-              All orbital slot data is derived from public or open sources. No paywalled databases.
+              All data in Clarke is derived from public sources. The two sources currently integrated are marked Live below. Sources marked Planned are in the roadmap but not yet ingested.
             </p>
             <div className="space-y-3">
-              <DataSourceCard name="ITU IFIC International Frequency Information Circular" url="https://www.itu.int/pub/R-IFIC" type="Orbital Slots" license="Public" description="The authoritative global registry for satellite orbital slots and frequency assignments, published weekly by the International Telecommunication Union. Every GEO slot filing, coordination agreement, and satellite network registration originates here." />
-              <DataSourceCard name="ITU Space Network Systems (SNS)" url="https://www.itu.int/online/sns/index.html" type="Orbital Slots" license="Public" description="Searchable database of all ITU satellite network filings. Covers filing status, coordination progress, orbital parameters, and frequency bands for every registered satellite network globally." />
-              <DataSourceCard name="UCS Satellite Database" url="https://www.ucsusa.org/resources/satellite-database" type="Satellites" license="Open Source" description="Union of Concerned Scientists open-source database of operational satellites, updated quarterly. Includes owner, operator, orbital parameters, launch date, and purpose for approximately 6,500 satellites." />
-              <DataSourceCard name="Space-Track.org" url="https://www.space-track.org" type="Orbital Data" license="Public (free account)" description="Official US Space Force catalog of all tracked space objects. Two-Line Element sets for every tracked satellite and debris object. Authoritative source for orbital mechanics data." />
-              <DataSourceCard name="FCC International Bureau Filings" url="https://www.fcc.gov/international" type="US Licenses" license="Public" description="US frequency and satellite licensing database. All FCC authorizations for US-licensed satellite operators including orbital slots, power limits, and service areas." />
-              <DataSourceCard name="SEC EDGAR" url="https://www.sec.gov/cgi-bin/browse-edgar" type="Financial Filings" license="Public" description="SEC's full-text search for public company filings. Clarke uses 10-K and 8-K filings from publicly traded satellite operators including SES, Intelsat, Eutelsat, and Telesat to cross-reference transponder lease rates, slot valuations, and revenue disclosures." />
+              <DataSourceCard name="UCS Satellite Database" url="https://www.ucsusa.org/resources/satellite-database" type="Satellites" license="Live" description={`Union of Concerned Scientists normalized catalog of active satellites, updated twice yearly. Clarke ingests the full dataset (${geoCount} GEO satellites from the May 2023 snapshot), providing operator attribution, orbital positions, launch dates, and purpose classifications for all tracked positions.`} />
+              <DataSourceCard name="FCC Approved Space Station List" url="https://www.fcc.gov/approved-space-station-list" type="US Licenses" license="Live" description={`The FCC's official list of all space stations authorized to operate in or serve the United States. Clarke ingests ${fccCount} GEO authorizations covering call signs, licensed frequency bands, licensee names, administrations, and in-orbit dates from government records.`} />
+              <DataSourceCard name="ITU Space Network System" url="https://www.itu.int/itu-r/space/apps/public/spaceexplorer/networks-explorer" type="Orbital Filings" license="Planned" description="The canonical international registry for every coordinated orbital position and frequency assignment. Bulk data access requires an ITU BR IFIC subscription and arrives in Microsoft Access format. Integration will extend the registry from active satellites to the full universe of filed and coordinated positions." />
+              <DataSourceCard name="SEC EDGAR" url="https://www.sec.gov/cgi-bin/browse-edgar" type="Financial Filings" license="Planned" description="Annual and quarterly filings from publicly traded satellite operators including SES, Viasat, Eutelsat, and Telesat. Integration will power the pricing layer by mapping disclosed transponder revenues and slot valuations to specific orbital positions." />
+              <DataSourceCard name="Space-Track.org" url="https://www.space-track.org" type="Orbital Mechanics" license="Planned" description="US Space Force catalog of all tracked orbital objects with daily TLE updates. Planned as the cross-reference layer for validating satellite positions and correcting identifier accuracy in the UCS import." />
+            </div>
+          </Section>
+
+          <Section id="registry-methodology" title="Registry Methodology">
+            <div className="space-y-4">
+              {[
+                { title: "Satellite and ownership layer", body: `The registry is built from the UCS Satellite Database, which provides a normalized record of active satellites including operator, owner country, orbital position, launch date, and purpose. Clarke ingests all ${geoCount} GEO satellites from the current snapshot, making each one queryable by position, operator, and purpose. The UCS data is the satellite layer: it tells Clarke what is physically operating at each position and who operates it.` },
+                { title: "Authorization layer", body: `FCC authorization records from the Approved Space Station List are ingested as a second layer on top of the UCS satellite data. For each GEO position, Clarke queries the FCC table for any authorization within 0.6 degrees of the nominal longitude. Where a match exists, the detail page for that position shows the FCC call sign, licensee name, authorized frequency bands, administration, and in-orbit date. Where no match exists, the position has no US FCC authorization, which is expected for satellites licensed under non-US administrations.` },
+                { title: "Co-location grouping", body: "Multiple satellites operating at the same nominal longitude are grouped together using a tolerance of 0.4 degrees. This matches the standard ITU coordination practice where satellites in the same coordination filing cluster within fractions of a degree. The grouping ensures that the four SES Astra satellites at 19.2°E, for example, all appear together on a single position page rather than as four separate entries." },
+                { title: "Congestion scoring", body: "The congestion score for a position is computed by counting all active GEO satellites in the UCS database within 2 degrees on either side of that position's nominal longitude, covering a total arc of 4 degrees. This score is a proxy for arc commercial density and spectrum coordination pressure. The tiers are Sparse for scores of 1 to 2, Low for 3 to 5, Moderate for 6 to 10, High for 11 to 18, and Critical for 19 and above. The score reflects active operational satellites rather than filed positions, so it understates total coordination pressure in arcs with heavy squatting activity." },
+              ].map((item) => (
+                <div key={item.title} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
+                  <div className="text-white text-sm font-semibold mb-2">{item.title}</div>
+                  <p className="text-zinc-500 text-xs leading-relaxed">{item.body}</p>
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          <Section id="data-quality" title="Data Quality">
+            <div className="space-y-4">
+              {[
+                { title: "UCS data vintage", body: "The satellite data ingested into Clarke comes from the UCS Satellite Database snapshot dated May 2023. Satellites launched, decommissioned, or repositioned after that date are not reflected. For operational GEO satellites that have occupied their positions for years, the data is reliable. For recently repositioned satellites or newly launched hardware, the position data may be stale by up to two years depending on when the next ingestion occurs." },
+                { title: "Satellite identifiers", body: "The UCS database includes NORAD catalog numbers and COSPAR international designators for each satellite. These identifiers are stored in Clarke's database but are not displayed to users. A spot-check of nine satellites against independent Celestrak records found that five had incorrect NORAD IDs, with some pointing to entirely different satellites at different orbital positions and one pointing to decayed re-entry debris. The satellite names, operator names, and orbital positions were generally accurate in the same check. Identifiers will be surfaced once they have been validated against an authoritative source." },
+                { title: "FCC coverage scope", body: `The ${fccCount} FCC authorizations in Clarke cover US-licensed operators and foreign operators with FCC-granted US market access. Satellites licensed entirely under non-US administrations, including most European, Russian, Chinese, and Asian operators, do not appear in FCC records and will show no authorization data on their position pages. This is a reflection of jurisdiction, not a gap in data collection.` },
+                { title: "Status labels", body: "Position status labels in the registry (Active, Filed, Squatted, Inactive) are derived from the UCS classification, which marks satellites as active based on reported operational status at the time of the snapshot. The UCS does not independently verify operational status in real time, and the labels may not reflect satellites that have been recently decommissioned or quietly taken offline since May 2023." },
+              ].map((item) => (
+                <div key={item.title} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
+                  <div className="text-white text-sm font-semibold mb-2">{item.title}</div>
+                  <p className="text-zinc-500 text-xs leading-relaxed">{item.body}</p>
+                </div>
+              ))}
             </div>
           </Section>
 
           <Section id="methodology" title="Methodology">
             <div className="space-y-4">
               {[
-                { title: "Slot status verification", body: "Slot status is verified against the ITU IFIC weekly publication and the UCS satellite database, updated quarterly. Satellite decommissions and new launches are reflected within 30 days of public announcement." },
+                { title: "Slot status verification", body: "Slot status is derived from UCS Satellite Database classifications, updated twice yearly. Satellite decommissions and new launches are reflected within the cadence of UCS updates, typically within six months of public announcement." },
                 { title: "Value estimates", body: "Orbital slot value estimates are derived from disclosed transaction prices in public M&A filings, bankruptcy proceedings (Intelsat 2020), and analyst reports from Northern Sky Research and Euroconsult. Ranges reflect meaningful uncertainty. These are not appraisals." },
                 { title: "Yield estimates", body: "Lease yield estimates of 5-9% are based on publicly disclosed transponder lease rates in operator earnings reports and industry research. Actual yield depends on individual lease terms negotiated between the operator and their broadcast customers." },
                 { title: "Not financial advice", body: "Nothing on Clarke constitutes investment advice. Value estimates, yield projections, and slot data are informational. The devnet tokenization features are a technical demonstration. Mainnet investment involves real financial risk." },

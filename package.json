@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "ts-node --project tsconfig.scripts.json scripts/seed-offerings.ts"
+    "seed": "ts-node --project tsconfig.scripts.json scripts/seed-offerings.ts",
+    "ingest": "ts-node --project tsconfig.scripts.json scripts/ingest-ucs.ts",
+    "ingest:fcc": "ts-node --project tsconfig.scripts.json scripts/ingest-fcc.ts",
+    "ingest:all": "npm run ingest && npm run ingest:fcc"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
@@ -16,6 +19,7 @@
     "@solana/wallet-adapter-react-ui": "^0.9.39",
     "@solana/wallet-adapter-wallets": "^0.19.38",
     "@solana/web3.js": "^1.98.4",
+    "better-sqlite3": "^12.10.0",
     "date-fns": "^4.1.0",
     "next": "16.2.4",
     "react": "19.2.4",
@@ -25,6 +29,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -33,6 +38,7 @@
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "xlsx": "^0.18.5"
   }
 }

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
 import OrbitalClient from "./OrbitalClient";
+import { slots as curatedSlots } from "@/data/orbital-slots";
+import { mergeWithUcs, getAllCongestionScores } from "@/lib/satellites";
 
 export const metadata = buildMeta({
   title: "Orbital Registry",
@@ -9,6 +11,8 @@ export const metadata = buildMeta({
 });
 
 export default function OrbitalPage() {
+  const slots = mergeWithUcs(curatedSlots);
+  const congestionScores = getAllCongestionScores();
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
       <div className="mb-10 flex items-start justify-between gap-4">
@@ -21,7 +25,7 @@ export default function OrbitalPage() {
           Docs →
         </Link>
       </div>
-      <OrbitalClient />
+      <OrbitalClient slots={slots} congestionScores={congestionScores} />
     </div>
   );
 }

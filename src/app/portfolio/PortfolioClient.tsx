@@ -8,13 +8,13 @@ import { Connection, LAMPORTS_PER_SOL, PublicKey, Transaction, TransactionInstru
 import { BN } from "@coral-xyz/anchor";
 import { offeringPda, fetchAllPositions, PROGRAM_ID } from "@/lib/program";
 import type { OnChainPosition } from "@/lib/program";
-import { slots } from "@/data/orbital-slots";
+import type { OrbitalSlot } from "@/data/orbital-slots";
 
 function lamportsToSol(bn: BN): string {
   return (bn.toNumber() / LAMPORTS_PER_SOL).toFixed(4);
 }
 
-function slotMeta(offeringKey: string): { label: string; apy: string | null } {
+function slotMeta(offeringKey: string, slots: OrbitalSlot[]): { label: string; apy: string | null } {
   for (const slot of slots) {
     try {
       const pda = offeringPda(slot.id);
@@ -44,7 +44,7 @@ function formatTs(unix: number): string {
   });
 }
 
-export default function PortfolioClient() {
+export default function PortfolioClient({ slots }: { slots: OrbitalSlot[] }) {
   const { connection } = useConnection();
   const { connected, publicKey, signTransaction } = useWallet();
   const { setVisible } = useWalletModal();
@@ -160,7 +160,7 @@ export default function PortfolioClient() {
             const key = pos.publicKey.toBase58();
             const status = claimStatus[key] ?? "idle";
             const claimable = pos.yieldClaimable.toNumber();
-            const { label, apy } = slotMeta(pos.offering.toBase58());
+            const { label, apy } = slotMeta(pos.offering.toBase58(), slots);
             const ts = timestamps[key];
             return (
               <div key={key} className="border border-zinc-800 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

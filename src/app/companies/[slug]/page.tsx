@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
 import { companiesBySlug, companies } from "@/data/companies";
+import { getOperatorGeoPositions } from "@/lib/satellites";
+import { slugToOperators } from "@/lib/operator-map";
 
 type Params = { slug: string };
 
@@ -28,6 +30,9 @@ export default async function CompanyPage({ params }: { params: Promise<Params> 
   const related = companies.filter(
     (c) => c.sector === company.sector && c.slug !== company.slug
   ).slice(0, 4);
+
+  const operatorNames = slugToOperators(slug);
+  const geoPositions = getOperatorGeoPositions(operatorNames);
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
@@ -62,6 +67,33 @@ export default async function CompanyPage({ params }: { params: Promise<Params> 
           <div className="text-white/25 text-[10px] font-mono tracking-widest uppercase">Sector</div>
         </div>
       </div>
+
+      {geoPositions.length > 0 && (
+        <div className="mb-16">
+          <div className="text-white/25 text-[10px] font-mono tracking-widest uppercase mb-4">
+            GEO Orbital Positions ({geoPositions.length})
+          </div>
+          <div className="space-y-px bg-white/[0.03] rounded-xl overflow-hidden">
+            {geoPositions.map((pos) => (
+              <Link
+                key={pos.slug}
+                href={`/orbital/${pos.slug}`}
+                className="group flex items-center justify-between bg-zinc-950 px-5 py-3 hover:bg-zinc-900/60 transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-white font-mono text-sm group-hover:text-white/70 transition-colors">{pos.label}</span>
+                  <span className="text-zinc-600 text-xs hidden sm:block truncate max-w-[240px]">
+                    {pos.names.join(" · ")}
+                  </span>
+                </div>
+                <span className="text-zinc-600 text-xs font-mono shrink-0">
+                  {pos.satelliteCount} sat{pos.satelliteCount !== 1 ? "s" : ""} →
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {related.length > 0 && (
         <div>

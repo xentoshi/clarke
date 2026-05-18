@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { slots } from "@/data/orbital-slots";
+import type { OrbitalSlot } from "@/data/orbital-slots";
+import { lonToSlug } from "@/lib/slot-utils";
 import { stocks } from "@/data/stocks";
 
 type Result = {
@@ -33,7 +34,7 @@ const pages = [
   { label: "List a Slot", sub: "Operators: raise capital against your slot", href: "/orbital/list" },
 ];
 
-function search(q: string): Result[] {
+function search(q: string, slots: OrbitalSlot[]): Result[] {
   if (!q.trim()) return [];
   const lq = q.toLowerCase();
 
@@ -41,7 +42,7 @@ function search(q: string): Result[] {
     ...slots
       .filter((s) => s.label.toLowerCase().includes(lq) || s.operator.toLowerCase().includes(lq) || s.country.toLowerCase().includes(lq))
       .slice(0, 4)
-      .map((s) => ({ type: "slot" as const, label: s.label, sub: `${s.operator} · ${s.valueEstimate}`, href: "/orbital" })),
+      .map((s) => ({ type: "slot" as const, label: s.label, sub: s.valueEstimate ? `${s.operator} · ${s.valueEstimate}` : s.operator, href: `/orbital/${lonToSlug(s.longitude)}` })),
 
     ...stocks
       .filter((s) => s.ticker.toLowerCase().includes(lq) || s.name.toLowerCase().includes(lq))
@@ -55,13 +56,13 @@ function search(q: string): Result[] {
   ].slice(0, 12);
 }
 
-export default function SearchPalette({ onClose }: { onClose: () => void }) {
+export default function SearchPalette({ slots, onClose }: { slots: OrbitalSlot[]; onClose: () => void }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  const results = search(query);
+  const results = search(query, slots);
 
   const close = useCallback(() => { setQuery(""); setSelected(0); onClose(); }, [onClose]);
   const navigate = useCallback((href: string) => { router.push(href); close(); }, [router, close]);

@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import type { OrbitalSlot } from "@/data/orbital-slots";
 
 // Always use the public devnet faucet for airdrops — RPC providers like Helius block requestAirdrop
 const FAUCET_CONNECTION = new Connection("https://api.devnet.solana.com", "confirmed");
@@ -34,7 +35,7 @@ const moreLinks = [
 
 const allLinks = [...primaryLinks, ...moreLinks];
 
-export default function Nav() {
+export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -188,7 +189,7 @@ export default function Nav() {
         )}
       </header>
 
-      {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
+      {searchOpen && <SearchPalette slots={slots} onClose={() => setSearchOpen(false)} />}
     </>
   );
 }

@@ -29,7 +29,7 @@ export default function OperatorClient() {
             "Best contact for follow-up",
           ].map((item) => (
             <li key={item} className="flex gap-2">
-              <span className="text-zinc-700 shrink-0">—</span>
+              <span className="text-zinc-700 shrink-0">·</span>
               <span>{item}</span>
             </li>
           ))}

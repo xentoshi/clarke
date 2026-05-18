@@ -7,70 +7,78 @@ export const metadata: Metadata = buildMeta({
   tag: "Data",
 });
 
-const sources = [
+const sources: { name: string; abbr: string; url: string; cadence: string; what: string; why: string; status: "live" | "planned" }[] = [
+  {
+    name: "UCS Satellite Database",
+    abbr: "Union of Concerned Scientists",
+    url: "https://www.ucsusa.org/resources/satellite-database",
+    cadence: "Bi-annual",
+    status: "live",
+    what: "A normalized database of all active satellites with operator, country, purpose, orbital regime, launch date, and expected lifetime. Clarke currently ingests 590 GEO satellites from the May 2023 snapshot, covering 407 distinct orbital positions.",
+    why: "The most accessible normalized dataset of active satellites available publicly. Powers Clarke's orbital registry, operator attribution, and congestion scoring. Satellite names and orbital positions are reliable; individual satellite identifiers (NORAD/COSPAR) have known accuracy issues in the UCS source and are not displayed.",
+  },
+  {
+    name: "FCC Approved Space Station List",
+    abbr: "FCC International Bureau",
+    url: "https://www.fcc.gov/approved-space-station-list",
+    cadence: "Updated as granted",
+    status: "live",
+    what: "The official FCC list of all space stations authorized to operate in or serve the United States. Clarke ingests 174 GEO authorizations covering US-licensed operators and foreign operators with US market access grants. Fields include call sign, licensee, authorized frequency bands (C/Ku/Ka/L), service type, administration, and in-orbit date.",
+    why: "The only government-issued, per-satellite licensing record Clarke currently has. Directly expresses the spectrum coordination pillar: which frequencies are authorized at which position, under which jurisdiction. A position absent from this list has no FCC authorization, which is itself a meaningful signal for US market access.",
+  },
   {
     name: "ITU Space Network System",
     abbr: "ITU SNS",
     url: "https://www.itu.int/itu-r/space/apps/public/spaceexplorer/networks-explorer",
     cadence: "Continuous",
-    what: "Every filed and coordinated orbital slot and frequency assignment across all regimes. The canonical registry for the international coordination of satellite positions. Publicly accessible, extremely messy to parse.",
-    why: "The foundational dataset for any orbital asset registry. A filed ITU slot is the closest thing to a deed that orbital real estate currently has. Coverage includes GEO, MEO, and GSO filings from operators across all member states.",
-  },
-  {
-    name: "FCC International Bureau Filing System",
-    abbr: "FCC IBFS",
-    url: "https://fcc.report/IBFS/",
-    cadence: "Continuous",
-    what: "Every US satellite license application, modification, grant, and revocation. Covers all operators licensed under US jurisdiction, including SpaceX Starlink, Amazon Kuiper, Viasat, Hughes, and hundreds of smaller operators.",
-    why: "US licensing records include technical parameters, orbital positions, spectrum allocations, and operator details not always present in ITU filings. The US has the largest licensed satellite fleet in the world.",
-  },
-  {
-    name: "Space-Track",
-    abbr: "18th SDS / US Space Force",
-    url: "https://www.space-track.org",
-    cadence: "Daily",
-    what: "Two-line element sets (TLEs) for all ~27,000 tracked orbital objects. The authoritative source for the position and trajectory of every catalogued object in Earth orbit, maintained by the US Space Force's 18th Space Defense Squadron.",
-    why: "Orbital position data is required to map conjunction risk, debris density by altitude band, and the physical relationship between assets. Free with registration.",
-  },
-  {
-    name: "UCS Satellite Database",
-    abbr: "Union of Concerned Scientists",
-    url: "https://www.ucsusa.org/resources/satellite-database",
-    cadence: "Quarterly",
-    what: "A curated database of all active satellites, with operator, country, purpose, orbital regime, launch date, and expected lifetime. Updated quarterly by analysts who reconcile multiple public sources.",
-    why: "The cleanest normalized dataset of active satellites available publicly. Useful as a cross-reference against TLE data and ITU filings to identify which tracked objects belong to which operators.",
+    status: "planned",
+    what: "Every filed and coordinated orbital slot and frequency assignment across all regimes. The canonical international registry for satellite positions. A filed ITU slot is the closest thing to a deed that orbital real estate currently has. Publicly accessible via web, paywalled for bulk data.",
+    why: "The foundational dataset Clarke does not yet have. ITU data would cover all operators regardless of US jurisdiction, add coordination dispute history, and make congestion scores authoritative rather than approximate. Bulk access requires an ITU BR IFIC subscription.",
   },
   {
     name: "SEC EDGAR",
     abbr: "US Securities and Exchange Commission",
     url: "https://www.sec.gov/search-filings",
     cadence: "Quarterly / Annual",
-    what: "Financial filings from publicly traded satellite operators including SES, Viasat, Eutelsat, Intelsat (post-emergence), and Telesat. 10-K and 20-F annual reports disclose slot utilization, contract lengths, revenue by region, and fleet composition.",
-    why: "The only public source of economic data tied to specific orbital assets. Revenues, contract structures, and operator strategy can be extracted from these filings and mapped onto the orbital registry.",
+    status: "planned",
+    what: "Financial filings from publicly traded satellite operators including SES, Viasat, Eutelsat, Intelsat, and Telesat. 10-K and 20-F annual reports disclose slot utilization, contract lengths, revenue by region, and fleet composition.",
+    why: "The only public source of economic data tied to specific orbital assets. Extracting transponder revenue by position from SEC filings is the path to Clarke's implied asset valuation layer.",
+  },
+  {
+    name: "Space-Track",
+    abbr: "18th SDS / US Space Force",
+    url: "https://www.space-track.org",
+    cadence: "Daily",
+    status: "planned",
+    what: "Two-line element sets (TLEs) for all ~27,000 tracked orbital objects. The authoritative source for the position and trajectory of every catalogued object in Earth orbit, maintained by the US Space Force.",
+    why: "Adding TLE cross-reference would let Clarke validate and correct UCS orbital positions, identify decommissioned satellites still listed as active, and map physical proximity risk between assets. Free with registration.",
   },
   {
     name: "Celestrak",
     abbr: "Dr. T.S. Kelso",
     url: "https://celestrak.org",
     cadence: "Daily",
-    what: "Curated TLE datasets organized by category: active satellites, debris, rocket bodies, country of origin. A more accessible interface to Space-Track data with additional categorization and historical archives going back decades.",
-    why: "Useful for historical orbital analysis and for working with specific satellite categories without processing the full Space-Track catalog.",
+    status: "planned",
+    what: "Curated TLE datasets organized by category: active satellites, debris, rocket bodies, country of origin. A more accessible interface to Space-Track data with historical archives going back decades.",
+    why: "Planned as the cross-reference layer for validating UCS satellite identifiers. A spot-check against Celestrak surfaced significant NORAD ID errors in the current UCS import, which is why those identifiers are currently omitted from Clarke.",
   },
   {
     name: "Gunter's Space Page",
     abbr: "Gunter Krebs",
     url: "https://space.skyrocket.de",
     cadence: "Ongoing",
-    what: "A comprehensive reference database of spacecraft and launch vehicles maintained by a single dedicated researcher. Covers thousands of satellites with mission descriptions, launch records, operator details, and orbital parameters.",
-    why: "One of the most complete historical records of spacecraft missions available anywhere. Particularly useful for tracking older GEO assets with sparse official documentation.",
+    status: "planned",
+    what: "A comprehensive reference database of spacecraft and launch vehicles. Covers thousands of satellites with mission descriptions, launch records, operator details, and orbital parameters.",
+    why: "Particularly useful for tracking older GEO assets and alternative names. Many satellites in the UCS database carry multiple aliases that complicate operator matching across sources.",
   },
   {
     name: "Jonathan's Space Report",
     abbr: "Jonathan McDowell",
     url: "https://planet4589.org/space/jsr/jsr.html",
     cadence: "Ongoing",
-    what: "Detailed launch and satellite records maintained by a Harvard astrophysicist who has tracked every orbital launch since the space age began. Includes subsatellite catalogs, orbital history, and launch manifests.",
-    why: "The most meticulous public record of orbital launches and satellite histories. Useful for building historical context around assets and operators that ITU and FCC records alone do not fully describe.",
+    status: "planned",
+    what: "Detailed launch and satellite records maintained by a Harvard astrophysicist. Includes subsatellite catalogs, orbital history, and launch manifests going back to the beginning of the space age.",
+    why: "The most meticulous public record of orbital launches and satellite histories. Useful for building historical transaction context that neither ITU filings nor FCC records fully describe.",
   },
 ];
 
@@ -93,15 +101,22 @@ export default function DataSourcesPage() {
           <div key={s.abbr} className="bg-zinc-950 p-6 sm:p-8">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
               <div>
-                <a
-                  href={s.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white font-bold text-base hover:text-white/70 transition-colors"
-                >
-                  {s.name} ↗
-                </a>
-                <div className="text-white/30 text-xs font-mono mt-1">{s.abbr}</div>
+                <div className="flex items-center gap-2.5 mb-1">
+                  <a
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white font-bold text-base hover:text-white/70 transition-colors"
+                  >
+                    {s.name} ↗
+                  </a>
+                  {s.status === "live" ? (
+                    <span className="text-[10px] font-mono text-emerald-400 border border-emerald-800/60 bg-emerald-950/40 px-1.5 py-0.5 rounded leading-none">Live</span>
+                  ) : (
+                    <span className="text-[10px] font-mono text-zinc-600 border border-zinc-800 px-1.5 py-0.5 rounded leading-none">Planned</span>
+                  )}
+                </div>
+                <div className="text-white/30 text-xs font-mono">{s.abbr}</div>
               </div>
               <div className="text-[10px] font-mono text-white/20 tracking-widest uppercase shrink-0 pt-1">
                 {s.cadence}

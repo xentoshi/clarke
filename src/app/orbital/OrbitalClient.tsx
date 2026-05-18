@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { slots, statusLabels } from "@/data/orbital-slots";
+import Link from "next/link";
+import { statusLabels } from "@/data/orbital-slots";
 import type { OrbitalSlot, SlotStatus } from "@/data/orbital-slots";
+import { lonToSlug } from "@/lib/slot-utils";
+import type { CongestionTier } from "@/lib/satellites";
 import EmailCapture from "@/components/EmailCapture";
 import DevnetStatus from "@/components/DevnetStatus";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
@@ -34,7 +37,7 @@ const statusDot: Record<SlotStatus, string> = {
 
 const GLOSSARY: { term: string; def: string }[] = [
   { term: "Active", def: "Satellite confirmed operational with live transponder revenue." },
-  { term: "Squatted", def: "ITU filing on record, no operational satellite — filed to block competitors or speculate." },
+  { term: "Squatted", def: "ITU filing on record, no operational satellite. Filed to block competitors or speculate on future value." },
   { term: "Filed", def: "ITU filing submitted, no confirmed satellite yet. May be in planning." },
   { term: "Ku-band", def: "11.7–12.7 GHz. Direct-to-home TV broadcast. Small dishes, widely deployed." },
   { term: "Ka-band", def: "26.5–40 GHz. High-throughput broadband. Faster but susceptible to rain fade." },
@@ -43,28 +46,67 @@ const GLOSSARY: { term: string; def: string }[] = [
 
 const faq = [
   {
+    q: "Where does this data come from?",
+    a: "Satellite names, operators, and orbital positions come from the UCS Satellite Database, a normalized catalog of active satellites maintained by the Union of Concerned Scientists and updated twice yearly. FCC authorization records, including call signs, licensed frequency bands, and in-orbit dates, come from the FCC Approved Space Station List, the official government record of all space stations authorized to operate in or serve the United States. Congestion scores are computed from satellite density in the UCS data rather than from ITU filing records, meaning they reflect the density of active operational hardware rather than the broader universe of filed and coordinated positions.",
+  },
+  {
+    q: "Why do some positions have FCC authorization data and others don't?",
+    a: "FCC authorization records exist only for operators that hold a US license or have been granted US market access by the FCC. A position operated by a Russian, Chinese, or European operator under their own national administration will have no FCC record, and that absence reflects jurisdiction rather than a data gap in Clarke. Positions operated by US-headquartered companies or operators serving US markets will typically appear in FCC records regardless of where the satellite is physically located over the equator.",
+  },
+  {
+    q: "What does it mean when multiple satellites appear at the same position?",
+    a: "Multiple satellites can share the same nominal orbital longitude through ITU coordination agreements, each operating on different frequency assignments that prevent mutual interference. The 19.2°E position in the Clarke registry, for example, has four distinct SES Astra satellites operating within 0.14 degrees of each other under the same nominal position. Clarke groups satellites within 0.4 degrees of a position's nominal longitude as co-located, which is the standard tolerance used in ITU coordination practice.",
+  },
+  {
+    q: "How many total orbital positions exist versus what Clarke currently tracks?",
+    a: "The ITU has registered approximately 1,800 GEO coordination filings across all member states, representing every position that has been filed, coordinated, or historically registered since the space age began. Clarke currently tracks 590 active satellites from the UCS database across 407 distinct occupied positions. The difference between 1,800 total filings and 407 occupied positions reflects squatted slots with no operational satellite, historically registered positions no longer in active use, filed positions where the satellite has never launched, and coordination filings from operators who have since surrendered their rights.",
+  },
+  {
     q: "How is yield calculated?",
     a: "Satellite operators charge annual lease fees to use an orbital position. That revenue is distributed pro-rata to token holders each quarter based on the yield share percentage set when the offering is created.",
   },
   {
-    q: "What is Ku-band vs Ka-band?",
-    a: "Ku-band (11.7–12.7 GHz) is the primary direct-to-home broadcasting band — Sky, DirecTV. Smaller dishes, widely deployed. Ka-band (26.5–40 GHz) delivers gigabit-class throughput for broadband internet but is more susceptible to rain fade. C-band (3.7–4.2 GHz) is legacy cable TV distribution — large dishes, extremely rain-resistant.",
+    q: "What is Ku-band versus Ka-band?",
+    a: "Ku-band (11.7 to 12.7 GHz) is the primary direct-to-home broadcasting band, used by Sky, DirecTV, and most consumer satellite television. Consumer dishes are small and the infrastructure is widely deployed globally. Ka-band (26.5 to 40 GHz) delivers gigabit-class throughput per satellite and is increasingly used for broadband internet, though it is more susceptible to signal degradation from heavy rain. C-band (3.7 to 4.2 GHz) is legacy cable television distribution infrastructure, requiring larger dishes but offering exceptional reliability in all weather conditions.",
   },
   {
     q: "Who can tokenize a slot?",
-    a: "Only the ITU filing holder — the entity with the coordination agreement and national license for that orbital position. Operators (SES, Intelsat, Eutelsat, etc.) list their slots. Investors buy fractional tokens representing lease yield rights.",
+    a: "Only the ITU filing holder, meaning the entity that holds the coordination agreement and national license for that orbital position, can list an offering on Clarke. Operators such as SES, Intelsat, and Eutelsat would list their slots directly. Investors purchase fractional tokens representing a claim on the transponder lease revenue the operator collects from that position.",
   },
   {
     q: "What does 'squatted' mean?",
-    a: "A squatted slot has an ITU filing on record but no operational satellite. The ITU found 45% of investigated networks showed no proof of use. Nations and companies file preemptively to block competitors or speculate on future value — a practice called 'paper satellites.'",
+    a: "A squatted slot has an ITU filing on record but no operational satellite currently using the position. The ITU found that 45% of investigated satellite networks showed no verifiable proof of being brought into use. Governments and operators file positions preemptively to block competitors from occupying strategically valuable arcs, to preserve optionality for future satellite programs, or to create tradeable coordination rights, a practice sometimes called paper satellites.",
+  },
+  {
+    q: "What does the congestion number mean?",
+    a: "The congestion score counts how many active GEO satellites from the UCS database occupy the 4-degree arc surrounding a position, specifically all satellites within 2 degrees on either side. A score of 1 indicates a position in an empty stretch of orbit with no neighboring operational satellites. A score of 23 indicates a position inside the most densely occupied arc currently tracked, where interference coordination requirements are highest and spectrum competition is most intense. The tiers are Sparse (1 to 2), Low (3 to 5), Moderate (6 to 10), High (11 to 18), and Critical (19 and above). The densest arc currently tracked is the European Ku-band corridor between 13°E and 28°E.",
   },
   {
     q: "Is this live on mainnet?",
-    a: "Clarke is a proof of concept on Solana devnet. Transactions are real on-chain interactions, verifiable on Solana Explorer. Mainnet deployment requires working with satellite operators to establish the legal SPV structure. No real money is involved.",
+    a: "Clarke is a proof of concept running on Solana devnet. Transactions are real on-chain interactions verifiable on Solana Explorer, but no real capital is involved and no operators are live. Mainnet deployment requires establishing the legal SPV structure with real satellite operators, which is the next phase of development.",
   },
 ];
 
-export default function OrbitalClient() {
+const congestionColors: Record<CongestionTier, string> = {
+  sparse: "bg-zinc-700",
+  low: "bg-blue-700",
+  moderate: "bg-amber-600",
+  high: "bg-orange-500",
+  critical: "bg-red-500",
+};
+
+function densityToTier(density: number): CongestionTier {
+  if (density <= 2) return "sparse";
+  if (density <= 5) return "low";
+  if (density <= 10) return "moderate";
+  if (density <= 18) return "high";
+  return "critical";
+}
+
+export default function OrbitalClient({ slots, congestionScores }: {
+  slots: OrbitalSlot[];
+  congestionScores: Record<string, number>;
+}) {
   const [selectedRaw, setSelectedRaw] = useState<OrbitalSlot | null>(null);
   const [filter, setFilter] = useState<SlotStatus | "all">("all");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -171,6 +213,7 @@ export default function OrbitalClient() {
 
   const filtered = filter === "all" ? slots : slots.filter((s) => s.status === filter);
 
+
   return (
     <>
       <div className="mb-4"><DevnetStatus /></div>
@@ -178,10 +221,10 @@ export default function OrbitalClient() {
       {/* Stats row */}
       <div className="flex flex-wrap gap-x-8 gap-y-2 mb-8 px-1">
         {[
-          { label: "GEO slots tracked", value: "~1,800" },
-          { label: "Active", value: "541" },
-          { label: "Squatted or filed", value: "45%" },
-          { label: "On-chain today", value: "$0" },
+          { label: "GEO satellites tracked", value: slots.length.toLocaleString() },
+          { label: "Active", value: slots.filter((s) => s.status === "active").length.toLocaleString() },
+          { label: "Curated", value: slots.filter((s) => s.source === "curated").length.toLocaleString() },
+          { label: "On-chain (devnet)", value: slots.filter((s) => s.tokenization?.status === "listed").length.toLocaleString() },
         ].map((s) => (
           <div key={s.label} className="flex items-baseline gap-2">
             <span className="text-white font-mono font-bold text-sm">{s.value}</span>
@@ -537,7 +580,9 @@ export default function OrbitalClient() {
                   <tr className="border-b border-zinc-800 bg-zinc-950">
                     <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Slot</th>
                     <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden sm:table-cell">Operator</th>
-                    <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Value</th>
+                    <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden md:table-cell">Congestion</th>
+                    <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden sm:table-cell">Value</th>
+                    <th className="px-4 py-2.5" />
                   </tr>
                 </thead>
                 <tbody>
@@ -563,8 +608,27 @@ export default function OrbitalClient() {
                       <td className="px-4 py-2.5 hidden sm:table-cell">
                         <span className="text-zinc-500 text-xs">{slot.operator}</span>
                       </td>
-                      <td className="px-4 py-2.5 text-right">
+                      <td className="px-4 py-2.5 text-right hidden md:table-cell">
+                        {(() => {
+                          const slug = lonToSlug(slot.longitude);
+                          const density = congestionScores[slug] ?? 0;
+                          const tier = densityToTier(density);
+                          return (
+                            <div className="flex items-center justify-end gap-1.5">
+                              <div className={`w-1.5 h-1.5 rounded-full ${congestionColors[tier]}`} />
+                              <span className="text-zinc-600 text-xs">{density}</span>
+                            </div>
+                          );
+                        })()}
+                      </td>
+                      <td className="px-4 py-2.5 text-right hidden sm:table-cell">
                         <span className="text-zinc-600 text-xs font-mono">{slot.valueEstimate}</span>
+                      </td>
+                      <td className="px-2 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                        <Link href={`/orbital/${lonToSlug(slot.longitude)}`}
+                          className="text-zinc-700 hover:text-zinc-300 text-xs transition-colors px-1">
+                          →
+                        </Link>
                       </td>
                     </tr>
                   ))}

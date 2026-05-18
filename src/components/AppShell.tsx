@@ -1,7 +1,8 @@
 import Nav from "@/components/Nav";
 import Link from "next/link";
+import type { OrbitalSlot } from "@/data/orbital-slots";
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell({ children, slots }: { children: React.ReactNode; slots: OrbitalSlot[] }) {
   return (
     <div className="flex flex-col min-h-screen bg-[#060608]">
 
@@ -19,7 +20,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* All content sits above the fixed images */}
       <div className="relative z-10 flex flex-col min-h-screen">
-        <Nav />
+        <Nav slots={slots} />
         <main className="flex-1">{children}</main>
 
         <footer className="relative mt-24">

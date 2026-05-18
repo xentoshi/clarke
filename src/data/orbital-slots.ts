@@ -27,6 +27,12 @@ export interface OrbitalSlot {
     soldTokens: number;
     what: string;          // plain-English description of what the token represents
   };
+  // UCS enrichment fields
+  source?: "curated" | "ucs";
+  ucsCount?: number;
+  cosparIds?: string[];
+  noradIds?: string[];
+  purpose?: string;
 }
 
 export const slots: OrbitalSlot[] = [

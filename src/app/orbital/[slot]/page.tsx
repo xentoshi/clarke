@@ -295,7 +295,7 @@ export default async function SlotPage({ params }: { params: Promise<Params> }) 
       {/* Data source */}
       <div className="border-t border-zinc-800/50 pt-6">
         <p className="text-zinc-700 text-xs font-mono">
-          Satellite names, operators, and positions from UCS Satellite Database (May 2023). FCC authorization data from the FCC Approved Space Station List. Satellite identifiers (NORAD/COSPAR) omitted — UCS identifier accuracy has not been independently verified. Curated descriptions and valuations from Clarke.
+          Satellite names, operators, and positions from UCS Satellite Database (May 2023). FCC authorization data from the FCC Approved Space Station List. Satellite identifiers (NORAD/COSPAR) omitted; UCS identifier accuracy has not been independently verified. Curated descriptions and valuations from Clarke.
         </p>
       </div>
 

@@ -215,7 +215,7 @@ export default function PortfolioClient({ slots }: { slots: OrbitalSlot[] }) {
                   </button>
                   <button
                     disabled
-                    title="Secondary market coming — positions are not yet transferable"
+                    title="Secondary market coming. Positions are not yet transferable."
                     className="px-4 py-2 text-xs font-medium rounded-lg bg-zinc-900 text-zinc-600
                                border border-zinc-800 cursor-not-allowed"
                   >

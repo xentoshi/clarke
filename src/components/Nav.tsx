@@ -138,7 +138,7 @@ export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
                   href="https://faucet.solana.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  title="Devnet faucet rate-limited — get SOL at faucet.solana.com"
+                  title="Devnet faucet rate-limited. Get SOL at faucet.solana.com"
                   className="hidden sm:flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 bg-red-500/10 border border-red-500/20
                              text-red-400 text-xs rounded-sm hover:bg-red-500/20 transition-colors"
                 >

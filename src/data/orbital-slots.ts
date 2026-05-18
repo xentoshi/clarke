@@ -251,7 +251,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "Measat 3b",
     coverage: ["Southeast Asia", "South Asia", "Middle East"],
     valueEstimate: "$140M+",
-    description: "Southeast Asia and South Asia coverage. Serves maritime connectivity across the Bay of Bengal and Strait of Malacca — one of the world's busiest shipping corridors — alongside government networks and enterprise data links across the densest population corridor on Earth.",
+    description: "Southeast Asia and South Asia coverage. Serves maritime connectivity across the Bay of Bengal and Strait of Malacca, one of the world's busiest shipping corridors, alongside government networks and enterprise data links across the densest population corridor on Earth.",
     launched: 2006,
   },
   {
@@ -447,7 +447,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "Intelsat 906",
     coverage: ["South Asia", "Middle East", "East Africa"],
     valueEstimate: "$135M+",
-    description: "South Asian and Middle Eastern connectivity hub. Serves maritime and aviation operators across the Arabian Sea and Gulf of Aden — one of the world's most strategically important shipping routes. Enterprise networks across Pakistan, Bangladesh, and the Horn of Africa.",
+    description: "South Asian and Middle Eastern connectivity hub. Serves maritime and aviation operators across the Arabian Sea and Gulf of Aden, one of the world's most strategically important shipping routes, alongside enterprise networks across Pakistan, Bangladesh, and the Horn of Africa.",
     launched: 2002,
   },
   {
@@ -545,7 +545,7 @@ export const slots: OrbitalSlot[] = [
     satellite: "JCSAT-3A",
     coverage: ["Japan", "Southeast Asia", "Pacific"],
     valueEstimate: "$115M+",
-    description: "Japan's Pacific gateway. Serves maritime communications across the North Pacific shipping lanes — the primary route for trans-Pacific container traffic — alongside government and defense relay for Japan's southern island chain and enterprise connectivity across Southeast Asia.",
+    description: "Japan's Pacific gateway. Serves maritime communications across the North Pacific shipping lanes, the primary route for trans-Pacific container traffic, alongside government and defense relay for Japan's southern island chain and enterprise connectivity across Southeast Asia.",
     launched: 2006,
   },
   {
@@ -587,7 +587,7 @@ export const slots: OrbitalSlot[] = [
     satellite: undefined,
     coverage: ["Asia", "Pacific"],
     valueEstimate: "$65M+",
-    description: "Disputed Pacific position. ITU filing held but operational status contested. Multiple operators claim coordination rights. A textbook example of ITU filing being used to hold a position pending commercial development — or to block competitors.",
+    description: "Disputed Pacific position. ITU filing held but operational status contested. Multiple operators claim coordination rights. A textbook example of ITU filing being used to hold a position pending commercial development, or to block competitors.",
     launched: undefined,
   },
 ];

@@ -6,6 +6,7 @@ import OrbitalDiagram from "@/components/OrbitalDiagram";
 import { buildMeta } from "@/lib/metadata";
 import { companies } from "@/data/companies";
 import { getSatelliteStats } from "@/lib/satellites";
+import { posts } from "@/data/posts";
 
 export const metadata: Metadata = buildMeta({
   title: "Clarke",
@@ -80,9 +81,9 @@ export default function HomePage() {
           rotates. From the ground, they appear fixed in the sky.
         </p>
         <p className="text-zinc-400 text-sm leading-relaxed mb-6">
-          Because satellites operating too closely together interfere with one another, only a limited
-          number of commercially viable positions exist within this orbital ring. These positions are
-          known as orbital slots.
+          Because satellites operating too closely together interfere with one another, the commercially
+          viable positions within this ring are finite and unevenly distributed across coverage regions,
+          spectrum bands, and regulatory regimes. These positions are known as orbital slots.
         </p>
         <p className="text-zinc-400 text-sm leading-relaxed">
           Orbital positions are coordinated internationally through the International Telecommunication
@@ -99,7 +100,7 @@ export default function HomePage() {
       <div className="mb-20">
         <Label>GEO, LEO, and MEO</Label>
         <p className="text-zinc-400 text-sm leading-relaxed mb-8">
-          Not all orbital regimes work the same way. Each has different physics, economics, and scarcity models.
+          Not all orbital regimes work the same way. Each has different physics, economics, and value models.
         </p>
 
         <OrbitalDiagram />
@@ -111,14 +112,14 @@ export default function HomePage() {
               name: "Geostationary Orbit",
               alt: "35,786 km",
               tag: "The most economically concentrated orbital regime.",
-              body: "Satellites in GEO remain fixed relative to Earth, allowing continuous coverage over the same geographic region. GEO powers television broadcasting, weather systems, military communications, and long-duration telecommunications infrastructure. Scarcity in GEO comes from fixed positional constraints and spectrum coordination. This is the primary market Clarke focuses on.",
+              body: "Satellites in GEO remain fixed relative to Earth, allowing continuous coverage over the same geographic region. GEO powers television broadcasting, weather systems, military communications, and long-duration telecommunications infrastructure. Value in GEO is driven by regulatory incumbency, spectrum rights, coverage geography, and the growing range of infrastructure types the positions can support. This is the primary market Clarke focuses on.",
             },
             {
               orbit: "LEO",
               name: "Low Earth Orbit",
               alt: "200–2,000 km",
               tag: "The fastest-growing orbital regime.",
-              body: "LEO satellites move rapidly relative to Earth, requiring large constellations for continuous coverage. SpaceX's Starlink, Amazon Kuiper, and OneWeb all operate in LEO. The scarce assets in LEO are not fixed positions, but spectrum rights, orbital shell access, launch cadence, and congestion management.",
+              body: "LEO satellites move rapidly relative to Earth, requiring large constellations for continuous coverage. SpaceX's Starlink, Amazon Kuiper, and OneWeb all operate in LEO. The valuable assets in LEO are not fixed positions but spectrum rights, orbital shell access, launch cadence, and congestion management.",
             },
             {
               orbit: "MEO",
@@ -179,8 +180,8 @@ export default function HomePage() {
         <Label>Why now?</Label>
         <p className="text-zinc-400 text-sm leading-relaxed">
           Launch costs have collapsed, orbital congestion is accelerating, and space infrastructure
-          is becoming commercially indispensable. Orbit is now large enough, scarce enough, and
-          economically important enough to support dedicated market infrastructure.
+          is becoming commercially indispensable. Orbit is now complex enough, contested enough,
+          and economically important enough to support dedicated market infrastructure.
         </p>
       </div>
 
@@ -229,8 +230,8 @@ export default function HomePage() {
         </div>
 
         <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-          Clarke covers all major orbital regimes, beginning with GEO, where scarcity is fixed,
-          infrastructure values are highest, and the market structure is most mature.
+          Clarke covers all major orbital regimes, beginning with GEO, where regulatory incumbency
+          is durable, infrastructure values are highest, and the market structure is most mature.
         </p>
         <p className="text-zinc-400 text-sm leading-relaxed">
           Over time, Clarke aims to become the financial coordination layer for the orbital economy.
@@ -266,6 +267,29 @@ export default function HomePage() {
           View the registry →
         </Link>
       </div>
+
+      {/* Latest from Clarke */}
+      {posts.length > 0 && (() => {
+        const latest = posts[0];
+        return (
+          <>
+            <SectionDivider />
+            <div className="mb-20">
+              <Label>Latest from Clarke</Label>
+              <Link href={`/blog/${latest.slug}`} className="group block border border-white/[0.06] rounded-2xl p-8 bg-black/20 hover:border-white/[0.12] transition-colors">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-[10px] font-mono text-white/25 tracking-widest uppercase">{latest.tag}</span>
+                  <span className="text-white/10 text-xs">·</span>
+                  <span className="text-[10px] font-mono text-white/25">{latest.readingMinutes} min read</span>
+                </div>
+                <h3 className="text-white font-bold text-lg leading-snug mb-3 group-hover:text-zinc-200 transition-colors">{latest.title}</h3>
+                <p className="text-zinc-500 text-sm leading-relaxed mb-5">{latest.subtitle}</p>
+                <span className="text-zinc-600 text-xs font-mono group-hover:text-zinc-400 transition-colors">Read →</span>
+              </Link>
+            </div>
+          </>
+        );
+      })()}
 
       {/* Email */}
       <div className="border border-white/[0.06] rounded-2xl p-10 bg-black/20 mb-24 text-center">

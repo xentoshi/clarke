@@ -538,7 +538,7 @@ export default function OrbitalClient({ slots, congestionScores }: {
                   onClick={() => setOpenGlossary(!openGlossary)}
                   className="text-zinc-700 text-xs hover:text-zinc-500 transition-colors"
                 >
-                  {openGlossary ? "Hide glossary" : "Glossary — Active · Squatted · Ku-band · Ka-band"}
+                  {openGlossary ? "Hide glossary" : "Glossary: Active · Squatted · Ku-band · Ka-band"}
                 </button>
                 {openGlossary && (
                   <div className="mt-3 space-y-2">

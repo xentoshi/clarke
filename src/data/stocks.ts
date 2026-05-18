@@ -102,14 +102,14 @@ export const stocks: Stock[] = [
     vertical: "Launch",
     description: "Small satellite launch and spacecraft manufacturing. Electron rocket and Neutron in development.",
     detail: "RocketLab operates the Electron small-lift rocket with 50+ launches, and manufactures spacecraft components and complete satellites via its Space Systems division. Neutron, a medium-lift reusable rocket, is in development. Revenue ~$400M/year with a growing backlog of government and commercial satellite manufacturing contracts.",
-    clarkeRelevance: "Launch cost is the primary input to the economics of any new orbital position. RocketLab's pricing data and manifest reveal what it costs to place a satellite at a given altitude — a key variable in GEO slot valuation models.",
+    clarkeRelevance: "Launch cost is the primary input to the economics of any new orbital position. RocketLab's pricing data and manifest reveal what it costs to place a satellite at a given altitude, a key variable in GEO slot valuation models.",
   },
   {
     ticker: "NOC",
     name: "Northrop Grumman",
     vertical: "Manufacturing",
     description: "GEO satellite manufacturing and in-orbit servicing via Mission Extension Vehicle (MEV).",
-    detail: "Northrop's Space Systems division manufactures GEO satellite buses including the GEOStar series, and has pioneered commercial in-orbit servicing with its Mission Extension Vehicle — physically docking to aging GEO satellites to extend their operational life by 5+ years. This technology directly affects the economics of orbital positions by reducing fleet replacement cycles.",
+    detail: "Northrop's Space Systems division manufactures GEO satellite buses including the GEOStar series, and has pioneered commercial in-orbit servicing with its Mission Extension Vehicle, physically docking to aging GEO satellites to extend their operational life by 5+ years. This technology directly affects the economics of orbital positions by reducing fleet replacement cycles.",
     clarkeRelevance: "In-orbit servicing extends the revenue-generating life of a GEO slot. Northrop's MEV contracts reveal how much operators will pay to preserve an orbital position, a direct input to slot residual value modeling.",
   },
   {
@@ -118,7 +118,7 @@ export const stocks: Stock[] = [
     vertical: "GEO Operators",
     description: "Canadian GEO satellite operator and Lightspeed LEO broadband constellation developer.",
     detail: "Telesat operates a fleet of GEO satellites serving government, maritime, and enterprise customers across the Americas. It also holds rights to and is developing Lightspeed, a 198-satellite LEO broadband constellation. Heavily backed by the Canadian government. Revenue ~$500M/year from existing GEO fleet.",
-    clarkeRelevance: "Telesat's SEC filings disclose individual GEO slot economics including contracted transponder revenue, utilization rates, and slot-level capital values — the same metrics Clarke normalizes across the broader GEO market.",
+    clarkeRelevance: "Telesat's SEC filings disclose individual GEO slot economics including contracted transponder revenue, utilization rates, and slot-level capital values, the same metrics Clarke normalizes across the broader GEO market.",
   },
   {
     ticker: "SIRI",
@@ -134,7 +134,7 @@ export const stocks: Stock[] = [
     vertical: "Lunar & Exploration",
     description: "Lunar landers and infrastructure. First commercial company to land on the Moon (2024).",
     detail: "Intuitive Machines operates the Nova-C lunar lander and has won multiple NASA CLPS contracts for payload delivery to the Moon. Its IM-1 mission in February 2024 was the first US Moon landing in 52 years. The company is building lunar communications and navigation infrastructure as a foundation for the cislunar economy.",
-    clarkeRelevance: "Cislunar orbital positions are the next frontier for asset registry. Intuitive Machines' infrastructure contracts reveal how governments and commercial players are beginning to price access to lunar orbital slots and surface positions — the next chapter of what Clarke tracks.",
+    clarkeRelevance: "Cislunar orbital positions are the next frontier for asset registry. Intuitive Machines' infrastructure contracts reveal how governments and commercial players are beginning to price access to lunar orbital slots and surface positions, the next chapter of what Clarke tracks.",
   },
   {
     ticker: "RDW",
@@ -150,7 +150,7 @@ export const stocks: Stock[] = [
     vertical: "Space Power",
     description: "Nuclear technology for space propulsion and power. Contracted by NASA and DARPA for space reactor development.",
     detail: "BWXT is the primary contractor for NASA's nuclear thermal propulsion and fission surface power programs. Its space division develops small nuclear reactors for deep space missions and lunar/Mars surface power. Revenue ~$2.5B/year, primarily defense nuclear, with space as a fast-growing segment.",
-    clarkeRelevance: "Nuclear power for space dramatically extends mission endurance and reach — expanding the economically viable orbital positions Clarke can eventually track. BWXT's contract structure reveals how government customers price reliable power infrastructure in space.",
+    clarkeRelevance: "Nuclear power for space dramatically extends mission endurance and reach, expanding the economically viable orbital positions Clarke can eventually track. BWXT's contract structure reveals how government customers price reliable power infrastructure in space.",
   },
   {
     ticker: "OKLO",
@@ -158,6 +158,6 @@ export const stocks: Stock[] = [
     vertical: "Space Power",
     description: "Compact fission microreactors. Aurora powerhouse targets remote and off-grid power including space applications.",
     detail: "Oklo is developing compact fission microreactors (the Aurora) for remote terrestrial and space power. Backed by Sam Altman, it has a fuel supply agreement with the US Department of Energy. While primarily targeting terrestrial markets, Oklo's technology is a candidate for lunar and deep space power infrastructure.",
-    clarkeRelevance: "Orbital infrastructure increasingly requires persistent power. Oklo's progress toward compact space-grade reactors represents a supply-side input to the economics of future orbital positions — particularly in non-GEO regimes where solar is impractical.",
+    clarkeRelevance: "Orbital infrastructure increasingly requires persistent power. Oklo's progress toward compact space-grade reactors represents a supply-side input to the economics of future orbital positions, particularly in non-GEO regimes where solar is impractical.",
   },
 ];

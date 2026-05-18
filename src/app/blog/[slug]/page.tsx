@@ -3,17 +3,13 @@ import Link from "next/link";
 import { getPost } from "@/data/posts";
 import { buildMeta } from "@/lib/metadata";
 import { TableOfContents } from "@/components/TableOfContents";
-import { MultiplanetaryPost, toc as multiplanetaryToc } from "@/data/posts/content/becoming-multiplanetary";
-import { DesigningForMarsPost, toc as designingForMarsToc } from "@/data/posts/content/designing-for-mars";
-import { OrbitalDataCentersEngineeringPost, toc as orbitalDataCentersEngineeringToc } from "@/data/posts/content/orbital-data-centers-engineering";
+import IntelsatBankruptcyPost, { toc as intelsatBankruptcyToc } from "@/data/posts/content/intelsat-bankruptcy-orbital-real-estate";
 import type { TocItem } from "@/components/TableOfContents";
 
 type ContentEntry = { Component: React.FC; toc: TocItem[] };
 
 const contentMap: Record<string, ContentEntry> = {
-  "becoming-multiplanetary": { Component: MultiplanetaryPost, toc: multiplanetaryToc },
-  "designing-for-mars": { Component: DesigningForMarsPost, toc: designingForMarsToc },
-  "orbital-data-centers-engineering": { Component: OrbitalDataCentersEngineeringPost, toc: orbitalDataCentersEngineeringToc },
+  "intelsat-bankruptcy-orbital-real-estate": { Component: IntelsatBankruptcyPost, toc: intelsatBankruptcyToc },
 };
 
 type Params = { slug: string };

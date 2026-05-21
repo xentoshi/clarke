@@ -38,20 +38,22 @@ export default function AppShell({ children, slots }: { children: React.ReactNod
                   <div className="flex flex-col gap-1">
                     {[
                       { label: "Orbital Slots", href: "/orbital" },
-                      { label: "Portfolio", href: "/portfolio" },
+                      { label: "Companies", href: "/companies" },
                       { label: "Space Markets", href: "/stocks" },
+                      { label: "Blog", href: "/blog" },
                     ].map((l) => (
                       <Link key={l.href} href={l.href} className="text-white/30 text-xs hover:text-white/80 transition-colors py-0.5">{l.label}</Link>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <div className="text-white/30 text-xs uppercase tracking-widest mb-4 font-medium">Company</div>
+                  <div className="text-white/30 text-xs uppercase tracking-widest mb-4 font-medium">Resources</div>
                   <div className="flex flex-col gap-1">
                     {[
                       { label: "About", href: "/about" },
                       { label: "Docs", href: "/docs" },
-                      { label: "List a Slot", href: "/orbital/list" },
+                      { label: "Data Sources", href: "/data" },
+                      { label: "Operator", href: "/operator" },
                     ].map((l) => (
                       <Link key={l.href} href={l.href} className="text-white/30 text-xs hover:text-white/80 transition-colors py-0.5">{l.label}</Link>
                     ))}

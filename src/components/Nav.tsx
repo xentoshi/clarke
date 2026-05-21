@@ -21,15 +21,11 @@ const WalletMultiButton = dynamic(
 const primaryLinks = [
   { href: "/orbital", label: "Orbital Slots" },
   { href: "/companies", label: "Companies" },
-  { href: "/portfolio", label: "Portfolio" },
   { href: "/stocks", label: "Stocks" },
 ];
 
 const moreLinks = [
-  { href: "/operator", label: "Operator" },
   { href: "/blog", label: "Blog" },
-  { href: "/data", label: "Data Sources" },
-  { href: "/docs", label: "Docs" },
   { href: "/about", label: "About" },
 ];
 

@@ -10,6 +10,10 @@ declare module "react-globe.gl" {
       pov?: { lat?: number; lng?: number; altitude?: number },
       transitionDuration?: number
     ): { lat: number; lng: number; altitude: number };
+    controls(): {
+      autoRotate: boolean;
+      autoRotateSpeed: number;
+    };
   }
 
   export interface GlobeProps {

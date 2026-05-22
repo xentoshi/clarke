@@ -1,11 +1,11 @@
-import https from "https";
+import https, { type RequestOptions } from "https";
 
-const BASE = "https://www.space-track.org";
+const TIMEOUT_MS = 30_000;
 
 export async function login(username: string, password: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const body = `identity=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
-    const options = {
+    const options: RequestOptions = {
       method: "POST",
       hostname: "www.space-track.org",
       path: "/ajaxauth/login",
@@ -19,6 +19,10 @@ export async function login(username: string, password: string): Promise<string>
     const req = https.request(options, (res) => {
       res.resume();
       res.on("end", () => {
+        if (res.statusCode && res.statusCode >= 400) {
+          reject(new Error(`Login failed: HTTP ${res.statusCode}. Check credentials.`));
+          return;
+        }
         const raw = res.headers["set-cookie"];
         if (!raw || raw.length === 0) {
           reject(new Error("Login failed: no cookie returned. Check credentials."));
@@ -29,6 +33,9 @@ export async function login(username: string, password: string): Promise<string>
       });
     });
 
+    req.setTimeout(TIMEOUT_MS, () => {
+      req.destroy(new Error("Space-Track login timed out after 30s."));
+    });
     req.on("error", reject);
     req.write(body);
     req.end();
@@ -37,7 +44,7 @@ export async function login(username: string, password: string): Promise<string>
 
 export async function query(cookie: string, path: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const options = {
+    const options: RequestOptions = {
       hostname: "www.space-track.org",
       path,
       headers: {
@@ -46,16 +53,22 @@ export async function query(cookie: string, path: string): Promise<string> {
       },
     };
 
-    https.get(options, (res) => {
+    const req = https.get(options, (res) => {
       if (res.statusCode === 401) {
+        res.resume();
         reject(new Error("Space-Track session expired or invalid."));
         return;
       }
       const chunks: Buffer[] = [];
+      res.on("error", reject);
       res.on("data", (c: Buffer) => chunks.push(c));
       res.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
-      res.on("error", reject);
-    }).on("error", reject);
+    });
+
+    req.setTimeout(TIMEOUT_MS, () => {
+      req.destroy(new Error("Space-Track query timed out after 30s."));
+    });
+    req.on("error", reject);
   });
 }
 

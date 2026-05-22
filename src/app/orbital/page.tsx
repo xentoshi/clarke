@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
 import OrbitalClient from "./OrbitalClient";
+import OrbitalGlobe from "@/components/OrbitalGlobe";
 import { slots as curatedSlots } from "@/data/orbital-slots";
 import { mergeWithUcs, getAllCongestionScores } from "@/lib/satellites";
 
@@ -24,6 +25,9 @@ export default function OrbitalPage() {
         <Link href="/docs" className="text-zinc-600 text-xs hover:text-zinc-300 transition-colors shrink-0 mt-1">
           Docs →
         </Link>
+      </div>
+      <div className="mb-10">
+        <OrbitalGlobe curatedSlots={curatedSlots} height={600} />
       </div>
       <OrbitalClient slots={slots} congestionScores={congestionScores} />
     </div>

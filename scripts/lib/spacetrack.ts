@@ -73,6 +73,6 @@ export async function query(cookie: string, path: string): Promise<string> {
 }
 
 export const PATHS = {
-  satcat: "/basicspacedata/query/class/satcat/PERIOD/1400--1480/ECCENTRICITY/0--0.01/CURRENT/Y/DECAY/null-null/orderby/NORAD_CAT_ID/format/json",
+  satcat: "/basicspacedata/query/class/satcat/PERIOD/1400--1480/CURRENT/Y/orderby/NORAD_CAT_ID/format/json",
   tles: "/basicspacedata/query/class/gp/MEAN_MOTION/0.99--1.01/ECCENTRICITY/0--0.01/EPOCH/%3Enow-30/orderby/NORAD_CAT_ID/format/tle",
 };

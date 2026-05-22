@@ -10,7 +10,8 @@
     "seed": "ts-node --project tsconfig.scripts.json scripts/seed-offerings.ts",
     "ingest": "ts-node --project tsconfig.scripts.json scripts/ingest-ucs.ts",
     "ingest:fcc": "ts-node --project tsconfig.scripts.json scripts/ingest-fcc.ts",
-    "ingest:all": "npm run ingest && npm run ingest:fcc"
+    "ingest:spacetrack": "ts-node --project tsconfig.scripts.json scripts/ingest-spacetrack.ts",
+    "ingest:all": "npm run ingest && npm run ingest:fcc && npm run ingest:spacetrack"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
@@ -25,6 +26,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-globe.gl": "^2.38.0",
+    "satellite.js": "^7.0.1",
     "three": "^0.184.0"
   },
   "devDependencies": {

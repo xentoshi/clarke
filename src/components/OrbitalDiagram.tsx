@@ -1,4 +1,9 @@
-export default function OrbitalDiagram() {
+interface Props {
+  satellites?: number[]; // GEO satellite longitudes from DB
+  curatedLons?: number[]; // curated slot longitudes
+}
+
+export default function OrbitalDiagram({ satellites = [], curatedLons = [] }: Props) {
   const cx = 200;
   const cy = 200;
 
@@ -8,9 +13,32 @@ export default function OrbitalDiagram() {
     { id: "geo", label: "GEO", alt: "35,786 km", r: 158, dur: "30s", color: "#f59e0b" },
   ];
 
+  const GEO_R = 158;
+
+  // Convert longitude to SVG x,y on the GEO ring
+  // 0°E = top, increases clockwise (like a compass)
+  function lonToXY(lon: number) {
+    const angle = ((lon - 90) * Math.PI) / 180;
+    return {
+      x: cx + GEO_R * Math.cos(angle),
+      y: cy + GEO_R * Math.sin(angle),
+    };
+  }
+
+  // Curated set for fast lookup
+  const curatedSet = new Set(curatedLons.map((l) => Math.round(l * 10)));
+
+  const isCurated = (lon: number) =>
+    curatedLons.some((c) => Math.abs(c - lon) <= 0.4);
+
   return (
     <div className="w-full my-10 select-none">
       <svg viewBox="0 0 400 400" className="w-full max-w-xs mx-auto block" aria-hidden="true">
+
+        {/* Subtle pulse animation for a handful of dots */}
+        <defs>
+          <animate id="pulse" attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite" />
+        </defs>
 
         {/* Orbit rings */}
         {orbits.map(({ id, r }) => (
@@ -24,11 +52,31 @@ export default function OrbitalDiagram() {
           />
         ))}
 
+        {/* GEO satellite dots -- all 588 from DB */}
+        {satellites.map((lon, i) => {
+          const { x, y } = lonToXY(lon);
+          const curated = isCurated(lon);
+          const shouldPulse = !curated && i % 47 === 0; // ~12 random pulsing dots
+          return (
+            <circle
+              key={`sat-${i}`}
+              cx={x} cy={y}
+              r={curated ? 2 : 1}
+              fill={curated ? "#ffd700" : "rgba(255,255,255,0.35)"}
+              opacity={curated ? 0.95 : 0.4}
+            >
+              {shouldPulse && (
+                <animate attributeName="opacity" values="0.4;0.9;0.4" dur={`${2 + (i % 3)}s`} repeatCount="indefinite" />
+              )}
+            </circle>
+          );
+        })}
+
         {/* Earth */}
         <circle cx={cx} cy={cy} r={16} fill="#0c0c12" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" />
         <text x={cx} y={cy + 4} textAnchor="middle" fill="rgba(255,255,255,0.25)" fontSize="6.5" fontFamily="monospace" letterSpacing="1.5">EARTH</text>
 
-        {/* Satellites */}
+        {/* Animated single satellites for LEO / MEO / GEO */}
         {orbits.map(({ id, r, dur, color }) => (
           <g key={`sat-${id}`} transform={`translate(${cx}, ${cy})`}>
             <animateTransform
@@ -45,7 +93,7 @@ export default function OrbitalDiagram() {
           </g>
         ))}
 
-        {/* Labels — right side */}
+        {/* Labels */}
         {orbits.map(({ id, label, alt, r, color }) => (
           <g key={`label-${id}`}>
             <line

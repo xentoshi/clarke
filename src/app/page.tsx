@@ -5,7 +5,7 @@ import EmailCapture from "@/components/EmailCapture";
 import OrbitalDiagram from "@/components/OrbitalDiagram";
 import { buildMeta } from "@/lib/metadata";
 import { companies } from "@/data/companies";
-import { getSatelliteStats } from "@/lib/satellites";
+import { getSatelliteStats, getGeoLongitudes } from "@/lib/satellites";
 import { posts } from "@/data/posts";
 
 export const metadata: Metadata = buildMeta({
@@ -28,6 +28,8 @@ function SectionDivider() {
 
 export default function HomePage() {
   const dbStats = getSatelliteStats();
+  const geoLongitudes = getGeoLongitudes();
+  const curatedLons = slots.map((s) => s.longitude);
   const geoTracked = dbStats.geoCount > 0 ? `${dbStats.geoCount}+` : "590+";
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6">
@@ -103,7 +105,7 @@ export default function HomePage() {
           Not all orbital regimes work the same way. Each has different physics, economics, and value models.
         </p>
 
-        <OrbitalDiagram />
+        <OrbitalDiagram satellites={geoLongitudes} curatedLons={curatedLons} />
 
         <div className="space-y-px bg-white/[0.04] rounded-xl overflow-hidden mt-8">
           {[

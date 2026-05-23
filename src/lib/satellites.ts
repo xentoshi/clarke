@@ -336,6 +336,15 @@ export function getFccCount(): number {
   return (db.prepare("SELECT COUNT(*) as n FROM fcc_authorizations").get() as { n: number }).n;
 }
 
+export function getGeoLongitudes(): number[] {
+  const db = getDb();
+  if (!db) return [];
+  const rows = db.prepare(
+    "SELECT longitude_geo FROM satellites WHERE orbit_class = 'GEO' AND longitude_geo IS NOT NULL"
+  ).all() as { longitude_geo: number }[];
+  return rows.map((r) => r.longitude_geo);
+}
+
 export function getGeoPositionCount(): number {
   const db = getDb();
   if (!db) return 0;

@@ -119,10 +119,6 @@ export default function OrbitalGlobe({ slots, height = 600, selectedSlotId = nul
     globe.scene().add(ring);
 
     globe.pointOfView({ lat: 20, lng: 20, altitude: 4.5 }, 0);
-
-    const controls = globe.controls();
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.4;
   }, []);
 
   const pointColor = useCallback(
@@ -171,8 +167,6 @@ export default function OrbitalGlobe({ slots, height = 600, selectedSlotId = nul
       const nextSlot = pt.slot && pt.slot.id === selectedSlotId ? null : pt.slot;
       onSlotSelect?.(nextSlot);
       globeRef.current?.pointOfView({ lat: pt.lat, lng: pt.lng, altitude: 2.5 }, 800);
-      const controls = globeRef.current?.controls();
-      if (controls) controls.autoRotate = false;
     },
     [onSlotSelect, selectedSlotId]
   );
@@ -188,8 +182,6 @@ export default function OrbitalGlobe({ slots, height = 600, selectedSlotId = nul
       { lat: selectedPoint.lat, lng: selectedPoint.lng, altitude: 2.5 },
       800
     );
-    const controls = globeRef.current.controls();
-    if (controls) controls.autoRotate = false;
   }, [selectedPoint]);
 
   return (

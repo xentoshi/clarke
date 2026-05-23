@@ -22,6 +22,7 @@ const sections = [
   { id: "legal",               label: "Legal Structure" },
   { id: "program",             label: "On-Chain Program" },
   { id: "yield",               label: "Yield Accounting" },
+  { id: "agents",              label: "Agents API" },
 ];
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
@@ -159,14 +160,15 @@ export default function DocsPage() {
 
           <Section id="data-sources" title="Data Sources">
             <p className="text-zinc-500 text-sm leading-relaxed mb-6">
-              All data in Clarke is derived from public sources. The two sources currently integrated are marked Live below. Sources marked Planned are in the roadmap but not yet ingested.
+              All data in Clarke is derived from public sources. Sources marked Live are currently ingested; sources marked Planned are in the roadmap but not yet integrated.
             </p>
             <div className="space-y-3">
               <DataSourceCard name="UCS Satellite Database" url="https://www.ucsusa.org/resources/satellite-database" type="Satellites" license="Live" description={`Union of Concerned Scientists normalized catalog of active satellites, updated twice yearly. Clarke ingests the full dataset (${geoCount} GEO satellites from the May 2023 snapshot), providing operator attribution, orbital positions, launch dates, and purpose classifications for all tracked positions.`} />
               <DataSourceCard name="FCC Approved Space Station List" url="https://www.fcc.gov/approved-space-station-list" type="US Licenses" license="Live" description={`The FCC's official list of all space stations authorized to operate in or serve the United States. Clarke ingests ${fccCount} GEO authorizations covering call signs, licensed frequency bands, licensee names, administrations, and in-orbit dates from government records.`} />
+              <DataSourceCard name="Space-Track.org" url="https://www.space-track.org" type="Orbital Mechanics" license="Live" description="US Space Force catalog of tracked orbital objects with TLE updates. Clarke ingests the SATCAT and live TLE tables (run via npm run ingest:spacetrack) to provide real-time satellite positions for the orbital globe and as a cross-reference for validating UCS identifiers." />
+              <DataSourceCard name="Clarke Companies Registry" url="/companies" type="Companies" license="Live" description="A curated registry of space-industry companies maintained in src/data/companies.ts, spanning 30+ sectors including GEO Operators, Launch, Lunar, Earth Observation, Robotics, ISRU, Habitation, and Space Insurance. Each entry includes sector, headquarters, founding year, and a profile describing the company's role in the broader space economy. Cross-referenced with the slot and stock layers via the agents API." />
               <DataSourceCard name="ITU Space Network System" url="https://www.itu.int/itu-r/space/apps/public/spaceexplorer/networks-explorer" type="Orbital Filings" license="Planned" description="The canonical international registry for every coordinated orbital position and frequency assignment. Bulk data access requires an ITU BR IFIC subscription and arrives in Microsoft Access format. Integration will extend the registry from active satellites to the full universe of filed and coordinated positions." />
               <DataSourceCard name="SEC EDGAR" url="https://www.sec.gov/cgi-bin/browse-edgar" type="Financial Filings" license="Planned" description="Annual and quarterly filings from publicly traded satellite operators including SES, Viasat, Eutelsat, and Telesat. Integration will power the pricing layer by mapping disclosed transponder revenues and slot valuations to specific orbital positions." />
-              <DataSourceCard name="Space-Track.org" url="https://www.space-track.org" type="Orbital Mechanics" license="Planned" description="US Space Force catalog of all tracked orbital objects with daily TLE updates. Planned as the cross-reference layer for validating satellite positions and correcting identifier accuracy in the UCS import." />
             </div>
           </Section>
 
@@ -361,6 +363,84 @@ export default function DocsPage() {
                   <p className="text-zinc-500 text-xs leading-relaxed">{s.body}</p>
                 </div>
               ))}
+            </div>
+          </Section>
+
+          <Section id="agents" title="Agents API">
+            <p className="text-zinc-500 text-sm leading-relaxed mb-6">
+              Clarke exposes a read-only HTTP API and a Model Context Protocol server so autonomous agents and LLM-based assistants can query the registry without scraping HTML. The same operations layer backs both transports, so HTTP responses and MCP tool results stay in sync. No authentication is required; reads are public, rate-limited, and cached.
+            </p>
+
+            <h3 className="text-white text-sm font-semibold mb-3">HTTP endpoints</h3>
+            <div className="space-y-2 mb-6">
+              {[
+                { path: "GET /api/v1/agents/slots", desc: "All orbital slots (curated + UCS-derived), merged and sorted by longitude." },
+                { path: "GET /api/v1/agents/slots/{slug}", desc: "Full dossier for one slot: record, satellites at that longitude, FCC authorizations, congestion data." },
+                { path: "GET /api/v1/agents/satellites", desc: "GEO satellites from the UCS database. Optional filters: operator, ownerCountry, limit (max 1000)." },
+                { path: "GET /api/v1/agents/companies", desc: "Company registry. Optional sector filter. Pass view=sectors to enumerate sectors with counts." },
+                { path: "GET /api/v1/agents/companies/{slug}", desc: "Company profile cross-referenced with its publicly traded stock (if any), its operated slots, and its satellites." },
+              ].map((e) => (
+                <div key={e.path} className="border border-zinc-800 rounded-lg px-4 py-3 bg-zinc-900/5">
+                  <div className="text-white font-mono text-xs mb-1">{e.path}</div>
+                  <div className="text-zinc-500 text-xs leading-relaxed">{e.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            <h3 className="text-white text-sm font-semibold mb-3">Response shape</h3>
+            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10 mb-6">
+              <p className="text-zinc-500 text-xs leading-relaxed mb-3">
+                Every successful response is a JSON envelope with a versioned <span className="font-mono text-zinc-300">data</span> field and a <span className="font-mono text-zinc-300">meta</span> object containing the API version, generation timestamp, and (for list endpoints) the row count. Responses carry <span className="font-mono text-zinc-300">ETag</span> and <span className="font-mono text-zinc-300">Cache-Control: public, s-maxage=300, stale-while-revalidate=60</span> headers; agents are expected to send <span className="font-mono text-zinc-300">If-None-Match</span> for conditional requests.
+              </p>
+              <pre className="text-zinc-400 text-xs font-mono bg-black/40 border border-zinc-800/60 rounded p-3 overflow-x-auto">{`{
+  "data": { ... },
+  "meta": {
+    "version": "1.0",
+    "generated_at": "2026-05-23T14:22:40Z",
+    "count": 590
+  }
+}`}</pre>
+            </div>
+
+            <h3 className="text-white text-sm font-semibold mb-3">Rate limits and validation</h3>
+            <div className="space-y-3 mb-6">
+              {[
+                { label: "RATE LIMIT", body: "60 requests per minute per IP, enforced in-memory per serverless instance. A 429 response includes a Retry-After header in seconds. There is no per-wallet limit in Phase 1 because no authentication is required." },
+                { label: "INPUT VALIDATION", body: "All path slugs are validated against /^[a-z0-9-]+$/ and query parameters against per-field regex caps. Path traversal attempts and injection patterns return 400. Tickers are restricted to /^[A-Z0-9.-]{1,10}$/." },
+                { label: "CORS", body: "All routes allow cross-origin reads (Access-Control-Allow-Origin: *) with GET and OPTIONS only. Preflight responses cache for 24 hours." },
+              ].map((s) => (
+                <div key={s.label} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
+                  <div className="text-xs font-mono text-zinc-600 mb-3">// {s.label}</div>
+                  <p className="text-zinc-500 text-xs leading-relaxed">{s.body}</p>
+                </div>
+              ))}
+            </div>
+
+            <h3 className="text-white text-sm font-semibold mb-3">Model Context Protocol (MCP) server</h3>
+            <p className="text-zinc-500 text-sm leading-relaxed mb-4">
+              The same operations are exposed as MCP tools so Claude Code, Cursor, and any other MCP-compatible client can query Clarke in plain English. The server runs locally over stdio and reads directly from the SQLite database; no network round-trip to Clarke is involved beyond what the host process does on its own.
+            </p>
+            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10 mb-6">
+              <div className="text-xs font-mono text-zinc-600 mb-3">// MCP CONFIG</div>
+              <pre className="text-zinc-400 text-xs font-mono bg-black/40 border border-zinc-800/60 rounded p-3 overflow-x-auto">{`{
+  "mcpServers": {
+    "clarke": {
+      "command": "npm",
+      "args": ["run", "mcp", "--silent"],
+      "cwd": "/absolute/path/to/clarke"
+    }
+  }
+}`}</pre>
+              <p className="text-zinc-500 text-xs leading-relaxed mt-3">
+                Available tools: <span className="font-mono">clarke_list_slots</span>, <span className="font-mono">clarke_get_slot</span>, <span className="font-mono">clarke_list_satellites</span>, <span className="font-mono">clarke_list_companies</span>, <span className="font-mono">clarke_get_company</span>, <span className="font-mono">clarke_company_sectors</span>, <span className="font-mono">clarke_list_stocks</span>.
+              </p>
+            </div>
+
+            <h3 className="text-white text-sm font-semibold mb-3">Scope and roadmap</h3>
+            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
+              <p className="text-zinc-500 text-xs leading-relaxed">
+                The current surface is read-only. Transaction-building endpoints, event streams, and on-chain capability tokens for metered access are on the roadmap but not implemented. Agents that want to invest, claim yield, or distribute revenue use the standard wallet adapter through the human-facing UI for now.
+              </p>
             </div>
           </Section>
 

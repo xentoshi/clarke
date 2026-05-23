@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback, useEffect, useState } from "react";
+import { useRef, useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import * as THREE from "three";
 import type { GlobeInstance } from "react-globe.gl";
@@ -20,13 +20,6 @@ const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
 const GEO_ALT = 35786 / 6371;
 const GEO_RING_RADIUS = 100 * (1 + GEO_ALT);
 
-const STATUS_COLORS: Record<string, string> = {
-  active:   "#34d399",
-  filed:    "#60a5fa",
-  squatted: "#fbbf24",
-  inactive: "#52525b",
-};
-
 interface GlobePoint {
   lat: number;
   lng: number;
@@ -36,7 +29,7 @@ interface GlobePoint {
   slot: OrbitalSlot | null;
 }
 
-function propagateAll(tles: TleEntry[], curatedSlots: OrbitalSlot[]): GlobePoint[] {
+function propagateAll(tles: TleEntry[], slots: OrbitalSlot[]): GlobePoint[] {
   const now = new Date();
   const gmst = gstime(now);
   const points: GlobePoint[] = [];
@@ -53,10 +46,13 @@ function propagateAll(tles: TleEntry[], curatedSlots: OrbitalSlot[]): GlobePoint
       const lng = degreesLong(geo.longitude);
       const alt = geo.height / 6371;
 
-      const slot = curatedSlots.find((s) => Math.abs(s.longitude - lng) <= 0.4) ?? null;
+      const slot = slots.find((s) => Math.abs(s.longitude - lng) <= 0.4) ?? null;
       const noradId = tle.tle1.slice(2, 7).trim();
 
-      points.push({ lat, lng, alt, name: tle.name ?? noradId, noradId, slot });
+      // Use small fixed altitude so points render as dots, not tall bars.
+      // The torus ring visually marks true GEO altitude.
+      void alt;
+      points.push({ lat, lng, alt: 0.02, name: tle.name ?? noradId, noradId, slot });
     } catch {
       // skip malformed TLEs
     }
@@ -66,15 +62,16 @@ function propagateAll(tles: TleEntry[], curatedSlots: OrbitalSlot[]): GlobePoint
 }
 
 interface Props {
-  curatedSlots: OrbitalSlot[];
+  slots: OrbitalSlot[];
   height?: number;
+  selectedSlotId?: string | null;
+  onSlotSelect?: (slot: OrbitalSlot | null) => void;
 }
 
-export default function OrbitalGlobe({ curatedSlots, height = 600 }: Props) {
+export default function OrbitalGlobe({ slots, height = 600, selectedSlotId = null, onSlotSelect }: Props) {
   const globeRef = useRef<GlobeInstance | null>(null);
   const tlesRef = useRef<TleEntry[]>([]);
   const [points, setPoints] = useState<GlobePoint[]>([]);
-  const [selected, setSelected] = useState<GlobePoint | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,11 +87,11 @@ export default function OrbitalGlobe({ curatedSlots, height = 600 }: Props) {
         }
         const tles: TleEntry[] = await res.json();
         tlesRef.current = tles;
-        setPoints(propagateAll(tles, curatedSlots));
+        setPoints(propagateAll(tles, slots));
         setLoading(false);
 
         interval = setInterval(() => {
-          setPoints(propagateAll(tlesRef.current, curatedSlots));
+          setPoints(propagateAll(tlesRef.current, slots));
         }, 30_000);
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : "Unknown error";
@@ -105,7 +102,7 @@ export default function OrbitalGlobe({ curatedSlots, height = 600 }: Props) {
 
     load();
     return () => clearInterval(interval);
-  }, [curatedSlots]);
+  }, [slots]);
 
   const handleGlobeReady = useCallback(() => {
     const globe = globeRef.current;
@@ -131,21 +128,23 @@ export default function OrbitalGlobe({ curatedSlots, height = 600 }: Props) {
   const pointColor = useCallback(
     (p: object) => {
       const pt = p as GlobePoint;
-      if (selected?.noradId === pt.noradId) return "#ffffff";
-      if (pt.slot) return "#ffd700";
+      if (pt.slot && pt.slot.id === selectedSlotId) return "#ffffff";
+      if (pt.slot?.tokenization?.status === "listed") return "#34d399";
+      if (pt.slot?.source === "curated") return "#ffd700";
       return "rgba(100,160,255,0.6)";
     },
-    [selected]
+    [selectedSlotId]
   );
 
   const pointRadius = useCallback(
     (p: object) => {
       const pt = p as GlobePoint;
-      if (selected?.noradId === pt.noradId) return 0.8;
-      if (pt.slot) return 0.55;
+      if (pt.slot && pt.slot.id === selectedSlotId) return 0.85;
+      if (pt.slot?.tokenization?.status === "listed") return 0.6;
+      if (pt.slot?.source === "curated") return 0.55;
       return 0.3;
     },
-    [selected]
+    [selectedSlotId]
   );
 
   const pointLabel = useCallback((p: object) => {
@@ -154,24 +153,44 @@ export default function OrbitalGlobe({ curatedSlots, height = 600 }: Props) {
       pt.lng >= 0
         ? `${pt.lng.toFixed(1)}°E`
         : `${Math.abs(pt.lng).toFixed(1)}°W`;
+    const accent = pt.slot?.tokenization?.status === "listed" ? "#34d399" : "#ffd700";
     return [
       `<div style="background:#080810;border:1px solid #2a2a3a;padding:6px 10px;`,
       `border-radius:6px;font-family:monospace;font-size:11px;`,
       `color:#e4e4e7;white-space:nowrap;line-height:1.7;">`,
       `<div style="font-weight:bold;color:#fff;">${pt.name}</div>`,
-      pt.slot ? `<div style="color:#ffd700;">${pt.slot.operator}</div>` : "",
+      pt.slot ? `<div style="color:${accent};">${pt.slot.operator}</div>` : "",
       `<div style="color:#6b7280;">${lonStr} · NORAD ${pt.noradId}</div>`,
       `</div>`,
     ].join("");
   }, []);
 
-  const handlePointClick = useCallback((p: object) => {
-    const pt = p as GlobePoint;
-    setSelected((prev) => (prev?.noradId === pt.noradId ? null : pt));
-    globeRef.current?.pointOfView({ lat: pt.lat, lng: pt.lng, altitude: 2.5 }, 800);
-    const controls = globeRef.current?.controls();
+  const handlePointClick = useCallback(
+    (p: object) => {
+      const pt = p as GlobePoint;
+      const nextSlot = pt.slot && pt.slot.id === selectedSlotId ? null : pt.slot;
+      onSlotSelect?.(nextSlot);
+      globeRef.current?.pointOfView({ lat: pt.lat, lng: pt.lng, altitude: 2.5 }, 800);
+      const controls = globeRef.current?.controls();
+      if (controls) controls.autoRotate = false;
+    },
+    [onSlotSelect, selectedSlotId]
+  );
+
+  const selectedPoint = useMemo(() => {
+    if (!selectedSlotId) return null;
+    return points.find((pt) => pt.slot?.id === selectedSlotId) ?? null;
+  }, [points, selectedSlotId]);
+
+  useEffect(() => {
+    if (!selectedPoint || !globeRef.current) return;
+    globeRef.current.pointOfView(
+      { lat: selectedPoint.lat, lng: selectedPoint.lng, altitude: 2.5 },
+      800
+    );
+    const controls = globeRef.current.controls();
     if (controls) controls.autoRotate = false;
-  }, []);
+  }, [selectedPoint]);
 
   return (
     <div className="relative w-full rounded-xl overflow-hidden bg-black" style={{ height }}>
@@ -206,64 +225,19 @@ export default function OrbitalGlobe({ curatedSlots, height = 600 }: Props) {
         enablePointerInteraction={true}
       />
 
-      {selected && (
-        <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:w-80 bg-zinc-950/95 border border-zinc-800 rounded-xl p-4 backdrop-blur-sm z-10">
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div>
-              <div className="text-white text-sm font-semibold leading-tight">{selected.name}</div>
-              {selected.slot && (
-                <div className="text-yellow-400 text-xs mt-0.5">{selected.slot.operator}</div>
-              )}
-            </div>
-            <button
-              onClick={() => setSelected(null)}
-              className="text-zinc-600 hover:text-white transition-colors text-lg leading-none shrink-0"
-            >
-              ×
-            </button>
-          </div>
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs">
-              <span className="text-zinc-500">Longitude</span>
-              <span className="text-zinc-200 font-mono">
-                {selected.lng >= 0 ? `${selected.lng.toFixed(2)}°E` : `${Math.abs(selected.lng).toFixed(2)}°W`}
-              </span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-zinc-500">Latitude</span>
-              <span className="text-zinc-200 font-mono">{selected.lat.toFixed(3)}°</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-zinc-500">NORAD ID</span>
-              <span className="text-zinc-200 font-mono">{selected.noradId}</span>
-            </div>
-            {selected.slot && (
-              <>
-                <div className="flex justify-between text-xs">
-                  <span className="text-zinc-500">Status</span>
-                  <span className="font-mono" style={{ color: STATUS_COLORS[selected.slot.status] }}>
-                    {selected.slot.status}
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-zinc-500">Est. value</span>
-                  <span className="text-zinc-200 font-mono">{selected.slot.valueEstimate}</span>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
       {!loading && !error && (
-        <div className="absolute top-4 right-4 flex items-center gap-1.5 z-10">
+        <div className="absolute top-4 left-4 flex items-center gap-1.5 z-10">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-zinc-500 text-[10px] font-mono">{points.length} GEO · live</span>
         </div>
       )}
 
       {!loading && !error && (
-        <div className="absolute bottom-4 right-4 flex flex-col gap-1.5 z-10">
+        <div className="absolute bottom-4 left-4 flex flex-col gap-1.5 z-10">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span className="text-zinc-500 text-[10px] font-mono">Listed on-chain</span>
+          </div>
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-yellow-400" />
             <span className="text-zinc-500 text-[10px] font-mono">Curated slot</span>

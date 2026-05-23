@@ -8,25 +8,11 @@ import { lonToSlug } from "@/lib/slot-utils";
 import type { CongestionTier } from "@/lib/satellites";
 import EmailCapture from "@/components/EmailCapture";
 import DevnetStatus from "@/components/DevnetStatus";
+import OrbitalGlobe from "@/components/OrbitalGlobe";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { LAMPORTS_PER_SOL, PublicKey, Transaction, TransactionInstruction, SystemProgram } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, Transaction, TransactionInstruction, SystemProgram } from "@solana/web3.js";
 import { offeringPda, positionPda, fetchOffering, PROGRAM_ID } from "@/lib/program";
-
-const CX = 260;
-const CY = 260;
-const R_ORBIT = 200;
-const R_EARTH = 52;
-
-const r4 = (n: number) => Math.round(n * 10000) / 10000;
-
-function lonToAngle(lon: number) {
-  return ((lon - 90) * Math.PI) / 180;
-}
-function slotPos(lon: number) {
-  const a = lonToAngle(lon);
-  return { x: r4(CX + R_ORBIT * Math.cos(a)), y: r4(CY + R_ORBIT * Math.sin(a)) };
-}
 
 const statusDot: Record<SlotStatus, string> = {
   active: "#34d399",
@@ -42,49 +28,6 @@ const GLOSSARY: { term: string; def: string }[] = [
   { term: "Ku-band", def: "11.7–12.7 GHz. Direct-to-home TV broadcast. Small dishes, widely deployed." },
   { term: "Ka-band", def: "26.5–40 GHz. High-throughput broadband. Faster but susceptible to rain fade." },
   { term: "C-band", def: "3.7–4.2 GHz. Legacy cable TV distribution. Large dishes, extremely reliable." },
-];
-
-const faq = [
-  {
-    q: "Where does this data come from?",
-    a: "Satellite names, operators, and orbital positions come from the UCS Satellite Database, a normalized catalog of active satellites maintained by the Union of Concerned Scientists and updated twice yearly. FCC authorization records, including call signs, licensed frequency bands, and in-orbit dates, come from the FCC Approved Space Station List, the official government record of all space stations authorized to operate in or serve the United States. Congestion scores are computed from satellite density in the UCS data rather than from ITU filing records, meaning they reflect the density of active operational hardware rather than the broader universe of filed and coordinated positions.",
-  },
-  {
-    q: "Why do some positions have FCC authorization data and others don't?",
-    a: "FCC authorization records exist only for operators that hold a US license or have been granted US market access by the FCC. A position operated by a Russian, Chinese, or European operator under their own national administration will have no FCC record, and that absence reflects jurisdiction rather than a data gap in Clarke. Positions operated by US-headquartered companies or operators serving US markets will typically appear in FCC records regardless of where the satellite is physically located over the equator.",
-  },
-  {
-    q: "What does it mean when multiple satellites appear at the same position?",
-    a: "Multiple satellites can share the same nominal orbital longitude through ITU coordination agreements, each operating on different frequency assignments that prevent mutual interference. The 19.2°E position in the Clarke registry, for example, has four distinct SES Astra satellites operating within 0.14 degrees of each other under the same nominal position. Clarke groups satellites within 0.4 degrees of a position's nominal longitude as co-located, which is the standard tolerance used in ITU coordination practice.",
-  },
-  {
-    q: "How many total orbital positions exist versus what Clarke currently tracks?",
-    a: "The ITU has registered approximately 1,800 GEO coordination filings across all member states, representing every position that has been filed, coordinated, or historically registered since the space age began. Clarke currently tracks 590 active satellites from the UCS database across 407 distinct occupied positions. The difference between 1,800 total filings and 407 occupied positions reflects squatted slots with no operational satellite, historically registered positions no longer in active use, filed positions where the satellite has never launched, and coordination filings from operators who have since surrendered their rights.",
-  },
-  {
-    q: "How is yield calculated?",
-    a: "Satellite operators charge annual lease fees to use an orbital position. That revenue is distributed pro-rata to token holders each quarter based on the yield share percentage set when the offering is created.",
-  },
-  {
-    q: "What is Ku-band versus Ka-band?",
-    a: "Ku-band (11.7 to 12.7 GHz) is the primary direct-to-home broadcasting band, used by Sky, DirecTV, and most consumer satellite television. Consumer dishes are small and the infrastructure is widely deployed globally. Ka-band (26.5 to 40 GHz) delivers gigabit-class throughput per satellite and is increasingly used for broadband internet, though it is more susceptible to signal degradation from heavy rain. C-band (3.7 to 4.2 GHz) is legacy cable television distribution infrastructure, requiring larger dishes but offering exceptional reliability in all weather conditions.",
-  },
-  {
-    q: "Who can tokenize a slot?",
-    a: "Only the ITU filing holder, meaning the entity that holds the coordination agreement and national license for that orbital position, can list an offering on Clarke. Operators such as SES, Intelsat, and Eutelsat would list their slots directly. Investors purchase fractional tokens representing a claim on the transponder lease revenue the operator collects from that position.",
-  },
-  {
-    q: "What does 'squatted' mean?",
-    a: "A squatted slot has an ITU filing on record but no operational satellite currently using the position. The ITU found that 45% of investigated satellite networks showed no verifiable proof of being brought into use. Governments and operators file positions preemptively to block competitors from occupying strategically valuable arcs, to preserve optionality for future satellite programs, or to create tradeable coordination rights, a practice sometimes called paper satellites.",
-  },
-  {
-    q: "What does the congestion number mean?",
-    a: "The congestion score counts how many active GEO satellites from the UCS database occupy the 4-degree arc surrounding a position, specifically all satellites within 2 degrees on either side. A score of 1 indicates a position in an empty stretch of orbit with no neighboring operational satellites. A score of 23 indicates a position inside the most densely occupied arc currently tracked, where interference coordination requirements are highest and spectrum competition is most intense. The tiers are Sparse (1 to 2), Low (3 to 5), Moderate (6 to 10), High (11 to 18), and Critical (19 and above). The densest arc currently tracked is the European Ku-band corridor between 13°E and 28°E.",
-  },
-  {
-    q: "Is this live on mainnet?",
-    a: "Clarke is a proof of concept running on Solana devnet. Transactions are real on-chain interactions verifiable on Solana Explorer, but no real capital is involved and no operators are live. Mainnet deployment requires establishing the legal SPV structure with real satellite operators, which is the next phase of development.",
-  },
 ];
 
 const congestionColors: Record<CongestionTier, string> = {
@@ -109,7 +52,6 @@ export default function OrbitalClient({ slots, congestionScores }: {
 }) {
   const [selectedRaw, setSelectedRaw] = useState<OrbitalSlot | null>(null);
   const [filter, setFilter] = useState<SlotStatus | "all">("all");
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [openGlossary, setOpenGlossary] = useState(false);
 
   const [investAmount, setInvestAmount] = useState("0.1");
@@ -218,130 +160,23 @@ export default function OrbitalClient({ slots, congestionScores }: {
     <>
       <div className="mb-4"><DevnetStatus /></div>
 
-      {/* Stats row */}
-      <div className="flex flex-wrap gap-x-8 gap-y-2 mb-8 px-1">
-        {[
-          { label: "GEO satellites tracked", value: slots.length.toLocaleString() },
-          { label: "Active", value: slots.filter((s) => s.status === "active").length.toLocaleString() },
-          { label: "Curated", value: slots.filter((s) => s.source === "curated").length.toLocaleString() },
-          { label: "On-chain (devnet)", value: slots.filter((s) => s.tokenization?.status === "listed").length.toLocaleString() },
-        ].map((s) => (
-          <div key={s.label} className="flex items-baseline gap-2">
-            <span className="text-white font-mono font-bold text-sm">{s.value}</span>
-            <span className="text-zinc-600 text-xs">{s.label}</span>
-          </div>
-        ))}
-      </div>
+      {/* Globe hero with drawer overlay */}
+      <div className="relative mb-8 rounded-2xl overflow-hidden border border-zinc-800">
+        <OrbitalGlobe
+          slots={slots}
+          height={720}
+          selectedSlotId={selected?.id ?? null}
+          onSlotSelect={setSelected}
+        />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        {/* Ring */}
-        <div className="border border-zinc-800 rounded-xl p-6">
-          <div className="text-zinc-600 text-xs font-mono mb-4 uppercase tracking-widest">
-            Clarke Belt · GEO Ring · 35,786 km
-          </div>
-          <svg viewBox={`0 0 ${CX * 2} ${CY * 2}`} className="w-full" style={{ maxHeight: 480 }}>
-            <defs>
-              <radialGradient id="gLit" cx="236" cy="238" r="55" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#1a3a5c" />
-                <stop offset="45%" stopColor="#0a1e38" />
-                <stop offset="100%" stopColor="#03080f" />
-              </radialGradient>
-              <radialGradient id="gSpec" cx="241" cy="240" r="26" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="rgba(200,230,255,0.28)" />
-                <stop offset="100%" stopColor="transparent" />
-              </radialGradient>
-              <radialGradient id="gDark" cx="284" cy="280" r="62" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="rgba(0,0,4,0.88)" />
-                <stop offset="55%" stopColor="rgba(0,0,4,0.45)" />
-                <stop offset="85%" stopColor="rgba(0,0,4,0.06)" />
-                <stop offset="100%" stopColor="transparent" />
-              </radialGradient>
-              <radialGradient id="gHalo" cx="260" cy="260" r="62" gradientUnits="userSpaceOnUse">
-                <stop offset="80%" stopColor="transparent" />
-                <stop offset="90%" stopColor="rgba(80,170,255,0.22)" />
-                <stop offset="100%" stopColor="transparent" />
-              </radialGradient>
-              <clipPath id="earthClip">
-                <circle cx={CX} cy={CY} r={R_EARTH} />
-              </clipPath>
-            </defs>
-
-            {[0.5, 0.75, 1.0, 1.25].map((s) => (
-              <circle key={s} cx={CX} cy={CY} r={R_ORBIT * s} fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth={1} />
-            ))}
-            {Array.from({ length: 12 }, (_, i) => i * 30).map((lon) => {
-              const a = lonToAngle(lon);
-              return (
-                <line key={lon}
-                  x1={r4(CX + (R_EARTH + 8) * Math.cos(a))} y1={r4(CY + (R_EARTH + 8) * Math.sin(a))}
-                  x2={r4(CX + (R_ORBIT + 20) * Math.cos(a))} y2={r4(CY + (R_ORBIT + 20) * Math.sin(a))}
-                  stroke="rgba(255,255,255,0.04)" strokeWidth={1} strokeDasharray="2,4" />
-              );
-            })}
-            <circle cx={CX} cy={CY} r={R_ORBIT} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={1.5} />
-            <circle cx={CX} cy={CY} r={R_EARTH + 8} fill="url(#gHalo)" />
-            <circle cx={CX} cy={CY} r={R_EARTH} fill="url(#gLit)" />
-            <circle cx={CX} cy={CY} r={R_EARTH} fill="url(#gDark)" clipPath="url(#earthClip)" />
-            <circle cx={CX} cy={CY} r={R_EARTH} fill="url(#gSpec)" />
-            <circle cx={CX} cy={CY} r={R_EARTH} fill="none" stroke="rgba(100,190,255,0.35)" strokeWidth={1.5} />
-
-            {[-90, 0, 90, 180].map((lon) => {
-              const a = lonToAngle(lon);
-              return (
-                <text key={lon}
-                  x={r4(CX + (R_ORBIT + 32) * Math.cos(a))}
-                  y={r4(CY + (R_ORBIT + 32) * Math.sin(a) + 3)}
-                  textAnchor="middle" fill="rgba(255,255,255,0.18)" fontSize={8} fontFamily="monospace">
-                  {lon === 0 ? "0°" : lon > 0 ? `${lon}°E` : `${Math.abs(lon)}°W`}
-                </text>
-              );
-            })}
-
-            {filtered.map((slot) => {
-              const { x, y } = slotPos(slot.longitude);
-              const isHot = selected?.id === slot.id;
-              const color = statusDot[slot.status];
-              return (
-                <g key={slot.id} style={{ cursor: "pointer" }}
-                  onClick={() => setSelected(selected?.id === slot.id ? null : slot)}>
-                  {isHot && <circle cx={x} cy={y} r={10} fill={color} opacity={0.15} />}
-                  <circle cx={x} cy={y} r={isHot ? 5 : 4} fill={color} opacity={isHot ? 1 : 0.7}
-                    stroke={isHot ? "white" : "transparent"} strokeWidth={1} />
-                </g>
-              );
-            })}
-
-            {selected && (() => {
-              const { x, y } = slotPos(selected.longitude);
-              const color = statusDot[selected.status];
-              return (
-                <g pointerEvents="none">
-                  <line x1={x} y1={y} x2={CX} y2={CY} stroke={color} strokeWidth={0.5} opacity={0.2} strokeDasharray="3,3" />
-                  <text x={x + (x > CX ? 8 : -8)} y={y + 4} textAnchor={x > CX ? "start" : "end"}
-                    fill="white" fontSize={8} fontFamily="monospace" fontWeight="bold">
-                    {selected.label}
-                  </text>
-                </g>
-              );
-            })()}
-          </svg>
-
-          {/* Legend */}
-          <div className="flex flex-wrap gap-3 mt-4">
-            {(["active", "filed", "squatted", "inactive"] as SlotStatus[]).map((s) => (
-              <div key={s} className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full" style={{ background: statusDot[s] }} />
-                <span className="text-zinc-600 text-xs">{statusLabels[s]}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right panel */}
-        <div className="space-y-3">
-          {/* Detail card */}
-          {selected ? (
-            <div className="border border-zinc-700 rounded-xl p-6 bg-zinc-900/10">
+        {/* Right-rail drawer */}
+        <div
+          className={`absolute top-0 right-0 bottom-0 w-full sm:w-[420px] bg-zinc-950/95 backdrop-blur-md border-l border-zinc-800 overflow-y-auto transition-transform duration-300 ease-out z-20 ${
+            selected ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {selected && (
+            <div className="p-6">
               {/* Header */}
               <div className="flex items-start justify-between gap-4 mb-5">
                 <div>
@@ -552,111 +387,108 @@ export default function OrbitalClient({ slots, congestionScores }: {
                 )}
               </div>
             </div>
-          ) : (
-            <div className="border border-zinc-800 rounded-xl p-6 bg-zinc-900/10 flex items-center justify-center min-h-48">
-              <p className="text-zinc-600 text-sm text-center">
-                Click a slot on the ring to view details
-              </p>
-            </div>
           )}
-
-          {/* Filter + table */}
-          <div>
-            <div className="flex gap-2 mb-3 flex-wrap">
-              {(["all", "active", "filed", "squatted", "inactive"] as const).map((f) => (
-                <button key={f} onClick={() => setFilter(f)}
-                  className={`text-xs px-3 py-1.5 rounded border font-medium transition-colors capitalize ${
-                    filter === f
-                      ? "text-white bg-zinc-700 border-zinc-600"
-                      : "text-zinc-500 bg-transparent border-zinc-800 hover:border-zinc-600 hover:text-zinc-300"
-                  }`}>
-                  {f}
-                </button>
-              ))}
-            </div>
-            <div className="border border-zinc-800 rounded-xl overflow-hidden max-h-80 overflow-y-auto">
-              <table className="w-full">
-                <thead className="sticky top-0 z-10">
-                  <tr className="border-b border-zinc-800 bg-zinc-950">
-                    <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Slot</th>
-                    <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden sm:table-cell">Operator</th>
-                    <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden md:table-cell">Congestion</th>
-                    <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden sm:table-cell">Value</th>
-                    <th className="px-4 py-2.5" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((slot) => (
-                    <tr key={slot.id}
-                      onClick={() => setSelected(selected?.id === slot.id ? null : slot)}
-                      className={`border-b border-zinc-800/50 cursor-pointer transition-colors last:border-b-0 ${
-                        selected?.id === slot.id
-                          ? "bg-zinc-800/40"
-                          : "hover:bg-zinc-900/40"
-                      }`}>
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: statusDot[slot.status] }} />
-                          <span className="text-white text-xs font-mono font-bold">{slot.label}</span>
-                          {slot.tokenization?.status === "listed" && (
-                            <span className="text-emerald-400 text-[10px] border border-emerald-900/60 bg-emerald-950/40 px-1 py-px rounded font-mono leading-none">
-                              listed
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-2.5 hidden sm:table-cell">
-                        <span className="text-zinc-500 text-xs">{slot.operator}</span>
-                      </td>
-                      <td className="px-4 py-2.5 text-right hidden md:table-cell">
-                        {(() => {
-                          const slug = lonToSlug(slot.longitude);
-                          const density = congestionScores[slug] ?? 0;
-                          const tier = densityToTier(density);
-                          return (
-                            <div className="flex items-center justify-end gap-1.5">
-                              <div className={`w-1.5 h-1.5 rounded-full ${congestionColors[tier]}`} />
-                              <span className="text-zinc-600 text-xs">{density}</span>
-                            </div>
-                          );
-                        })()}
-                      </td>
-                      <td className="px-4 py-2.5 text-right hidden sm:table-cell">
-                        <span className="text-zinc-600 text-xs font-mono">{slot.valueEstimate}</span>
-                      </td>
-                      <td className="px-2 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
-                        <Link href={`/orbital/${lonToSlug(slot.longitude)}`}
-                          className="text-zinc-700 hover:text-zinc-300 text-xs transition-colors px-1">
-                          →
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* FAQ */}
-      <div className="mt-16">
-        <h2 className="text-xs uppercase tracking-widest text-zinc-500 mb-6 font-medium">FAQ</h2>
-        <div className="space-y-2 max-w-3xl">
-          {faq.map((item, i) => (
-            <div key={i} className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/10">
-              <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                className="w-full flex items-center justify-between px-5 py-4 text-left">
-                <span className="text-white text-sm font-medium">{item.q}</span>
-                <span className="text-zinc-500 text-lg leading-none shrink-0 ml-4">{openFaq === i ? "−" : "+"}</span>
-              </button>
-              {openFaq === i && (
-                <div className="px-5 pb-4">
-                  <p className="text-zinc-500 text-sm leading-relaxed">{item.a}</p>
-                </div>
-              )}
-            </div>
+      {/* Stats row */}
+      <div className="flex flex-wrap gap-x-8 gap-y-2 mb-6 px-1">
+        {[
+          { label: "GEO satellites tracked", value: slots.length.toLocaleString() },
+          { label: "Active", value: slots.filter((s) => s.status === "active").length.toLocaleString() },
+          { label: "Curated", value: slots.filter((s) => s.source === "curated").length.toLocaleString() },
+          { label: "On-chain (devnet)", value: slots.filter((s) => s.tokenization?.status === "listed").length.toLocaleString() },
+        ].map((s) => (
+          <div key={s.label} className="flex items-baseline gap-2">
+            <span className="text-white font-mono font-bold text-sm">{s.value}</span>
+            <span className="text-zinc-600 text-xs">{s.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter + table */}
+      <div>
+        <div className="flex gap-2 mb-3 flex-wrap">
+          {(["all", "active", "filed", "squatted", "inactive"] as const).map((f) => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`text-xs px-3 py-1.5 rounded border font-medium transition-colors capitalize ${
+                filter === f
+                  ? "text-white bg-zinc-700 border-zinc-600"
+                  : "text-zinc-500 bg-transparent border-zinc-800 hover:border-zinc-600 hover:text-zinc-300"
+              }`}>
+              {f}
+            </button>
           ))}
+        </div>
+        <div className="border border-zinc-800 rounded-xl overflow-hidden max-h-96 overflow-y-auto">
+          <table className="w-full">
+            <thead className="sticky top-0 z-10">
+              <tr className="border-b border-zinc-800 bg-zinc-950">
+                <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Slot</th>
+                <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden sm:table-cell">Operator</th>
+                <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden md:table-cell">Congestion</th>
+                <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden sm:table-cell">Value</th>
+                <th className="px-4 py-2.5" />
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((slot) => (
+                <tr key={slot.id}
+                  onClick={() => setSelected(selected?.id === slot.id ? null : slot)}
+                  className={`border-b border-zinc-800/50 cursor-pointer transition-colors last:border-b-0 ${
+                    selected?.id === slot.id
+                      ? "bg-zinc-800/40"
+                      : "hover:bg-zinc-900/40"
+                  }`}>
+                  <td className="px-4 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: statusDot[slot.status] }} />
+                      <span className="text-white text-xs font-mono font-bold">{slot.label}</span>
+                      {slot.tokenization?.status === "listed" && (
+                        <span className="text-emerald-400 text-[10px] border border-emerald-900/60 bg-emerald-950/40 px-1 py-px rounded font-mono leading-none">
+                          listed
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-2.5 hidden sm:table-cell">
+                    <span className="text-zinc-500 text-xs">{slot.operator}</span>
+                  </td>
+                  <td className="px-4 py-2.5 text-right hidden md:table-cell">
+                    {(() => {
+                      const slug = lonToSlug(slot.longitude);
+                      const density = congestionScores[slug] ?? 0;
+                      const tier = densityToTier(density);
+                      return (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <div className={`w-1.5 h-1.5 rounded-full ${congestionColors[tier]}`} />
+                          <span className="text-zinc-600 text-xs">{density}</span>
+                        </div>
+                      );
+                    })()}
+                  </td>
+                  <td className="px-4 py-2.5 text-right hidden sm:table-cell">
+                    <span className="text-zinc-600 text-xs font-mono">{slot.valueEstimate}</span>
+                  </td>
+                  <td className="px-2 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                    <Link href={`/orbital/${lonToSlug(slot.longitude)}`}
+                      className="text-zinc-700 hover:text-zinc-300 text-xs transition-colors px-1">
+                      →
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-4 flex items-center justify-end">
+          <Link
+            href="/orbital/faq"
+            className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors"
+          >
+            Questions about the data? Read the FAQ →
+          </Link>
         </div>
       </div>
     </>

@@ -11,10 +11,12 @@
     "ingest": "ts-node --project tsconfig.scripts.json scripts/ingest-ucs.ts",
     "ingest:fcc": "ts-node --project tsconfig.scripts.json scripts/ingest-fcc.ts",
     "ingest:spacetrack": "ts-node --project tsconfig.scripts.json scripts/ingest-spacetrack.ts",
-    "ingest:all": "npm run ingest && npm run ingest:fcc && npm run ingest:spacetrack"
+    "ingest:all": "npm run ingest && npm run ingest:fcc && npm run ingest:spacetrack",
+    "mcp": "tsx scripts/clarke-mcp.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/wallet-adapter-react-ui": "^0.9.39",
@@ -27,7 +29,8 @@
     "react-dom": "19.2.4",
     "react-globe.gl": "^2.38.0",
     "satellite.js": "^7.0.1",
-    "three": "^0.184.0"
+    "three": "^0.184.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -40,6 +43,7 @@
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
+    "tsx": "^4.22.3",
     "typescript": "^5",
     "xlsx": "^0.18.5"
   }

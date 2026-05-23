@@ -20,7 +20,9 @@ const VERTICAL_ORDER = [
   "Launch",
   "Manufacturing",
   "Ground Systems",
+  "On-orbit Servicing",
   "Lunar & Exploration",
+  "Space Tourism",
   "Space Power",
 ];
 

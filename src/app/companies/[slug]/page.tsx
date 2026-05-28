@@ -2,8 +2,13 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
 import { companiesBySlug, companies } from "@/data/companies";
+import { stocks } from "@/data/stocks";
 import { getOperatorGeoPositions } from "@/lib/satellites";
 import { slugToOperators } from "@/lib/operator-map";
+
+function normalizeName(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
 
 type Params = { slug: string };
 
@@ -34,6 +39,12 @@ export default async function CompanyPage({ params }: { params: Promise<Params> 
   const operatorNames = slugToOperators(slug);
   const geoPositions = getOperatorGeoPositions(operatorNames);
 
+  const cn = normalizeName(company.name);
+  const matchingStock = stocks.find((s) => {
+    const sn = normalizeName(s.name);
+    return sn.includes(cn) || cn.includes(sn);
+  });
+
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
       <div className="mb-12">
@@ -42,10 +53,30 @@ export default async function CompanyPage({ params }: { params: Promise<Params> 
         </Link>
       </div>
 
-      <div className="mb-2">
+      <div className="mb-2 flex items-center gap-3">
         <span className="text-[10px] font-mono text-white/25 tracking-widest uppercase">{company.sector}</span>
+        {matchingStock && (
+          <Link
+            href="/stocks"
+            className="text-[10px] font-mono text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 px-1.5 py-0.5 rounded transition-colors"
+          >
+            {matchingStock.ticker}
+          </Link>
+        )}
       </div>
-      <h1 className="text-3xl sm:text-4xl font-bold text-white mb-8">{company.name}</h1>
+      <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">{company.name}</h1>
+
+      {company.website && (
+        <a
+          href={company.website}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block text-xs font-mono text-zinc-600 hover:text-zinc-300 transition-colors mb-8"
+        >
+          {new URL(company.website).hostname.replace("www.", "")} ↗
+        </a>
+      )}
+      {!company.website && <div className="mb-8" />}
 
       <p className="text-zinc-300 text-base leading-relaxed mb-12">{company.description}</p>
 

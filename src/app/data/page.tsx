@@ -49,7 +49,7 @@ const sources: { name: string; abbr: string; url: string; cadence: string; what:
     abbr: "18th SDS / US Space Force",
     url: "https://www.space-track.org",
     cadence: "Daily",
-    status: "planned",
+    status: "live",
     what: "Two-line element sets (TLEs) for all ~27,000 tracked orbital objects. The authoritative source for the position and trajectory of every catalogued object in Earth orbit, maintained by the US Space Force.",
     why: "Adding TLE cross-reference would let Clarke validate and correct UCS orbital positions, identify decommissioned satellites still listed as active, and map physical proximity risk between assets. Free with registration.",
   },

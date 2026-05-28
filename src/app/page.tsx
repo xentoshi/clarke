@@ -7,6 +7,7 @@ import { buildMeta } from "@/lib/metadata";
 import { companies } from "@/data/companies";
 import { getSatelliteStats, getGeoLongitudes } from "@/lib/satellites";
 import { posts } from "@/data/posts";
+import { stocks } from "@/data/stocks";
 
 export const metadata: Metadata = buildMeta({
   title: "Clarke",
@@ -218,10 +219,11 @@ export default function HomePage() {
         </p>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-px bg-white/[0.06] rounded-xl overflow-hidden mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.06] rounded-xl overflow-hidden mb-8">
           {[
             { value: geoTracked, label: "GEO satellites tracked" },
             { value: `${companies.length}`, label: "Companies indexed" },
+            { value: `${stocks.length}`, label: "Stocks tracked" },
             { value: `${listedSlots}`, label: "On-chain (devnet)" },
           ].map((s) => (
             <div key={s.label} className="bg-zinc-950 px-6 py-6 text-center">

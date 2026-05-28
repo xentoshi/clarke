@@ -265,6 +265,14 @@ export const stocks: Stock[] = [
     clarkeRelevance: "Cislunar orbital positions are the next frontier for Clarke's registry. ispace's payload pricing and mission cadence are early data points for what governments and commercial customers are paying for lunar orbital and surface access, the same shape of pricing Clarke normalized for GEO.",
   },
   {
+    ticker: "MNTS",
+    name: "Momentus",
+    vertical: "On-orbit Servicing",
+    description: "Orbital transfer vehicles for last-mile satellite delivery. Vigoride platform uses microwave electrothermal propulsion.",
+    detail: "Momentus operates Vigoride orbital transfer vehicles that carry satellites from rideshare drop-off altitudes to their final operational orbits. Serves constellation operators who need precise placement after a shared launch. Uses water-based microwave electrothermal propulsion. Early revenue from commercial and government payload delivery contracts.",
+    clarkeRelevance: "Orbital transfer pricing reveals the cost gap between rideshare insertion points and operationally useful orbits. Momentus's per-mission pricing is an input to Clarke's model of what it costs to occupy a specific slot, not just reach the GEO arc.",
+  },
+  {
     ticker: "186A.T",
     name: "Astroscale",
     vertical: "On-orbit Servicing",

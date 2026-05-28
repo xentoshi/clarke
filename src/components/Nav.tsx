@@ -25,7 +25,9 @@ const primaryLinks = [
 ];
 
 const moreLinks = [
+  { href: "/portfolio", label: "Portfolio" },
   { href: "/blog", label: "Blog" },
+  { href: "/data", label: "Data" },
   { href: "/about", label: "About" },
 ];
 

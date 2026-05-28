@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import type { OrbitalSlot } from "@/data/orbital-slots";
 import { lonToSlug } from "@/lib/slot-utils";
 import { stocks } from "@/data/stocks";
+import { companies } from "@/data/companies";
 
 type Result = {
-  type: "slot" | "stock" | "page";
+  type: "slot" | "stock" | "company" | "page";
   label: string;
   sub: string;
   href: string;
@@ -16,12 +17,14 @@ type Result = {
 const typeColors: Record<Result["type"], string> = {
   slot: "text-sky-400",
   stock: "text-emerald-400",
+  company: "text-violet-400",
   page: "text-zinc-500",
 };
 
 const typeLabels: Record<Result["type"], string> = {
   slot: "Orbital",
   stock: "Stock",
+  company: "Company",
   page: "Page",
 };
 
@@ -29,6 +32,7 @@ const pages = [
   { label: "Orbital Slots", sub: "Browse and invest in tokenized GEO slots", href: "/orbital" },
   { label: "Portfolio", sub: "View positions and claim yield", href: "/portfolio" },
   { label: "Space Markets", sub: "Live prices for satellite companies", href: "/stocks" },
+  { label: "Data Sources", sub: "Public datasets Clarke normalizes", href: "/data" },
   { label: "Docs", sub: "Technical reference", href: "/docs" },
   { label: "About Clarke", sub: "How it works and why", href: "/about" },
   { label: "List a Slot", sub: "Operators: raise capital against your slot", href: "/orbital/list" },
@@ -41,17 +45,22 @@ function search(q: string, slots: OrbitalSlot[]): Result[] {
   return [
     ...slots
       .filter((s) => s.label.toLowerCase().includes(lq) || s.operator.toLowerCase().includes(lq) || s.country.toLowerCase().includes(lq))
-      .slice(0, 4)
+      .slice(0, 3)
       .map((s) => ({ type: "slot" as const, label: s.label, sub: s.valueEstimate ? `${s.operator} · ${s.valueEstimate}` : s.operator, href: `/orbital/${lonToSlug(s.longitude)}` })),
+
+    ...companies
+      .filter((c) => c.name.toLowerCase().includes(lq) || c.sector.toLowerCase().includes(lq) || c.hq?.toLowerCase().includes(lq))
+      .slice(0, 4)
+      .map((c) => ({ type: "company" as const, label: c.name, sub: `${c.sector}${c.hq ? ` · ${c.hq}` : ""}`, href: `/companies/${c.slug}` })),
 
     ...stocks
       .filter((s) => s.ticker.toLowerCase().includes(lq) || s.name.toLowerCase().includes(lq))
-      .slice(0, 4)
+      .slice(0, 3)
       .map((s) => ({ type: "stock" as const, label: s.ticker, sub: s.name, href: "/stocks" })),
 
     ...pages
       .filter((p) => p.label.toLowerCase().includes(lq) || p.sub.toLowerCase().includes(lq))
-      .slice(0, 3)
+      .slice(0, 2)
       .map((p) => ({ type: "page" as const, ...p })),
   ].slice(0, 12);
 }
@@ -95,7 +104,7 @@ export default function SearchPalette({ slots, onClose }: { slots: OrbitalSlot[]
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search slots, stocks, pages..."
+            placeholder="Search companies, slots, stocks..."
             className="flex-1 bg-transparent text-white text-sm placeholder-zinc-600 focus:outline-none"
           />
           <kbd className="text-xs text-zinc-600 bg-zinc-800 px-1.5 py-0.5 rounded font-mono">ESC</kbd>
@@ -117,7 +126,7 @@ export default function SearchPalette({ slots, onClose }: { slots: OrbitalSlot[]
         )}
 
         {query && results.length === 0 && <div className="py-10 text-center text-zinc-600 text-sm">No results for "{query}"</div>}
-        {!query && <div className="py-6 text-center text-zinc-700 text-xs">Search orbital slots, stocks, and pages</div>}
+        {!query && <div className="py-6 text-center text-zinc-700 text-xs">Search companies, orbital slots, stocks, and pages</div>}
       </div>
     </div>
   );

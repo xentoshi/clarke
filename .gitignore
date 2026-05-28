@@ -49,6 +49,10 @@ Anchor.toml
 
 # Private design docs
 docs/superpowers/
+docs/strategy.md
+docs/pitch.md
+docs/foundations.md
+docs/foundations/
 
 # Solana wallet keypairs — never commit
 *.keypair.json

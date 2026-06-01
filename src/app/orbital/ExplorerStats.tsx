@@ -26,7 +26,7 @@ export default function ExplorerStats({ rows, updated }: { rows: ExplorerRow[]; 
         </div>
       ))}
       {updated && (
-        <span className="text-zinc-700 text-xs font-mono ml-auto">Data updated {updated}</span>
+        <span className="text-zinc-700 text-xs font-mono w-full sm:w-auto sm:ml-auto">Data updated {updated}</span>
       )}
     </div>
   );

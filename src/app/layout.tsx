@@ -34,7 +34,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const allSlots = mergeWithUcs(curatedSlots);
   return (
     <html lang="en" className={`h-full ${manrope.variable} ${ibmPlexMono.variable}`}>
-      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100">
+      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100 overflow-x-hidden">
         {PLAUSIBLE_DOMAIN && (
           <Script
             src="https://plausible.io/js/script.js"

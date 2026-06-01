@@ -16,6 +16,12 @@ export default function OrbitalExplorer({ rows, updated }: { rows: ExplorerRow[]
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [selected, setSelected] = useState<ExplorerRow | null>(null);
   const [csvOpen, setCsvOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const filterCount =
+    facets.regions.length + facets.operators.length + facets.bands.length + facets.statuses.length +
+    (facets.fccOnly ? 1 : 0) + (facets.listedOnly ? 1 : 0) +
+    (facets.congestionMin > 0 || facets.congestionMax < 100 ? 1 : 0);
 
   const operatorOptions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -69,13 +75,17 @@ export default function OrbitalExplorer({ rows, updated }: { rows: ExplorerRow[]
       <div className="mb-4"><ExplorerStats rows={rows} updated={updated} /></div>
 
       {/* Controls */}
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
         <input
           value={facets.search}
           onChange={(e) => setFacets({ ...facets, search: e.target.value })}
           placeholder="Search slot, operator, country, satellite…"
-          className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
+          className="flex-1 min-w-0 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
         />
+        <button onClick={() => setFiltersOpen((o) => !o)}
+          className="lg:hidden shrink-0 border border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white rounded-lg px-3 py-2 text-xs font-medium transition-colors">
+          Filters{filterCount > 0 ? ` (${filterCount})` : ""}
+        </button>
         <button onClick={() => setCsvOpen(true)}
           className="shrink-0 border border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white rounded-lg px-3 py-2 text-xs font-medium transition-colors">
           Download CSV
@@ -83,7 +93,9 @@ export default function OrbitalExplorer({ rows, updated }: { rows: ExplorerRow[]
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        <aside className="lg:w-52 shrink-0"><FacetPanel facets={facets} onChange={setFacets} operatorOptions={operatorOptions} /></aside>
+        <aside className={`lg:w-52 shrink-0 ${filtersOpen ? "block bg-zinc-950 border border-zinc-800 rounded-xl p-4" : "hidden"} lg:block lg:bg-transparent lg:border-0 lg:rounded-none lg:p-0`}>
+          <FacetPanel facets={facets} onChange={setFacets} operatorOptions={operatorOptions} />
+        </aside>
         <div className="flex-1 min-w-0">
           <div className="text-zinc-600 text-xs mb-2 font-mono">{filtered.length.toLocaleString()} of {rows.length.toLocaleString()} positions</div>
           <SlotTable rows={filtered} sortKey={sortKey} sortDir={sortDir} onSort={onSort}
@@ -94,7 +106,7 @@ export default function OrbitalExplorer({ rows, updated }: { rows: ExplorerRow[]
         </div>
       </div>
 
-      <SlotDrawer row={selected} onClose={() => setSelected(null)} />
+      {selected && <SlotDrawer row={selected} onClose={() => setSelected(null)} />}
       {csvOpen && <CsvExportDialog rows={filtered} onClose={() => setCsvOpen(false)} />}
     </>
   );

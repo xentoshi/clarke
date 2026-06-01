@@ -36,7 +36,7 @@ export default function SlotTable({
     key && key === sortKey ? (sortDir === "asc" ? " ↑" : " ↓") : "";
 
   return (
-    <div className="border border-zinc-800 rounded-xl overflow-hidden">
+    <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950">
       <div className="overflow-y-auto max-h-[70vh]">
         <table className="w-full">
           <thead className="sticky top-0 z-10">

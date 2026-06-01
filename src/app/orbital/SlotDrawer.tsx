@@ -27,6 +27,13 @@ function launchYear(date: string | null): string {
 export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; onClose: () => void }) {
   const [dossier, setDossier] = useState<Dossier | null>(null);
   const [loading, setLoading] = useState(false);
+  const [shown, setShown] = useState(false);
+
+  // Slide in on mount (the drawer is only mounted while open).
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setShown(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   const [investAmount, setInvestAmount] = useState("0.1");
   const [txStatus, setTxStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
@@ -109,13 +116,12 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
     }
   }
 
-  const open = !!row;
   const v = row?.valuation;
 
   return (
     <>
-      <div className={`fixed inset-0 bg-black/50 z-30 transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`} onClick={onClose} />
-      <div className={`fixed top-0 right-0 bottom-0 w-full sm:w-[420px] bg-zinc-950 border-l border-zinc-800 overflow-y-auto z-40 transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}>
+      <div className={`fixed inset-0 bg-black/50 z-30 transition-opacity duration-300 ${shown ? "opacity-100" : "opacity-0"}`} onClick={onClose} />
+      <div className={`fixed top-0 right-0 bottom-0 w-full sm:w-[420px] bg-zinc-950 border-l border-zinc-800 overflow-y-auto z-40 transition-transform duration-300 ease-out ${shown ? "translate-x-0" : "translate-x-full"}`}>
         {row && v && (
           <div className="p-6">
             {/* Header */}

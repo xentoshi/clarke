@@ -63,3 +63,6 @@ target/
 
 # Cargo lockfile is pinned for the toolchain workaround — commit it
 # Cargo.lock  <- intentionally tracked
+
+# Brainstorming visual companion scratch
+.superpowers/

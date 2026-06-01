@@ -40,14 +40,14 @@ export function createServer(): McpServer {
 
   server.tool(
     "clarke_list_slots",
-    "List all orbital slots in the Clarke registry: curated GEO positions with operator/value/tokenization details merged with the broader set derived from the UCS satellite database. UCS-derived entries have basic fields only; curated entries additionally include valuation and on-chain tokenization status.",
+    "List all orbital slots in the Clarke registry: curated GEO positions with operator/value/tokenization details merged with the broader set derived from the UCS satellite database. Each entry includes a normalized congestion score (0-100) and a heuristic valuation (estimated value range, point estimate, confidence, and factor breakdown). Curated entries additionally include an authoritative valuation override and on-chain tokenization status.",
     {},
     async () => textResult(listSlots()),
   );
 
   server.tool(
     "clarke_get_slot",
-    "Get a full dossier for a single orbital slot identified by its slug (e.g. '19-2e' for 19.2°E, '101w' for 101°W). Returns the slot record plus all UCS satellites at that longitude, FCC authorizations, and congestion data.",
+    "Get a full dossier for a single orbital slot identified by its slug (e.g. '19-2e' for 19.2°E, '101w' for 101°W). Returns the slot record plus all UCS satellites at that longitude, FCC authorizations, the normalized congestion score with its factor breakdown, and a heuristic valuation (range, confidence, and per-factor multipliers).",
     { slug: z.string().regex(SAFE_SLUG).describe("Slot slug, e.g. '19-2e'") },
     async ({ slug }) => {
       const dossier = getSlotDossier(slug);

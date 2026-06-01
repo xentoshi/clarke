@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 import https from "https";
+import { recordIngest } from "./lib/ingest-meta";
 
 const DB_PATH = path.join(process.cwd(), "data", "clarke.db");
 const UCS_URL = "https://www.ucs.org/media/11493";
@@ -168,6 +169,7 @@ async function main() {
   }
 
   insertMany(rows);
+  recordIngest(db, "UCS", geoCount, "UCS Satellite Database (GEO subset)");
   db.exec("VACUUM");
   db.close();
 

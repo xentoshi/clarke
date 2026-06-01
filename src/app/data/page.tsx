@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { buildMeta } from "@/lib/metadata";
+import { getDataFreshness } from "@/lib/freshness";
 
 export const metadata: Metadata = buildMeta({
   title: "Data Sources",
@@ -82,7 +83,22 @@ const sources: { name: string; abbr: string; url: string; cadence: string; what:
   },
 ];
 
+function formatDate(lastRun: string): string {
+  const d = new Date(lastRun.replace(" ", "T") + "Z");
+  if (isNaN(d.getTime())) return lastRun;
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
+}
+
+function ageLabel(ageDays: number): string {
+  if (ageDays < 0) return "";
+  if (ageDays === 0) return "today";
+  if (ageDays === 1) return "1 day ago";
+  return `${ageDays} days ago`;
+}
+
 export default function DataSourcesPage() {
+  const freshness = getDataFreshness();
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
       <div className="mb-16">
@@ -95,6 +111,26 @@ export default function DataSourcesPage() {
           Clarke normalizes these sources into a single legible view.
         </p>
       </div>
+
+      {freshness.length > 0 && (
+        <div className="mb-16">
+          <div className="text-white/30 text-[11px] font-mono tracking-[0.3em] uppercase mb-4">Live data freshness</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/[0.04] border border-white/[0.04]">
+            {freshness.map((f) => (
+              <div key={f.source} className="bg-zinc-950 p-4">
+                <div className="flex items-baseline justify-between gap-3 mb-1">
+                  <span className="text-white text-sm font-bold">{f.source}</span>
+                  <span className="text-emerald-400/90 font-mono text-xs tabular-nums">{f.rowCount.toLocaleString()} rows</span>
+                </div>
+                <div className="text-white/30 text-xs font-mono">
+                  Updated {formatDate(f.lastRun)}
+                  {ageLabel(f.ageDays) && <span className="text-white/20"> · {ageLabel(f.ageDays)}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-px bg-white/[0.04]">
         {sources.map((s) => (

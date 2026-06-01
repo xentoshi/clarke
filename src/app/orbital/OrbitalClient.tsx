@@ -38,17 +38,19 @@ const congestionColors: Record<CongestionTier, string> = {
   critical: "bg-red-500",
 };
 
-function densityToTier(density: number): CongestionTier {
-  if (density <= 2) return "sparse";
-  if (density <= 5) return "low";
-  if (density <= 10) return "moderate";
-  if (density <= 18) return "high";
+// Mirrors tierForScore() in src/lib/satellites.ts — keep thresholds in sync.
+function scoreToTier(score: number): CongestionTier {
+  if (score < 15) return "sparse";
+  if (score < 35) return "low";
+  if (score < 55) return "moderate";
+  if (score < 75) return "high";
   return "critical";
 }
 
-export default function OrbitalClient({ slots, congestionScores }: {
+export default function OrbitalClient({ slots, congestionScores, valuationRanges }: {
   slots: OrbitalSlot[];
   congestionScores: Record<string, number>;
+  valuationRanges: Record<string, string>;
 }) {
   const [selectedRaw, setSelectedRaw] = useState<OrbitalSlot | null>(null);
   const [filter, setFilter] = useState<SlotStatus | "all">("all");
@@ -457,18 +459,22 @@ export default function OrbitalClient({ slots, congestionScores }: {
                   <td className="px-4 py-2.5 text-right hidden md:table-cell">
                     {(() => {
                       const slug = lonToSlug(slot.longitude);
-                      const density = congestionScores[slug] ?? 0;
-                      const tier = densityToTier(density);
+                      const score = congestionScores[slug] ?? 0;
+                      const tier = scoreToTier(score);
                       return (
                         <div className="flex items-center justify-end gap-1.5">
                           <div className={`w-1.5 h-1.5 rounded-full ${congestionColors[tier]}`} />
-                          <span className="text-zinc-600 text-xs">{density}</span>
+                          <span className="text-zinc-600 text-xs">{score}</span>
                         </div>
                       );
                     })()}
                   </td>
                   <td className="px-4 py-2.5 text-right hidden sm:table-cell">
-                    <span className="text-zinc-600 text-xs font-mono">{slot.valueEstimate}</span>
+                    {slot.valueEstimate ? (
+                      <span className="text-zinc-600 text-xs font-mono">{slot.valueEstimate}</span>
+                    ) : (
+                      <span className="text-zinc-700 text-xs font-mono">{valuationRanges[lonToSlug(slot.longitude)] ?? "—"}</span>
+                    )}
                   </td>
                   <td className="px-2 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
                     <Link href={`/orbital/${lonToSlug(slot.longitude)}`}

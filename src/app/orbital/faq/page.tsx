@@ -44,7 +44,7 @@ const faq = [
   },
   {
     q: "What does the congestion number mean?",
-    a: "The congestion score counts how many active GEO satellites from the UCS database occupy the 4-degree arc surrounding a position, specifically all satellites within 2 degrees on either side. A score of 1 indicates a position in an empty stretch of orbit with no neighboring operational satellites. A score of 23 indicates a position inside the most densely occupied arc currently tracked, where interference coordination requirements are highest and spectrum competition is most intense. The tiers are Sparse (1 to 2), Low (3 to 5), Moderate (6 to 10), High (11 to 18), and Critical (19 and above). The densest arc currently tracked is the European Ku-band corridor between 13°E and 28°E.",
+    a: "The congestion score is a normalized 0 to 100 index that blends three signals at a position: how many active GEO satellites occupy the surrounding arc (within 2 degrees on either side), how many sit directly co-located at the same nominal longitude (within 0.4 degrees), and how many distinct operators share the arc. A score near 0 means an empty stretch of orbit; a score near 100 means a dense, multi-operator arc where interference coordination requirements are highest. An arc dominated by a single operator scores lower than an equally packed arc contested by several operators, because shared arcs are harder to coordinate. The tiers are Sparse (0 to 14), Low (15 to 34), Moderate (35 to 54), High (55 to 74), and Critical (75 to 100). The densest arc currently tracked is the European Ku-band corridor between 13°E and 28°E.",
   },
   {
     q: "Is this live on mainnet?",

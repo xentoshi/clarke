@@ -152,43 +152,95 @@ export function getNearbySlots(lon: number, count = 4): { slug: string; label: s
 
 export type CongestionTier = "sparse" | "low" | "moderate" | "high" | "critical";
 
+export interface CongestionFactors {
+  coLocated: number;          // satellites within ±0.4° (direct co-location)
+  neighborhood: number;       // satellites within ±2° (arc density)
+  distinctOperators: number;  // distinct operators in the ±2° neighborhood
+  dominantOperator: string | null;
+  dominantShare: number;      // 0..1, share of the dominant operator in the neighborhood
+}
+
 export interface CongestionData {
-  density: number;
+  density: number;            // neighborhood count (back-compat alias of factors.neighborhood)
+  score: number;              // normalized 0..100 congestion/coordination-risk score
   tier: CongestionTier;
   label: string;
+  factors: CongestionFactors;
 }
 
+const EMPTY_CONGESTION: CongestionData = {
+  density: 0,
+  score: 0,
+  tier: "sparse",
+  label: "Sparse",
+  factors: { coLocated: 0, neighborhood: 0, distinctOperators: 0, dominantOperator: null, dominantShare: 0 },
+};
+
+function tierForScore(score: number): { tier: CongestionTier; label: string } {
+  if (score < 15) return { tier: "sparse", label: "Sparse" };
+  if (score < 35) return { tier: "low", label: "Low" };
+  if (score < 55) return { tier: "moderate", label: "Moderate" };
+  if (score < 75) return { tier: "high", label: "High" };
+  return { tier: "critical", label: "Critical" };
+}
+
+// Normalized congestion score blending three signals at a longitude:
+//   density (±2° arc occupancy), co-location (±0.4° direct neighbors), and
+//   contention (how many distinct operators share the arc). A position packed
+//   by a single operator scores lower on contention than an equally dense arc
+//   contested by many operators — the latter carries more coordination risk.
 export function getCongestion(lon: number): CongestionData {
   const db = getDb();
-  const density = db
-    ? (db.prepare("SELECT COUNT(*) as n FROM satellites WHERE orbit_class = 'GEO' AND longitude_geo BETWEEN ? AND ?")
-        .get(lon - 2, lon + 2) as { n: number }).n
-    : 0;
+  if (!db) return EMPTY_CONGESTION;
 
-  let tier: CongestionTier;
-  let label: string;
-  if (density <= 2) { tier = "sparse"; label = "Sparse"; }
-  else if (density <= 5) { tier = "low"; label = "Low"; }
-  else if (density <= 10) { tier = "moderate"; label = "Moderate"; }
-  else if (density <= 18) { tier = "high"; label = "High"; }
-  else { tier = "critical"; label = "Critical"; }
+  const rows = db.prepare(
+    "SELECT operator, longitude_geo as lon FROM satellites WHERE orbit_class = 'GEO' AND longitude_geo BETWEEN ? AND ?"
+  ).all(lon - 2, lon + 2) as { operator: string | null; lon: number }[];
 
-  return { density, tier, label };
+  const neighborhood = rows.length;
+  const coLocated = rows.filter((r) => Math.abs(r.lon - lon) <= 0.4).length;
+
+  const opCounts = new Map<string, number>();
+  for (const r of rows) {
+    const op = (r.operator ?? "").trim();
+    if (op) opCounts.set(op, (opCounts.get(op) ?? 0) + 1);
+  }
+  const distinctOperators = opCounts.size;
+  let dominantOperator: string | null = null;
+  let dominantCount = 0;
+  for (const [op, n] of opCounts) {
+    if (n > dominantCount) { dominantCount = n; dominantOperator = op; }
+  }
+  const attributed = [...opCounts.values()].reduce((a, b) => a + b, 0);
+  const dominantShare = attributed > 0 ? dominantCount / attributed : 0;
+
+  const densityScore = Math.min(neighborhood / 20, 1) * 50;
+  const coLocationScore = Math.min(coLocated / 6, 1) * 30;
+  const contentionScore = Math.min(distinctOperators / 8, 1) * 20;
+  const score = Math.round(densityScore + coLocationScore + contentionScore);
+
+  const { tier, label } = tierForScore(score);
+
+  return {
+    density: neighborhood,
+    score,
+    tier,
+    label,
+    factors: { coLocated, neighborhood, distinctOperators, dominantOperator, dominantShare },
+  };
 }
 
+// Normalized 0..100 congestion score per slot slug, consistent with
+// getCongestion().score. Used by the orbital listing to color positions.
 export function getAllCongestionScores(): Record<string, number> {
   const db = getDb();
   if (!db) return {};
   const positions = db.prepare(
     "SELECT DISTINCT ROUND(longitude_geo,1) as lon FROM satellites WHERE orbit_class = 'GEO' AND longitude_geo IS NOT NULL"
   ).all() as { lon: number }[];
-  const stmt = db.prepare(
-    "SELECT COUNT(*) as n FROM satellites WHERE orbit_class = 'GEO' AND longitude_geo BETWEEN ? AND ?"
-  );
   const result: Record<string, number> = {};
   for (const { lon } of positions) {
-    const { n } = stmt.get(lon - 2, lon + 2) as { n: number };
-    result[lonToSlug(lon)] = n;
+    result[lonToSlug(lon)] = getCongestion(lon).score;
   }
   return result;
 }

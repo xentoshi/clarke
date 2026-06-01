@@ -3,12 +3,20 @@ import crypto from "crypto";
 
 export const API_VERSION = "1.0";
 
+export interface FreshnessMeta {
+  source: string;
+  last_run: string;
+  row_count: number;
+  age_days: number;
+}
+
 export interface Envelope<T> {
   data: T;
   meta: {
     version: string;
     generated_at: string;
     count?: number;
+    data_freshness?: FreshnessMeta[];
   };
 }
 
@@ -16,6 +24,7 @@ interface OkOptions {
   count?: number;
   cacheSeconds?: number;
   staleSeconds?: number;
+  freshness?: FreshnessMeta[];
 }
 
 export function ok<T>(data: T, opts: OkOptions = {}): NextResponse {
@@ -25,6 +34,7 @@ export function ok<T>(data: T, opts: OkOptions = {}): NextResponse {
       version: API_VERSION,
       generated_at: new Date().toISOString(),
       ...(opts.count !== undefined ? { count: opts.count } : {}),
+      ...(opts.freshness ? { data_freshness: opts.freshness } : {}),
     },
   };
 

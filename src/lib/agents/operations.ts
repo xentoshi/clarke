@@ -12,6 +12,9 @@ import {
   type GeoSatellite,
   type FccAuthorization,
 } from "../satellites";
+import { valuateSlot, type SlotValuation } from "../valuation";
+import { getDataFreshness } from "../freshness";
+import type { FreshnessMeta } from "./envelope";
 
 // All operations are pure read-only views over local data + SQLite.
 // Shared by HTTP routes and the MCP server so they stay in sync.
@@ -28,8 +31,22 @@ export function isSafeSlug(slug: string): boolean {
 
 // -------- Slots --------
 
-export function listSlots(): OrbitalSlot[] {
-  return mergeWithUcs(curatedSlots);
+// Additive enrichment: all original OrbitalSlot fields stay at the top level
+// (so existing /slots consumers keep working), with congestion + valuation added.
+export interface SlotListItem extends OrbitalSlot {
+  congestionScore: number;
+  valuation: SlotValuation;
+}
+
+export function listSlots(): SlotListItem[] {
+  return mergeWithUcs(curatedSlots).map((slot) => {
+    const congestion = getCongestion(slot.longitude);
+    return {
+      ...slot,
+      congestionScore: congestion.score,
+      valuation: valuateSlot(slot, congestion),
+    };
+  });
 }
 
 export interface SlotDossier {
@@ -37,6 +54,7 @@ export interface SlotDossier {
   satellites: GeoSatellite[];
   fccAuthorizations: FccAuthorization[];
   congestion: ReturnType<typeof getCongestion>;
+  valuation: SlotValuation;
 }
 
 export function getSlotDossier(slug: string): SlotDossier | null {
@@ -47,7 +65,18 @@ export function getSlotDossier(slug: string): SlotDossier | null {
   const satellites = getGeoSatellitesByLongitude(slot.longitude);
   const fccAuthorizations = getFccAuthorizationsByLongitude(slot.longitude);
   const congestion = getCongestion(slot.longitude);
-  return { slot, satellites, fccAuthorizations, congestion };
+  const valuation = valuateSlot(slot, congestion);
+  return { slot, satellites, fccAuthorizations, congestion, valuation };
+}
+
+// Adapter: data freshness in the snake_case shape used by the API envelope meta.
+export function freshnessMeta(): FreshnessMeta[] {
+  return getDataFreshness().map((f) => ({
+    source: f.source,
+    last_run: f.lastRun,
+    row_count: f.rowCount,
+    age_days: f.ageDays,
+  }));
 }
 
 // -------- Satellites --------

@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { getSlotDossier, isSafeSlug } from "@/lib/agents/operations";
+import { getSlotDossier, isSafeSlug, freshnessMeta } from "@/lib/agents/operations";
 import { ok, notFound, badRequest, rateLimited, preflight } from "@/lib/agents/envelope";
 import { checkRateLimit, getClientIp } from "@/lib/agents/rate-limit";
 
@@ -19,5 +19,5 @@ export async function GET(
   const dossier = getSlotDossier(slug);
   if (!dossier) return notFound(`No slot at slug '${slug}'`);
 
-  return ok(dossier);
+  return ok(dossier, { freshness: freshnessMeta() });
 }

@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 import { login, query, PATHS } from "./lib/spacetrack";
+import { recordIngest } from "./lib/ingest-meta";
 
 const DB_PATH = path.join(process.cwd(), "data", "clarke.db");
 
@@ -199,6 +200,9 @@ async function main() {
   console.log(`Parsed ${tleBlocks.length} TLE blocks.`);
   insertTlesMany(tleBlocks);
   console.log(`Upserted ${tleBlocks.length} TLE rows.`);
+
+  recordIngest(db, "Space-Track satcat", satcatData.length, "Space-Track satellite catalog");
+  recordIngest(db, "Space-Track TLE", tleBlocks.length, "Space-Track two-line element sets");
 
   db.close();
   console.log("Done.");

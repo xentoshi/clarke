@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 import * as XLSX from "xlsx";
+import { recordIngest } from "./lib/ingest-meta";
 
 const XLSX_PATH = path.join(process.cwd(), "data", "ssal.xlsx");
 const DB_PATH = path.join(process.cwd(), "data", "clarke.db");
@@ -107,6 +108,7 @@ function main() {
   }
 
   insertMany(records);
+  recordIngest(db, "FCC-SSAL", inserted, "FCC Space Station Authorization List (GEO)");
   db.exec("VACUUM");
   db.close();
 

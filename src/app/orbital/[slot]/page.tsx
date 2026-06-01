@@ -10,7 +10,8 @@ import {
 } from "@/lib/satellites";
 import { slugToLon, lonToSlug } from "@/lib/slot-utils";
 import { operatorToSlug } from "@/lib/operator-map";
-import { slots as curatedSlots, statusColors, statusLabels, bandColors } from "@/data/orbital-slots";
+import { slots as curatedSlots, statusColors, statusLabels, bandColors, type OrbitalSlot } from "@/data/orbital-slots";
+import { valuateSlot } from "@/lib/valuation";
 import type { GeoSatellite } from "@/lib/satellites";
 
 type Params = { slot: string };
@@ -70,6 +71,27 @@ export default async function SlotPage({ params }: { params: Promise<Params> }) 
   const congestion = getCongestion(lon);
   const fccAuths = getFccAuthorizationsByLongitude(lon);
 
+  // Build a slot record for valuation: prefer the curated record, otherwise
+  // synthesize one from the live UCS data at this longitude.
+  const valuationSlot: OrbitalSlot = curated ?? {
+    id: slot,
+    longitude: lon,
+    label,
+    operator,
+    country: sats[0]?.ownerCountry ?? "",
+    bands: [],
+    status: "active",
+    coverage: [],
+    valueEstimate: "",
+    description: "",
+    source: "ucs",
+  };
+  const valuation = valuateSlot(valuationSlot, congestion);
+  const confidenceColor =
+    valuation.confidence === "high" ? "text-emerald-400 border-emerald-800/60 bg-emerald-950/30" :
+    valuation.confidence === "medium" ? "text-amber-400 border-amber-800/60 bg-amber-950/30" :
+    "text-zinc-400 border-zinc-700 bg-zinc-900/40";
+
   const purposes = [...new Set(sats.map((s) => s.purpose).filter(Boolean))];
   const launchYears = sats
     .map((s) => parseYear(s.launchDate))
@@ -96,10 +118,15 @@ export default async function SlotPage({ params }: { params: Promise<Params> }) 
             <h1 className="text-3xl sm:text-4xl font-bold text-white font-mono mb-2">{label}</h1>
             <p className="text-zinc-400 text-sm">{operator}</p>
           </div>
-          {curated?.valueEstimate && (
+          {curated?.valueEstimate ? (
             <div className="text-right">
               <div className="text-white font-bold font-mono text-2xl">{curated.valueEstimate}</div>
-              <div className="text-zinc-600 text-xs mt-0.5">estimated value</div>
+              <div className="text-zinc-600 text-xs mt-0.5">curated estimate</div>
+            </div>
+          ) : (
+            <div className="text-right">
+              <div className="text-white font-bold font-mono text-2xl">{valuation.formatted.range}</div>
+              <div className="text-zinc-600 text-xs mt-0.5">modeled value range</div>
             </div>
           )}
         </div>
@@ -125,9 +152,48 @@ export default async function SlotPage({ params }: { params: Promise<Params> }) 
             congestion.tier === "high" ? "text-orange-400" :
             congestion.tier === "moderate" ? "text-amber-400" :
             congestion.tier === "low" ? "text-blue-400" : "text-zinc-500"
-          }`}>{congestion.label}</div>
+          }`}>{congestion.label} <span className="text-white/30 text-sm">{congestion.score}</span></div>
           <div className="text-white/25 text-[10px] font-mono tracking-widest uppercase">Congestion</div>
         </div>
+      </div>
+
+      {/* Implied valuation */}
+      <div className="mb-12">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Implied valuation</h2>
+          <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${confidenceColor}`}>
+            {valuation.confidence} confidence
+          </span>
+        </div>
+        <div className="border border-zinc-800 rounded-xl overflow-hidden">
+          <div className="bg-zinc-950 px-5 py-5 flex items-baseline justify-between gap-4 border-b border-zinc-800/60">
+            <div>
+              <div className="text-white font-bold font-mono text-2xl">{valuation.formatted.range}</div>
+              <div className="text-zinc-600 text-xs mt-0.5">
+                modeled range · midpoint {valuation.formatted.point}
+                {valuation.basis === "curated" && <span className="text-zinc-500"> · curated estimate {valuation.curatedEstimate}</span>}
+              </div>
+            </div>
+          </div>
+          <table className="w-full">
+            <tbody>
+              {valuation.factors.map((f) => (
+                <tr key={f.label} className="border-b border-zinc-800/40 last:border-b-0">
+                  <td className="px-5 py-2.5 text-zinc-300 text-xs font-medium w-36">{f.label}</td>
+                  <td className="px-2 py-2.5 text-zinc-500 text-xs">{f.detail}</td>
+                  <td className="px-5 py-2.5 text-right">
+                    <span className={`text-xs font-mono ${f.multiplier > 1 ? "text-emerald-400" : f.multiplier < 1 ? "text-orange-400" : "text-zinc-500"}`}>
+                      ×{f.multiplier.toFixed(2)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-zinc-700 text-[11px] font-mono mt-2 leading-relaxed">
+          Heuristic estimate from public data, not a market quote. A baseline is multiplied by arc desirability, occupancy, operator tier, spectrum, and arc scarcity. See the methodology in <Link href="/docs" className="text-zinc-500 hover:text-zinc-400 underline">docs</Link>.
+        </p>
       </div>
 
       {/* Curated enrichment */}

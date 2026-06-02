@@ -45,43 +45,76 @@ export async function fetchQuote(ticker: string): Promise<StockQuote | null> {
   }
 }
 
+// The Yahoo v8 chart endpoint (fetchQuote) returns price but not market cap.
+// Yahoo's batch quote endpoint does, but now requires a crumb + cookie. We fetch
+// that session once, then a single authenticated batch call returns price,
+// change, market cap, and 52-week range for every ticker (US and international).
+const YAHOO_UA = "Mozilla/5.0";
+let _session: { cookie: string; crumb: string } | null = null;
+
+async function getYahooSession(): Promise<{ cookie: string; crumb: string } | null> {
+  if (_session) return _session;
+  try {
+    const r1 = await fetch("https://fc.yahoo.com/", { headers: { "User-Agent": YAHOO_UA } });
+    const setCookies = (r1.headers.getSetCookie?.() ?? []) as string[];
+    const single = r1.headers.get("set-cookie");
+    const cookie = (setCookies.length ? setCookies : single ? [single] : [])
+      .map((c) => c.split(";")[0])
+      .join("; ");
+    if (!cookie) return null;
+
+    const r2 = await fetch("https://query1.finance.yahoo.com/v1/test/getcrumb", {
+      headers: { "User-Agent": YAHOO_UA, Cookie: cookie },
+    });
+    const crumb = (await r2.text()).trim();
+    if (!crumb || crumb.includes("<") || crumb.length > 32) return null;
+
+    _session = { cookie, crumb };
+    return _session;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchAllQuotes(tickers: string[]): Promise<StockQuote[]> {
   if (tickers.length === 0) return [];
-  try {
-    const symbols = tickers.join(",");
-    const res = await fetch(
-      `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,marketCap,fiftyTwoWeekHigh,fiftyTwoWeekLow,regularMarketVolume,shortName`,
-      {
-        headers: { "User-Agent": "Mozilla/5.0" },
+
+  const session = await getYahooSession();
+  if (session) {
+    try {
+      const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(tickers.join(","))}&crumb=${encodeURIComponent(session.crumb)}`;
+      const res = await fetch(url, {
+        headers: { "User-Agent": YAHOO_UA, Cookie: session.cookie },
         next: { revalidate: 300 },
-      }
-    );
-    if (!res.ok) throw new Error(`Yahoo Finance v7 returned ${res.status}`);
-    const json = await res.json();
-    const quotes: unknown[] = json?.quoteResponse?.result ?? [];
-    return quotes
-      .filter((q): q is Record<string, unknown> => typeof q === "object" && q !== null)
-      .map((q) => {
-        const price = (q.regularMarketPrice as number) ?? 0;
-        const change = (q.regularMarketChange as number) ?? 0;
-        const changePercent = (q.regularMarketChangePercent as number) ?? 0;
-        return {
-          ticker: q.symbol as string,
-          name: (q.shortName as string) ?? (q.symbol as string),
-          price,
-          change,
-          changePercent,
-          marketCap: q.marketCap as number | undefined,
-          high52w: q.fiftyTwoWeekHigh as number | undefined,
-          low52w: q.fiftyTwoWeekLow as number | undefined,
-          volume: q.regularMarketVolume as number | undefined,
-        };
       });
-  } catch {
-    // Fall back to individual requests if the batch endpoint fails
-    const results = await Promise.all(tickers.map(fetchQuote));
-    return results.filter((r): r is StockQuote => r !== null);
+      if (res.ok) {
+        const json = await res.json();
+        const result: unknown[] = json?.quoteResponse?.result ?? [];
+        if (result.length > 0) {
+          return result
+            .filter((q): q is Record<string, unknown> => typeof q === "object" && q !== null)
+            .map((q) => ({
+              ticker: q.symbol as string,
+              name: (q.shortName as string) ?? (q.longName as string) ?? (q.symbol as string),
+              price: (q.regularMarketPrice as number) ?? 0,
+              change: (q.regularMarketChange as number) ?? 0,
+              changePercent: (q.regularMarketChangePercent as number) ?? 0,
+              marketCap: q.marketCap as number | undefined,
+              high52w: q.fiftyTwoWeekHigh as number | undefined,
+              low52w: q.fiftyTwoWeekLow as number | undefined,
+              volume: q.regularMarketVolume as number | undefined,
+            }));
+        }
+      }
+      _session = null; // crumb likely stale — drop it so the next call re-auths
+    } catch {
+      _session = null;
+    }
   }
+
+  // Fallback: per-ticker v8 chart (price/change only, no market cap).
+  const results = await Promise.all(tickers.map(fetchQuote));
+  return results.filter((r): r is StockQuote => r !== null);
 }
 
 export function formatMarketCap(val?: number): string {

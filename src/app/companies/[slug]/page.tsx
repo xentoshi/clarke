@@ -3,12 +3,21 @@ import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
 import { companiesBySlug, companies } from "@/data/companies";
 import { stocks } from "@/data/stocks";
-import { getOperatorGeoPositions } from "@/lib/satellites";
 import { slugToOperators } from "@/lib/operator-map";
+import { buildOperatorExposure } from "@/lib/exposure";
+import { getConstellationPresence, type CongestionTier } from "@/lib/satellites";
+
+const REGIME_LABEL: Record<string, string> = {
+  LEO: "LEO", MEO: "MEO", ELLIPTICAL: "Elliptical",
+};
 
 function normalizeName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
+
+const congestionColor: Record<CongestionTier, string> = {
+  sparse: "#3f3f46", low: "#3b82f6", moderate: "#f59e0b", high: "#f97316", critical: "#ef4444",
+};
 
 type Params = { slug: string };
 
@@ -37,7 +46,8 @@ export default async function CompanyPage({ params }: { params: Promise<Params> 
   ).slice(0, 4);
 
   const operatorNames = slugToOperators(slug);
-  const geoPositions = getOperatorGeoPositions(operatorNames);
+  const exposure = buildOperatorExposure(operatorNames);
+  const constellation = getConstellationPresence(company.name);
 
   const cn = normalizeName(company.name);
   const matchingStock = stocks.find((s) => {
@@ -99,30 +109,115 @@ export default async function CompanyPage({ params }: { params: Promise<Params> 
         </div>
       </div>
 
-      {geoPositions.length > 0 && (
+      {exposure && (
         <div className="mb-16">
           <div className="text-white/25 text-[10px] font-mono tracking-widest uppercase mb-4">
-            GEO Orbital Positions ({geoPositions.length})
+            Orbital exposure ({exposure.positionCount} GEO position{exposure.positionCount !== 1 ? "s" : ""})
           </div>
-          <div className="space-y-px bg-white/[0.03] rounded-xl overflow-hidden">
-            {geoPositions.map((pos) => (
-              <Link
-                key={pos.slug}
-                href={`/orbital/${pos.slug}`}
-                className="group flex items-center justify-between bg-zinc-950 px-5 py-3 hover:bg-zinc-900/60 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <span className="text-white font-mono text-sm group-hover:text-white/70 transition-colors">{pos.label}</span>
-                  <span className="text-zinc-600 text-xs hidden sm:block truncate max-w-[240px]">
-                    {pos.names.join(" · ")}
-                  </span>
-                </div>
-                <span className="text-zinc-600 text-xs font-mono shrink-0">
-                  {pos.satelliteCount} sat{pos.satelliteCount !== 1 ? "s" : ""} →
-                </span>
-              </Link>
+
+          {/* Portfolio aggregates */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.04] mb-4">
+            <div className="bg-zinc-950 px-5 py-4">
+              <div className="text-white font-bold font-mono text-base mb-1">{exposure.valueRange}</div>
+              <div className="text-white/25 text-[10px] font-mono tracking-widest uppercase">Implied value</div>
+            </div>
+            <div className="bg-zinc-950 px-5 py-4">
+              <div className="text-white font-bold font-mono text-base mb-1">{exposure.avgCongestion}</div>
+              <div className="text-white/25 text-[10px] font-mono tracking-widest uppercase">Avg congestion</div>
+            </div>
+            <div className="bg-zinc-950 px-5 py-4">
+              <div className="text-white font-bold font-mono text-base mb-1">{exposure.fccCount}</div>
+              <div className="text-white/25 text-[10px] font-mono tracking-widest uppercase">FCC licensed</div>
+            </div>
+            <div className="bg-zinc-950 px-5 py-4">
+              <div className="text-white font-bold font-mono text-base mb-1">{exposure.listedCount}</div>
+              <div className="text-white/25 text-[10px] font-mono tracking-widest uppercase">Tokenized</div>
+            </div>
+          </div>
+
+          {/* Longitude strip */}
+          <div className="relative h-12 bg-zinc-950 border border-zinc-800 rounded-lg mb-4 overflow-hidden">
+            {[25, 50, 75].map((p) => (
+              <div key={p} className="absolute top-0 bottom-4 w-px bg-white/[0.05]" style={{ left: `${p}%` }} />
+            ))}
+            {exposure.positions.map((p) => (
+              <div key={p.slug} className="absolute -translate-x-1/2 group" style={{ left: `${((p.longitude + 180) / 360) * 100}%`, top: "10px" }}>
+                <div className="w-2 h-2 rounded-full ring-2 ring-zinc-950" style={{ background: congestionColor[p.congestionTier] }} />
+              </div>
+            ))}
+            <div className="absolute bottom-0 left-0 right-0 flex justify-between px-2 text-[9px] font-mono text-white/25">
+              <span>180°W</span><span>0°</span><span>180°E</span>
+            </div>
+          </div>
+
+          {/* Positions table */}
+          <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-zinc-800">
+                  <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Slot</th>
+                  <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden sm:table-cell">Region</th>
+                  <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden md:table-cell">Bands</th>
+                  <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Cong.</th>
+                  <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {exposure.positions.map((p) => (
+                  <tr key={p.slug} className="border-b border-zinc-800/50 last:border-b-0 hover:bg-zinc-900/40 transition-colors">
+                    <td className="px-4 py-2.5">
+                      <Link href={`/orbital/${p.slug}`} className="flex items-center gap-2 group">
+                        <span className="text-white text-xs font-mono font-bold group-hover:text-white/70 transition-colors">{p.label}</span>
+                        {p.fccLicensed && <span className="text-sky-400/80 text-[9px] border border-sky-900/60 px-1 rounded font-mono leading-none">FCC</span>}
+                        {p.listed && <span className="text-emerald-400 text-[10px] border border-emerald-900/60 bg-emerald-950/40 px-1 rounded font-mono leading-none">listed</span>}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-2.5 hidden sm:table-cell"><span className="text-zinc-600 text-xs">{p.region}</span></td>
+                    <td className="px-4 py-2.5 hidden md:table-cell"><span className="text-zinc-500 text-xs font-mono">{p.bands.length ? p.bands.join("/") : "—"}</span></td>
+                    <td className="px-4 py-2.5 text-right">
+                      <span className="inline-flex items-center justify-end gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: congestionColor[p.congestionTier] }} />
+                        <span className="text-zinc-500 text-xs font-mono">{p.congestionScore}</span>
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-right"><span className="text-zinc-500 text-xs font-mono">{p.valueDisplay}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Agent callout */}
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-zinc-600">
+            <span>Agents query this via</span>
+            <code className="font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 rounded px-1.5 py-0.5">GET /api/v1/agents/companies/{slug}</code>
+            <Link href="/docs" className="text-zinc-600 hover:text-zinc-400 underline">docs →</Link>
+          </div>
+          <p className="text-zinc-700 text-[10px] font-mono mt-2 leading-relaxed">
+            Implied value is a heuristic model over public data (range across {exposure.positionCount} position{exposure.positionCount !== 1 ? "s" : ""}), not a quote.
+          </p>
+        </div>
+      )}
+
+      {constellation && (
+        <div className="mb-16">
+          <div className="text-white/25 text-[10px] font-mono tracking-widest uppercase mb-4">
+            Constellation presence ({constellation.total.toLocaleString()} active satellite{constellation.total !== 1 ? "s" : ""})
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.04] mb-3">
+            {constellation.regimes.map((r) => (
+              <div key={r.regime} className="bg-zinc-950 px-5 py-4">
+                <div className="text-white font-bold font-mono text-base mb-1">{r.count.toLocaleString()}</div>
+                <div className="text-white/25 text-[10px] font-mono tracking-widest uppercase">{REGIME_LABEL[r.regime] ?? r.regime} satellites</div>
+              </div>
             ))}
           </div>
+          {constellation.topPurpose && (
+            <p className="text-zinc-500 text-xs mb-2">Primary purpose: {constellation.topPurpose}</p>
+          )}
+          <p className="text-zinc-700 text-[10px] font-mono leading-relaxed">
+            Constellations are capacity assets, not priced orbital positions — shown for coverage, not valuation. Source: UCS Satellite Database.
+          </p>
         </div>
       )}
 

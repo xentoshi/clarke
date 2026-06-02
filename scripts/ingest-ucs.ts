@@ -128,9 +128,10 @@ async function main() {
     const name = clean(cols[0]);
     const orbitClass = clean(cols[8]);
     if (!name || !orbitClass) { skipped++; continue; }
-    if (orbitClass !== "GEO") { skipped++; continue; }
 
-    const lonRaw = parseFloat2(cols[10] ?? "");
+    // Ingest all regimes (GEO/LEO/MEO/Elliptical). GEO longitude only applies
+    // to GEO rows; leave it null otherwise.
+    const lonRaw = orbitClass === "GEO" ? parseFloat2(cols[10] ?? "") : null;
     const longitude_geo = lonRaw;
 
     rows.push({
@@ -165,11 +166,11 @@ async function main() {
     });
 
     total++;
-    geoCount++;
+    if (orbitClass === "GEO") geoCount++;
   }
 
   insertMany(rows);
-  recordIngest(db, "UCS", geoCount, "UCS Satellite Database (GEO subset)");
+  recordIngest(db, "UCS", total, "UCS Satellite Database (all regimes)");
   db.exec("VACUUM");
   db.close();
 

@@ -50,6 +50,7 @@ Anchor.toml
 # Private design docs
 docs/superpowers/
 docs/strategy.md
+docs/agent-native-strategy.md
 docs/pitch.md
 docs/foundations.md
 docs/foundations/

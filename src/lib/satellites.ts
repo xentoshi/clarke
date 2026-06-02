@@ -245,6 +245,53 @@ export function getAllCongestionScores(): Record<string, number> {
   return result;
 }
 
+export interface ConstellationRegime {
+  regime: string; // LEO | MEO | ELLIPTICAL
+  count: number;
+}
+
+export interface ConstellationPresence {
+  total: number;
+  regimes: ConstellationRegime[];
+  operators: string[];
+  topPurpose: string | null;
+}
+
+// Non-GEO ("constellation") satellite presence for a company, matched by
+// company-name word boundary against the operator field. Descriptive coverage
+// only — constellations are capacity assets, not priced GEO positions, so this
+// deliberately carries no valuation.
+export function getConstellationPresence(companyName: string): ConstellationPresence | null {
+  const db = getDb();
+  if (!db) return null;
+  const clean = companyName.toLowerCase().replace(/\s*\(.*?\)/g, "").trim();
+  if (!clean) return null;
+
+  const candidates = db.prepare(
+    "SELECT operator, UPPER(orbit_class) as regime, purpose FROM satellites WHERE orbit_class != 'GEO' AND operator IS NOT NULL AND LOWER(operator) LIKE ?"
+  ).all(`%${clean}%`) as { operator: string; regime: string; purpose: string | null }[];
+
+  const re = new RegExp(`\\b${clean.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+  const matched = candidates.filter((r) => re.test(r.operator));
+  if (matched.length === 0) return null;
+
+  const byRegime = new Map<string, number>();
+  const purposeCounts = new Map<string, number>();
+  const ops = new Set<string>();
+  for (const r of matched) {
+    byRegime.set(r.regime, (byRegime.get(r.regime) ?? 0) + 1);
+    ops.add(r.operator);
+    if (r.purpose) purposeCounts.set(r.purpose, (purposeCounts.get(r.purpose) ?? 0) + 1);
+  }
+
+  return {
+    total: matched.length,
+    regimes: [...byRegime.entries()].map(([regime, count]) => ({ regime, count })).sort((a, b) => b.count - a.count),
+    operators: [...ops],
+    topPurpose: [...purposeCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null,
+  };
+}
+
 export interface OperatorPosition {
   slug: string;
   label: string;

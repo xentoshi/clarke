@@ -4,6 +4,7 @@ import Script from "next/script";
 import AppShell from "@/components/AppShell";
 import SolanaWalletProvider from "@/components/WalletProvider";
 import Analytics from "@/components/Analytics";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { Manrope, IBM_Plex_Mono } from "next/font/google";
 import { slots as curatedSlots } from "@/data/orbital-slots";
 import { mergeWithUcs } from "@/lib/satellites";
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           />
         )}
         <Analytics />
+        <VercelAnalytics />
         <SolanaWalletProvider>
           <AppShell slots={allSlots}>{children}</AppShell>
         </SolanaWalletProvider>

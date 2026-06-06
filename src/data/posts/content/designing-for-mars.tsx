@@ -14,7 +14,7 @@ export const toc: TocItem[] = [
   { id: "what-earth-gets-wrong", label: "What Earth architecture gets wrong" },
 ];
 
-export function DesigningForMarsPost() {
+export default function DesigningForMarsPost() {
   return (
     <>
       <p>

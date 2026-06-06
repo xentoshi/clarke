@@ -47,7 +47,7 @@ function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
   );
 }
 
-export function MultiplanetaryPost() {
+export default function MultiplanetaryPost() {
   return (
     <>
       <div className="border border-zinc-700 rounded-xl p-6 bg-zinc-900/30 mb-10">

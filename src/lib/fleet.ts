@@ -6,6 +6,7 @@ import { getDb } from "./db";
 // launches, so they are presented as "in registry", not a real-time census.
 const FLEET_OPERATORS: Record<string, string[]> = {
   // public tickers
+  SPCX: ["SpaceX", "Spacex"],
   IRDM: ["Iridium Communications, Inc."],
   GSAT: ["Globalstar"],
   SPIR: ["Spire Global Inc."],

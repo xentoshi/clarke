@@ -97,6 +97,14 @@ export const stocks: Stock[] = [
     clarkeRelevance: "Satellite manufacturing costs and platform lifetimes directly affect the economics of the orbital positions those satellites occupy. Lockheed's contract data and fleet disclosures are inputs to asset-level financial modeling.",
   },
   {
+    ticker: "SPCX",
+    name: "SpaceX",
+    vertical: "Launch",
+    description: "Reusable launch (Falcon 9, Starship) and the Starlink broadband constellation. Listed June 2026 in the largest IPO on record.",
+    detail: "SpaceX priced its IPO at $135 on June 12, 2026, raising roughly $75B at an initial $1.77T market cap, the largest debut on record, and opened above $150 on Nasdaq. The company operates Falcon 9, the world's most-flown orbital rocket, runs the Starlink broadband constellation, and is flight-testing Starship, which targets full reusability.",
+    clarkeRelevance: "SPCX puts a public market price on the largest satellite fleet ever flown. Starlink accounts for more than half of the active satellites in Clarke's registry, making SpaceX's market-cap-per-satellite the benchmark against which every other operator's orbital assets are priced.",
+  },
+  {
     ticker: "RKLB",
     name: "RocketLab USA",
     vertical: "Launch",

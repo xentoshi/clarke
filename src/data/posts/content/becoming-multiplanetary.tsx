@@ -148,7 +148,7 @@ export default function MultiplanetaryPost() {
           exposure, consumables mass, and the psychological burden of confinement.
         </p>
         <div className="companies">
-          {["Impulse Space", "Phase Four", "Exotrail", "ThrustMe", "Accion Systems", "Orbion", "Pale Blue", "Ultra Safe Nuclear"].map((c) => (
+          {["Impulse Space", "Phase Four", "Exotrail", "ThrustMe", "Revolution Space", "Orbion", "Pale Blue"].map((c) => (
             <CompanyTag key={c} name={c} />
           ))}
         </div>

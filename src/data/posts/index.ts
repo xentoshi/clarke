@@ -10,6 +10,15 @@ export interface Post {
 
 export const posts: Post[] = [
   {
+    slug: "fcc-part-100-space-modernization-order",
+    title: "The FCC's Part 100 Order: The Reform's Biggest Test Case Is Exempt From the Reform",
+    subtitle: "The FCC just made satellite licensing dramatically faster for almost everyone — while quietly confirming that the largest application in its history stays in the slow lane, and that the agency's authority to regulate orbital safety at all is now an open fight with Congress.",
+    date: "2026-07-28",
+    readingMinutes: 8,
+    excerpt: "The FCC's new Part 100 rules replace decades-old satellite licensing with a faster, presumption-based process — but the megaconstellation filings that most justify the reform, including SpaceX's million-satellite orbital data center application, are excluded from its faster timelines. For the 522 GEO positions Clarke tracks, the order also creates the first mandatory cross-operator tracking-data regime, on legal authority Congress is actively contesting.",
+    tag: "Regulatory",
+  },
+  {
     slug: "europe-dth-aging-fleet",
     title: "Europe's TV Anchors Are Flying on an Aging Fleet",
     subtitle: "Every SES satellite at 19.2°E is past its design life. At 28.2°E, the UK workhorses cross the line by 2029. A position-level read of the public record.",

@@ -66,9 +66,6 @@ export default function SlotTable({
                     {r.fccLicensed && (
                       <span className="text-sky-400/80 text-[9px] border border-sky-900/60 px-1 rounded font-mono leading-none">FCC</span>
                     )}
-                    {r.listed && (
-                      <span className="text-emerald-400 text-[10px] border border-emerald-900/60 bg-emerald-950/40 px-1 rounded font-mono leading-none">listed</span>
-                    )}
                   </div>
                 </td>
                 <td className="px-4 py-2.5 hidden sm:table-cell"><span className="text-zinc-400 text-xs">{r.operator || "—"}</span></td>

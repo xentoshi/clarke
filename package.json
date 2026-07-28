@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "ts-node --project tsconfig.scripts.json scripts/seed-offerings.ts",
     "ingest": "ts-node --project tsconfig.scripts.json scripts/ingest-ucs.ts",
     "ingest:fcc": "ts-node --project tsconfig.scripts.json scripts/ingest-fcc.ts",
     "ingest:spacetrack": "ts-node --project tsconfig.scripts.json scripts/ingest-spacetrack.ts",
@@ -15,13 +14,7 @@
     "mcp": "tsx scripts/clarke-mcp.ts"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.32.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@solana/wallet-adapter-base": "^0.9.27",
-    "@solana/wallet-adapter-react": "^0.15.39",
-    "@solana/wallet-adapter-react-ui": "^0.9.39",
-    "@solana/wallet-adapter-wallets": "^0.19.38",
-    "@solana/web3.js": "^1.98.4",
     "@vercel/analytics": "^2.0.1",
     "better-sqlite3": "^12.10.0",
     "next": "16.2.4",

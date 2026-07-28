@@ -49,7 +49,6 @@ export function buildExplorerRows(): ExplorerRow[] {
       congestionTier: congestion.tier,
       region: regionForLongitude(slot.longitude),
       fccLicensed: fccSet.has(slug),
-      listed: slot.tokenization?.status === "listed",
       bands: slot.bands,
       coverage: slot.coverage,
       description: slot.description,
@@ -57,7 +56,6 @@ export function buildExplorerRows(): ExplorerRow[] {
       launched: slot.launched,
       valuation,
       valueDisplay: slot.valueEstimate || valuation.formatted.range,
-      tokenization: slot.tokenization,
     };
   });
 }

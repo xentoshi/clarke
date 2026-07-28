@@ -40,7 +40,7 @@ export function createServer(): McpServer {
 
   server.tool(
     "clarke_list_slots",
-    "List all orbital slots in the Clarke registry: curated GEO positions with operator/value/tokenization details merged with the broader set derived from the UCS satellite database. Each entry includes a normalized congestion score (0-100) and a heuristic valuation (estimated value range, point estimate, confidence, and factor breakdown). Curated entries additionally include an authoritative valuation override and on-chain tokenization status.",
+    "List all orbital slots in the Clarke registry: curated GEO positions with operator/value details merged with the broader set derived from the UCS satellite database. Each entry includes a normalized congestion score (0-100), FCC filing status, and a heuristic valuation (estimated value range, point estimate, confidence, and factor breakdown). Curated entries additionally include an authoritative valuation override.",
     {},
     async () => textResult(listSlots()),
   );

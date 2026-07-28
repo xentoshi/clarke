@@ -1,4 +1,4 @@
-import type { Band, SlotStatus, OrbitalSlot } from "@/data/orbital-slots";
+import type { Band, SlotStatus } from "@/data/orbital-slots";
 import type { CongestionTier } from "@/lib/satellites";
 import type { SlotValuation } from "@/lib/valuation";
 
@@ -20,7 +20,6 @@ export interface ExplorerRow {
   congestionTier: CongestionTier;
   region: string;
   fccLicensed: boolean;
-  listed: boolean;
   bands: Band[];
   coverage: string[];
   description: string;
@@ -28,7 +27,6 @@ export interface ExplorerRow {
   launched?: number;
   valuation: SlotValuation;
   valueDisplay: string; // curated estimate if present, else modeled range
-  tokenization?: OrbitalSlot["tokenization"];
 }
 
 export type SortKey = "longitude" | "operator" | "satCount" | "congestionScore" | "value";
@@ -43,7 +41,6 @@ export interface Facets {
   congestionMin: number;
   congestionMax: number;
   fccOnly: boolean;
-  listedOnly: boolean;
 }
 
 export const EMPTY_FACETS: Facets = {
@@ -55,5 +52,4 @@ export const EMPTY_FACETS: Facets = {
   congestionMin: 0,
   congestionMax: 100,
   fccOnly: false,
-  listedOnly: false,
 };

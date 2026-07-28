@@ -25,7 +25,6 @@ export interface ExposurePosition {
   congestionScore: number;
   congestionTier: CongestionTier;
   fccLicensed: boolean;
-  listed: boolean;
   valuation: SlotValuation;
   valueDisplay: string;
 }
@@ -38,7 +37,6 @@ export interface OperatorExposure {
   valueHigh: number;
   valueRange: string;
   avgCongestion: number;
-  listedCount: number;
   fccCount: number;
 }
 
@@ -75,7 +73,6 @@ export function buildOperatorExposure(operatorNames: string[]): OperatorExposure
       congestionScore: congestion.score,
       congestionTier: congestion.tier,
       fccLicensed: fccSet.has(pos.slug),
-      listed: slot.tokenization?.status === "listed",
       valuation,
       valueDisplay: slot.valueEstimate || valuation.formatted.range,
     };
@@ -93,7 +90,6 @@ export function buildOperatorExposure(operatorNames: string[]): OperatorExposure
     valueHigh,
     valueRange: `${formatMoney(valueLow)}–${formatMoney(valueHigh)}`,
     avgCongestion: Math.round(items.reduce((s, p) => s + p.congestionScore, 0) / items.length),
-    listedCount: items.filter((p) => p.listed).length,
     fccCount: items.filter((p) => p.fccLicensed).length,
   };
 }

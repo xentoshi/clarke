@@ -1,10 +1,9 @@
 import { buildMeta } from "@/lib/metadata";
-import { slots } from "@/data/orbital-slots";
 import { getSatelliteStats, getFccCount } from "@/lib/satellites";
 
 export const metadata = buildMeta({
   title: "Docs",
-  description: "Technical documentation for Clarke: orbital slots, data sources, yield accounting, the on-chain program, and legal structure.",
+  description: "Technical documentation for Clarke: registry methodology, data sources, congestion scoring, and the agents API.",
   tag: "Docs",
   path: "/docs",
 });
@@ -16,12 +15,6 @@ const sections = [
   { id: "registry-methodology",label: "Registry Methodology" },
   { id: "data-quality",        label: "Data Quality" },
   { id: "methodology",         label: "Methodology" },
-  { id: "how-it-works",        label: "How It Works" },
-  { id: "tokens",              label: "Slot Tokens" },
-  { id: "fees",                label: "Fee Structure" },
-  { id: "legal",               label: "Legal Structure" },
-  { id: "program",             label: "On-Chain Program" },
-  { id: "yield",               label: "Yield Accounting" },
   { id: "agents",              label: "Agents API" },
 ];
 
@@ -59,7 +52,6 @@ export default function DocsPage() {
   const geoCount = dbStats.geoCount > 0 ? dbStats.geoCount : 590;
   const totalSats = dbStats.total > 0 ? dbStats.total : 7560;
   const fccCount = getFccCount();
-  const listedSlots = slots.filter(s => s.tokenization?.status === "listed").length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
@@ -67,7 +59,7 @@ export default function DocsPage() {
         <p className="text-zinc-600 text-xs font-mono mb-3">// DOCUMENTATION</p>
         <h1 className="text-2xl font-bold text-white mb-3">Docs</h1>
         <p className="text-zinc-500 text-sm max-w-2xl leading-relaxed">
-          Technical reference for Clarke: how the on-chain program works, where the orbital slot data comes from, and how the legal structure is designed. Clarke is building capital markets for orbital infrastructure. This is the engineering and methodology behind it.
+          Technical reference for Clarke: where the orbital slot data comes from, how positions are scored and valued, and how to query the registry programmatically. This is the engineering and methodology behind the registry.
         </p>
       </div>
 
@@ -98,9 +90,9 @@ export default function DocsPage() {
           <Section id="overview" title="Overview">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               {[
-                { value: geoCount,    label: "GEO satellites tracked" },
-                { value: fccCount,    label: "FCC authorizations" },
-                { value: listedSlots, label: "On devnet" },
+                { value: geoCount,  label: "GEO satellites tracked" },
+                { value: fccCount,  label: "FCC authorizations" },
+                { value: "590+",    label: "GEO positions in registry" },
               ].map((s) => (
                 <div key={s.label} className="border border-zinc-800 rounded-xl p-4 bg-zinc-900/10 text-center">
                   <div className="text-2xl font-bold font-mono text-white">{s.value}</div>
@@ -109,7 +101,7 @@ export default function DocsPage() {
               ))}
             </div>
             <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-              Clarke is building capital markets for orbital infrastructure: the registry, pricing layer, and exchange for orbital slots across GEO, LEO, and MEO. The on-chain program is a proof of concept for fractional positions in orbital slot revenue, currently running on Solana devnet with three GEO slots modeled as a technical demonstration.
+              Clarke is a live registry of GEO orbital positions: congestion, operators, and FCC filing status, built from public data so a market that mostly runs on PDFs and phone calls has a queryable reference layer.
             </p>
             <p className="text-zinc-500 text-sm leading-relaxed">
               Named after Arthur C. Clarke, who first described geostationary orbit in 1945. The Clarke Belt, the ring of satellites 35,786 km above the equator, is named in his honor.
@@ -211,158 +203,11 @@ export default function DocsPage() {
               {[
                 { title: "Slot status verification", body: "Slot status is derived from UCS Satellite Database classifications, updated twice yearly. Satellite decommissions and new launches are reflected within the cadence of UCS updates, typically within six months of public announcement." },
                 { title: "Value estimates", body: "Orbital slot value estimates are derived from disclosed transaction prices in public M&A filings, bankruptcy proceedings (Intelsat 2020), and analyst reports from Northern Sky Research and Euroconsult. Ranges reflect meaningful uncertainty. These are not appraisals." },
-                { title: "Yield estimates", body: "Lease yield estimates of 5-9% are based on publicly disclosed transponder lease rates in operator earnings reports and industry research. Actual yield depends on individual lease terms negotiated between the operator and their broadcast customers." },
-                { title: "Not financial advice", body: "Nothing on Clarke constitutes investment advice. Value estimates, yield projections, and slot data are informational. The devnet tokenization features are a technical demonstration. Mainnet investment involves real financial risk." },
+                { title: "Not investment advice", body: "Nothing on Clarke constitutes investment advice. Value estimates and slot data are informational, derived from public sources, and not a market quote or an offer." },
               ].map((item) => (
                 <div key={item.title} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
                   <div className="text-white text-sm font-semibold mb-2">{item.title}</div>
                   <p className="text-zinc-500 text-xs leading-relaxed">{item.body}</p>
-                </div>
-              ))}
-            </div>
-          </Section>
-
-          <Section id="how-it-works" title="How It Works">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {[
-                { step: "01", actor: "Operator", action: "Submits an International Telecommunication Union-registered orbital slot. Clarke verifies the lease contract and creates an on-chain offering." },
-                { step: "02", actor: "Investor",  action: "Buys tokens with SOL. Capital flows immediately to the operator treasury. Tokens represent a fractional claim on future transponder lease revenue." },
-                { step: "03", actor: "Operator",  action: "Submits transponder lease revenue quarterly. The configured yield share accumulates in the offering account. Token holders claim their proportional share at any time." },
-              ].map((s) => (
-                <div key={s.step} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-                  <div className="text-white/20 text-xs font-mono mb-3">{s.step}</div>
-                  <div className="text-white text-sm font-semibold mb-2">{s.actor}</div>
-                  <p className="text-zinc-500 text-xs leading-relaxed">{s.action}</p>
-                </div>
-              ))}
-            </div>
-          </Section>
-
-          <Section id="tokens" title="Slot Tokens">
-            <p className="text-zinc-500 text-sm leading-relaxed mb-6">
-              Each listed slot has a dedicated yield token on Solana with its own ticker. The token represents a fractional claim on that slot's quarterly transponder lease revenue, recorded as an on-chain position in the Clarke program. These three tokens are currently deployed on Solana devnet as a technical proof of concept, not a live investment product.
-            </p>
-            <div className="space-y-3 mb-6">
-              {[
-                { ticker: "$ASTRA19", name: "Astra 19.2°E Yield Token", slot: "19.2°E · SES · Ku/Ka-band", yield: "est. 6.2% APY", what: "19.2°E is the most valuable GEO slot in Europe. Home to Astra 1N, it serves Sky Deutschland, Sky UK, and 120M+ European homes. Each yield token entitles the holder to a proportional share of transponder lease revenue from this position." },
-                { ticker: "$SES28",   name: "SES 28.2°E Yield Token",   slot: "28.2°E · SES · Ku-band",    yield: "est. 5.9% APY", what: "28.2°E is the primary slot for Sky UK, serving 11M+ subscribers. Sky's entire UK broadcasting infrastructure depends on this position. Each yield token entitles the holder to a share of the transponder lease revenue SES collects from Sky and other Ku-band users at this longitude." },
-                { ticker: "$SATMEX101", name: "SatMex / SES 101°W Yield Token", slot: "101°W · SES · C/Ku-band", yield: "est. 5.8% APY", what: "101°W is a premium North American orbital position serving major US cable operators and broadcasters. Originally operated by Satellites Mexicanos (SatMex), the slot is now held by SES following their 2014 acquisition (hence the ticker). C-band capacity supports legacy cable TV distribution across the continental United States. Each yield token entitles the holder to a share of lease revenue from C-band and Ku-band transponder usage." },
-              ].map((t) => (
-                <div key={t.ticker} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div>
-                      <span className="text-white font-mono font-bold text-sm">{t.ticker}</span>
-                      <span className="text-zinc-500 text-xs ml-3">{t.name}</span>
-                    </div>
-                    <span className="text-emerald-400 font-mono text-xs shrink-0">{t.yield}</span>
-                  </div>
-                  <div className="text-zinc-600 text-xs font-mono mb-2">{t.slot}</div>
-                  <p className="text-zinc-500 text-xs leading-relaxed">{t.what}</p>
-                </div>
-              ))}
-            </div>
-            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-              <div className="text-xs font-mono text-zinc-600 mb-3">// TICKER NAMING CONVENTION</div>
-              <p className="text-zinc-500 text-xs leading-relaxed">
-                Tickers follow the pattern $[OPERATOR/SATELLITE][LONGITUDE]. New slots added to Clarke will follow the same convention. The ticker, slot ID, and on-chain offering PDA are permanently linked at the time of listing and cannot be changed.
-              </p>
-            </div>
-          </Section>
-
-          <Section id="fees" title="Fee Structure">
-            <p className="text-zinc-500 text-sm leading-relaxed mb-6">
-              Clarke charges fees to operators only. Investors receive yield net of the operator's yield share commitment. No fees are deducted from investor distributions.
-            </p>
-            <div className="space-y-3">
-              {[
-                { fee: "2% origination fee", when: "At listing", detail: "Charged on the total capital raised when an operator's slot offering closes. A $10M raise generates $200K for Clarke. This is Clarke's primary revenue source in the early phase." },
-                { fee: "5% yield distribution fee", when: "Quarterly", detail: "Charged on each yield distribution flowing through the platform. As listed slots and invested capital grow, this becomes recurring revenue compounding without additional sales effort. Ten slots distributing $5M/year in yield generates $250K/year for Clarke." },
-              ].map((f) => (
-                <div key={f.fee} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-                  <div className="flex items-start justify-between gap-4 mb-2">
-                    <span className="text-white font-bold text-sm">{f.fee}</span>
-                    <span className="text-zinc-600 text-xs font-mono shrink-0">{f.when}</span>
-                  </div>
-                  <p className="text-zinc-500 text-xs leading-relaxed">{f.detail}</p>
-                </div>
-              ))}
-            </div>
-          </Section>
-
-          <Section id="legal" title="Legal Structure">
-            <div className="space-y-4">
-              {[
-                { label: "WHAT IS TOKENIZED", body: "Clarke does not tokenize orbital slots themselves. International Telecommunication Union filings cannot be transferred on-chain. What Clarke tokenizes is a Special Purpose Vehicle that holds the operator's contractual right to receive transponder lease revenue from a specific position. Token holders receive fractional economic rights to that revenue stream. This is identical in structure to real estate tokenization, where an LLC holding a lease is fractionalized rather than the land title itself." },
-                { label: "SPV JURISDICTION",  body: "The target jurisdiction for Clarke SPVs is the Cayman Islands. This jurisdiction offers neutral tax treatment, a mature legal framework for fund and SPV structures, no withholding on distributions to foreign investors, and established precedent across the RWA tokenization and crypto industries. Each slot would get a dedicated SPV with no cross-exposure to other offerings or the Clarke operating entity. Clarke is in the design phase. No SPVs have been formed." },
-                { label: "OPERATOR RIGHTS",  body: "The satellite operator retains full ownership of their International Telecommunication Union filing, their satellite, and all operational responsibilities. Listing on Clarke does not modify the filing, transfer the frequency license, or affect the operator's relationship with the national administration holding their coordination agreement. Clarke tokenizes only the revenue stream." },
-                { label: "PRECEDENTS",        body: "The SPV tokenization structure is used by Securitize (BlackRock BUIDL fund), RealT (real estate), Maple Finance (private credit), and Centrifuge (trade receivables). Clarke applies the same framework to orbital infrastructure." },
-              ].map((s) => (
-                <div key={s.label} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-                  <div className="text-xs font-mono text-zinc-600 mb-3">// {s.label}</div>
-                  <p className="text-zinc-500 text-sm leading-relaxed">{s.body}</p>
-                </div>
-              ))}
-            </div>
-          </Section>
-
-          <Section id="program" title="On-Chain Program">
-            <p className="text-zinc-500 text-sm leading-relaxed mb-6">
-              The Clarke program is deployed on Solana devnet at{" "}
-              <a href="https://explorer.solana.com/address/3KFUjEeu7efYuvLuAvEeKQqVt3pyoghUafoPSWzYif57?cluster=devnet"
-                target="_blank" rel="noreferrer"
-                className="text-white/60 hover:text-white font-mono text-xs transition-colors">
-                3KFUjEe…if57
-              </a>
-              . Written in Rust using Anchor 0.29.
-            </p>
-            <div className="space-y-2 mb-6">
-              {[
-                { ix: "initialize",          who: "Admin",          desc: "One-time setup. Creates the ProgramAuthority PDA that gates admin instructions. Can only succeed once." },
-                { ix: "create_offering",     who: "Admin",          desc: "Creates a SlotOffering PDA. Sets total token supply, price in lamports, and yield share in basis points." },
-                { ix: "invest",              who: "Investor",       desc: "Buys tokens. SOL transfers directly to the operator treasury. Creates an InvestorPosition PDA on first purchase." },
-                { ix: "distribute_yield",    who: "Admin/Operator", desc: "Deposits transponder lease revenue. The configured yield share (e.g. 80%) accumulates for token holders." },
-                { ix: "claim_yield",         who: "Investor",       desc: "Withdraws accrued yield to the investor's wallet. Cannot drain the PDA below its rent-exempt minimum." },
-                { ix: "set_offering_status", who: "Admin",          desc: "Pauses or closes an offering." },
-                { ix: "transfer_authority",  who: "Admin",          desc: "Transfers the program admin role to a new public key." },
-              ].map((ix) => (
-                <div key={ix.ix} className="flex items-start gap-4 py-2.5 border-b border-zinc-800/50 last:border-0">
-                  <span className="text-emerald-400/70 font-mono text-xs w-44 shrink-0 pt-0.5">{ix.ix}</span>
-                  <span className="text-zinc-600 text-xs w-24 shrink-0 pt-0.5">{ix.who}</span>
-                  <span className="text-zinc-500 text-xs leading-relaxed">{ix.desc}</span>
-                </div>
-              ))}
-            </div>
-            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-              <div className="text-xs font-mono text-zinc-600 mb-3">// PDA SEEDS</div>
-              <div className="space-y-1.5">
-                {[
-                  { account: "ProgramAuthority", seeds: '["authority"]' },
-                  { account: "SlotOffering",      seeds: '["offering", slot_id]' },
-                  { account: "InvestorPosition",  seeds: '["position", investor, offering]' },
-                ].map((p) => (
-                  <div key={p.account} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
-                    <span className="text-zinc-400 font-mono text-xs sm:w-44 shrink-0">{p.account}</span>
-                    <code className="text-zinc-500 text-xs">{p.seeds}</code>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Section>
-
-          <Section id="yield" title="Yield Accounting">
-            <p className="text-zinc-500 text-sm leading-relaxed mb-6">
-              Clarke uses the reward-per-token accumulator pattern, the same approach used by Synthetix, Uniswap v3, and most Solana staking programs. It distributes yield in O(1) regardless of how many investors hold tokens.
-            </p>
-            <div className="space-y-4">
-              {[
-                { title: "Accumulator", body: "Each SlotOffering tracks yield_per_token_acc: a running total of yield-per-token distributed since the offering was created. When an operator deposits revenue, this increases by (holder_share / sold_tokens)." },
-                { title: "Debt tracking", body: "Each InvestorPosition records yield_debt: the value of yield_per_token_acc at the time tokens were last purchased or yield was last claimed. This represents yield the investor is not entitled to because it predates their position." },
-                { title: "Claimable amount", body: "Claimable yield at any moment is: tokens x (yield_per_token_acc - yield_debt). Computed on-chain at claim time with no iteration over other positions." },
-                { title: "Rent protection", body: "The claim_yield instruction verifies the offering PDA retains enough lamports to remain rent-exempt after transfer. Yield can never drain the account below its minimum balance." },
-              ].map((s) => (
-                <div key={s.title} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-                  <div className="text-white text-sm font-semibold mb-2">{s.title}</div>
-                  <p className="text-zinc-500 text-xs leading-relaxed">{s.body}</p>
                 </div>
               ))}
             </div>
@@ -407,7 +252,7 @@ export default function DocsPage() {
             <h3 className="text-white text-sm font-semibold mb-3">Rate limits and validation</h3>
             <div className="space-y-3 mb-6">
               {[
-                { label: "RATE LIMIT", body: "60 requests per minute per IP, enforced in-memory per serverless instance. A 429 response includes a Retry-After header in seconds. There is no per-wallet limit in Phase 1 because no authentication is required." },
+                { label: "RATE LIMIT", body: "60 requests per minute per IP, enforced in-memory per serverless instance. A 429 response includes a Retry-After header in seconds. No authentication is required." },
                 { label: "INPUT VALIDATION", body: "All path slugs are validated against /^[a-z0-9-]+$/ and query parameters against per-field regex caps. Path traversal attempts and injection patterns return 400. Tickers are restricted to /^[A-Z0-9.-]{1,10}$/." },
                 { label: "CORS", body: "All routes allow cross-origin reads (Access-Control-Allow-Origin: *) with GET and OPTIONS only. Preflight responses cache for 24 hours." },
               ].map((s) => (
@@ -441,7 +286,7 @@ export default function DocsPage() {
             <h3 className="text-white text-sm font-semibold mb-3">Scope and roadmap</h3>
             <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
               <p className="text-zinc-500 text-xs leading-relaxed">
-                The current surface is read-only. Transaction-building endpoints, event streams, and on-chain capability tokens for metered access are on the roadmap but not implemented. Agents that want to invest, claim yield, or distribute revenue use the standard wallet adapter through the human-facing UI for now.
+                The current surface is read-only. Event streams and metered access for high-volume agent consumers are on the roadmap but not implemented.
               </p>
             </div>
           </Section>

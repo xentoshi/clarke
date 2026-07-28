@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import DevnetStatus from "@/components/DevnetStatus";
 import ExplorerStats from "./ExplorerStats";
 import FacetPanel from "./FacetPanel";
 import SlotTable from "./SlotTable";
@@ -20,7 +19,7 @@ export default function OrbitalExplorer({ rows, updated }: { rows: ExplorerRow[]
 
   const filterCount =
     facets.regions.length + facets.operators.length + facets.bands.length + facets.statuses.length +
-    (facets.fccOnly ? 1 : 0) + (facets.listedOnly ? 1 : 0) +
+    (facets.fccOnly ? 1 : 0) +
     (facets.congestionMin > 0 || facets.congestionMax < 100 ? 1 : 0);
 
   const operatorOptions = useMemo(() => {
@@ -45,7 +44,6 @@ export default function OrbitalExplorer({ rows, updated }: { rows: ExplorerRow[]
       if (facets.statuses.length && !facets.statuses.includes(r.status)) return false;
       if (r.congestionScore < facets.congestionMin || r.congestionScore > facets.congestionMax) return false;
       if (facets.fccOnly && !r.fccLicensed) return false;
-      if (facets.listedOnly && !r.listed) return false;
       return true;
     });
 
@@ -70,8 +68,6 @@ export default function OrbitalExplorer({ rows, updated }: { rows: ExplorerRow[]
 
   return (
     <>
-      <div className="mb-4"><DevnetStatus /></div>
-
       <div className="mb-4"><ExplorerStats rows={rows} updated={updated} /></div>
 
       {/* Controls */}

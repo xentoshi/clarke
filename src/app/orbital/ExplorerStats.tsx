@@ -4,7 +4,7 @@ import type { ExplorerRow } from "./types";
 
 export default function ExplorerStats({ rows, updated }: { rows: ExplorerRow[]; updated: string | null }) {
   const active = rows.filter((r) => r.status === "active").length;
-  const listed = rows.filter((r) => r.listed).length;
+  const fccLicensed = rows.filter((r) => r.fccLicensed).length;
   const densest = rows.reduce<ExplorerRow | null>(
     (max, r) => (!max || r.congestionScore > max.congestionScore ? r : max),
     null,
@@ -14,7 +14,7 @@ export default function ExplorerStats({ rows, updated }: { rows: ExplorerRow[]; 
     { label: "positions", value: rows.length.toLocaleString() },
     { label: "active", value: active.toLocaleString() },
     { label: "densest", value: densest ? densest.label : "—" },
-    { label: "listed", value: listed.toLocaleString() },
+    { label: "FCC licensed", value: fccLicensed.toLocaleString() },
   ];
 
   return (

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Script from "next/script";
 import AppShell from "@/components/AppShell";
-import SolanaWalletProvider from "@/components/WalletProvider";
 import Analytics from "@/components/Analytics";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { Manrope, IBM_Plex_Mono } from "next/font/google";
@@ -22,7 +21,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "Clarke · Orbital Infrastructure",
-  description: "The data and intelligence layer for orbital infrastructure. Registry, pricing, and market tools for assets across GEO, LEO, and MEO.",
+  description: "Clarke is a live registry of GEO orbital positions — congestion, operators, and FCC filing status — the reference-data layer for a market that runs on PDFs and phone calls.",
   icons: {
     icon: "/logo.svg",
     shortcut: "/logo.svg",
@@ -45,9 +44,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         )}
         <Analytics />
         <VercelAnalytics />
-        <SolanaWalletProvider>
-          <AppShell slots={allSlots}>{children}</AppShell>
-        </SolanaWalletProvider>
+        <AppShell slots={allSlots}>{children}</AppShell>
       </body>
     </html>
   );

@@ -1,6 +1,5 @@
 export type Band = "C" | "Ku" | "Ka" | "X" | "L" | "S";
 export type SlotStatus = "active" | "filed" | "squatted" | "inactive";
-export type TokenizationStatus = "listed" | "unlisted";
 
 export interface OrbitalSlot {
   id: string;
@@ -15,18 +14,6 @@ export interface OrbitalSlot {
   valueEstimate: string;
   description: string;
   launched?: number;
-  tokenization?: {
-    status: TokenizationStatus;
-    ticker: string;        // e.g. $ASTRA19
-    tokenName: string;     // e.g. "Astra 19.2°E Yield Token"
-    totalTokens: number;
-    tokenPrice: string;
-    minInvestment: string;
-    leaseYield: string;
-    availableTokens: number;
-    soldTokens: number;
-    what: string;          // plain-English description of what the token represents
-  };
   // UCS enrichment fields
   source?: "curated" | "ucs";
   ucsCount?: number;
@@ -49,18 +36,6 @@ export const slots: OrbitalSlot[] = [
     valueEstimate: "$400M+",
     description: "Most heavily loaded orbital position in Europe. Serves enterprise data networks, government relay links, and broadband connectivity across Europe and North Africa. One of the highest-revenue Ku-band positions in the world.",
     launched: 1988,
-    tokenization: {
-      status: "listed",
-      ticker: "$ASTRA19",
-      tokenName: "Astra 19.2°E Yield Token",
-      totalTokens: 1000000,
-      tokenPrice: "0.0004 SOL",
-      minInvestment: "0.1 SOL",
-      leaseYield: "6.2% APY",
-      availableTokens: 312000,
-      soldTokens: 688000,
-      what: "Each $ASTRA19 token represents a fractional claim on transponder lease revenue from the 19.2°E geostationary orbital position, operated by SES. One of the highest-traffic Ku/Ka positions in Europe, carrying enterprise data, government relay, and broadband connectivity across Europe and North Africa under long-term fixed contracts.",
-    },
   },
   {
     id: "28_2e",
@@ -75,18 +50,6 @@ export const slots: OrbitalSlot[] = [
     valueEstimate: "$300M+",
     description: "UK and Ireland's primary fixed satellite position. Serves maritime communications across the North Atlantic, UK government and defense relay links, and enterprise connectivity for the British Isles. Operators here have held continuous contracts since the early 1990s.",
     launched: 1993,
-    tokenization: {
-      status: "listed",
-      ticker: "$SES28",
-      tokenName: "SES 28.2°E Yield Token",
-      totalTokens: 750000,
-      tokenPrice: "0.0004 SOL",
-      minInvestment: "0.1 SOL",
-      leaseYield: "5.9% APY",
-      availableTokens: 750000,
-      soldTokens: 0,
-      what: "Each $SES28 token represents a fractional claim on transponder lease revenue from the 28.2°E orbital position, operated by SES. The primary fixed satellite position for the UK and Ireland, carrying government relay, maritime comms across the North Atlantic, and enterprise data links under contracts that have run continuously since the early 1990s.",
-    },
   },
   {
     id: "13e",
@@ -115,18 +78,6 @@ export const slots: OrbitalSlot[] = [
     valueEstimate: "$350M+",
     description: "Premium North American C/Ku position. C-band capacity underpins financial data distribution, enterprise networks, and rural broadband across the continental US. Ku-band serves aviation and maritime operators across the Gulf of Mexico.",
     launched: 2010,
-    tokenization: {
-      status: "listed",
-      ticker: "$SATMEX101",
-      tokenName: "SES 101°W Yield Token",
-      totalTokens: 500000,
-      tokenPrice: "0.0004 SOL",
-      minInvestment: "0.1 SOL",
-      leaseYield: "5.8% APY",
-      availableTokens: 390000,
-      soldTokens: 110000,
-      what: "Each $SATMEX101 token represents a fractional claim on transponder lease revenue from the 101°W orbital position over North America, operated by SES. C-band capacity carries enterprise data networks and financial distribution infrastructure; Ku-band serves aviation and maritime connectivity across the Gulf of Mexico and Caribbean under long-term fixed contracts.",
-    },
   },
   {
     id: "119w",

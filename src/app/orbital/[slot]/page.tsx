@@ -219,17 +219,6 @@ export default async function SlotPage({ params }: { params: Promise<Params> }) 
               </span>
             ))}
           </div>
-          {curated.tokenization?.status === "listed" && (
-            <div className="border border-emerald-800/50 bg-emerald-950/20 rounded-xl p-4 flex items-center justify-between gap-4">
-              <div>
-                <div className="text-emerald-400 text-xs font-mono font-bold mb-0.5">{curated.tokenization.ticker}</div>
-                <div className="text-zinc-400 text-xs">{curated.tokenization.leaseYield} · {curated.tokenization.tokenPrice}</div>
-              </div>
-              <Link href="/orbital" className="text-xs text-emerald-400 border border-emerald-800/60 px-3 py-1.5 rounded hover:bg-emerald-950/40 transition-colors">
-                View offering →
-              </Link>
-            </div>
-          )}
         </div>
       )}
 

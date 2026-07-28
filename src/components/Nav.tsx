@@ -5,28 +5,18 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import type { OrbitalSlot } from "@/data/orbital-slots";
 
-// Always use the public devnet faucet for airdrops — RPC providers like Helius block requestAirdrop
-const FAUCET_CONNECTION = new Connection("https://api.devnet.solana.com", "confirmed");
-
 const SearchPalette = dynamic(() => import("./SearchPalette"), { ssr: false });
-const WalletMultiButton = dynamic(
-  () => import("@solana/wallet-adapter-react-ui").then((m) => m.WalletMultiButton),
-  { ssr: false }
-);
 
 const primaryLinks = [
-  { href: "/", label: "Map" },
+  { href: "/", label: "Home" },
   { href: "/markets", label: "Markets" },
   { href: "/orbital", label: "Orbital Slots" },
   { href: "/companies", label: "Companies" },
 ];
 
 const moreLinks = [
-  { href: "/portfolio", label: "Portfolio" },
   { href: "/blog", label: "Blog" },
   { href: "/data", label: "Data" },
   { href: "/about", label: "About" },
@@ -39,28 +29,9 @@ export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [airdropping, setAirdropping] = useState(false);
-  const [airdropFailed, setAirdropFailed] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
-  const { connected, publicKey } = useWallet();
-
-  async function handleAirdrop() {
-    if (!publicKey || airdropping) return;
-    setAirdropping(true);
-    setAirdropFailed(false);
-    try {
-      const sig = await FAUCET_CONNECTION.requestAirdrop(publicKey, 2 * LAMPORTS_PER_SOL);
-      await FAUCET_CONNECTION.confirmTransaction(sig, "confirmed");
-    } catch (e) {
-      console.error("Airdrop failed:", e);
-      setAirdropFailed(true);
-    } finally {
-      setAirdropping(false);
-    }
-  }
 
   useEffect(() => { setMobileOpen(false); setMoreOpen(false); }, [pathname]);
-  useEffect(() => { setAirdropFailed(false); }, [publicKey]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -130,41 +101,6 @@ export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
               <span className="hidden sm:block text-xs">Search</span>
               <kbd className="hidden sm:block text-xs bg-zinc-800 px-1 py-0.5 rounded font-mono">⌘K</kbd>
             </button>
-
-            {connected && (
-              airdropFailed ? (
-                <a
-                  href="https://faucet.solana.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Devnet faucet rate-limited. Get SOL at faucet.solana.com"
-                  className="hidden sm:flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 bg-red-500/10 border border-red-500/20
-                             text-red-400 text-xs rounded-sm hover:bg-red-500/20 transition-colors"
-                >
-                  Rate limited · faucet.solana.com ↗
-                </a>
-              ) : (
-                <button
-                  onClick={handleAirdrop}
-                  disabled={airdropping}
-                  title="Airdrop 2 devnet SOL"
-                  className="hidden sm:flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 bg-emerald-500/10 border border-emerald-500/20
-                             text-emerald-400 text-xs rounded-sm hover:bg-emerald-500/20 transition-colors disabled:opacity-40"
-                >
-                  {airdropping ? "…" : "⬇ SOL"}
-                </button>
-              )
-            )}
-
-            <WalletMultiButton style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: "2px",
-              fontSize: "12px",
-              height: "32px",
-              padding: "0 12px",
-              color: "rgba(255,255,255,0.5)",
-            }} />
 
             <button onClick={() => setMobileOpen((o) => !o)} className="lg:hidden p-2.5 sm:p-2 text-zinc-400 hover:text-white transition-colors">
               {mobileOpen

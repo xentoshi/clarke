@@ -6,8 +6,9 @@ import { getLatestIngest } from "@/lib/freshness";
 
 export const metadata = buildMeta({
   title: "Orbital Registry",
-  description: "Search, filter, and compare every tracked GEO orbital position. Operators, congestion, estimated values, and on-chain offerings.",
+  description: "Search, filter, and compare every tracked GEO orbital position — operators, congestion scores, FCC filing status, and CSV export.",
   tag: "Registry",
+  path: "/orbital",
 });
 
 export default function OrbitalPage() {

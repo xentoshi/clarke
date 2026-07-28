@@ -88,13 +88,12 @@ export default function SpaceEconomyMap({ companies }: { companies: MapCompany[]
       {/* Header */}
       <div className="mb-10">
         <div className="text-emerald-400/80 text-[11px] font-mono uppercase tracking-widest mb-3">
-          Interactive · the whole industry in one view
+          Supporting context · value chain
         </div>
-        <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-4">The Space Economy</h1>
-        <p className="text-zinc-400 text-base max-w-2xl leading-relaxed mb-6">
-          Every company that turns capital into infrastructure in orbit, organized as one value chain —
-          from the money, to the rockets, to the satellites, to the services in your pocket. Click anyone
-          to see what they do and where they sit in the stack.
+        <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-3">The Space Economy</h2>
+        <p className="text-zinc-400 text-sm max-w-2xl leading-relaxed mb-6">
+          Companies in Clarke's registry, organized by where they sit in the value chain — from capital
+          to launch to the satellites and services they power. Click anyone to see what they do.
         </p>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
           <span className="text-zinc-300 font-mono">{companies.length} <span className="text-zinc-600">companies</span></span>

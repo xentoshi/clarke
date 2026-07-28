@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function EmailCapture({ label = "Get notified when the raise opens" }: { label?: string }) {
+export default function EmailCapture({ label = "Get notified" }: { label?: string }) {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
 

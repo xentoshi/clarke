@@ -60,7 +60,7 @@ export default function AboutPage() {
             { href: "/orbital",   title: "Orbital Registry", desc: `${geoCount} GEO satellites, ${positionCount} positions, FCC data, congestion scoring.` },
             { href: "/companies", title: "Companies",        desc: `${companies.length} organizations across the space infrastructure stack.` },
             { href: "/stocks",    title: "Space Markets",    desc: `Live prices for ${stocks.length} publicly traded space companies.` },
-            { href: "/docs",      title: "Docs",             desc: "Full technical reference: registry methodology, data quality, on-chain program." },
+            { href: "/docs",      title: "Docs",             desc: "Full technical reference: registry methodology, data sources, and the agents API." },
             { href: "/data",      title: "Data Sources",     desc: "The public datasets Clarke normalizes and their integration status." },
           ].map((item) => (
             <Link key={item.href} href={item.href}

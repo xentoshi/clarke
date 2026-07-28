@@ -22,7 +22,6 @@ const COLUMNS: Column[] = [
   { id: "congestionScore", header: "Congestion", get: (r) => r.congestionScore, default: true },
   { id: "bands", header: "Bands", get: (r) => r.bands.join(" "), default: false },
   { id: "fccLicensed", header: "FCC Licensed", get: (r) => (r.fccLicensed ? "yes" : "no"), default: false },
-  { id: "listed", header: "Listed", get: (r) => (r.listed ? "yes" : "no"), default: false },
   { id: "value_low", header: "Value Low (USD)", get: (r) => r.valuation.low, default: true },
   { id: "value_point", header: "Value Mid (USD)", get: (r) => r.valuation.point, default: true },
   { id: "value_high", header: "Value High (USD)", get: (r) => r.valuation.high, default: true },

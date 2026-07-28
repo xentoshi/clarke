@@ -29,13 +29,11 @@ const typeLabels: Record<Result["type"], string> = {
 };
 
 const pages = [
-  { label: "Orbital Slots", sub: "Browse and invest in tokenized GEO slots", href: "/orbital" },
-  { label: "Portfolio", sub: "View positions and claim yield", href: "/portfolio" },
+  { label: "Orbital Slots", sub: "Search and filter every tracked GEO orbital position", href: "/orbital" },
   { label: "Space Markets", sub: "Live prices for satellite companies", href: "/stocks" },
   { label: "Data Sources", sub: "Public datasets Clarke normalizes", href: "/data" },
   { label: "Docs", sub: "Technical reference", href: "/docs" },
   { label: "About Clarke", sub: "How it works and why", href: "/about" },
-  { label: "List a Slot", sub: "Operators: raise capital against your slot", href: "/orbital/list" },
 ];
 
 function search(q: string, slots: OrbitalSlot[]): Result[] {

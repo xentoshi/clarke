@@ -116,7 +116,7 @@ export default async function CompanyPage({ params }: { params: Promise<Params> 
           </div>
 
           {/* Portfolio aggregates */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.04] mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-white/[0.04] mb-4">
             <div className="bg-zinc-950 px-5 py-4">
               <div className="text-white font-bold font-mono text-base mb-1">{exposure.valueRange}</div>
               <div className="text-white/25 text-[10px] font-mono tracking-widest uppercase">Implied value</div>
@@ -128,10 +128,6 @@ export default async function CompanyPage({ params }: { params: Promise<Params> 
             <div className="bg-zinc-950 px-5 py-4">
               <div className="text-white font-bold font-mono text-base mb-1">{exposure.fccCount}</div>
               <div className="text-white/25 text-[10px] font-mono tracking-widest uppercase">FCC licensed</div>
-            </div>
-            <div className="bg-zinc-950 px-5 py-4">
-              <div className="text-white font-bold font-mono text-base mb-1">{exposure.listedCount}</div>
-              <div className="text-white/25 text-[10px] font-mono tracking-widest uppercase">Tokenized</div>
             </div>
           </div>
 
@@ -169,7 +165,6 @@ export default async function CompanyPage({ params }: { params: Promise<Params> 
                       <Link href={`/orbital/${p.slug}`} className="flex items-center gap-2 group">
                         <span className="text-white text-xs font-mono font-bold group-hover:text-white/70 transition-colors">{p.label}</span>
                         {p.fccLicensed && <span className="text-sky-400/80 text-[9px] border border-sky-900/60 px-1 rounded font-mono leading-none">FCC</span>}
-                        {p.listed && <span className="text-emerald-400 text-[10px] border border-emerald-900/60 bg-emerald-950/40 px-1 rounded font-mono leading-none">listed</span>}
                       </Link>
                     </td>
                     <td className="px-4 py-2.5 hidden sm:table-cell"><span className="text-zinc-600 text-xs">{p.region}</span></td>

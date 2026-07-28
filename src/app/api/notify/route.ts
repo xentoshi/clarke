@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ALLOWED_TYPES = new Set(["waitlist", "slot_listing_inquiry", "slot_notify"]);
+const ALLOWED_TYPES = new Set(["waitlist"]);
 const MAX_STRING = 500;
 
 function sanitize(val: unknown): string {
@@ -65,12 +65,8 @@ export async function POST(req: NextRequest) {
 
   const webhook = process.env.NOTIFY_WEBHOOK_URL;
   if (webhook) {
-    const label = safe.type === "waitlist" ? "🛰 Early access signup"
-      : safe.type === "slot_listing_inquiry" ? "📡 Operator inquiry"
-      : "🔔 Slot notify";
-    const lines = [`**${label}**`];
+    const lines = [`**🛰 Early access signup**`];
     if (safe.email) lines.push(`Email: \`${safe.email}\``);
-    if (safe.slotId) lines.push(`Slot: \`${safe.slotId}\``);
     const isDiscord = webhook.includes("discord.com");
     try {
       await fetch(webhook, {

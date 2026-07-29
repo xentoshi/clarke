@@ -24,7 +24,7 @@ const faq = [
   },
   {
     q: "How many total orbital positions exist versus what Clarke currently tracks?",
-    a: "The ITU has registered approximately 1,800 GEO coordination filings across all member states, representing every position that has been filed, coordinated, or historically registered since the space age began. Clarke currently tracks 590 active satellites from the UCS database across 407 distinct occupied positions. The difference between 1,800 total filings and 407 occupied positions reflects squatted slots with no operational satellite, historically registered positions no longer in active use, filed positions where the satellite has never launched, and coordination filings from operators who have since surrendered their rights.",
+    a: "The ITU has registered approximately 1,800 GEO coordination filings across all member states, representing every position that has been filed, coordinated, or historically registered since the space age began. Clarke currently tracks 590 active satellites from the UCS database across 407 distinct occupied positions. The difference between 1,800 total filings and 407 occupied positions reflects squatted slots with no operational satellite, historically registered positions no longer in active use, filed positions where the satellite has never launched, and coordination filings from operators who have since surrendered their rights. The Orbital Registry table itself lists more than 407 rows: co-located satellites outside Clarke's curated position set are currently listed individually rather than grouped by position, so a handful of positions with multiple satellites appear as multiple rows. That grouping is on the roadmap.",
   },
   {
     q: "What is Ku-band versus Ka-band?",

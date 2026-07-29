@@ -40,7 +40,7 @@ export default function AboutPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.04] rounded-xl overflow-hidden mb-16">
         {[
-          { value: `${geoCount}`, label: "GEO satellites tracked" },
+          { value: `${geoCount}`, label: "GEO satellites tracked (registry)" },
           { value: `${fccCount}`, label: "FCC authorizations" },
           { value: `${companies.length}`, label: "Companies indexed" },
           { value: `${stocks.length}`, label: "Live market prices" },

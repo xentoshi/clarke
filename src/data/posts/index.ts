@@ -12,10 +12,10 @@ export const posts: Post[] = [
   {
     slug: "fcc-part-100-space-modernization-order",
     title: "The FCC's Part 100 Order: The Reform's Biggest Test Case Is Exempt From the Reform",
-    subtitle: "The FCC just made satellite licensing dramatically faster for almost everyone — while quietly confirming that the largest application in its history stays in the slow lane, and that the agency's authority to regulate orbital safety at all is now an open fight with Congress.",
+    subtitle: "The FCC just made satellite licensing dramatically faster for almost everyone, while quietly confirming that the largest application in its history stays in the slow lane, and that the agency's authority to regulate orbital safety at all is now an open fight with Congress.",
     date: "2026-07-28",
     readingMinutes: 8,
-    excerpt: "The FCC's new Part 100 rules replace decades-old satellite licensing with a faster, presumption-based process — but the megaconstellation filings that most justify the reform, including SpaceX's million-satellite orbital data center application, are excluded from its faster timelines. For the 522 GEO positions Clarke tracks, the order also creates the first mandatory cross-operator tracking-data regime, on legal authority Congress is actively contesting.",
+    excerpt: "The FCC's new Part 100 rules replace decades-old satellite licensing with a faster, presumption-based process, but the megaconstellation filings that most justify the reform, including SpaceX's million-satellite orbital data center application, are excluded from its faster timelines. For the 522 GEO positions Clarke tracks, the order also creates the first mandatory cross-operator tracking-data regime, on legal authority Congress is actively contesting.",
     tag: "Regulatory",
   },
   {

@@ -67,3 +67,6 @@ target/
 
 # Brainstorming visual companion scratch
 .superpowers/
+
+# Local scratch — call prep, personal notes, etc.
+/scratch/

@@ -98,7 +98,7 @@ export default function SpaceEconomyMap({ companies }: { companies: MapCompany[]
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
           <span className="text-zinc-300 font-mono">{companies.length} <span className="text-zinc-600">companies</span></span>
           <span className="text-zinc-300 font-mono">{LAYERS.length} <span className="text-zinc-600">layers</span></span>
-          <span className="text-zinc-300 font-mono">{totalSats.toLocaleString()} <span className="text-zinc-600">satellites in orbit</span></span>
+          <span className="text-zinc-300 font-mono">{totalSats.toLocaleString()} <span className="text-zinc-600">satellites in orbit (indexed companies, all orbits)</span></span>
         </div>
       </div>
 

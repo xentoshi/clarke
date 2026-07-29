@@ -17,7 +17,9 @@ function fetch(url: string): Promise<string> {
         }
         const chunks: Buffer[] = [];
         res.on("data", (c: Buffer) => chunks.push(c));
-        res.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+        // Source file is Mac OS Roman, not UTF-8 — decoding as UTF-8 corrupts
+        // every accented name (Société, Göktürk, etc.) into U+FFFD.
+        res.on("end", () => resolve(new TextDecoder("macintosh").decode(Buffer.concat(chunks))));
         res.on("error", reject);
       }).on("error", reject);
     };

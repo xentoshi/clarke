@@ -90,7 +90,7 @@ export default function DocsPage() {
           <Section id="overview" title="Overview">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               {[
-                { value: geoCount,  label: "GEO satellites tracked" },
+                { value: geoCount,  label: "GEO satellites tracked (registry)" },
                 { value: fccCount,  label: "FCC authorizations" },
                 { value: "590+",    label: "GEO positions in registry" },
               ].map((s) => (

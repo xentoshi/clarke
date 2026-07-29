@@ -15,7 +15,7 @@ const sources: { name: string; abbr: string; url: string; cadence: string; what:
     url: "https://www.ucsusa.org/resources/satellite-database",
     cadence: "Bi-annual",
     status: "live",
-    what: "A normalized database of all active satellites with operator, country, purpose, orbital regime, launch date, and expected lifetime. Clarke currently ingests 590 GEO satellites from the May 2023 snapshot, covering 407 distinct orbital positions.",
+    what: "A normalized database of all active satellites with operator, country, purpose, orbital regime, launch date, and expected lifetime. Clarke currently ingests 590 GEO satellites from the May 2023 snapshot, covering 407 distinct orbital positions (the Orbital Registry lists more rows than that — co-located satellites outside Clarke's curated position set are currently listed individually rather than grouped by position, which is on the list to fix).",
     why: "The most accessible normalized dataset of active satellites available publicly. Powers Clarke's orbital registry, operator attribution, and congestion scoring. Satellite names and orbital positions are reliable; individual satellite identifiers (NORAD/COSPAR) have known accuracy issues in the UCS source and are not displayed.",
   },
   {

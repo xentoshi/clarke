@@ -31,7 +31,14 @@ export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setMobileOpen(false); setMoreOpen(false); }, [pathname]);
+  // Close menus on route change. Adjusted during render (not an effect) so the
+  // close happens in the same commit as the navigation, not a render later.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setMobileOpen(false);
+    setMoreOpen(false);
+  }
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

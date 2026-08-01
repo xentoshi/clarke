@@ -92,7 +92,7 @@ export default function SpaceEconomyMap({ companies }: { companies: MapCompany[]
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-3">The Space Economy</h2>
         <p className="text-zinc-400 text-sm max-w-2xl leading-relaxed mb-6">
-          Companies in Clarke's registry, organized by where they sit in the value chain — from capital
+          Companies in Clarke&apos;s registry, organized by where they sit in the value chain — from capital
           to launch to the satellites and services they power. Click anyone to see what they do.
         </p>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">

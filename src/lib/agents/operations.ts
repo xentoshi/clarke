@@ -34,6 +34,11 @@ export function isSafeSlug(slug: string): boolean {
 // Additive enrichment: all original OrbitalSlot fields stay at the top level
 // (so existing /slots consumers keep working), with congestion + valuation added.
 export interface SlotListItem extends OrbitalSlot {
+  // The path segment GET /api/v1/agents/slots/{slug} expects. Explicit
+  // because it does not match `id` (e.g. id "19_2e" vs slug "19-2e", or
+  // id "ucs_26052" vs slug "179-8w") — without this a caller has no way to
+  // construct a valid detail URL from the list response alone.
+  slug: string;
   congestionScore: number;
   valuation: SlotValuation;
 }
@@ -43,6 +48,7 @@ export function listSlots(): SlotListItem[] {
     const congestion = getCongestion(slot.longitude);
     return {
       ...slot,
+      slug: lonToSlug(slot.longitude),
       congestionScore: congestion.score,
       valuation: valuateSlot(slot, congestion),
     };

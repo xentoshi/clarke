@@ -6,7 +6,7 @@ export default function NotFound() {
       <p className="text-zinc-600 font-mono text-xs uppercase tracking-widest mb-4">404</p>
       <h1 className="text-4xl font-bold text-white mb-4">Page not found</h1>
       <p className="text-zinc-500 text-sm mb-10">
-        This page doesn't exist or was removed.
+        This page doesn&apos;t exist or was removed.
       </p>
       <div className="flex items-center justify-center gap-4">
         <Link href="/" className="px-4 py-2 bg-white text-zinc-950 text-sm font-semibold rounded hover:bg-zinc-100 transition-colors">

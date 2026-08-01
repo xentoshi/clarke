@@ -3,9 +3,17 @@ import path from "path";
 import fs from "fs";
 import * as XLSX from "xlsx";
 import { recordIngest } from "./lib/ingest-meta";
+import { ensureEventTables, recordSlotEvent } from "./lib/events";
 
 const XLSX_PATH = path.join(process.cwd(), "data", "ssal.xlsx");
 const DB_PATH = path.join(process.cwd(), "data", "clarke.db");
+
+// "N/A" is a common literal placeholder in the source for a missing call
+// sign, not a real identifier — 21 of 174 current rows share it. Treating it
+// as a key would produce nonsense new/lapsed noise between unrelated rows.
+function isRealCallSign(cs: string | null | undefined): cs is string {
+  return !!cs && cs !== "N/A";
+}
 
 // "1 W.L." → -1   "100.85 W.L." → -100.85   "100 E.L." → 100
 function parseOrbitalLocation(raw: string): number | null {
@@ -63,6 +71,17 @@ function main() {
     CREATE INDEX IF NOT EXISTS idx_fcc_lon ON fcc_authorizations(longitude_geo);
     CREATE INDEX IF NOT EXISTS idx_fcc_callsign ON fcc_authorizations(call_sign);
   `);
+  ensureEventTables(db);
+
+  // Snapshot before the delete+reinsert so new/lapsed/changed authorizations
+  // can be told apart from a no-op re-run against the same source file.
+  const prevByCallSign = new Map<string, { licensee: string | null; grantStatus: string | null; longitudeGeo: number | null; orbitalLocation: string | null }>(
+    (db.prepare(
+      "SELECT call_sign, licensee, grant_status, longitude_geo, orbital_location FROM fcc_authorizations WHERE source = 'FCC-SSAL' AND call_sign IS NOT NULL"
+    ).all() as { call_sign: string; licensee: string | null; grant_status: string | null; longitude_geo: number | null; orbital_location: string | null }[])
+      .filter((r) => isRealCallSign(r.call_sign))
+      .map((r) => [r.call_sign, { licensee: r.licensee, grantStatus: r.grant_status, longitudeGeo: r.longitude_geo, orbitalLocation: r.orbital_location }]),
+  );
 
   db.exec("DELETE FROM fcc_authorizations WHERE source = 'FCC-SSAL'");
 
@@ -78,13 +97,27 @@ function main() {
     )
   `);
 
-  const insertMany = db.transaction((records: object[]) => {
+  interface FccRecord {
+    orbital_location: string | null;
+    longitude_geo: number;
+    satellite_name: string | null;
+    call_sign: string | null;
+    licensee: string | null;
+    administration: string | null;
+    service: string | null;
+    frequency_range: string | null;
+    date_in_orbit: string | null;
+    grant_status: string | null;
+    notes: string | null;
+  }
+
+  const insertMany = db.transaction((records: FccRecord[]) => {
     for (const rec of records) insert.run(rec);
   });
 
   let inserted = 0;
   let skipped = 0;
-  const records: object[] = [];
+  const records: FccRecord[] = [];
 
   for (const row of rawRows) {
     const locRaw = String(row["Orbital Location"] ?? "");
@@ -109,6 +142,69 @@ function main() {
 
   insertMany(records);
   recordIngest(db, "FCC-SSAL", inserted, "FCC Space Station Authorization List (GEO)");
+
+  const newByCallSign = new Map<string, FccRecord>(
+    records.filter((r) => isRealCallSign(r.call_sign)).map((r) => [r.call_sign as string, r]),
+  );
+
+  let newAuthEvents = 0, lapsedEvents = 0, licenseeChangeEvents = 0, statusChangeEvents = 0;
+
+  for (const [callSign, rec] of newByCallSign) {
+    const prev = prevByCallSign.get(callSign);
+    if (!prev) {
+      recordSlotEvent(db, {
+        source: "fcc",
+        eventType: "new_authorization",
+        longitudeGeo: rec.longitude_geo,
+        callSign,
+        summary: `New FCC authorization: ${callSign} (${rec.licensee ?? "unknown licensee"}) at ${rec.orbital_location ?? rec.longitude_geo + "°"}.`,
+        detail: { callSign, licensee: rec.licensee, orbitalLocation: rec.orbital_location, grantStatus: rec.grant_status },
+      });
+      newAuthEvents++;
+      continue;
+    }
+    if (rec.licensee && rec.licensee !== prev.licensee) {
+      recordSlotEvent(db, {
+        source: "fcc",
+        eventType: "licensee_change",
+        longitudeGeo: rec.longitude_geo,
+        callSign,
+        summary: `${callSign} licensee changed from "${prev.licensee ?? "unknown"}" to "${rec.licensee}".`,
+        detail: { callSign, oldLicensee: prev.licensee, newLicensee: rec.licensee },
+      });
+      licenseeChangeEvents++;
+    }
+    if (rec.grant_status !== prev.grantStatus) {
+      recordSlotEvent(db, {
+        source: "fcc",
+        eventType: "grant_status_change",
+        longitudeGeo: rec.longitude_geo,
+        callSign,
+        summary: `${callSign} grant status changed from "${prev.grantStatus ?? "unknown"}" to "${rec.grant_status ?? "unknown"}".`,
+        detail: { callSign, oldStatus: prev.grantStatus, newStatus: rec.grant_status },
+      });
+      statusChangeEvents++;
+    }
+  }
+
+  for (const [callSign, prev] of prevByCallSign) {
+    if (!newByCallSign.has(callSign)) {
+      recordSlotEvent(db, {
+        source: "fcc",
+        eventType: "authorization_lapsed",
+        longitudeGeo: prev.longitudeGeo,
+        callSign,
+        summary: `FCC authorization ${callSign} (${prev.licensee ?? "unknown licensee"}) no longer appears in the FCC list.`,
+        detail: { callSign, licensee: prev.licensee },
+      });
+      lapsedEvents++;
+    }
+  }
+
+  if (newAuthEvents || lapsedEvents || licenseeChangeEvents || statusChangeEvents) {
+    console.log(`Recorded events: ${newAuthEvents} new, ${lapsedEvents} lapsed, ${licenseeChangeEvents} licensee changes, ${statusChangeEvents} status changes.`);
+  }
+
   db.exec("VACUUM");
   db.close();
 

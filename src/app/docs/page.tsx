@@ -56,7 +56,7 @@ export default function DocsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
       <div className="mb-10">
-        <p className="text-zinc-600 text-xs font-mono mb-3">// DOCUMENTATION</p>
+        <p className="text-zinc-600 text-xs font-mono mb-3">{"// DOCUMENTATION"}</p>
         <h1 className="text-2xl font-bold text-white mb-3">Docs</h1>
         <p className="text-zinc-500 text-sm max-w-2xl leading-relaxed">
           Technical reference for Clarke: where the orbital slot data comes from, how positions are scored and valued, and how to query the registry programmatically. This is the engineering and methodology behind the registry.
@@ -111,12 +111,12 @@ export default function DocsPage() {
           <Section id="orbital-slots" title="Orbital Slots">
             <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10 mb-6">
               <p className="text-zinc-400 text-sm leading-relaxed mb-3">
-                Geostationary orbit sits exactly 35,786 km above the equator, the altitude at which a satellite's orbital period matches Earth's rotation. From the ground it appears stationary. The International Telecommunication Union manages this ring globally, allocating roughly 1,800 positions to member states who sublicense to private operators.
+                Geostationary orbit sits exactly 35,786 km above the equator, the altitude at which a satellite&apos;s orbital period matches Earth&apos;s rotation. From the ground it appears stationary. The International Telecommunication Union manages this ring globally, allocating roughly 1,800 positions to member states who sublicense to private operators.
               </p>
               <p className="text-zinc-400 text-sm leading-relaxed mb-3">
-                As of 2022, only 541 of those positions are occupied by active satellites. The ITU found that 45% of investigated satellite networks showed no proof of being brought into use, a practice known as slot squatting. The SES acquisition of Intelsat, valued at $3.1B, was substantially driven by Intelsat's orbital slot portfolio.
+                As of 2022, only 541 of those positions are occupied by active satellites. The ITU found that 45% of investigated satellite networks showed no proof of being brought into use, a practice known as slot squatting. The SES acquisition of Intelsat, valued at $3.1B, was substantially driven by Intelsat&apos;s orbital slot portfolio.
               </p>
-              <p className="text-zinc-500 text-xs leading-relaxed">Source: Aerospace Corporation, "Orbital Slots for Everyone?" (2018).</p>
+              <p className="text-zinc-500 text-xs leading-relaxed">Source: Aerospace Corporation, &quot;Orbital Slots for Everyone?&quot; (2018).</p>
             </div>
 
             <h3 className="text-white text-sm font-semibold mb-3">Status definitions</h3>
@@ -257,7 +257,7 @@ export default function DocsPage() {
                 { label: "CORS", body: "All routes allow cross-origin reads (Access-Control-Allow-Origin: *) with GET and OPTIONS only. Preflight responses cache for 24 hours." },
               ].map((s) => (
                 <div key={s.label} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-                  <div className="text-xs font-mono text-zinc-600 mb-3">// {s.label}</div>
+                  <div className="text-xs font-mono text-zinc-600 mb-3">{`// ${s.label}`}</div>
                   <p className="text-zinc-500 text-xs leading-relaxed">{s.body}</p>
                 </div>
               ))}
@@ -268,7 +268,7 @@ export default function DocsPage() {
               The same operations are exposed as MCP tools so Claude Code, Cursor, and any other MCP-compatible client can query Clarke in plain English. The server runs locally over stdio and reads directly from the SQLite database; no network round-trip to Clarke is involved beyond what the host process does on its own.
             </p>
             <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10 mb-6">
-              <div className="text-xs font-mono text-zinc-600 mb-3">// MCP CONFIG</div>
+              <div className="text-xs font-mono text-zinc-600 mb-3">{"// MCP CONFIG"}</div>
               <pre className="text-zinc-400 text-xs font-mono bg-black/40 border border-zinc-800/60 rounded p-3 overflow-x-auto">{`{
   "mcpServers": {
     "clarke": {

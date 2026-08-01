@@ -112,7 +112,7 @@ export default function OrbitalDataCentersEngineeringPost() {
         residents and industry, and social operating licenses are rapidly being lost.
       </p>
       <p>
-        In contrast, moving into orbit means switching the source of resources from Earth's biosphere
+        In contrast, moving into orbit means switching the source of resources from Earth&apos;s biosphere
         to outer space. Solar radiation is about 40 percent higher than on the ground, with no
         atmospheric attenuation or night-time blockage, so the capacity factor for solar power
         generation reaches over 95 percent compared to 10 to 24 percent on the ground. The FCC has
@@ -134,7 +134,7 @@ export default function OrbitalDataCentersEngineeringPost() {
         converts to heat. To operate at a stable temperature of around 20 degrees Celsius, a
         large radiator surface area is required. Calculations show that cooling a 1 megawatt
         compute cluster requires thousands of square meters of radiating surface — a significant
-        fraction of the system's overall mass and cost.
+        fraction of the system&apos;s overall mass and cost.
       </p>
       <p>
         One of the major advantages of orbital data centers is that auxiliary power consumption
@@ -160,7 +160,7 @@ export default function OrbitalDataCentersEngineeringPost() {
 
       <h2 id="radiation-hardened-hardware">Radiation-hardened hardware</h2>
       <p>
-        Outside Earth's atmosphere, electronics are constantly exposed to high-energy particles
+        Outside Earth&apos;s atmosphere, electronics are constantly exposed to high-energy particles
         such as galactic cosmic rays, solar particle events, and protons captured in the Van Allen
         belts. These radiations have two major adverse effects on semiconductors.
       </p>
@@ -186,7 +186,7 @@ export default function OrbitalDataCentersEngineeringPost() {
         registers to detect and correct bit flips in real time.
       </p>
       <p>
-        Proton beam tests using Google's Trillium TPU suggest that even a radiation dose equivalent
+        Proton beam tests using Google&apos;s Trillium TPU suggest that even a radiation dose equivalent
         to a five-year mission in low Earth orbit would not cause fatal physical damage, and that
         the chip could be operated with proper bit-flip correction in place. In March 2026, NVIDIA
         released the Vera Rubin Space-1, a space-qualified module delivering up to 25 times more
@@ -198,12 +198,12 @@ export default function OrbitalDataCentersEngineeringPost() {
 
       <h2 id="whats-operating">What is operating</h2>
       <p>
-        Starcloud's first satellite, launched November 2025 aboard a SpaceX Falcon 9, carried an
+        Starcloud&apos;s first satellite, launched November 2025 aboard a SpaceX Falcon 9, carried an
         NVIDIA H100 GPU and demonstrated sustained AI inference in low Earth orbit — the most
         powerful computing hardware ever operated in space. Within weeks it had trained a small
         language model entirely in orbit and run a version of Google Gemini on the satellite.
         By March 2026, Starcloud had raised $170 million at a $1.1 billion valuation. Starcloud-2,
-        scheduled for October 2026, will carry multiple H100s alongside NVIDIA's Blackwell chip,
+        scheduled for October 2026, will carry multiple H100s alongside NVIDIA&apos;s Blackwell chip,
         an AWS server blade, and a bitcoin mining module — the first multi-tenant orbital compute
         platform.
       </p>
@@ -215,9 +215,9 @@ export default function OrbitalDataCentersEngineeringPost() {
         orbital compute — a platform play, not a single-use-case product.
       </p>
       <p>
-        Google and SpaceX are in active talks on Project Suncatcher, Google's orbital data center
-        initiative, with discussions involving SpaceX launching satellites carrying Google's TPU
-        hardware into orbit. Google's internal timeline targets first test satellites by 2027.
+        Google and SpaceX are in active talks on Project Suncatcher, Google&apos;s orbital data center
+        initiative, with discussions involving SpaceX launching satellites carrying Google&apos;s TPU
+        hardware into orbit. Google&apos;s internal timeline targets first test satellites by 2027.
         The longer vision involves gigawatt-scale orbital compute capacity. Meta has separately
         reserved one gigawatt of orbital solar energy and 100 gigawatt-hours of long-duration
         storage, with the intent to beam power to ground-based data centers — an orbital-energy-for-terrestrial-compute
@@ -227,11 +227,11 @@ export default function OrbitalDataCentersEngineeringPost() {
       <p>
         Chinese enterprises have been operating AI compute in orbit for considerably longer, with
         less public attention. Zhongke Tiansuan had already been operating a space computer aboard
-        a Jilin-1 satellite for over 1,000 days by early 2026. The company's Aurora 5000 system
+        a Jilin-1 satellite for over 1,000 days by early 2026. The company&apos;s Aurora 5000 system
         uses a domestically developed GPU, reducing dependence on US chip supply chains for orbital
         compute. The China National Space Administration deployed three test satellites in 2024
         equipped with domestic AI accelerators, with plans for a 50-satellite AI constellation
-        operational by 2028. China's 15th Five-Year Plan explicitly includes gigawatt-scale
+        operational by 2028. China&apos;s 15th Five-Year Plan explicitly includes gigawatt-scale
         space-based digital infrastructure as a national priority, framed explicitly around
         digital sovereignty.
       </p>
@@ -240,7 +240,7 @@ export default function OrbitalDataCentersEngineeringPost() {
       <p>
         The biggest factor determining the feasibility of an orbital data center is the cost of
         orbital insertion. The $50,000 per kilogram cost of the Space Shuttle era was a barrier to
-        all commercial activity. SpaceX's Falcon 9 brought that down to around $2,700 per kilogram.
+        all commercial activity. SpaceX&apos;s Falcon 9 brought that down to around $2,700 per kilogram.
         Once the fully reusable Starship is operational, launch costs are projected to fall to a
         range of $100 to $200 per kilogram. Starcloud estimates the equivalent energy cost of
         orbital solar at approximately $0.005 per kilowatt-hour, roughly 15 times lower than
@@ -291,7 +291,7 @@ export default function OrbitalDataCentersEngineeringPost() {
         essential.
       </p>
       <p>
-        According to Google's analysis, by forming constellation clusters in which satellites fly
+        According to Google&apos;s analysis, by forming constellation clusters in which satellites fly
         closely together over a range of hundreds of meters to several kilometers, it is possible
         to increase received power and secure terabit-level communication bandwidth within the cluster.
       </p>
@@ -307,8 +307,8 @@ export default function OrbitalDataCentersEngineeringPost() {
       <h2 id="robotic-maintenance">Robotic maintenance</h2>
       <p>
         For an orbital data center to function as infrastructure rather than a disposable satellite,
-        it must be upgradeable and repairable in orbit. DARPA's Robotic Servicing of Geosynchronous
-        Satellites program and Northrop Grumman's Mission Extension Vehicle demonstrate pioneering
+        it must be upgradeable and repairable in orbit. DARPA&apos;s Robotic Servicing of Geosynchronous
+        Satellites program and Northrop Grumman&apos;s Mission Extension Vehicle demonstrate pioneering
         technologies for this purpose.
       </p>
       <p>
@@ -320,7 +320,7 @@ export default function OrbitalDataCentersEngineeringPost() {
         maintenance ecosystem.
       </p>
       <p>
-        DARPA's robotic servicing vehicles are scheduled to operate in geostationary orbit after
+        DARPA&apos;s robotic servicing vehicles are scheduled to operate in geostationary orbit after
         2025. Application of these technologies to low Earth orbit data center clusters will enable
         significant extensions of operational lifetimes — from 10 years to over 15 years.
       </p>
@@ -381,7 +381,7 @@ export default function OrbitalDataCentersEngineeringPost() {
       <p>
         When satellites burn up in the atmosphere at the end of their lifespan, they release metal
         vapors such as aluminum oxide, which have been linked to ozone depletion and risks to
-        Earth's radiation budget. Plans to launch tens of thousands of satellites also increase
+        Earth&apos;s radiation budget. Plans to launch tens of thousands of satellites also increase
         the risk of Kessler syndrome — a chain reaction of space debris. Orbital data center
         operators must bear the costs of autonomous collision avoidance systems, forced deorbit
         propulsion to ensure atmospheric entry within five years of mission completion, and
@@ -399,7 +399,7 @@ export default function OrbitalDataCentersEngineeringPost() {
         processing of satellite data, secure computation for national defense, and low-latency
         hubs for financial transactions. This wave consists of hundreds of small satellite nodes,
         with prototype clusters ranging from 100 kilowatts to 500 kilowatts. Starcloud, Axiom,
-        and China's Zhongke Tiansuan are all first-wave operators. The reliability of off-grid
+        and China&apos;s Zhongke Tiansuan are all first-wave operators. The reliability of off-grid
         systems that do not depend on terrestrial power grids is evaluated during this period.
       </p>
       <p>
@@ -408,7 +408,7 @@ export default function OrbitalDataCentersEngineeringPost() {
         This wave involves gigawatt-class clusters with thousands to tens of thousands of satellites.
         Starship launch costs fall below $200 per kilogram, and stricter energy regulations on the
         ground make orbital data centers the mainstream compute infrastructure. This is where
-        Google's Project Suncatcher, NVIDIA's space computing platform, and equivalent Chinese
+        Google&apos;s Project Suncatcher, NVIDIA&apos;s space computing platform, and equivalent Chinese
         programs are targeting.
       </p>
       <p>
@@ -450,7 +450,7 @@ export default function OrbitalDataCentersEngineeringPost() {
       </p>
       <p>
         Orbital data centers will be an essential bridge for 21st-century digital civilization to
-        expand beyond the limits of Earth's biosphere. Whoever controls this frontier will have
+        expand beyond the limits of Earth&apos;s biosphere. Whoever controls this frontier will have
         sovereignty over the next generation of computing resources and intelligence.
       </p>
     </>

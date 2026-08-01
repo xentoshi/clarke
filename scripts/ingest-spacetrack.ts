@@ -3,8 +3,21 @@ import path from "path";
 import fs from "fs";
 import { login, query, PATHS } from "./lib/spacetrack";
 import { recordIngest } from "./lib/ingest-meta";
+import { ensureEventTables, recordSlotEvent } from "./lib/events";
+import { subSatelliteLongitudeDeg, circularDiffDeg } from "./lib/orbit";
 
 const DB_PATH = path.join(process.cwd(), "data", "clarke.db");
+
+// Two independent TLE fits of the same tracked object, weeks apart, for a
+// genuinely station-kept GEO satellite normally differ by well under half a
+// degree (fit noise, not movement) — verified against real data before this
+// threshold was picked. A real relocation is typically many degrees.
+const RELOCATION_THRESHOLD_DEG = 1.0;
+
+function formatLonShort(lon: number): string {
+  const r = Math.round(lon * 10) / 10;
+  return `${Math.abs(r)}°${r >= 0 ? "E" : "W"}`;
+}
 
 function nullStr(v: string | null | undefined): string | null {
   if (v === undefined || v === null) return null;
@@ -105,12 +118,20 @@ async function main() {
     CREATE INDEX IF NOT EXISTS idx_tles_norad ON spacetrack_tles(norad_id);
     CREATE INDEX IF NOT EXISTS idx_tles_epoch ON spacetrack_tles(epoch);
   `);
+  ensureEventTables(db);
 
   // --- Satcat ---
   console.log("Fetching satcat...");
   const satcatRaw = await query(cookie, PATHS.satcat);
   const satcatData: SatcatRow[] = JSON.parse(satcatRaw);
   console.log(`Parsed ${satcatData.length} satcat records.`);
+
+  // Snapshot decay status before the upsert overwrites it, so a newly-set
+  // decay_date can be told apart from one that was already there.
+  const prevDecayByNorad = new Map<string, string | null>(
+    (db.prepare("SELECT norad_id, decay_date FROM spacetrack_satcat").all() as { norad_id: string; decay_date: string | null }[])
+      .map((r) => [r.norad_id, r.decay_date]),
+  );
 
   const upsertSatcat = db.prepare(`
     INSERT OR REPLACE INTO spacetrack_satcat (
@@ -150,10 +171,35 @@ async function main() {
   insertSatcatMany(satcatData);
   console.log(`Upserted ${satcatData.length} satcat rows.`);
 
+  let decayEvents = 0;
+  for (const r of satcatData) {
+    const noradId = r.NORAD_CAT_ID.trim();
+    const newDecay = nullStr(r.DECAY);
+    const prevDecay = prevDecayByNorad.get(noradId);
+    if (newDecay && !prevDecay) {
+      recordSlotEvent(db, {
+        source: "spacetrack",
+        eventType: "satellite_decayed",
+        noradId,
+        summary: `${nullStr(r.OBJECT_NAME) ?? noradId} (NORAD ${noradId}) decayed/reentered (${newDecay}).`,
+        detail: { noradId, decayDate: newDecay },
+      });
+      decayEvents++;
+    }
+  }
+  if (decayEvents > 0) console.log(`Recorded ${decayEvents} decay event(s).`);
+
   // --- TLEs ---
   console.log("Fetching TLEs...");
   const tleRaw = await query(cookie, PATHS.tles);
   const tleLines = tleRaw.split(/\r?\n/).map((l) => l.trimEnd());
+
+  // Snapshot prior TLEs before the upsert overwrites them, so a relocation
+  // can be measured old-vs-new rather than only ever seeing the latest fit.
+  const prevTleByNorad = new Map<string, { tle1: string; tle2: string; name: string | null }>(
+    (db.prepare("SELECT norad_id, tle1, tle2, name FROM spacetrack_tles").all() as { norad_id: string; tle1: string; tle2: string; name: string | null }[])
+      .map((r) => [r.norad_id, r]),
+  );
 
   const upsertTle = db.prepare(`
     INSERT OR REPLACE INTO spacetrack_tles (
@@ -200,6 +246,29 @@ async function main() {
   console.log(`Parsed ${tleBlocks.length} TLE blocks.`);
   insertTlesMany(tleBlocks);
   console.log(`Upserted ${tleBlocks.length} TLE rows.`);
+
+  let relocationEvents = 0;
+  for (const b of tleBlocks) {
+    const prev = prevTleByNorad.get(b.norad_id);
+    if (!prev) continue; // first time seeing this object — nothing to compare against
+    const oldLon = subSatelliteLongitudeDeg(prev.tle1, prev.tle2);
+    const newLon = subSatelliteLongitudeDeg(b.tle1, b.tle2);
+    if (oldLon === null || newLon === null) continue;
+    const delta = circularDiffDeg(oldLon, newLon);
+    if (Math.abs(delta) >= RELOCATION_THRESHOLD_DEG) {
+      const name = b.name ?? prev.name ?? b.norad_id;
+      recordSlotEvent(db, {
+        source: "spacetrack",
+        eventType: "satellite_relocated",
+        noradId: b.norad_id,
+        longitudeGeo: newLon,
+        summary: `${name} (NORAD ${b.norad_id}) moved from ${formatLonShort(oldLon)} to ${formatLonShort(newLon)}.`,
+        detail: { noradId: b.norad_id, oldLongitudeDeg: oldLon, newLongitudeDeg: newLon, deltaDeg: delta },
+      });
+      relocationEvents++;
+    }
+  }
+  if (relocationEvents > 0) console.log(`Recorded ${relocationEvents} relocation event(s).`);
 
   recordIngest(db, "Space-Track satcat", satcatData.length, "Space-Track satellite catalog");
   recordIngest(db, "Space-Track TLE", tleBlocks.length, "Space-Track two-line element sets");

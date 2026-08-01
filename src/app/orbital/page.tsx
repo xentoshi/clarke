@@ -24,13 +24,16 @@ export default function OrbitalPage() {
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-10">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <p className="text-zinc-600 text-xs font-mono mb-3">// ORBITAL_REGISTRY</p>
+          <p className="text-zinc-600 text-xs font-mono mb-3">{"// ORBITAL_REGISTRY"}</p>
           <h1 className="text-2xl font-bold text-white mb-2">Orbital Registry</h1>
           <p className="text-zinc-500 text-sm leading-relaxed">
             Every tracked GEO position, by longitude. Search, filter, compare, export.
           </p>
         </div>
         <div className="flex items-center gap-4 shrink-0 mt-1">
+          <Link href="/orbital/changes" className="text-zinc-600 text-xs hover:text-zinc-300 transition-colors">
+            Changes →
+          </Link>
           <Link href="/orbital/faq" className="text-zinc-600 text-xs hover:text-zinc-300 transition-colors">
             FAQ →
           </Link>

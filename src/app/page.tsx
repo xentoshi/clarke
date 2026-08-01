@@ -5,6 +5,7 @@ import { stocks } from "@/data/stocks";
 import { getFleetByKey } from "@/lib/fleet";
 import { layerForSector } from "@/lib/value-chain";
 import { buildExplorerRows } from "@/lib/explorer";
+import { getGeoPositionCount } from "@/lib/satellites";
 import SpaceEconomyMap, { type MapCompany } from "./SpaceEconomyMap";
 
 export const metadata = buildMeta({
@@ -20,6 +21,10 @@ function normalizeName(name: string): string {
 export default function HomePage() {
   const registryRows = buildExplorerRows();
   const fccCount = registryRows.filter((r) => r.fccLicensed).length;
+  // Distinct occupied positions, not registry rows — co-located satellites
+  // outside the curated slot set can produce more than one row per position
+  // (see /orbital/faq). "Positions tracked" should mean positions.
+  const positionCount = getGeoPositionCount();
   const fleetByKey = getFleetByKey();
 
   // Reverse-map company slug -> stock ticker so the map can mark public names.
@@ -62,7 +67,7 @@ export default function HomePage() {
           status — the reference-data layer for a market that runs on PDFs and phone calls.
         </p>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm mb-8">
-          <span className="text-zinc-300 font-mono">{registryRows.length} <span className="text-zinc-600">positions tracked</span></span>
+          <span className="text-zinc-300 font-mono">{positionCount} <span className="text-zinc-600">positions tracked</span></span>
           <span className="text-zinc-300 font-mono">0–100 <span className="text-zinc-600">congestion score</span></span>
           <span className="text-zinc-300 font-mono">{fccCount} <span className="text-zinc-600">FCC filings flagged</span></span>
           <span className="text-zinc-300 font-mono">CSV <span className="text-zinc-600">export</span></span>

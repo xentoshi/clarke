@@ -3,7 +3,7 @@ import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
 import {
   getSatellitesBySlug,
-  getAllGeoSlugs,
+  getAllRegistrySlugs,
   getNearbySlots,
   getCongestion,
   getFccAuthorizationsByLongitude,
@@ -26,6 +26,12 @@ function primaryOperator(sats: GeoSatellite[]): string {
   return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
 }
 
+// UCS "users" classification tied to the same primary operator picked above,
+// so the valuation's ownership flag stays consistent with the operator shown.
+function primaryUsers(sats: GeoSatellite[], operator: string): string | undefined {
+  return sats.find((s) => s.operator === operator && s.users)?.users ?? undefined;
+}
+
 function parseYear(dateStr: string | null): number | null {
   if (!dateStr) return null;
   const parts = dateStr.split("/");
@@ -38,18 +44,22 @@ export async function generateMetadata({ params }: { params: Promise<Params> }) 
   const lon = slugToLon(slot);
   if (lon === null) return {};
   const sats = getSatellitesBySlug(slot);
-  if (sats.length === 0) return {};
+  const fccAuths = getFccAuthorizationsByLongitude(lon);
+  if (sats.length === 0 && fccAuths.length === 0) return {};
   const label = formatLon(lon);
-  const operator = primaryOperator(sats);
+  const operator = primaryOperator(sats) || fccAuths[0]?.licensee || "";
+  const description = sats.length > 0
+    ? `${sats.length} satellite${sats.length !== 1 ? "s" : ""} at ${label}. Primary operator: ${operator}. GEO orbital slot registry.`
+    : `FCC-authorized position at ${label} with no satellite in orbit yet. Licensee: ${operator}. GEO orbital slot registry.`;
   return buildMeta({
     title: `${label} · Orbital Position`,
-    description: `${sats.length} satellite${sats.length !== 1 ? "s" : ""} at ${label}. Primary operator: ${operator}. GEO orbital slot registry.`,
+    description,
     tag: "Registry",
   });
 }
 
 export async function generateStaticParams() {
-  return getAllGeoSlugs().map((slot) => ({ slot }));
+  return getAllRegistrySlugs(curatedSlots).map((slot) => ({ slot }));
 }
 
 export default async function SlotPage({ params }: { params: Promise<Params> }) {
@@ -58,33 +68,37 @@ export default async function SlotPage({ params }: { params: Promise<Params> }) 
   if (lon === null) notFound();
 
   const sats = getSatellitesBySlug(slot);
-  if (sats.length === 0) notFound();
-
-  const label = formatLon(lon);
-  const operator = primaryOperator(sats);
-  const nearby = getNearbySlots(lon, 4);
-
+  const fccAuths = getFccAuthorizationsByLongitude(lon);
   const curated = curatedSlots.find(
     (s) => Math.abs(s.longitude - lon) <= 0.4 && lonToSlug(s.longitude) === slot
   ) ?? curatedSlots.find((s) => Math.abs(s.longitude - lon) <= 0.4);
 
+  // A position can be real with zero UCS satellites — an FCC filing with no
+  // satellite in orbit yet. Only 404 if none of the three sources have
+  // anything at this longitude.
+  if (sats.length === 0 && fccAuths.length === 0 && !curated) notFound();
+
+  const label = formatLon(lon);
+  const operator = primaryOperator(sats) || fccAuths[0]?.licensee || "";
+  const nearby = getNearbySlots(lon, 4);
+
   const congestion = getCongestion(lon);
-  const fccAuths = getFccAuthorizationsByLongitude(lon);
 
   // Build a slot record for valuation: prefer the curated record, otherwise
-  // synthesize one from the live UCS data at this longitude.
+  // synthesize one from the live UCS/FCC data at this longitude.
   const valuationSlot: OrbitalSlot = curated ?? {
     id: slot,
     longitude: lon,
     label,
     operator,
-    country: sats[0]?.ownerCountry ?? "",
+    country: sats[0]?.ownerCountry ?? fccAuths[0]?.administration ?? "",
     bands: [],
-    status: "active",
+    status: sats.length > 0 ? "active" : "filed",
     coverage: [],
     valueEstimate: "",
     description: "",
-    source: "ucs",
+    source: sats.length > 0 ? "ucs" : "fcc",
+    users: primaryUsers(sats, operator),
   };
   const valuation = valuateSlot(valuationSlot, congestion);
   const confidenceColor =
@@ -92,7 +106,6 @@ export default async function SlotPage({ params }: { params: Promise<Params> }) 
     valuation.confidence === "medium" ? "text-amber-400 border-amber-800/60 bg-amber-950/30" :
     "text-zinc-400 border-zinc-700 bg-zinc-900/40";
 
-  const purposes = [...new Set(sats.map((s) => s.purpose).filter(Boolean))];
   const launchYears = sats
     .map((s) => parseYear(s.launchDate))
     .filter((y): y is number => y !== null)
@@ -112,7 +125,7 @@ export default async function SlotPage({ params }: { params: Promise<Params> }) 
 
       {/* Header */}
       <div className="mb-10">
-        <p className="text-zinc-600 text-xs font-mono mb-3">// GEO · {lon >= 0 ? "EAST" : "WEST"}</p>
+        <p className="text-zinc-600 text-xs font-mono mb-3">{`// GEO · ${lon >= 0 ? "EAST" : "WEST"}`}</p>
         <div className="flex items-start justify-between gap-6 flex-wrap">
           <div>
             <h1 className="text-3xl sm:text-4xl font-bold text-white font-mono mb-2">{label}</h1>
@@ -122,6 +135,11 @@ export default async function SlotPage({ params }: { params: Promise<Params> }) 
             <div className="text-right">
               <div className="text-white font-bold font-mono text-2xl">{curated.valueEstimate}</div>
               <div className="text-zinc-600 text-xs mt-0.5">curated estimate</div>
+            </div>
+          ) : valuation.nonCommercial ? (
+            <div className="text-right max-w-[220px]">
+              <div className="text-amber-300/90 font-bold text-sm">Not commercially valued</div>
+              <div className="text-zinc-600 text-[10px] mt-0.5">government / military asset</div>
             </div>
           ) : (
             <div className="text-right">
@@ -166,15 +184,26 @@ export default async function SlotPage({ params }: { params: Promise<Params> }) 
           </span>
         </div>
         <div className="border border-zinc-800 rounded-xl overflow-hidden">
-          <div className="bg-zinc-950 px-5 py-5 flex items-baseline justify-between gap-4 border-b border-zinc-800/60">
-            <div>
-              <div className="text-white font-bold font-mono text-2xl">{valuation.formatted.range}</div>
-              <div className="text-zinc-600 text-xs mt-0.5">
-                modeled range · midpoint {valuation.formatted.point}
-                {valuation.basis === "curated" && <span className="text-zinc-500"> · curated estimate {valuation.curatedEstimate}</span>}
+          {valuation.nonCommercial ? (
+            <div className="bg-amber-950/20 px-5 py-4 border-b border-amber-900/40">
+              <div className="text-amber-300/90 text-sm font-semibold mb-1">Not commercially valued</div>
+              <div className="text-amber-200/60 text-xs leading-relaxed">
+                {valuation.nonCommercialReason} — this is not a leasable commercial position. The modeled range
+                below (<span className="font-mono">{valuation.formatted.range}</span>) is the pricing model&apos;s raw
+                output for reference only; it is not a meaningful market estimate for this satellite.
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-zinc-950 px-5 py-5 flex items-baseline justify-between gap-4 border-b border-zinc-800/60">
+              <div>
+                <div className="text-white font-bold font-mono text-2xl">{valuation.formatted.range}</div>
+                <div className="text-zinc-600 text-xs mt-0.5">
+                  modeled range · midpoint {valuation.formatted.point}
+                  {valuation.basis === "curated" && <span className="text-zinc-500"> · curated estimate {valuation.curatedEstimate}</span>}
+                </div>
+              </div>
+            </div>
+          )}
           <table className="w-full">
             <tbody>
               {valuation.factors.map((f) => (

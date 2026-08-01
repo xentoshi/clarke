@@ -30,6 +30,26 @@ export interface SlotValuation {
   curatedEstimate?: string;
   factors: ValuationFactor[];
   formatted: { low: string; point: string; high: string; range: string };
+  // True when the UCS "users" field indicates a government/military asset
+  // with no commercial component. The figures above still get computed (so
+  // this stays additive and nothing downstream has to special-case a missing
+  // range), but a sovereign satellite isn't a leasable market position —
+  // consumers should not present the dollar figures as a market estimate for
+  // these rows. See nonCommercialReason for what triggered the flag.
+  nonCommercial: boolean;
+  nonCommercialReason?: string;
+}
+
+// UCS "users" values that mean this satellite has no commercial component at
+// all (pure "Government", "Military", "Government/Civil", etc.). Anything
+// that mentions "Commercial" — including mixed hosted-payload cases like
+// "Military/Commercial" — keeps a real (if partial) market dimension and is
+// left alone. Absent data is not treated as evidence of government
+// ownership — only an explicit non-commercial UCS classification flags it.
+function nonCommercialFlag(users: string | undefined): { flagged: boolean; reason?: string } {
+  if (!users) return { flagged: false };
+  if (users.toLowerCase().includes("commercial")) return { flagged: false };
+  return { flagged: true, reason: `UCS classifies this satellite's users as "${users}"` };
 }
 
 // Tier-1 GEO operators that consistently hold premium positions. Matched as
@@ -92,6 +112,7 @@ export function valuateSlot(slot: OrbitalSlot, congestion?: CongestionData): Slo
   const arc = arcDesirability(slot.longitude);
   const op = operatorTier(slot.operator ?? "");
   const band = bandPremium(slot.bands);
+  const nonCommercial = nonCommercialFlag(slot.users);
 
   // Occupancy: an active, multi-satellite position is generating revenue.
   const occMult = 1 + Math.min(coLocated, 6) * 0.12;
@@ -105,14 +126,21 @@ export function valuateSlot(slot: OrbitalSlot, congestion?: CongestionData): Slo
     { label: "Spectrum", multiplier: round2(band.mult), detail: band.detail },
     { label: "Scarcity", multiplier: round2(scarcityMult), detail: `Congestion score ${cong.score}` },
   ];
+  if (nonCommercial.flagged) {
+    factors.push({ label: "Ownership", multiplier: 1, detail: `${nonCommercial.reason} — not a leasable commercial position; figures below are the model's raw output, not a market estimate` });
+  }
 
   const point = Math.round(
     BASELINE_USD * arc.mult * occMult * op.mult * band.mult * scarcityMult,
   );
 
-  // Confidence reflects how much real data backs the estimate.
+  // Confidence reflects how much real data backs the estimate. A flagged
+  // non-commercial asset is never medium/high confidence, regardless of how
+  // dense its neighborhood is — density says nothing about a market value
+  // that doesn't apply here.
   let confidence: Confidence;
-  if (slot.source === "curated") confidence = "high";
+  if (nonCommercial.flagged) confidence = "low";
+  else if (slot.source === "curated") confidence = "high";
   else if ((slot.operator ?? "").trim() && coLocated >= 2) confidence = "medium";
   else confidence = "low";
 
@@ -131,6 +159,8 @@ export function valuateSlot(slot: OrbitalSlot, congestion?: CongestionData): Slo
     basis: curatedEstimate ? "curated" : "model",
     curatedEstimate,
     factors,
+    nonCommercial: nonCommercial.flagged,
+    nonCommercialReason: nonCommercial.reason,
     formatted: {
       low: formatMoney(low),
       point: formatMoney(point),

@@ -78,7 +78,13 @@ export default function SlotTable({
                     <span className="text-zinc-500 text-xs font-mono">{r.congestionScore}</span>
                   </div>
                 </td>
-                <td className="px-4 py-2.5 text-right hidden sm:table-cell"><span className="text-zinc-500 text-xs font-mono">{r.valueDisplay}</span></td>
+                <td className="px-4 py-2.5 text-right hidden sm:table-cell">
+                  {r.valuation.nonCommercial ? (
+                    <span className="text-amber-500/50 text-xs font-mono" title={`Not commercially valued: ${r.valuation.nonCommercialReason ?? "government/military asset"}`}>n/a</span>
+                  ) : (
+                    <span className="text-zinc-500 text-xs font-mono">{r.valueDisplay}</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

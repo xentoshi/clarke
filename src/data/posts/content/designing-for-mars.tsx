@@ -1,5 +1,4 @@
 import type { TocItem } from "@/components/TableOfContents";
-import { BlogImage } from "@/components/BlogImage";
 
 export const toc: TocItem[] = [
   { id: "the-brief", label: "The brief" },
@@ -52,8 +51,8 @@ export default function DesigningForMarsPost() {
       <h2 id="radiation">Radiation: go underground</h2>
       <p>
         Mars has no global magnetic field and an atmosphere that provides less than 1 percent of
-        Earth's radiation shielding. The surface dose of around 300 millisieverts per year is six
-        times the occupational limit for radiation workers on Earth and would exceed NASA's historical
+        Earth&apos;s radiation shielding. The surface dose of around 300 millisieverts per year is six
+        times the occupational limit for radiation workers on Earth and would exceed NASA&apos;s historical
         career limit for astronauts in under three years. A crew spending a decade on Mars at surface
         exposure levels accumulates a radiation dose that meaningfully raises lifetime cancer risk.
       </p>
@@ -74,7 +73,7 @@ export default function DesigningForMarsPost() {
         that add structural complexity.
       </p>
       <p>
-        ESA's concept developed with Foster and Partners addressed this by separating the problem
+        ESA&apos;s concept developed with Foster and Partners addressed this by separating the problem
         into two systems: an inflatable pressure shell provides the air-tight enclosure, while
         a 3D-printed regolith shell constructed by robots provides the radiation shielding and
         structural load bearing. The two systems are decoupled, which means neither has to solve
@@ -105,7 +104,7 @@ export default function DesigningForMarsPost() {
         The design implication is that rectangular rooms, right-angle corners, and flat walls,
         the basic vocabulary of Earth architecture, are structurally inconvenient on Mars.
         The shapes that work best under pressure loads are the shapes that 3D printing from
-        local materials naturally produces. ICON's Vulcan printing system, and the geometry of
+        local materials naturally produces. ICON&apos;s Vulcan printing system, and the geometry of
         Mars Dune Alpha it produced with Bjarke Ingels Group, generates curved interior volumes
         as a direct output of the printing process. The aesthetic emerges from the engineering,
         rather than being imposed on top of it.
@@ -153,7 +152,7 @@ export default function DesigningForMarsPost() {
       </p>
       <p>
         Mars Dune Alpha, the 160-square-meter habitat 3D-printed by ICON and designed by Bjarke
-        Ingels Group at NASA's Johnson Space Center, was built specifically to generate baseline
+        Ingels Group at NASA&apos;s Johnson Space Center, was built specifically to generate baseline
         data on this question. Four crew members completed a 12-month analog mission inside it
         starting in 2023. The structure includes distinct zones for sleeping, working, exercising,
         and food production, with spatial transitions between them that create a sense of
@@ -170,7 +169,7 @@ export default function DesigningForMarsPost() {
         immediate environment.
       </p>
       <p>
-        Hassell Studio's Mars habitat concept addresses this through deliberate biome differentiation:
+        Hassell Studio&apos;s Mars habitat concept addresses this through deliberate biome differentiation:
         sleeping pods offer genuine acoustic and visual privacy, a central commons serves as the
         social anchor, and integrated food growing areas create a living element within the
         inhabited space. The growing areas are not segregated as utility space. They are embedded

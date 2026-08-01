@@ -118,6 +118,23 @@ export function getAllGeoSlugs(): string[] {
   return [...seen];
 }
 
+// Every slug that should have a working detail page. Deliberately additive
+// on top of getAllGeoSlugs() rather than derived from mergeWithUcs()'s own
+// slug set: a UCS satellite within 0.4° of a curated slot is absorbed into
+// that slot's row in the merged registry (by design — see /orbital/faq), so
+// its own raw-longitude slug (e.g. a satellite at 19.3° near curated 19.2°E)
+// doesn't appear as a separate merged row. getAllGeoSlugs() still generates
+// a page for it. Rederiving from mergeWithUcs() here would silently drop
+// those pages; this only adds the FCC-only positions that have no page at
+// all today.
+export function getAllRegistrySlugs(curatedSlots: OrbitalSlot[]): string[] {
+  const base = getAllGeoSlugs();
+  const fccOnly = mergeWithUcs(curatedSlots)
+    .filter((s) => s.source === "fcc")
+    .map((s) => lonToSlug(s.longitude));
+  return [...new Set([...base, ...fccOnly])];
+}
+
 export function getSatellitesBySlug(slug: string): GeoSatellite[] {
   const lon = slugToLon(slug);
   if (lon === null) return [];
@@ -189,13 +206,31 @@ function tierForScore(score: number): { tier: CongestionTier; label: string } {
 //   contention (how many distinct operators share the arc). A position packed
 //   by a single operator scores lower on contention than an equally dense arc
 //   contested by many operators — the latter carries more coordination risk.
+//
+// Excludes satellites Space-Track has confirmed decayed (spacetrack_satcat.
+// decay_date). GEO objects essentially never decay in the atmospheric-drag
+// sense — this mainly guards against counting a satellite Clarke's own
+// second source already knows is gone, rather than trusting the UCS row
+// forever. It intentionally does NOT try to detect graveyard-orbit
+// retirement (satellites boosted above GEO but still catalogued): normal
+// station-keeping and deliberate inclined-orbit operation produce
+// apogee/perigee/inclination variation in the same range as a graveyard
+// raise, so a naive altitude threshold would misclassify active fleet
+// (e.g. operators running inclined-orbit satellites near end of life) as
+// retired. That needs a more careful signal than this query provides.
 export function getCongestion(lon: number): CongestionData {
   const db = getDb();
   if (!db) return EMPTY_CONGESTION;
 
-  const rows = db.prepare(
-    "SELECT operator, longitude_geo as lon FROM satellites WHERE orbit_class = 'GEO' AND longitude_geo BETWEEN ? AND ?"
-  ).all(lon - 2, lon + 2) as { operator: string | null; lon: number }[];
+  const rows = db.prepare(`
+    SELECT s.operator, s.longitude_geo as lon
+    FROM satellites s
+    WHERE s.orbit_class = 'GEO' AND s.longitude_geo BETWEEN ? AND ?
+      AND NOT EXISTS (
+        SELECT 1 FROM spacetrack_satcat st
+        WHERE st.norad_id = s.norad_id AND st.decay_date IS NOT NULL
+      )
+  `).all(lon - 2, lon + 2) as { operator: string | null; lon: number }[];
 
   const neighborhood = rows.length;
   const coLocated = rows.filter((r) => Math.abs(r.lon - lon) <= 0.4).length;
@@ -324,7 +359,20 @@ export function getOperatorGeoPositions(operatorNames: string[]): OperatorPositi
   return [...bySlug.values()];
 }
 
-function ucsToSlot(sat: GeoSatellite): OrbitalSlot {
+// NORAD IDs Space-Track has confirmed decayed (spacetrack_satcat.decay_date
+// set). See the note on getCongestion() — this catches confirmed reentry,
+// not graveyard-orbit retirement, which isn't reliably detectable from this
+// data without misclassifying active inclined-orbit fleet.
+function getDecayedNoradIds(): Set<string> {
+  const db = getDb();
+  if (!db) return new Set();
+  const rows = db.prepare(
+    "SELECT norad_id FROM spacetrack_satcat WHERE decay_date IS NOT NULL"
+  ).all() as { norad_id: string }[];
+  return new Set(rows.map((r) => r.norad_id));
+}
+
+function ucsToSlot(sat: GeoSatellite, decayedNoradIds: Set<string>): OrbitalSlot {
   const lon = sat.longitudeGeo ?? 0;
   const launchYear = sat.launchDate ? parseInt(sat.launchDate.split("/").pop() ?? "0") : undefined;
   return {
@@ -334,7 +382,7 @@ function ucsToSlot(sat: GeoSatellite): OrbitalSlot {
     operator: sat.operator ?? "",
     country: sat.ownerCountry ?? "",
     bands: [],
-    status: "active",
+    status: sat.noradId && decayedNoradIds.has(sat.noradId) ? "inactive" : "active",
     satellite: sat.name,
     coverage: [],
     valueEstimate: "",
@@ -349,6 +397,7 @@ function ucsToSlot(sat: GeoSatellite): OrbitalSlot {
     purpose: sat.purpose ?? undefined,
     cosparIds: sat.cosparId ? [sat.cosparId] : [],
     noradIds: sat.noradId ? [sat.noradId] : [],
+    users: sat.users ?? undefined,
   };
 }
 
@@ -374,11 +423,63 @@ export function mergeWithUcs(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
   });
 
   const curatedLons = curatedSlots.map((s) => s.longitude);
+  const decayedNoradIds = getDecayedNoradIds();
   const ucsDerived = ucs
     .filter((s) => s.longitudeGeo !== null && !curatedLons.some((lon) => Math.abs(lon - s.longitudeGeo!) <= TOLERANCE))
-    .map(ucsToSlot);
+    .map((s) => ucsToSlot(s, decayedNoradIds));
 
-  return [...enriched, ...ucsDerived].sort((a, b) => a.longitude - b.longitude);
+  // FCC-authorized positions with no UCS satellite and no curated slot nearby
+  // would otherwise have zero representation in the registry: no row, no
+  // congestion score, no valuation — despite being a real, government-issued
+  // authorization. Synthesize a minimal placeholder so they're findable.
+  const ucsLons = ucs.filter((s) => s.longitudeGeo !== null).map((s) => s.longitudeGeo!);
+  const allLons = [...curatedLons, ...ucsLons];
+  const fccDerived = fccOnlySlots(allLons, TOLERANCE);
+
+  return [...enriched, ...ucsDerived, ...fccDerived].sort((a, b) => a.longitude - b.longitude);
+}
+
+// Groups FCC authorizations by ~0.1°-rounded longitude, keeping only groups
+// with no UCS satellite or curated slot within TOLERANCE, and synthesizes one
+// placeholder OrbitalSlot per group.
+function fccOnlySlots(coveredLons: number[], toleranceDeg: number): OrbitalSlot[] {
+  const auths = getAllFccAuthorizations().filter((a) => a.longitudeGeo !== null);
+  if (auths.length === 0) return [];
+
+  const byLon = new Map<string, { lon: number; auths: FccAuthorization[] }>();
+  for (const a of auths) {
+    const lon = Math.round(a.longitudeGeo! * 10) / 10;
+    const key = lonToSlug(lon);
+    const group = byLon.get(key);
+    if (group) group.auths.push(a);
+    else byLon.set(key, { lon, auths: [a] });
+  }
+
+  const slots: OrbitalSlot[] = [];
+  for (const { lon, auths: group } of byLon.values()) {
+    if (coveredLons.some((c) => Math.abs(c - lon) <= toleranceDeg)) continue;
+    const primary = group[0];
+    const callSigns = group.map((a) => a.callSign).filter(Boolean).join(", ");
+    slots.push({
+      id: `fcc_${lonToSlug(lon)}`,
+      longitude: lon,
+      label: formatLon(lon),
+      operator: primary.licensee ?? "",
+      country: primary.administration ?? "",
+      bands: [],
+      status: "filed",
+      coverage: [],
+      valueEstimate: "",
+      description: [
+        `FCC-authorized position with no UCS-tracked satellite in orbit here yet.`,
+        group.length > 1 ? `${group.length} authorizations: ${callSigns}.` : callSigns ? `Authorization: ${callSigns}.` : "",
+      ].filter(Boolean).join(" "),
+      source: "fcc",
+      cosparIds: [],
+      noradIds: [],
+    });
+  }
+  return slots;
 }
 
 export interface FccAuthorization {

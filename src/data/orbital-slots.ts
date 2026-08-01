@@ -15,11 +15,12 @@ export interface OrbitalSlot {
   description: string;
   launched?: number;
   // UCS enrichment fields
-  source?: "curated" | "ucs";
+  source?: "curated" | "ucs" | "fcc";
   ucsCount?: number;
   cosparIds?: string[];
   noradIds?: string[];
   purpose?: string;
+  users?: string; // UCS "users" field, e.g. "Commercial", "Government", "Military"
 }
 
 export const slots: OrbitalSlot[] = [

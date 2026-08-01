@@ -28,8 +28,16 @@ export default function StockDrawer({
     return () => cancelAnimationFrame(id);
   }, []);
 
-  useEffect(() => {
+  // Clear the stale profile the instant the slug changes, adjusted during
+  // render rather than in an effect, so a fast switch never shows the
+  // previous company's data while the new fetch is in flight.
+  const [prevSlug, setPrevSlug] = useState(companySlug);
+  if (companySlug !== prevSlug) {
+    setPrevSlug(companySlug);
     setProfile(null);
+  }
+
+  useEffect(() => {
     if (!companySlug) return;
     let cancelled = false;
     fetch(`/api/v1/agents/companies/${companySlug}`)

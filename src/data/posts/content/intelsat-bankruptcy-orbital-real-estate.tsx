@@ -46,9 +46,9 @@ export default function Post() {
       </p>
       <p>
         What made it instructive was not the collapse but the survival. Through two years of restructuring,
-        Intelsat's orbital slot portfolio emerged largely intact. The company deleveraged from $16 billion
+        Intelsat&apos;s orbital slot portfolio emerged largely intact. The company deleveraged from $16 billion
         to $7 billion in debt, and in 2025, SES acquired Intelsat for $3.1 billion. That acquisition price
-        is the market's answer to a question the industry had never been forced to price precisely: how much
+        is the market&apos;s answer to a question the industry had never been forced to price precisely: how much
         are the regulatory rights to occupy a specific longitude in geostationary orbit actually worth?
       </p>
 
@@ -56,13 +56,13 @@ export default function Post() {
       <p>
         Intelsat was established in the 1960s under the Kennedy administration as an intergovernmental
         entity, designed to provide global telecommunications coverage under the principle that outer space
-        was the "province of all mankind," a phrase echoed in the 1967 Outer Space Treaty. For decades the
+        was the &quot;province of all mankind,&quot; a phrase echoed in the 1967 Outer Space Treaty. For decades the
         company operated as a protected monopoly, authorized by international treaties to occupy prime
         positions in the geostationary arc.
       </p>
       <p>
         The geostationary orbit sits 35,786 kilometers above the equator, the only altitude where a
-        satellite's period matches Earth's rotation, allowing it to appear fixed over a single geographic
+        satellite&apos;s period matches Earth&apos;s rotation, allowing it to appear fixed over a single geographic
         region from the ground. That physical characteristic made GEO satellites the most efficient
         mechanism for broadcast television and long-distance telecommunications. The International
         Telecommunication Union became the de facto registrar for these positions, managing rights on a
@@ -110,9 +110,9 @@ export default function Post() {
         The revenue base was deteriorating in parallel. Terrestrial fiber-optic networks had displaced
         satellite as the preferred medium for data transmission across most developed markets, and the rise
         of streaming services was undermining the broadcast television distribution contracts that had
-        historically anchored Intelsat's customer base. The company was locked into a cycle of launching
+        historically anchored Intelsat&apos;s customer base. The company was locked into a cycle of launching
         expensive, long-lived assets to protect its orbital filings even as the market value of those
-        assets' bandwidth was declining.
+        assets&apos; bandwidth was declining.
       </p>
 
       <h2 id="c-band-the-reveal">C-Band: The Regulatory Asset Revealed</h2>
@@ -146,17 +146,17 @@ export default function Post() {
         infrastructure to execute the clearing, and its existing debt load made raising that capital on
         private markets impossible without the protection of a bankruptcy filing. The Chapter 11 process
         provided the legal framework to obtain debtor-in-possession financing, prioritize the clearing
-        project, and ultimately collect the incentive payments that funded the company's emergence from
+        project, and ultimately collect the incentive payments that funded the company&apos;s emergence from
         restructuring.
       </p>
       <p>
         The C-band episode is the clearest illustration of why orbital slot valuations are so difficult
         to assess through conventional means. The FCC was not paying Intelsat for its satellites. It was
-        paying for the company's regulatory right to transmit within a specific frequency range at specific
+        paying for the company&apos;s regulatory right to transmit within a specific frequency range at specific
         orbital positions. When the opportunity cost of that spectrum for terrestrial 5G exceeded its
         value in satellite broadcasting, the regulatory system ran what amounted to a forced market-clearing
-        event, and the price it revealed (nearly $5 billion for Intelsat's share alone) exceeded the
-        company's eventual total acquisition price.
+        event, and the price it revealed (nearly $5 billion for Intelsat&apos;s share alone) exceeded the
+        company&apos;s eventual total acquisition price.
       </p>
 
       <h2 id="the-acquisition">The SES Acquisition as Market Verdict</h2>
@@ -168,7 +168,7 @@ export default function Post() {
       </p>
       <p>
         The transaction was framed publicly as the creation of a multi-orbit operator capable of combining
-        GEO's broad regional coverage with MEO and LEO capacity for low-latency data services. That framing
+        GEO&apos;s broad regional coverage with MEO and LEO capacity for low-latency data services. That framing
         is accurate. The more precise reading is that SES paid $3.1 billion for a portfolio of
         ITU-coordinated orbital positions, the spectrum licenses attached to them, and the customer
         relationships built on top of them over six decades. The satellites occupying those positions were
@@ -191,7 +191,7 @@ export default function Post() {
         The value of an orbital position is substantially a function of its spectrum license rather than
         the hardware occupying it. The C-band clearing demonstrated that the same frequency rights Intelsat
         had used for broadcast distribution could be repriced to reflect their opportunity cost in 5G
-        wireless, and that repricing yielded more than the company's total post-restructuring equity value.
+        wireless, and that repricing yielded more than the company&apos;s total post-restructuring equity value.
         The spectrum rights were the asset. The satellites were the instrument.
       </p>
       <p>
@@ -214,13 +214,13 @@ export default function Post() {
         <li>Intelsat S.A. Bankruptcy Filing, Eastern District of Virginia, Case No. 3:20-bk-32299 (May 14, 2020)</li>
         <li>Intelsat S.A. Form 8-K / EX-99.1, SEC EDGAR (February 2020)</li>
         <li>FCC Report and Order, C-Band Spectrum Reallocation, FCC-20-22 (March 2020)</li>
-        <li>"Evaluating the FCC's $10 Billion Gamble: Successfully Accelerating Access to Spectrum in Auction 107," ResearchGate</li>
-        <li>"SES Completes FCC's C-Band Transition Clearing," SES Press Release (ses.com)</li>
-        <li>"Intelsat wipes out $9bn debt as it emerges from bankruptcy," Capacity Media (2022)</li>
+        <li>&quot;Evaluating the FCC&apos;s $10 Billion Gamble: Successfully Accelerating Access to Spectrum in Auction 107,&quot; ResearchGate</li>
+        <li>&quot;SES Completes FCC&apos;s C-Band Transition Clearing,&quot; SES Press Release (ses.com)</li>
+        <li>&quot;Intelsat wipes out $9bn debt as it emerges from bankruptcy,&quot; Capacity Media (2022)</li>
         <li>SES and Intelsat FCC Transfer Application, SB Docket No. 24-267 (FCC, 2024)</li>
-        <li>"The new economics of GEO: from scarcity to abundance," London Economics</li>
-        <li>"Paper satellites and the free use of outer space," NYU Law Global (Globalex)</li>
-        <li>"Launch Cost Deflation and the Economics of Satellite Deployment," Anser Press / ResearchGate</li>
+        <li>&quot;The new economics of GEO: from scarcity to abundance,&quot; London Economics</li>
+        <li>&quot;Paper satellites and the free use of outer space,&quot; NYU Law Global (Globalex)</li>
+        <li>&quot;Launch Cost Deflation and the Economics of Satellite Deployment,&quot; Anser Press / ResearchGate</li>
       </ol>
     </div>
   );

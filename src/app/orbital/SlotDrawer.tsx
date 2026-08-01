@@ -31,12 +31,20 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
     return () => cancelAnimationFrame(id);
   }, []);
 
+  // Clear the stale dossier the instant the selected slot changes, adjusted
+  // during render rather than in an effect, so switching slots fast never
+  // shows the previous slot's dossier while the new fetch is in flight.
+  const [prevSlug, setPrevSlug] = useState<string | null>(row?.slug ?? null);
+  if ((row?.slug ?? null) !== prevSlug) {
+    setPrevSlug(row?.slug ?? null);
+    setDossier(null);
+    setLoading(row !== null);
+  }
+
   // Fetch the dossier whenever the selected slot changes.
   useEffect(() => {
-    setDossier(null);
     if (!row) return;
     let cancelled = false;
-    setLoading(true);
     fetch(`/api/v1/agents/slots/${row.slug}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((json) => { if (!cancelled && json?.data) setDossier(json.data as Dossier); })
@@ -70,13 +78,19 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
             {row.description && <p className="text-zinc-400 text-sm leading-relaxed mb-5">{row.description}</p>}
 
             {/* Value */}
-            <div className="space-y-1 mb-1">
-              {v.basis === "curated" && v.curatedEstimate && (
-                <div className="flex justify-between text-xs py-1 border-b border-zinc-900"><span className="text-zinc-600">Curated value</span><span className="text-white font-mono">{v.curatedEstimate}</span></div>
-              )}
-              <div className="flex justify-between text-xs py-1 border-b border-zinc-900"><span className="text-zinc-600">Modeled range</span><span className="text-zinc-300 font-mono">{v.formatted.range}</span></div>
-              <div className="flex justify-between text-xs py-1 border-b border-zinc-900"><span className="text-zinc-600">Confidence</span><span className={`font-mono ${v.confidence === "high" ? "text-emerald-400" : v.confidence === "medium" ? "text-amber-400" : "text-zinc-400"}`}>{v.confidence}</span></div>
-            </div>
+            {v.nonCommercial ? (
+              <div className="text-amber-300/80 text-xs bg-amber-950/20 border border-amber-900/40 rounded px-2.5 py-2 mb-1">
+                Not commercially valued — {v.nonCommercialReason?.replace("UCS classifies this satellite's users as ", "users: ")}
+              </div>
+            ) : (
+              <div className="space-y-1 mb-1">
+                {v.basis === "curated" && v.curatedEstimate && (
+                  <div className="flex justify-between text-xs py-1 border-b border-zinc-900"><span className="text-zinc-600">Curated value</span><span className="text-white font-mono">{v.curatedEstimate}</span></div>
+                )}
+                <div className="flex justify-between text-xs py-1 border-b border-zinc-900"><span className="text-zinc-600">Modeled range</span><span className="text-zinc-300 font-mono">{v.formatted.range}</span></div>
+                <div className="flex justify-between text-xs py-1 border-b border-zinc-900"><span className="text-zinc-600">Confidence</span><span className={`font-mono ${v.confidence === "high" ? "text-emerald-400" : v.confidence === "medium" ? "text-amber-400" : "text-zinc-400"}`}>{v.confidence}</span></div>
+              </div>
+            )}
 
             {/* Congestion */}
             <div className="text-zinc-500 text-[10px] uppercase tracking-wider font-medium mt-5 mb-2">Congestion · {row.congestionScore} / 100</div>

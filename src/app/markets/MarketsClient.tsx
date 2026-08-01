@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useId } from "react";
 import { useRouter } from "next/navigation";
 import { stocks, type Stock } from "@/data/stocks";
 import type { StockQuote } from "@/lib/fetchStocks";
@@ -65,7 +65,7 @@ function areaPath(values: number[], w: number, h: number): string {
 function MiniSpark({ values, up, w = 96, h = 28 }: { values: number[]; up: boolean; w?: number; h?: number }) {
   const color = up ? "#34d399" : "#f87171";
   const line = sparklinePath(values, w, h);
-  const id = useMemo(() => `g${Math.random().toString(36).slice(2)}`, []);
+  const id = useId();
   if (!line) return <span className="text-zinc-700 text-xs">—</span>;
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="overflow-visible">
@@ -268,6 +268,13 @@ export default function MarketsClient({
         </p>
       </div>
 
+      {withQuote === 0 && stocks.length > 0 && (
+        <div className="border border-amber-900/40 bg-amber-950/20 rounded-xl px-4 py-3 mb-6 text-amber-300/80 text-xs">
+          Live prices are unavailable right now — the upstream quote source didn&apos;t return data for any of the
+          {" "}{stocks.length} tracked tickers. This is a fetch issue, not a market condition; try again shortly.
+        </div>
+      )}
+
       {/* Clarke Space Index */}
       {index && (
         <div className="border border-white/[0.06] rounded-2xl bg-gradient-to-br from-white/[0.03] to-transparent p-5 mb-6">
@@ -402,7 +409,13 @@ export default function MarketsClient({
                       </div>
                     </td>
                     <td className="px-3 py-3 text-right font-mono text-sm tabular-nums">
-                      {r.kind === "public" && r.quote ? <span className="text-white">${r.quote.price.toFixed(2)}</span> : <span className="text-zinc-600 text-xs">Private</span>}
+                      {r.kind === "private" ? (
+                        <span className="text-zinc-600 text-xs">Private</span>
+                      ) : r.quote ? (
+                        <span className="text-white">${r.quote.price.toFixed(2)}</span>
+                      ) : (
+                        <span className="text-zinc-700 text-xs" title="Price unavailable — quote fetch failed">—</span>
+                      )}
                     </td>
                     <td className={`px-3 py-3 text-right font-mono text-sm tabular-nums ${r.kind === "public" && r.change24 !== null ? (r.change24 >= 0 ? "text-emerald-400" : "text-red-400") : "text-zinc-700"}`}>
                       {r.kind === "public" ? pct(r.change24) : "—"}

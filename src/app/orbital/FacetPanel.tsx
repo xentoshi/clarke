@@ -19,6 +19,10 @@ function activeCount(f: Facets): number {
   );
 }
 
+function Check({ on }: { on: boolean }) {
+  return <span className={`w-3 h-3 rounded-[3px] border shrink-0 ${on ? "bg-emerald-500 border-emerald-500" : "border-zinc-700"}`} />;
+}
+
 export default function FacetPanel({
   facets, onChange, operatorOptions,
 }: {
@@ -28,10 +32,6 @@ export default function FacetPanel({
 }) {
   const set = (patch: Partial<Facets>) => onChange({ ...facets, ...patch });
   const n = activeCount(facets);
-
-  const Check = ({ on }: { on: boolean }) => (
-    <span className={`w-3 h-3 rounded-[3px] border shrink-0 ${on ? "bg-emerald-500 border-emerald-500" : "border-zinc-700"}`} />
-  );
 
   return (
     <div className="text-xs">

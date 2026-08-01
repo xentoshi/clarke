@@ -82,7 +82,7 @@ export default function MultiplanetaryPost() {
         <div className="layer-number">Layer 01</div>
         <div className="layer-title">Launch: Getting off Earth</div>
         <p>
-          The first problem is the hardest physics. Earth's gravitational well requires roughly 9.4 km/s of
+          The first problem is the hardest physics. Earth&apos;s gravitational well requires roughly 9.4 km/s of
           delta-v to reach low orbit. That number is fixed by the mass of the planet. Chemical rockets,
           burning a fuel and oxidizer to produce hot exhaust, are the only proven method of generating
           that delta-v.
@@ -98,7 +98,7 @@ export default function MultiplanetaryPost() {
           it away. The Saturn V that took Apollo to the Moon cost roughly $185 million per flight in 2023
           dollars. The Space Shuttle ended up costing approximately $54,000 per kilogram to orbit once all
           costs were accounted for. SpaceX changed the equation with Falcon 9. By landing and reflying the
-          first stage booster, they demonstrated that a rocket's most expensive component could be recovered
+          first stage booster, they demonstrated that a rocket&apos;s most expensive component could be recovered
           and reused. The cost fell to roughly $2,700 per kilogram to low Earth orbit. Starship, currently
           in flight testing, targets full reusability of both stages and aims for costs below $100 per
           kilogram to orbit.
@@ -168,15 +168,15 @@ export default function MultiplanetaryPost() {
           poles by LCROSS impact data and orbital measurements. Water ice can be mined, melted, and
           electrolyzed into hydrogen and oxygen. Hydrogen and oxygen are rocket propellant. Oxygen is
           breathable air. A lunar propellant depot changes the economics of the entire solar system:
-          instead of launching propellant from Earth's deep gravity well, you refuel at the Moon's
+          instead of launching propellant from Earth&apos;s deep gravity well, you refuel at the Moon&apos;s
           shallow one (1.6 km/s to escape versus 11.2 km/s from Earth).
         </p>
         <p>
-          The Artemis program's goal of returning humans to the lunar surface is explicitly framed as
+          The Artemis program&apos;s goal of returning humans to the lunar surface is explicitly framed as
           proving the technologies needed for Mars. ISRU, surface mobility, dust mitigation, radiation
           management, in-suit operations: all of these get tested on the Moon before a crew is committed
           to a 9-month transit from which there is no early return. A parallel commercial lunar economy
-          is emerging through NASA's CLPS program, seeding a private-sector supply chain for lunar
+          is emerging through NASA&apos;s CLPS program, seeding a private-sector supply chain for lunar
           operations.
         </p>
         <div className="companies">
@@ -219,7 +219,7 @@ export default function MultiplanetaryPost() {
           infrastructure, not amenities.
         </p>
         <p>
-          Mars Dune Alpha, a 3D-printed analog habitat at NASA's Johnson Space Center designed by
+          Mars Dune Alpha, a 3D-printed analog habitat at NASA&apos;s Johnson Space Center designed by
           Bjarke Ingels Group and built by ICON, is running crew analog missions of 12 months to
           generate baseline data on exactly these questions. What volume does a crew member need?
           What spatial transitions matter? What light conditions preserve circadian rhythm?
@@ -302,7 +302,7 @@ export default function MultiplanetaryPost() {
         <p>
           Nuclear power is the answer for Mars. A fission reactor produces constant,
           weather-independent, 24-hour power regardless of dust, night, or seasonal variation.
-          NASA's Kilopower project demonstrated a small fission reactor in 2018 producing 1 to 10
+          NASA&apos;s Kilopower project demonstrated a small fission reactor in 2018 producing 1 to 10
           kilowatts continuously. Microreactor companies targeting terrestrial markets in remote
           locations and defense applications are building the same technology Mars needs, driven
           by commercial incentives that no longer depend solely on NASA contracts.
@@ -320,7 +320,7 @@ export default function MultiplanetaryPost() {
         <p>
           In-Situ Resource Utilization is the layer that separates an outpost from a civilization.
           An outpost consumes what it brings from Earth. A civilization produces what it needs from
-          what it finds. The economics of Mars make ISRU existential: even at Starship's target
+          what it finds. The economics of Mars make ISRU existential: even at Starship&apos;s target
           costs, any consumable that can be produced locally must be.
         </p>
         <p>
@@ -340,7 +340,7 @@ export default function MultiplanetaryPost() {
         <p>
           Regolith, the loose rock and soil covering the surface, can be used as a construction
           material if properly processed. The perchlorates must be removed first. Processed
-          regolith can be sintered or 3D printed into structural elements. ICON's research into
+          regolith can be sintered or 3D printed into structural elements. ICON&apos;s research into
           printing structures from basalt analogs is directly aimed at developing a system
           adaptable to Martian feedstock.
         </p>
@@ -448,7 +448,7 @@ export default function MultiplanetaryPost() {
           The infrastructure requirements include relay satellites in Mars orbit to maintain contact
           when the planet rotates away from the direct Earth line, sufficient ground station capacity
           on Earth, and eventually a deep-space internet protocol capable of handling delay-tolerant
-          networking. NASA's Deep Space Network currently handles Mars communications for robotic
+          networking. NASA&apos;s Deep Space Network currently handles Mars communications for robotic
           missions. Scaling it for crewed missions and a settlement with significant data requirements
           is an unsolved infrastructure problem.
         </p>
@@ -533,15 +533,15 @@ export default function MultiplanetaryPost() {
           Mars has iron, aluminum, silicon, magnesium, calcium, and sulfur in its surface rocks in
           quantities sufficient for large-scale construction. The asteroid belt contains metallic
           asteroids with iron-nickel cores and platinum-group metal concentrations orders of magnitude
-          higher than Earth's richest surface deposits. The Moon has titanium in its mare basalts,
+          higher than Earth&apos;s richest surface deposits. The Moon has titanium in its mare basalts,
           helium-3 in regolith implanted by the solar wind, and water ice in permanently shadowed
           craters.
         </p>
         <p>
           The economics of asteroid mining depend entirely on whether extracted materials can be used
           in space rather than returned to Earth. Returning platinum to Earth from an asteroid
-          requires overcoming Earth's gravity well twice. Using iron-nickel from a metallic asteroid
-          to build space structures in orbit never has to lift that material out of Earth's gravity
+          requires overcoming Earth&apos;s gravity well twice. Using iron-nickel from a metallic asteroid
+          to build space structures in orbit never has to lift that material out of Earth&apos;s gravity
           well at all. The value proposition shifts entirely when the customer is the space economy
           rather than the terrestrial one.
         </p>
@@ -571,7 +571,7 @@ export default function MultiplanetaryPost() {
         <p>
           On planetary surfaces, additive manufacturing from local materials is the path to
           construction at scale. 3D printing concrete analogs from Martian regolith can produce
-          structural elements without importing building materials. ICON's Project Olympus work for
+          structural elements without importing building materials. ICON&apos;s Project Olympus work for
           NASA is developing the construction technology that a Mars settlement will require.
         </p>
         <p>
@@ -611,7 +611,7 @@ export default function MultiplanetaryPost() {
           The communication delay creates a second governance problem that physics imposes without
           appeal. One-way delay between Earth and Mars ranges from 3 to 22 minutes. A 20-minute
           round-trip lag makes centralized Earth governance of a Martian settlement operationally
-          unworkable. Emergency decisions cannot wait for Earth's input. Legal disputes cannot
+          unworkable. Emergency decisions cannot wait for Earth&apos;s input. Legal disputes cannot
           be adjudicated on Earth timescales. Martian settlements will of necessity develop
           independent governance structures capable of making binding decisions without reference
           to Earth. The legal literature describes this trajectory as polycentric governance:
@@ -680,7 +680,7 @@ export default function MultiplanetaryPost() {
         The sovereign phase, from 2075 to 2126, sees Martian and orbital populations reach tens
         of thousands, achieving total industrial closure. The transition to an interplanetary
         confederation begins, driven by communication physics as much as political will.
-        Governance structures capable of operating without Earth's input will have been
+        Governance structures capable of operating without Earth&apos;s input will have been
         developing for decades by this point, whether or not anyone planned for them.
       </p>
 

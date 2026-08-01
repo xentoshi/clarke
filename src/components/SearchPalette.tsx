@@ -81,7 +81,14 @@ export default function SearchPalette({ slots, onClose }: { slots: OrbitalSlot[]
   }, [close]);
 
   useEffect(() => { setTimeout(() => inputRef.current?.focus(), 50); }, []);
-  useEffect(() => { setSelected(0); }, [query]);
+
+  // Reset selection when the query changes. Adjusted during render rather
+  // than in an effect to avoid an extra commit on every keystroke.
+  const [prevQuery, setPrevQuery] = useState(query);
+  if (query !== prevQuery) {
+    setPrevQuery(query);
+    setSelected(0);
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") { e.preventDefault(); setSelected((s) => Math.min(s + 1, results.length - 1)); }
@@ -123,7 +130,7 @@ export default function SearchPalette({ slots, onClose }: { slots: OrbitalSlot[]
           </div>
         )}
 
-        {query && results.length === 0 && <div className="py-10 text-center text-zinc-600 text-sm">No results for "{query}"</div>}
+        {query && results.length === 0 && <div className="py-10 text-center text-zinc-600 text-sm">No results for &quot;{query}&quot;</div>}
         {!query && <div className="py-6 text-center text-zinc-700 text-xs">Search companies, orbital slots, stocks, and pages</div>}
       </div>
     </div>

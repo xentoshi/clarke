@@ -45,7 +45,7 @@ export default function OrbitalFaqPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
       <div className="mb-10 flex items-start justify-between gap-4">
         <div>
-          <p className="text-zinc-600 text-xs font-mono mb-3">// ORBITAL_REGISTRY · FAQ</p>
+          <p className="text-zinc-600 text-xs font-mono mb-3">{"// ORBITAL_REGISTRY · FAQ"}</p>
           <h1 className="text-2xl font-bold text-white mb-2">Frequently asked questions</h1>
           <p className="text-zinc-500 text-sm leading-relaxed">
             Data sources, congestion scores, and how position status is determined.

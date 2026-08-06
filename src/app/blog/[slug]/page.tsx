@@ -5,8 +5,6 @@ import { buildMeta } from "@/lib/metadata";
 import { TableOfContents } from "@/components/TableOfContents";
 import FccPart100Post, { toc as fccPart100Toc } from "@/data/posts/content/fcc-part-100-space-modernization-order";
 import IntelsatBankruptcyPost, { toc as intelsatBankruptcyToc } from "@/data/posts/content/intelsat-bankruptcy-orbital-real-estate";
-import MultiplanetaryPost, { toc as multiplanetaryToc } from "@/data/posts/content/becoming-multiplanetary";
-import DesigningForMarsPost, { toc as designingForMarsToc } from "@/data/posts/content/designing-for-mars";
 import OrbitalDataCentersPost, { toc as orbitalDataCentersToc } from "@/data/posts/content/orbital-data-centers-engineering";
 import EuropeDthAgingFleetPost, { toc as europeDthAgingFleetToc } from "@/data/posts/content/europe-dth-aging-fleet";
 import type { TocItem } from "@/components/TableOfContents";
@@ -16,8 +14,6 @@ type ContentEntry = { Component: React.FC; toc: TocItem[] };
 const contentMap: Record<string, ContentEntry> = {
   "fcc-part-100-space-modernization-order": { Component: FccPart100Post, toc: fccPart100Toc },
   "intelsat-bankruptcy-orbital-real-estate": { Component: IntelsatBankruptcyPost, toc: intelsatBankruptcyToc },
-  "becoming-multiplanetary": { Component: MultiplanetaryPost, toc: multiplanetaryToc },
-  "designing-for-mars": { Component: DesigningForMarsPost, toc: designingForMarsToc },
   "orbital-data-centers-engineering": { Component: OrbitalDataCentersPost, toc: orbitalDataCentersToc },
   "europe-dth-aging-fleet": { Component: EuropeDthAgingFleetPost, toc: europeDthAgingFleetToc },
 };

@@ -13,6 +13,7 @@ export const toc: TocItem[] = [
   { id: "environmental-impact", label: "Environmental impact" },
   { id: "three-waves", label: "Three waves" },
   { id: "conclusions", label: "Conclusions" },
+  { id: "sources", label: "Sources" },
 ];
 
 function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
@@ -51,7 +52,7 @@ export default function OrbitalDataCentersEngineeringPost() {
           <li>Hardware is already in orbit. Starcloud flew an H100 in November 2025. NVIDIA released a dedicated space chip in March 2026. Google and SpaceX are in active talks. China has been operating AI compute in orbit for over 1,000 days.</li>
           <li>At $500/kg launch cost, an orbital facility costs roughly three times a ground facility. At $100/kg — projected for the early 2030s with Starship — cost parity is reached.</li>
           <li>Modern AI chips are more vulnerable to radiation than older satellite hardware. Triple modular redundancy, physical shielding, and enhanced ECC are the primary mitigations.</li>
-          <li>Launch emissions currently exceed the ASCEND sustainability threshold by a factor of 10 to 25. Environmental viability depends on fuel improvements and reusability.</li>
+          <li>Launch emissions currently exceed the ASCEND sustainability threshold by roughly a factor of 10. Environmental viability depends on fuel improvements and reusability.</li>
           <li>Three waves: edge and defense compute 2026–2030, hyperscale AI training 2030–2040, cislunar integration 2040–2055.</li>
         </ul>
       </div>
@@ -92,15 +93,17 @@ export default function OrbitalDataCentersEngineeringPost() {
       <p>
         The computing infrastructure that powers the global digital economy is currently at a
         historic turning point. As AI models grow larger, the demand for computing resources is
-        growing exponentially, with global data center capacity expected to reach 100 gigawatts
-        by 2030 — roughly double the current installed base. The US Department of Energy projects
+        growing exponentially: global data center capacity is currently around 100 gigawatts and is
+        projected to roughly double to 200 gigawatts by 2030. The US Department of Energy projects
         that data centers will account for up to 12 percent of American electrical demand by 2028,
         driven almost entirely by AI training and inference workloads.
       </p>
       <p>
         The first barrier is a constrained power grid. Major data center hubs such as Ireland and
-        the Netherlands have introduced moratoria on the construction of new hyperscale facilities
-        due to the load on existing power grids. Waiting times to connect to the terrestrial power
+        the Netherlands introduced moratoria on the construction of new hyperscale facilities due
+        to the load on existing power grids; Dublin&apos;s moratorium was eased in December 2025, but the
+        underlying grid-capacity constraint that caused it has not gone away. Waiting times to connect
+        to the terrestrial power
         grid can range from three to seven years in developed countries, creating the risk that
         billions of dollars in AI investments stagnate as idle silicon. A single large AI training
         cluster can consume 100 to 500 megawatts continuously.
@@ -144,8 +147,9 @@ export default function OrbitalDataCentersEngineeringPost() {
         to 1.05. The latest research is developing photonic structures and special coatings
         with high emissivity in the mid-infrared spectrum to efficiently radiate heat toward
         the 3 Kelvin cosmic microwave background. Inorganic coatings using silica aerogels
-        and phosphate geopolymers have been demonstrated to maintain high emissivity without
-        degradation even in harsh radiation environments.
+        and phosphate geopolymers have demonstrated high, stable emissivity in terrestrial
+        passive radiative cooling applications; their durability under actual orbital radiation
+        exposure has not yet been demonstrated and remains an open engineering question.
       </p>
 
       <Table
@@ -181,8 +185,8 @@ export default function OrbitalDataCentersEngineeringPost() {
         To resolve this paradox, three strategies are being adopted. First, triple modular redundancy:
         three identical processors perform the same calculations and decide the outcome by majority
         vote. Second, physical shielding with lead, tungsten, or hydrogen-rich polymers — though
-        shielding adds approximately 1 kilogram of mass per kilowatt of computational power,
-        increasing launch costs. Third, enhanced error correction code applied across memory and
+        shielding mass scales with the amount of compute being protected, adding directly to
+        launch costs. Third, enhanced error correction code applied across memory and
         registers to detect and correct bit flips in real time.
       </p>
       <p>
@@ -201,7 +205,7 @@ export default function OrbitalDataCentersEngineeringPost() {
         Starcloud&apos;s first satellite, launched November 2025 aboard a SpaceX Falcon 9, carried an
         NVIDIA H100 GPU and demonstrated sustained AI inference in low Earth orbit — the most
         powerful computing hardware ever operated in space. Within weeks it had trained a small
-        language model entirely in orbit and run a version of Google Gemini on the satellite.
+        language model entirely in orbit and run Google&apos;s Gemma model on the satellite.
         By March 2026, Starcloud had raised $170 million at a $1.1 billion valuation. Starcloud-2,
         scheduled for October 2026, will carry multiple H100s alongside NVIDIA&apos;s Blackwell chip,
         an AWS server blade, and a bitcoin mining module — the first multi-tenant orbital compute
@@ -215,32 +219,37 @@ export default function OrbitalDataCentersEngineeringPost() {
         orbital compute — a platform play, not a single-use-case product.
       </p>
       <p>
-        Google and SpaceX are in active talks on Project Suncatcher, Google&apos;s orbital data center
-        initiative, with discussions involving SpaceX launching satellites carrying Google&apos;s TPU
-        hardware into orbit. Google&apos;s internal timeline targets first test satellites by 2027.
-        The longer vision involves gigawatt-scale orbital compute capacity. Meta has separately
-        reserved one gigawatt of orbital solar energy and 100 gigawatt-hours of long-duration
-        storage, with the intent to beam power to ground-based data centers — an orbital-energy-for-terrestrial-compute
-        model that sidesteps the harder engineering problems of cooling and data transmission
-        latency while accessing the solar capacity factor advantage of orbital operation.
+        Google&apos;s orbital data center initiative, Project Suncatcher, has Planet Labs signed as
+        the committed launch partner for its first test satellites, targeted for 2027. Google and
+        SpaceX have also discussed a role for SpaceX in the broader buildout, though no launch
+        agreement between them has been finalized. The longer vision involves gigawatt-scale orbital
+        compute capacity. Meta has separately signed two deals aimed at a related goal: a reservation
+        of one gigawatt of orbital solar capacity from Overview Energy, and 100 gigawatt-hours of
+        long-duration storage from Noon Energy, with the intent to beam power down to ground-based
+        data centers — an orbital-energy-for-terrestrial-compute model that sidesteps the harder
+        engineering problems of cooling and data transmission latency while accessing the solar
+        capacity factor advantage of orbital operation. The first orbital demonstration is targeted
+        for 2028, commercial deployment for 2030.
       </p>
       <p>
         Chinese enterprises have been operating AI compute in orbit for considerably longer, with
-        less public attention. Zhongke Tiansuan had already been operating a space computer aboard
-        a Jilin-1 satellite for over 1,000 days by early 2026. The company&apos;s Aurora 5000 system
-        uses a domestically developed GPU, reducing dependence on US chip supply chains for orbital
-        compute. The China National Space Administration deployed three test satellites in 2024
-        equipped with domestic AI accelerators, with plans for a 50-satellite AI constellation
-        operational by 2028. China&apos;s 15th Five-Year Plan explicitly includes gigawatt-scale
-        space-based digital infrastructure as a national priority, framed explicitly around
-        digital sovereignty.
+        less public attention. Zhongke Tiansuan&apos;s Aurora 1000 system has been operating a space
+        computer aboard a Jilin-1 satellite for over 1,000 days as of early 2026. Its successor,
+        Aurora 5000, built around a domestically developed GPU to reduce dependence on US chip supply
+        chains, was still in in-orbit trials as of late 2025. Several other Chinese programs are
+        building toward orbital compute at scale: CAS Space Technology has flown a small cluster of
+        AI test satellites, and Zhejiang Lab&apos;s Three-Body Computing Constellation put twelve
+        satellites in orbit in May 2025 with a stated target of 100 by 2027 (a related effort, Star
+        Compute, targets roughly 2,800). China Aerospace Science and Technology Corporation has
+        proposed gigawatt-scale space-based digital infrastructure as a priority for the 15th
+        Five-Year Plan (2026–2030), framed explicitly around digital sovereignty.
       </p>
 
       <h2 id="launch-economics">Launch economics</h2>
       <p>
         The biggest factor determining the feasibility of an orbital data center is the cost of
-        orbital insertion. The $50,000 per kilogram cost of the Space Shuttle era was a barrier to
-        all commercial activity. SpaceX&apos;s Falcon 9 brought that down to around $2,700 per kilogram.
+        orbital insertion. The roughly $54,000 per kilogram cost of the Space Shuttle era was a
+        barrier to all commercial activity. SpaceX&apos;s Falcon 9 brought that down to around $2,700 per kilogram.
         Once the fully reusable Starship is operational, launch costs are projected to fall to a
         range of $100 to $200 per kilogram. Starcloud estimates the equivalent energy cost of
         orbital solar at approximately $0.005 per kilowatt-hour, roughly 15 times lower than
@@ -275,10 +284,13 @@ export default function OrbitalDataCentersEngineeringPost() {
       </p>
       <p>
         One of the critical risks of orbital infrastructure is that physical repairs are not easily
-        possible. Ground-based data centers can replace faulty GPUs within hours. In orbit, ROI
-        depends on managing annual failure rates estimated at 5 to 9 percent. Full module replacement
-        through frequent launches, or the establishment of an in-orbit robotic maintenance ecosystem,
-        is key to ensuring long-term economics.
+        possible. Ground-based data centers can replace faulty GPUs within hours. There is no
+        direct measurement yet of orbital hardware failure rates at scale; the closest available
+        proxy is Meta&apos;s reported ~9% annualized H100 failure rate in ground clusters training
+        Llama 3, which orbital operators are using as a rough upper-bound planning figure despite
+        radiation and thermal cycling in orbit affecting hardware differently than ground conditions
+        do. Full module replacement through frequent launches, or the establishment of an in-orbit
+        robotic maintenance ecosystem, is key to ensuring long-term economics.
       </p>
 
       <h2 id="communication-and-latency">Communication and latency</h2>
@@ -297,8 +309,8 @@ export default function OrbitalDataCentersEngineeringPost() {
       </p>
       <p>
         Round-trip latency to ground users from low Earth orbit is approximately 5 to 20
-        milliseconds, which is acceptable for about 75 percent of real-time inference workloads.
-        AI training is relatively tolerant of ground delays on the order of milliseconds and is
+        milliseconds, acceptable for most real-time inference workloads though not the tightest
+        ones. AI training is relatively tolerant of ground delays on the order of milliseconds and is
         expected to be the first major application for orbital data centers. For backhaul,
         existing constellations such as Starlink are being used to distribute orbital compute
         results to ground stations around the world.
@@ -320,9 +332,10 @@ export default function OrbitalDataCentersEngineeringPost() {
         maintenance ecosystem.
       </p>
       <p>
-        DARPA&apos;s robotic servicing vehicles are scheduled to operate in geostationary orbit after
-        2025. Application of these technologies to low Earth orbit data center clusters will enable
-        significant extensions of operational lifetimes — from 10 years to over 15 years.
+        DARPA&apos;s Mission Robotic Vehicle, developed under the RSGS program with Northrop Grumman&apos;s
+        SpaceLogistics, launched to geostationary orbit on July 21, 2026. Application of these
+        technologies to low Earth orbit data center clusters will enable significant extensions of
+        operational lifetimes — from 10 years to over 15 years.
       </p>
 
       <h2 id="geopolitical-sovereignty">Geopolitical sovereignty</h2>
@@ -334,8 +347,10 @@ export default function OrbitalDataCentersEngineeringPost() {
         based on the 1967 Outer Space Treaty.
       </p>
       <p>
-        Under the proposed digital flag state framework, a satellite is considered to be under
-        the sovereignty of its country of registration. The interior of the satellite enclosure,
+        Legal commentators, notably Aetherflux chief legal officer Joseph Yaffe, have proposed a
+        &quot;digital flag state&quot; framework: a satellite would be considered under the sovereignty
+        of its country of registration. This is live legal commentary responding to a real gap, not
+        adopted law or treaty text. Under the proposal, the interior of the satellite enclosure,
         regardless of its orbital position, is treated as the territory of the registering country
         and is immune from physical or legal intervention by other states. The point at which data
         is transmitted and received through ground stations acts as a border, while any processing
@@ -373,10 +388,10 @@ export default function OrbitalDataCentersEngineeringPost() {
         Methane is considered a relatively clean fuel, but soot (black carbon), water vapor, and
         alumina particles released in the stratosphere and mesosphere can have a warming effect
         estimated at 500 times more powerful than the same emissions released at ground level.
-        The ASCEND study found that for orbital computing to be as environmentally responsible
-        as a ground-based data center powered by renewable energy, rocket emissions would need
-        to be kept below 1.9 kilograms of CO₂ equivalent per kilogram of payload. Current rockets
-        exceed this threshold by a factor of 10 to 25.
+        The Thales Alenia Space-led ASCEND study found that for orbital computing to be as
+        environmentally responsible as a ground-based data center powered by renewable energy,
+        rocket emissions would need to be kept below roughly 370 kilograms of CO₂ equivalent per
+        kilogram of payload. Current rockets exceed this threshold by roughly a factor of 10.
       </p>
       <p>
         When satellites burn up in the atmosphere at the end of their lifespan, they release metal
@@ -453,6 +468,31 @@ export default function OrbitalDataCentersEngineeringPost() {
         expand beyond the limits of Earth&apos;s biosphere. Whoever controls this frontier will have
         sovereignty over the next generation of computing resources and intelligence.
       </p>
+
+      <h2 id="sources">Sources</h2>
+      <ol className="text-zinc-600 text-xs space-y-1 font-mono">
+        <li>CNBC, &quot;Nvidia-Backed Starcloud Trains First AI Model in Space, Orbital Data Centers&quot; (December 10, 2025)</li>
+        <li>TechCrunch, &quot;Starcloud Raises $170 Million Series A to Build Data Centers in Space&quot; (March 30, 2026)</li>
+        <li>SpaceNews, &quot;Starcloud Achieves Unicorn Status With $170 Million Raise for Orbital Data Centers&quot; (March 2026)</li>
+        <li>Axiom Space, &quot;Axiom Space to Launch Orbital Data Center Nodes to Support National Security, Commercial, International Customers&quot; (press release, axiomspace.com)</li>
+        <li>NVIDIA Newsroom, &quot;NVIDIA Launches Space Computing, Rocketing AI Into Orbit&quot; (March 16, 2026)</li>
+        <li>Google Research, &quot;Exploring a Space-Based, Scalable AI Infrastructure System Design&quot; (research.google, November 2025)</li>
+        <li>Google Research / arXiv:2511.19468, &quot;Towards a Future Space-Based, Highly Scalable AI Infrastructure System Design&quot; (November 2025)</li>
+        <li>SpaceNews, &quot;Overview Energy to Provide Space-Based Solar Power for Meta Data Centers&quot; (2026)</li>
+        <li>China Daily / State Council Information Office, &quot;Chinese Tech Firms Race to Build AI Computing Capabilities in Space&quot; (December 5, 2025)</li>
+        <li>SpaceNews, &quot;China Eyes Space Resources, Space Tourism and On-Orbit Digital Infrastructure&quot; (2026)</li>
+        <li>SpaceX, FCC application for Orbital Data Center constellation (filed January 30, 2026; accepted February 4, 2026)</li>
+        <li>SpaceNews, &quot;Blue Origin Joins the Orbital Data Center Race&quot; (March 2026)</li>
+        <li>SpaceNews, &quot;Orbital Files Plans for 100,000 Orbital Data Centers&quot; (June 2026)</li>
+        <li>Orbital Radar, &quot;Rocket Launch Cost Trends: $54,000 to $3,000 per Kilogram&quot; (2026)</li>
+        <li>Starcloud, &quot;Why We Should Train AI in Space&quot; (white paper, starcloudinc.github.io/wp.pdf)</li>
+        <li>DARPA, &quot;Robotic Servicing of Geosynchronous Satellites Lifts Off&quot; (July 21, 2026)</li>
+        <li>Thales Alenia Space, &quot;Thales Alenia Space Reveals Results of ASCEND Feasibility Study on Space Data Centers&quot; (June 27, 2024)</li>
+        <li>ESA, &quot;The Cost of Space Debris&quot; (esa.int)</li>
+        <li>GlobeNewswire (SEALSQ), &quot;SEALSQ Positioned for Leadership in Orbital Quantum Security and Space-Based Data Centers With Post-Quantum Semiconductor Technology&quot; (May 13, 2026)</li>
+        <li>Bloomberg Law, &quot;&apos;Digital Flag State&apos; Rule Would Give Space Law a Regulatory Boost&quot; (February 2026)</li>
+        <li>NASA, &quot;Demonstration Proves Nuclear Fission System Can Provide Space Exploration Power&quot; (May 2, 2018)</li>
+      </ol>
     </>
   );
 }

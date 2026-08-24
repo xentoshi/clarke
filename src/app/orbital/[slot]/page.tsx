@@ -9,7 +9,6 @@ import {
   getFccAuthorizationsByLongitude,
 } from "@/lib/satellites";
 import { slugToLon, lonToSlug } from "@/lib/slot-utils";
-import { operatorToSlug } from "@/lib/operator-map";
 import { slots as curatedSlots, statusColors, statusLabels, bandColors, type OrbitalSlot } from "@/data/orbital-slots";
 import { valuateSlot } from "@/lib/valuation";
 import type { GeoSatellite } from "@/lib/satellites";
@@ -221,7 +220,7 @@ export default async function SlotPage({ params }: { params: Promise<Params> }) 
           </table>
         </div>
         <p className="text-zinc-700 text-[11px] font-mono mt-2 leading-relaxed">
-          Heuristic estimate from public data, not a market quote. A baseline is multiplied by arc desirability, occupancy, operator tier, spectrum, and arc scarcity. See the methodology in <Link href="/docs" className="text-zinc-500 hover:text-zinc-400 underline">docs</Link>.
+          Heuristic estimate from public data, not a market quote. A baseline is multiplied by arc desirability, occupancy, operator tier, spectrum, and arc scarcity. See the methodology in <Link href="/about#registry-methodology" className="text-zinc-500 hover:text-zinc-400 underline">docs</Link>.
         </p>
       </div>
 
@@ -278,16 +277,7 @@ export default async function SlotPage({ params }: { params: Promise<Params> }) 
                       )}
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
-                      {(() => {
-                        const companySlug = operatorToSlug(sat.operator);
-                        return companySlug ? (
-                          <Link href={`/companies/${companySlug}`} className="text-blue-400 hover:text-blue-300 text-xs transition-colors">
-                            {sat.operator}
-                          </Link>
-                        ) : (
-                          <span className="text-zinc-400 text-xs">{sat.operator ?? "—"}</span>
-                        );
-                      })()}
+                      <span className="text-zinc-400 text-xs">{sat.operator ?? "—"}</span>
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <span className="text-zinc-500 text-xs">{sat.detailedPurpose ?? sat.purpose ?? "—"}</span>

@@ -81,7 +81,7 @@ export default function ChangesPage() {
             New FCC authorizations, lapsed filings, licensee and grant-status changes, and satellite
             relocations or decays, detected each time the registry is re-ingested. Detected from real
             differences between ingest runs, not a live feed — see{" "}
-            <Link href="/data" className="text-zinc-400 hover:text-zinc-300 underline">
+            <Link href="/about#data-sources" className="text-zinc-400 hover:text-zinc-300 underline">
               data freshness
             </Link>{" "}
             for how recently each source was last checked.

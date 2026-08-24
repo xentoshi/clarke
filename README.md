@@ -83,7 +83,6 @@ npm run dev
 | Variable | Required | Description |
 |---|---|---|
 | `NEXT_PUBLIC_URL` | Yes (prod) | Canonical URL |
-| `NOTIFY_WEBHOOK_URL` | No | Webhook for form submissions |
 | `SPACETRACK_USERNAME` | No | Space-Track login (for `npm run ingest:spacetrack`) |
 | `SPACETRACK_PASSWORD` | No | Space-Track password (for `npm run ingest:spacetrack`) |
 | `PV_SECRET` | No | Secret to read the internal page-view counter at `/api/pv` |

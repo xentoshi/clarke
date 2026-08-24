@@ -21,7 +21,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "Clarke · Orbital Infrastructure",
-  description: "Clarke is a live registry of GEO orbital positions — congestion, operators, and FCC filing status — the reference-data layer for a market that runs on PDFs and phone calls.",
+  description: "Clarke is a live registry of GEO orbital positions: congestion, operators, and FCC filing status, the reference-data layer for a market that runs on PDFs and phone calls.",
   icons: {
     icon: "/logo.svg",
     shortcut: "/logo.svg",

@@ -13,6 +13,13 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "www.esa.int" },
     ],
   },
+  async redirects() {
+    return [
+      { source: "/", destination: "/orbital", permanent: true },
+      { source: "/docs", destination: "/about", permanent: true },
+      { source: "/data", destination: "/about", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

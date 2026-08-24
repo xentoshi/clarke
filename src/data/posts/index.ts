@@ -19,15 +19,6 @@ export const posts: Post[] = [
     tag: "Regulatory",
   },
   {
-    slug: "europe-dth-aging-fleet",
-    title: "Europe's TV Anchors Are Flying on an Aging Fleet",
-    subtitle: "Every SES satellite at 19.2°E is past its design life. At 28.2°E, the UK workhorses cross the line by 2029. A position-level read of the public record.",
-    date: "2026-06-04",
-    readingMinutes: 7,
-    excerpt: "Two orbital positions carry most of Europe's satellite television: 19.2°E for the continent, 28.2°E for the UK. Both are flying on an aging fleet. Every operational SES satellite at 19.2°E is past its fifteen-year design life, and the UK workhorse trio crosses that line between 2027 and 2029. This is a quantified, public signal about a refleet decision approaching at two of the most valuable positions in geostationary orbit, and it does not appear in any company-level report.",
-    tag: "Market Intelligence",
-  },
-  {
     slug: "orbital-data-centers-engineering",
     title: "Orbital Data Centers: The Engineering Case",
     subtitle: "Hardware is already in orbit. NVIDIA released a dedicated space chip in March 2026. The question now is economics.",

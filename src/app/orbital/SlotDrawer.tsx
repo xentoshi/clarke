@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { ExplorerRow } from "./types";
 import { statusLabels } from "@/data/orbital-slots";
-import EmailCapture from "@/components/EmailCapture";
 
 interface DossierSat { id: number; name: string; operator: string | null; launchDate: string | null }
 interface DossierFcc { id: number; satelliteName: string | null; licensee: string | null; service: string | null; callSign: string | null }
@@ -149,12 +148,7 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
             <div className="text-zinc-500 text-[10px] uppercase tracking-wider font-medium mt-5 mb-2">Status</div>
             <div className="text-zinc-300 text-xs">{statusLabels[row.status]}</div>
 
-            {/* CTA */}
-            <div className="mt-6 pt-5 border-t border-zinc-800">
-              <EmailCapture label="Get notified of registry updates →" />
-            </div>
-
-            <div className="mt-4 text-center">
+            <div className="mt-6 pt-5 border-t border-zinc-800 text-center">
               <Link href={`/orbital/${row.slug}`} className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors">Open full page →</Link>
             </div>
           </div>

@@ -53,7 +53,6 @@ export default function OrbitalExplorer({ rows, updated }: { rows: ExplorerRow[]
         case "operator": return a.operator.localeCompare(b.operator) * dir;
         case "satCount": return (a.satCount - b.satCount) * dir;
         case "congestionScore": return (a.congestionScore - b.congestionScore) * dir;
-        case "value": return (a.valuation.point - b.valuation.point) * dir;
         default: return (a.longitude - b.longitude) * dir;
       }
     });

@@ -3,33 +3,22 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import type { OrbitalSlot } from "@/data/orbital-slots";
 
 const SearchPalette = dynamic(() => import("./SearchPalette"), { ssr: false });
 
-const primaryLinks = [
-  { href: "/", label: "Home" },
-  { href: "/markets", label: "Markets" },
+const navLinks = [
   { href: "/orbital", label: "Orbital Slots" },
-  { href: "/companies", label: "Companies" },
-];
-
-const moreLinks = [
   { href: "/blog", label: "Blog" },
-  { href: "/data", label: "Data" },
   { href: "/about", label: "About" },
 ];
-
-const allLinks = [...primaryLinks, ...moreLinks];
 
 export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement>(null);
 
   // Close menus on route change. Adjusted during render (not an effect) so the
   // close happens in the same commit as the navigation, not a render later.
@@ -37,33 +26,22 @@ export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
   if (pathname !== prevPathname) {
     setPrevPathname(pathname);
     setMobileOpen(false);
-    setMoreOpen(false);
   }
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); setSearchOpen((o) => !o); }
-      if (e.key === "Escape") { setSearchOpen(false); setMoreOpen(false); }
+      if (e.key === "Escape") { setSearchOpen(false); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const isMoreActive = moreLinks.some((l) => l.href === pathname);
-
   return (
     <>
       <header className="border-b border-white/[0.05] bg-[#060608]/95 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+          <Link href="/orbital" className="flex items-center gap-2.5 shrink-0">
             <Image src="/logo.svg" alt="Clarke" width={32} height={32} />
             <div className="flex flex-col">
               <span className="text-white font-bold text-base tracking-[0.15em] leading-none">CLARKE</span>
@@ -72,31 +50,12 @@ export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
           </Link>
 
           <nav className="hidden lg:flex items-center gap-0.5">
-            {primaryLinks.map((link) => (
+            {navLinks.map((link) => (
               <Link key={link.href} href={link.href}
                 className={`px-3 py-1.5 text-sm rounded-sm transition-colors ${pathname === link.href ? "text-white bg-white/8" : "text-white/40 hover:text-white hover:bg-white/5"}`}>
                 {link.label}
               </Link>
             ))}
-            <div ref={moreRef} className="relative">
-              <button onClick={() => setMoreOpen((o) => !o)}
-                className={`px-3 py-1.5 text-sm rounded-sm transition-colors flex items-center gap-1 ${isMoreActive || moreOpen ? "text-white bg-white/8" : "text-white/40 hover:text-white hover:bg-white/5"}`}>
-                More
-                <svg className={`w-3 h-3 transition-transform ${moreOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {moreOpen && (
-                <div className="absolute top-full right-0 mt-1 w-44 bg-[#0a0a0e] border border-white/10 rounded-sm shadow-2xl py-1 z-50">
-                  {moreLinks.map((link) => (
-                    <Link key={link.href} href={link.href}
-                      className={`block px-3 py-2 text-sm transition-colors ${pathname === link.href ? "text-white bg-white/8" : "text-white/40 hover:text-white hover:bg-white/5"}`}>
-                      {link.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
           </nav>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -119,8 +78,8 @@ export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
 
         {mobileOpen && (
           <div className="lg:hidden border-t border-white/[0.05] bg-[#060608] px-4 py-3">
-            <nav className="grid grid-cols-2 gap-1">
-              {allLinks.map((link) => (
+            <nav className="grid grid-cols-1 gap-1">
+              {navLinks.map((link) => (
                 <Link key={link.href} href={link.href}
                   className={`px-3 py-2 text-sm rounded-sm transition-colors ${pathname === link.href ? "text-white bg-white/8" : "text-white/40 hover:text-white hover:bg-white/5"}`}>
                   {link.label}

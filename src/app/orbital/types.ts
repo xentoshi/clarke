@@ -29,7 +29,7 @@ export interface ExplorerRow {
   valueDisplay: string; // curated estimate if present, else modeled range
 }
 
-export type SortKey = "longitude" | "operator" | "satCount" | "congestionScore" | "value";
+export type SortKey = "longitude" | "operator" | "satCount" | "congestionScore";
 export type SortDir = "asc" | "desc";
 
 export interface Facets {

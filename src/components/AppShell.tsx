@@ -38,8 +38,6 @@ export default function AppShell({ children, slots }: { children: React.ReactNod
                   <div className="flex flex-col gap-1">
                     {[
                       { label: "Orbital Slots", href: "/orbital" },
-                      { label: "Companies", href: "/companies" },
-                      { label: "Space Markets", href: "/stocks" },
                       { label: "Blog", href: "/blog" },
                     ].map((l) => (
                       <Link key={l.href} href={l.href} className="text-white/30 text-xs hover:text-white/80 transition-colors py-0.5">{l.label}</Link>
@@ -51,12 +49,23 @@ export default function AppShell({ children, slots }: { children: React.ReactNod
                   <div className="flex flex-col gap-1">
                     {[
                       { label: "About", href: "/about" },
-                      { label: "Docs", href: "/docs" },
-                      { label: "Data Sources", href: "/data" },
                       { label: "Registry FAQ", href: "/orbital/faq" },
                     ].map((l) => (
                       <Link key={l.href} href={l.href} className="text-white/30 text-xs hover:text-white/80 transition-colors py-0.5">{l.label}</Link>
                     ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-white/30 text-xs uppercase tracking-widest mb-4 font-medium">Connect</div>
+                  <div className="flex flex-col gap-1">
+                    <a
+                      href="https://x.com/ClarkeBeltFi"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-white/30 text-xs hover:text-white/80 transition-colors py-0.5"
+                    >
+                      X / Twitter
+                    </a>
                   </div>
                 </div>
               </div>

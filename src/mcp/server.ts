@@ -4,14 +4,9 @@ import {
   listSlots,
   getSlotDossier,
   listSatellites,
-  listCompanies,
-  getCompanyProfile,
-  listCompanySectors,
-  listStocks,
 } from "../lib/agents/operations";
 
 const SAFE_SLUG = /^[a-z0-9-]+$/;
-const SAFE_TICKER = /^[A-Z0-9.-]{1,10}$/;
 const SAFE_STRING = /^[A-Za-z0-9 .\-_&]{1,80}$/;
 
 function textResult(payload: unknown) {
@@ -66,41 +61,6 @@ export function createServer(): McpServer {
     },
     async ({ operator, ownerCountry, limit }) =>
       textResult(listSatellites({ operator, ownerCountry, limit })),
-  );
-
-  server.tool(
-    "clarke_list_companies",
-    "List space companies in the Clarke registry, optionally filtered by sector (e.g. 'Launch', 'GEO Operators', 'Lunar', 'Earth Observation'). Use clarke_company_sectors to discover the full list of sectors.",
-    { sector: z.string().regex(SAFE_STRING).optional() },
-    async ({ sector }) => textResult(listCompanies({ sector })),
-  );
-
-  server.tool(
-    "clarke_get_company",
-    "Get a company profile by slug (e.g. 'ses', 'spacex', 'intuitive-machines'). Returns the company record along with cross-references: its publicly traded stock (if any), the orbital slots it operates, and the satellites it owns. Matching uses word-boundary name comparison against operator fields.",
-    { slug: z.string().regex(SAFE_SLUG) },
-    async ({ slug }) => {
-      const profile = getCompanyProfile(slug);
-      if (!profile) return errorResult(`No company at slug '${slug}'`);
-      return textResult(profile);
-    },
-  );
-
-  server.tool(
-    "clarke_company_sectors",
-    "List the distinct sectors used in the Clarke company registry, with the count of companies in each. Use this before clarke_list_companies to discover valid sector filters.",
-    {},
-    async () => textResult(listCompanySectors()),
-  );
-
-  server.tool(
-    "clarke_list_stocks",
-    "List publicly traded space companies tracked by Clarke. Optionally filter by vertical (e.g. 'GEO Operators', 'Launch') or fetch a specific ticker. Returns the static catalog only; live stock prices are not exposed through the agents API.",
-    {
-      vertical: z.string().regex(SAFE_STRING).optional(),
-      ticker: z.string().regex(SAFE_TICKER).optional(),
-    },
-    async ({ vertical, ticker }) => textResult(listStocks({ vertical, ticker })),
   );
 
   return server;

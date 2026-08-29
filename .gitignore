@@ -54,6 +54,7 @@ docs/agent-native-strategy.md
 docs/pitch.md
 docs/foundations.md
 docs/foundations/
+docs/outreach/
 
 # Solana wallet keypairs — never commit
 *.keypair.json

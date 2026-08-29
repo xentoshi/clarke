@@ -117,7 +117,9 @@ async function main() {
   let total = 0;
   let geoCount = 0;
   let skipped = 0;
+  let duplicateNorad = 0;
   const rows: object[] = [];
+  const seenNorad = new Set<string>();
 
   // Skip header line (index 0)
   for (let i = 1; i < lines.length; i++) {
@@ -130,6 +132,13 @@ async function main() {
     const name = clean(cols[0]);
     const orbitClass = clean(cols[8]);
     if (!name || !orbitClass) { skipped++; continue; }
+
+    // The source occasionally lists the same NORAD ID twice (an exact
+    // duplicate row, or two differently-named objects sharing an ID) — keep
+    // the first occurrence and drop the rest rather than double-counting.
+    const norad_id = clean(cols[26]);
+    if (norad_id && seenNorad.has(norad_id)) { duplicateNorad++; continue; }
+    if (norad_id) seenNorad.add(norad_id);
 
     // Ingest all regimes (GEO/LEO/MEO/Elliptical). GEO longitude only applies
     // to GEO rows; leave it null otherwise.
@@ -163,7 +172,7 @@ async function main() {
       launch_site: clean(cols[23]),
       launch_vehicle: clean(cols[24]),
       cospar_id: clean(cols[25]),
-      norad_id: clean(cols[26]),
+      norad_id,
       comments: clean(cols[27]),
     });
 
@@ -176,7 +185,7 @@ async function main() {
   db.exec("VACUUM");
   db.close();
 
-  console.log(`Inserted ${total} satellites (${geoCount} GEO, ${skipped} skipped)`);
+  console.log(`Inserted ${total} satellites (${geoCount} GEO, ${skipped} skipped, ${duplicateNorad} duplicate NORAD IDs dropped)`);
   console.log(`Database written to ${DB_PATH}`);
 }
 

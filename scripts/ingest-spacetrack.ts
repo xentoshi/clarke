@@ -4,7 +4,7 @@ import fs from "fs";
 import { login, query, PATHS } from "./lib/spacetrack";
 import { recordIngest } from "./lib/ingest-meta";
 import { ensureEventTables, recordSlotEvent } from "./lib/events";
-import { subSatelliteLongitudeDeg, circularDiffDeg } from "./lib/orbit";
+import { subSatelliteLongitudeDeg, circularDiffDeg, normalizeLonDeg } from "./lib/orbit";
 
 const DB_PATH = path.join(process.cwd(), "data", "clarke.db");
 
@@ -196,8 +196,8 @@ async function main() {
 
   // Snapshot prior TLEs before the upsert overwrites them, so a relocation
   // can be measured old-vs-new rather than only ever seeing the latest fit.
-  const prevTleByNorad = new Map<string, { tle1: string; tle2: string; name: string | null }>(
-    (db.prepare("SELECT norad_id, tle1, tle2, name FROM spacetrack_tles").all() as { norad_id: string; tle1: string; tle2: string; name: string | null }[])
+  const prevTleByNorad = new Map<string, { tle1: string; tle2: string }>(
+    (db.prepare("SELECT norad_id, tle1, tle2 FROM spacetrack_tles").all() as { norad_id: string; tle1: string; tle2: string }[])
       .map((r) => [r.norad_id, r]),
   );
 
@@ -213,34 +213,41 @@ async function main() {
     for (const b of blocks) upsertTle.run(b);
   });
 
+  // PATHS.tles requests format/tle — Space-Track's bare two-line format,
+  // which never includes a name line. Chunking blindly in fixed groups of 3
+  // (as if every record were name + line1 + line2) desyncs against every
+  // single two-line record: each one's own line1 gets rejected as a "name"
+  // candidate, its line2 gets misattributed as the NEXT record's name, and
+  // roughly half of all objects were silently dropped entirely. Scan line by
+  // line instead, and only ever emit a block from a genuine line1/line2 pair
+  // (matching catalog numbers on both) — this also leaves room for a real
+  // name line if the query format ever changes upstream.
+  const looksLikeTleLine = (s: string) => /^[12] \d/.test(s);
+
   const tleBlocks: { norad_id: string; name: string | null; tle1: string; tle2: string; epoch: string | null }[] = [];
+  let pendingName: string | null = null;
   let i = 0;
   while (i < tleLines.length) {
-    // Skip blank lines
-    if (!tleLines[i] || tleLines[i].trim() === "") { i++; continue; }
+    const line = tleLines[i];
+    if (!line || line.trim() === "") { i++; continue; }
 
-    const nameLine = tleLines[i];
-    const line1 = tleLines[i + 1];
-    const line2 = tleLines[i + 2];
-
-    if (!line1 || !line2 || !line1.startsWith("1 ") || !line2.startsWith("2 ")) {
-      i++;
-      continue;
+    const next = tleLines[i + 1];
+    if (line.startsWith("1 ") && next && next.startsWith("2 ")) {
+      const norad_id = line.slice(2, 7).trim();
+      if (next.slice(2, 7).trim() === norad_id) {
+        const epochRaw = line.slice(18, 32).trim();
+        tleBlocks.push({ norad_id, name: pendingName, tle1: line, tle2: next, epoch: parseEpoch(epochRaw) });
+        pendingName = null;
+        i += 2;
+        continue;
+      }
     }
 
-    const norad_id = line1.slice(2, 7).trim();
-    const epochRaw = line1.slice(18, 32).trim();
-    const epoch = parseEpoch(epochRaw);
-
-    tleBlocks.push({
-      norad_id,
-      name: nameLine.trim() || null,
-      tle1: line1,
-      tle2: line2,
-      epoch,
-    });
-
-    i += 3;
+    // Not a valid line1/line2 pair starting here. A line that itself looks
+    // like orphaned TLE data can't be a real satellite name — clear any
+    // pending name so it doesn't get attached to an unrelated object.
+    pendingName = looksLikeTleLine(line) ? null : (line.trim() || null);
+    i++;
   }
 
   console.log(`Parsed ${tleBlocks.length} TLE blocks.`);
@@ -256,19 +263,63 @@ async function main() {
     if (oldLon === null || newLon === null) continue;
     const delta = circularDiffDeg(oldLon, newLon);
     if (Math.abs(delta) >= RELOCATION_THRESHOLD_DEG) {
-      const name = b.name ?? prev.name ?? b.norad_id;
+      // Space-Track's TLE feed (format/tle) never carries a name line, so
+      // b.name is always null in practice — fall back to a plain NORAD ID
+      // label rather than printing it redundantly twice ("X (NORAD X)").
+      const label = b.name ? `${b.name} (NORAD ${b.norad_id})` : `NORAD ${b.norad_id}`;
       recordSlotEvent(db, {
         source: "spacetrack",
         eventType: "satellite_relocated",
         noradId: b.norad_id,
         longitudeGeo: newLon,
-        summary: `${name} (NORAD ${b.norad_id}) moved from ${formatLonShort(oldLon)} to ${formatLonShort(newLon)}.`,
+        summary: `${label} moved from ${formatLonShort(oldLon)} to ${formatLonShort(newLon)}.`,
         detail: { noradId: b.norad_id, oldLongitudeDeg: oldLon, newLongitudeDeg: newLon, deltaDeg: delta },
       });
       relocationEvents++;
     }
   }
   if (relocationEvents > 0) console.log(`Recorded ${relocationEvents} relocation event(s).`);
+
+  // --- Fix up UCS longitude data using Space-Track as a cross-reference ---
+  //
+  // UCS occasionally reports a GEO longitude in the 0..360 convention (e.g.
+  // 359 instead of -1) rather than Clarke's -180..180, which sorts and
+  // groups it wrong against everything else. More commonly, UCS records
+  // longitude_geo as the literal value 0 for GEO satellites whose real
+  // position isn't publicly disclosed (mostly classified military assets)
+  // rather than leaving it blank, which piles unrelated satellites onto a
+  // single position and makes it look artificially congested. Fix both,
+  // using this ingest's own TLE data as ground truth where available.
+  console.log("Cross-checking UCS longitude data...");
+
+  const updateLon = db.prepare("UPDATE satellites SET longitude_geo = ? WHERE id = ?");
+
+  const outOfRange = db.prepare(
+    "SELECT id, longitude_geo FROM satellites WHERE orbit_class = 'GEO' AND longitude_geo IS NOT NULL AND (longitude_geo > 180 OR longitude_geo <= -180)",
+  ).all() as { id: number; longitude_geo: number }[];
+  for (const row of outOfRange) updateLon.run(normalizeLonDeg(row.longitude_geo), row.id);
+  if (outOfRange.length > 0) console.log(`Normalized ${outOfRange.length} out-of-range longitude value(s).`);
+
+  const zeroLon = db.prepare(
+    "SELECT id, norad_id FROM satellites WHERE orbit_class = 'GEO' AND longitude_geo = 0",
+  ).all() as { id: number; norad_id: string | null }[];
+  const tleForNorad = db.prepare("SELECT tle1, tle2 FROM spacetrack_tles WHERE norad_id = ?");
+
+  let zeroCorrected = 0;
+  let zeroNulled = 0;
+  for (const row of zeroLon) {
+    const tle = row.norad_id ? (tleForNorad.get(row.norad_id) as { tle1: string; tle2: string } | undefined) : undefined;
+    const realLon = tle ? subSatelliteLongitudeDeg(tle.tle1, tle.tle2) : null;
+    if (realLon !== null) {
+      updateLon.run(realLon, row.id);
+      zeroCorrected++;
+    } else {
+      updateLon.run(null, row.id);
+      zeroNulled++;
+    }
+  }
+  if (zeroCorrected > 0) console.log(`Corrected ${zeroCorrected} satellite(s) misfiled at 0° using TLE data.`);
+  if (zeroNulled > 0) console.log(`Marked ${zeroNulled} satellite(s) with unknown GEO position (no public tracking data) as unknown instead of 0°.`);
 
   recordIngest(db, "Space-Track satcat", satcatData.length, "Space-Track satellite catalog");
   recordIngest(db, "Space-Track TLE", tleBlocks.length, "Space-Track two-line element sets");

@@ -18,6 +18,17 @@ export function subSatelliteLongitudeDeg(tle1: string, tle2: string): number | n
   }
 }
 
+// Normalize a longitude into (-180, 180], the convention used everywhere in
+// Clarke. UCS occasionally reports a GEO longitude in the 0..360 convention
+// instead (e.g. 359 rather than -1), which sorts and groups wrong against
+// data that's otherwise all in -180..180.
+export function normalizeLonDeg(lon: number): number {
+  let l = lon;
+  while (l > 180) l -= 360;
+  while (l <= -180) l += 360;
+  return l;
+}
+
 // Shortest signed angular distance from a to b, degrees, in (-180, 180].
 // Plain subtraction breaks at the antimeridian (e.g. 179 -> -179 is a 2°
 // move, not a 358° one).

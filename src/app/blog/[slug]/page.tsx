@@ -6,6 +6,8 @@ import { TableOfContents } from "@/components/TableOfContents";
 import FccPart100Post, { toc as fccPart100Toc } from "@/data/posts/content/fcc-part-100-space-modernization-order";
 import IntelsatBankruptcyPost, { toc as intelsatBankruptcyToc } from "@/data/posts/content/intelsat-bankruptcy-orbital-real-estate";
 import OrbitalDataCentersPost, { toc as orbitalDataCentersToc } from "@/data/posts/content/orbital-data-centers-engineering";
+import DesigningForMarsPost, { toc as designingForMarsToc } from "@/data/posts/content/designing-for-mars";
+import MultiplanetaryPost, { toc as multiplanetaryToc } from "@/data/posts/content/becoming-multiplanetary";
 import type { TocItem } from "@/components/TableOfContents";
 
 type ContentEntry = { Component: React.FC; toc: TocItem[] };
@@ -14,6 +16,8 @@ const contentMap: Record<string, ContentEntry> = {
   "fcc-part-100-space-modernization-order": { Component: FccPart100Post, toc: fccPart100Toc },
   "intelsat-bankruptcy-orbital-real-estate": { Component: IntelsatBankruptcyPost, toc: intelsatBankruptcyToc },
   "orbital-data-centers-engineering": { Component: OrbitalDataCentersPost, toc: orbitalDataCentersToc },
+  "designing-for-mars": { Component: DesigningForMarsPost, toc: designingForMarsToc },
+  "becoming-multiplanetary": { Component: MultiplanetaryPost, toc: multiplanetaryToc },
 };
 
 type Params = { slug: string };

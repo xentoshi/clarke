@@ -12,11 +12,11 @@ export const metadata = buildMeta({
 
 const sections = [
   { id: "why-now",              label: "Why Now?" },
+  { id: "agents",               label: "Agents API" },
   { id: "orbital-slots",        label: "Orbital Slots" },
   { id: "data-sources",         label: "Data Sources" },
   { id: "data-quality",         label: "Data Quality" },
   { id: "registry-methodology", label: "Registry Methodology" },
-  { id: "agents",               label: "Agents API" },
 ];
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
@@ -128,24 +128,37 @@ export default function AboutPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
 
       {/* What Clarke is */}
-      <div className="max-w-3xl mb-16">
+      <div className="max-w-3xl mb-10">
         <p className="text-zinc-300 text-lg leading-relaxed mb-5">
-          Clarke is the intelligence and registry layer for the orbital economy, built from public data
-          that has never been aggregated into a single accessible system. The platform maps orbital
-          occupancy, spectrum coordination, infrastructure ownership, and congestion risk across the
-          geostationary belt, drawing on ITU coordination records, FCC licensing data, and operator
-          disclosures that are individually public but have never been normalized together.
+          Clarke is the data infrastructure for orbital real estate. Positions in geostationary orbit
+          are licensed by the ITU, sublicensed to operators, and increasingly fought over as the belt
+          fills up, but the market trading on them still runs on PDFs, phone calls, and internal
+          spreadsheets. Clarke turns the public record, satellite databases, FCC licensing filings, and
+          orbital tracking data, into a structured registry: what&apos;s at a position, who holds it, how
+          contested it is, and what it&apos;s worth.
         </p>
-        <p className="text-zinc-500 text-base leading-relaxed mb-5">
-          Orbital infrastructure is worth hundreds of billions of dollars and changes hands constantly
-          through satellite acquisitions, spectrum leasing, fleet consolidations, and regulatory transfers.
-          There is no unified data layer, no public pricing index, and no canonical registry of ownership,
-          congestion, or implied asset value. Clarke is building that infrastructure.
+        <p className="text-zinc-500 text-base leading-relaxed">
+          Orbital infrastructure changes hands for hundreds of billions of dollars through satellite
+          acquisitions, spectrum leasing, fleet consolidations, and regulatory transfers, yet there is no
+          unified data layer, no public pricing index, and no canonical registry of ownership, congestion,
+          or implied value. Every other mature asset class, real estate, terrestrial spectrum, equities,
+          converged on public registries once enough capital moved through it. Orbital real estate is
+          already trading at that scale. It&apos;s just missing the reference layer.
         </p>
-        <p className="text-zinc-600 text-sm leading-relaxed">
-          Named after Arthur C. Clarke, who first described geostationary orbit in 1945. The Clarke Belt,
-          the ring of satellites 35,786 km above the equator, is named in his honor.
-        </p>
+      </div>
+
+      {/* Three pillars */}
+      <div className="grid sm:grid-cols-3 gap-4 mb-10 max-w-3xl">
+        {[
+          { title: "Registry", body: "What's at a position and who holds it, from satellite and FCC licensing data." },
+          { title: "Congestion", body: "How contested an arc is, scored 0-100 from live density and operator overlap." },
+          { title: "Valuation", body: "What a position implies in dollar terms, modeled from disclosed M&A and analyst comps." },
+        ].map((p) => (
+          <div key={p.title} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
+            <div className="text-white text-sm font-semibold mb-2">{p.title}</div>
+            <p className="text-zinc-500 text-xs leading-relaxed">{p.body}</p>
+          </div>
+        ))}
       </div>
 
       {/* Stats */}
@@ -162,12 +175,17 @@ export default function AboutPage() {
         ))}
       </div>
 
-      <div className="mb-16 max-w-3xl">
+      <div className="mb-6 max-w-3xl">
         <Link href="/orbital"
           className="inline-flex items-center gap-2 bg-white text-black rounded-lg px-5 py-2.5 text-sm font-bold hover:bg-zinc-200 transition-colors">
           Explore the registry →
         </Link>
       </div>
+
+      <p className="text-zinc-600 text-sm leading-relaxed mb-16 max-w-3xl">
+        Named after Arthur C. Clarke, who first described geostationary orbit in 1945. The Clarke Belt,
+        the ring of satellites 35,786 km above the equator, is named in his honor.
+      </p>
 
       {/* Mobile nav — horizontal scroll */}
       <div className="lg:hidden flex gap-2 overflow-x-auto pb-3 mb-6 border-b border-zinc-800 scrollbar-none">
@@ -212,6 +230,82 @@ export default function AboutPage() {
                   <p className="text-zinc-500 text-xs leading-relaxed">{item.body}</p>
                 </div>
               ))}
+            </div>
+          </Section>
+
+          <Section id="agents" title="Agents API">
+            <p className="text-zinc-500 text-sm leading-relaxed mb-6">
+              Clarke exposes a read-only HTTP API and a Model Context Protocol server so autonomous agents and LLM-based assistants can query the registry without scraping HTML. The same operations layer backs both transports, so HTTP responses and MCP tool results stay in sync. No authentication is required; reads are public, rate-limited, and cached.
+            </p>
+
+            <h3 className="text-white text-sm font-semibold mb-3">HTTP endpoints</h3>
+            <div className="space-y-2 mb-6">
+              {[
+                { path: "GET /api/v1/agents/slots", desc: "All orbital slots (curated + UCS-derived), merged and sorted by longitude, each with a congestion score and heuristic valuation." },
+                { path: "GET /api/v1/agents/slots/{slug}", desc: "Full dossier for one slot: record, satellites at that longitude, FCC authorizations, congestion breakdown, and heuristic valuation." },
+                { path: "GET /api/v1/agents/satellites", desc: "GEO satellites from the UCS database. Optional filters: operator, ownerCountry, limit (max 1000)." },
+              ].map((e) => (
+                <div key={e.path} className="border border-zinc-800 rounded-lg px-4 py-3 bg-zinc-900/5">
+                  <div className="text-white font-mono text-xs mb-1">{e.path}</div>
+                  <div className="text-zinc-500 text-xs leading-relaxed">{e.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            <h3 className="text-white text-sm font-semibold mb-3">Response shape</h3>
+            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10 mb-6">
+              <p className="text-zinc-500 text-xs leading-relaxed mb-3">
+                Every successful response is a JSON envelope with a versioned <span className="font-mono text-zinc-300">data</span> field and a <span className="font-mono text-zinc-300">meta</span> object containing the API version, generation timestamp, and (for list endpoints) the row count. Responses carry <span className="font-mono text-zinc-300">ETag</span> and <span className="font-mono text-zinc-300">Cache-Control: public, s-maxage=300, stale-while-revalidate=60</span> headers; agents are expected to send <span className="font-mono text-zinc-300">If-None-Match</span> for conditional requests.
+              </p>
+              <pre className="text-zinc-400 text-xs font-mono bg-black/40 border border-zinc-800/60 rounded p-3 overflow-x-auto">{`{
+  "data": { ... },
+  "meta": {
+    "version": "1.0",
+    "generated_at": "2026-05-23T14:22:40Z",
+    "count": 590
+  }
+}`}</pre>
+            </div>
+
+            <h3 className="text-white text-sm font-semibold mb-3">Rate limits and validation</h3>
+            <div className="space-y-3 mb-6">
+              {[
+                { label: "RATE LIMIT", body: "60 requests per minute per IP, enforced in-memory per serverless instance. A 429 response includes a Retry-After header in seconds. No authentication is required." },
+                { label: "INPUT VALIDATION", body: "All path slugs are validated against /^[a-z0-9-]+$/ and query parameters against per-field regex caps. Path traversal attempts and injection patterns return 400. Tickers are restricted to /^[A-Z0-9.-]{1,10}$/." },
+                { label: "CORS", body: "All routes allow cross-origin reads (Access-Control-Allow-Origin: *) with GET and OPTIONS only. Preflight responses cache for 24 hours." },
+              ].map((s) => (
+                <div key={s.label} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
+                  <div className="text-xs font-mono text-zinc-600 mb-3">{`// ${s.label}`}</div>
+                  <p className="text-zinc-500 text-xs leading-relaxed">{s.body}</p>
+                </div>
+              ))}
+            </div>
+
+            <h3 className="text-white text-sm font-semibold mb-3">Model Context Protocol (MCP) server</h3>
+            <p className="text-zinc-500 text-sm leading-relaxed mb-4">
+              The same operations are exposed as MCP tools so Claude Code, Cursor, and any other MCP-compatible client can query Clarke in plain English. The server runs locally over stdio and reads directly from the SQLite database; no network round-trip to Clarke is involved beyond what the host process does on its own.
+            </p>
+            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10 mb-6">
+              <div className="text-xs font-mono text-zinc-600 mb-3">{"// MCP CONFIG"}</div>
+              <pre className="text-zinc-400 text-xs font-mono bg-black/40 border border-zinc-800/60 rounded p-3 overflow-x-auto">{`{
+  "mcpServers": {
+    "clarke": {
+      "command": "npm",
+      "args": ["run", "mcp", "--silent"],
+      "cwd": "/absolute/path/to/clarke"
+    }
+  }
+}`}</pre>
+              <p className="text-zinc-500 text-xs leading-relaxed mt-3">
+                Available tools: <span className="font-mono">clarke_list_slots</span>, <span className="font-mono">clarke_get_slot</span>, <span className="font-mono">clarke_list_satellites</span>.
+              </p>
+            </div>
+
+            <h3 className="text-white text-sm font-semibold mb-3">Scope and roadmap</h3>
+            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
+              <p className="text-zinc-500 text-xs leading-relaxed">
+                The current surface is read-only. Event streams and metered access for high-volume agent consumers are on the roadmap but not implemented.
+              </p>
             </div>
           </Section>
 
@@ -349,82 +443,6 @@ export default function AboutPage() {
                   <p className="text-zinc-500 text-xs leading-relaxed">{item.body}</p>
                 </div>
               ))}
-            </div>
-          </Section>
-
-          <Section id="agents" title="Agents API">
-            <p className="text-zinc-500 text-sm leading-relaxed mb-6">
-              Clarke exposes a read-only HTTP API and a Model Context Protocol server so autonomous agents and LLM-based assistants can query the registry without scraping HTML. The same operations layer backs both transports, so HTTP responses and MCP tool results stay in sync. No authentication is required; reads are public, rate-limited, and cached.
-            </p>
-
-            <h3 className="text-white text-sm font-semibold mb-3">HTTP endpoints</h3>
-            <div className="space-y-2 mb-6">
-              {[
-                { path: "GET /api/v1/agents/slots", desc: "All orbital slots (curated + UCS-derived), merged and sorted by longitude, each with a congestion score and heuristic valuation." },
-                { path: "GET /api/v1/agents/slots/{slug}", desc: "Full dossier for one slot: record, satellites at that longitude, FCC authorizations, congestion breakdown, and heuristic valuation." },
-                { path: "GET /api/v1/agents/satellites", desc: "GEO satellites from the UCS database. Optional filters: operator, ownerCountry, limit (max 1000)." },
-              ].map((e) => (
-                <div key={e.path} className="border border-zinc-800 rounded-lg px-4 py-3 bg-zinc-900/5">
-                  <div className="text-white font-mono text-xs mb-1">{e.path}</div>
-                  <div className="text-zinc-500 text-xs leading-relaxed">{e.desc}</div>
-                </div>
-              ))}
-            </div>
-
-            <h3 className="text-white text-sm font-semibold mb-3">Response shape</h3>
-            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10 mb-6">
-              <p className="text-zinc-500 text-xs leading-relaxed mb-3">
-                Every successful response is a JSON envelope with a versioned <span className="font-mono text-zinc-300">data</span> field and a <span className="font-mono text-zinc-300">meta</span> object containing the API version, generation timestamp, and (for list endpoints) the row count. Responses carry <span className="font-mono text-zinc-300">ETag</span> and <span className="font-mono text-zinc-300">Cache-Control: public, s-maxage=300, stale-while-revalidate=60</span> headers; agents are expected to send <span className="font-mono text-zinc-300">If-None-Match</span> for conditional requests.
-              </p>
-              <pre className="text-zinc-400 text-xs font-mono bg-black/40 border border-zinc-800/60 rounded p-3 overflow-x-auto">{`{
-  "data": { ... },
-  "meta": {
-    "version": "1.0",
-    "generated_at": "2026-05-23T14:22:40Z",
-    "count": 590
-  }
-}`}</pre>
-            </div>
-
-            <h3 className="text-white text-sm font-semibold mb-3">Rate limits and validation</h3>
-            <div className="space-y-3 mb-6">
-              {[
-                { label: "RATE LIMIT", body: "60 requests per minute per IP, enforced in-memory per serverless instance. A 429 response includes a Retry-After header in seconds. No authentication is required." },
-                { label: "INPUT VALIDATION", body: "All path slugs are validated against /^[a-z0-9-]+$/ and query parameters against per-field regex caps. Path traversal attempts and injection patterns return 400. Tickers are restricted to /^[A-Z0-9.-]{1,10}$/." },
-                { label: "CORS", body: "All routes allow cross-origin reads (Access-Control-Allow-Origin: *) with GET and OPTIONS only. Preflight responses cache for 24 hours." },
-              ].map((s) => (
-                <div key={s.label} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-                  <div className="text-xs font-mono text-zinc-600 mb-3">{`// ${s.label}`}</div>
-                  <p className="text-zinc-500 text-xs leading-relaxed">{s.body}</p>
-                </div>
-              ))}
-            </div>
-
-            <h3 className="text-white text-sm font-semibold mb-3">Model Context Protocol (MCP) server</h3>
-            <p className="text-zinc-500 text-sm leading-relaxed mb-4">
-              The same operations are exposed as MCP tools so Claude Code, Cursor, and any other MCP-compatible client can query Clarke in plain English. The server runs locally over stdio and reads directly from the SQLite database; no network round-trip to Clarke is involved beyond what the host process does on its own.
-            </p>
-            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10 mb-6">
-              <div className="text-xs font-mono text-zinc-600 mb-3">{"// MCP CONFIG"}</div>
-              <pre className="text-zinc-400 text-xs font-mono bg-black/40 border border-zinc-800/60 rounded p-3 overflow-x-auto">{`{
-  "mcpServers": {
-    "clarke": {
-      "command": "npm",
-      "args": ["run", "mcp", "--silent"],
-      "cwd": "/absolute/path/to/clarke"
-    }
-  }
-}`}</pre>
-              <p className="text-zinc-500 text-xs leading-relaxed mt-3">
-                Available tools: <span className="font-mono">clarke_list_slots</span>, <span className="font-mono">clarke_get_slot</span>, <span className="font-mono">clarke_list_satellites</span>.
-              </p>
-            </div>
-
-            <h3 className="text-white text-sm font-semibold mb-3">Scope and roadmap</h3>
-            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-              <p className="text-zinc-500 text-xs leading-relaxed">
-                The current surface is read-only. Event streams and metered access for high-volume agent consumers are on the roadmap but not implemented.
-              </p>
             </div>
           </Section>
 

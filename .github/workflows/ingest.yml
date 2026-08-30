@@ -1,0 +1,53 @@
+name: Scheduled data ingest
+
+# Keeps data/clarke.db from going silently stale. Runs the full ingest
+# pipeline (UCS, FCC, Space-Track) on a schedule and commits the refreshed
+# database straight to main if anything changed. Low blast radius (data
+# only, easily reverted) and no human has to remember to run this by hand.
+
+on:
+  schedule:
+    # 06:17 UTC daily — off-peak, deliberately not on the hour.
+    - cron: "17 6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: scheduled-ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ingest pipeline
+        env:
+          SPACETRACK_USERNAME: ${{ secrets.SPACETRACK_USERNAME }}
+          SPACETRACK_PASSWORD: ${{ secrets.SPACETRACK_PASSWORD }}
+        run: npm run ingest:all
+
+      - name: Commit and push if data changed
+        run: |
+          git config user.name "clarke-ingest-bot"
+          git config user.email "actions@users.noreply.github.com"
+          if git diff --quiet -- data/clarke.db; then
+            echo "No data changes, nothing to commit."
+            exit 0
+          fi
+          git add data/clarke.db
+          git commit -m "Scheduled data refresh ($(date -u +%Y-%m-%d))"
+          git push

@@ -61,9 +61,9 @@ const sources: { name: string; abbr: string; url: string; cadence: string; what:
     abbr: "US Securities and Exchange Commission",
     url: "https://www.sec.gov/search-filings",
     cadence: "Quarterly / Annual",
-    status: "planned",
-    what: "Financial filings from publicly traded satellite operators including SES, Viasat, Eutelsat, Intelsat, and Telesat. 10-K and 20-F annual reports disclose slot utilization, contract lengths, revenue by region, and fleet composition.",
-    why: "The only public source of economic data tied to specific orbital assets. Extracting transponder revenue by position from SEC filings is the path to Clarke's implied asset valuation layer.",
+    status: "live",
+    what: "Structured XBRL financial facts (revenue, net income, operating income, total assets) from the three GEO operators that actually file with the SEC: Viasat (10-K/10-Q), SES (20-F/6-K), and Telesat (20-F/6-K). Eutelsat and Intelsat are not included: Eutelsat has only an ADR registration on file, no financial disclosures, and Intelsat's US entity deregistered after being absorbed into SES.",
+    why: "The only public source of company-level economic data for operators whose fleets anchor Clarke's registry. This is company-level structured data, not slot-level, extracting revenue by specific orbital position from unstructured filing text is a harder problem and not yet attempted.",
   },
   {
     name: "Space-Track",
@@ -132,10 +132,10 @@ export default function AboutPage() {
         <p className="text-zinc-300 text-lg leading-relaxed mb-5">
           Clarke is the data infrastructure for orbital real estate. Positions in geostationary orbit
           are licensed by the ITU, sublicensed to operators, and increasingly fought over as the belt
-          fills up, but the market trading on them still runs on PDFs, phone calls, and internal
-          spreadsheets. Clarke turns the public record, satellite databases, FCC licensing filings, and
-          orbital tracking data, into a structured registry: what&apos;s at a position, who holds it, how
-          contested it is, and what it&apos;s worth.
+          fills up, but the market trading on them is still negotiated deal by deal, with no public record
+          of who holds what. Clarke turns satellite databases, FCC licensing filings, and orbital tracking
+          data into a structured registry: what&apos;s at a position, who holds it, how congested it is,
+          and what it&apos;s worth.
         </p>
         <p className="text-zinc-500 text-base leading-relaxed">
           Orbital infrastructure changes hands for hundreds of billions of dollars through satellite
@@ -420,6 +420,7 @@ export default function AboutPage() {
                 { title: "Satellite identifiers", body: "The UCS database includes NORAD catalog numbers and COSPAR international designators for each satellite. These identifiers are stored in Clarke's database but are not displayed to users. A spot-check of nine satellites against independent Celestrak records found that five had incorrect NORAD IDs, with some pointing to entirely different satellites at different orbital positions and one pointing to decayed re-entry debris. The satellite names, operator names, and orbital positions were generally accurate in the same check. Identifiers will be surfaced once they have been validated against an authoritative source." },
                 { title: "FCC coverage scope", body: `The ${fccCount} FCC authorizations in Clarke cover US-licensed operators and foreign operators with FCC-granted US market access. Satellites licensed entirely under non-US administrations, including most European, Russian, Chinese, and Asian operators, do not appear in FCC records and will show no authorization data on their position pages. This is a reflection of jurisdiction, not a gap in data collection.` },
                 { title: "Status labels", body: "Position status labels in the registry (Active, Filed, Squatted, Inactive) are derived from the UCS classification, which marks satellites as active based on reported operational status at the time of the snapshot. The UCS does not independently verify operational status in real time, and updates follow its twice-yearly cadence, so decommissions and new launches typically take up to six months to show up after they are publicly announced." },
+                { title: "SEC financial data currency", body: "Viasat and SES both have current SEC financial data (Viasat through its most recent 10-Q, SES through its FY2025 20-F). Telesat's structured XBRL data caps at fiscal year 2021, the SEC's system has no more recent tagged financial facts for the entity on file, despite Telesat's ongoing 6-K filings since then. Treat Telesat's revenue and income figures as historical reference points, not current financials." },
               ].map((item) => (
                 <div key={item.title} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
                   <div className="text-white text-sm font-semibold mb-2">{item.title}</div>

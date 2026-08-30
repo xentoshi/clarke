@@ -1,9 +1,10 @@
 name: Scheduled data ingest
 
-# Keeps data/clarke.db from going silently stale. Runs the full ingest
-# pipeline (UCS, FCC, Space-Track) on a schedule and commits the refreshed
-# database straight to main if anything changed. Low blast radius (data
-# only, easily reverted) and no human has to remember to run this by hand.
+# Keeps data/clarke.db from going silently stale. Runs UCS, Space-Track, and
+# SEC EDGAR ingest on a schedule and commits the refreshed database straight
+# to main if anything changed. FCC-SSAL is excluded, see below. Low blast
+# radius (data only, easily reverted) and no human has to remember to run
+# this by hand.
 
 on:
   schedule:
@@ -42,11 +43,11 @@ jobs:
       # a daily FCC update that never actually happened. Refresh that file
       # by hand (download from https://www.fcc.gov/approved-space-station-list,
       # replace data/ssal.xlsx, run npm run ingest:fcc, commit).
-      - name: Run ingest pipeline (UCS + Space-Track only)
+      - name: Run ingest pipeline (UCS + Space-Track + SEC EDGAR)
         env:
           SPACETRACK_USERNAME: ${{ secrets.SPACETRACK_USERNAME }}
           SPACETRACK_PASSWORD: ${{ secrets.SPACETRACK_PASSWORD }}
-        run: npm run ingest && npm run ingest:spacetrack
+        run: npm run ingest && npm run ingest:spacetrack && npm run ingest:sec
 
       - name: Commit and push if data changed
         run: |

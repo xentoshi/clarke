@@ -10,7 +10,8 @@
     "ingest": "ts-node --project tsconfig.scripts.json scripts/ingest-ucs.ts",
     "ingest:fcc": "ts-node --project tsconfig.scripts.json scripts/ingest-fcc.ts",
     "ingest:spacetrack": "ts-node --project tsconfig.scripts.json scripts/ingest-spacetrack.ts",
-    "ingest:all": "npm run ingest && npm run ingest:fcc && npm run ingest:spacetrack",
+    "ingest:sec": "ts-node --project tsconfig.scripts.json scripts/ingest-sec.ts",
+    "ingest:all": "npm run ingest && npm run ingest:fcc && npm run ingest:spacetrack && npm run ingest:sec",
     "mcp": "tsx scripts/clarke-mcp.ts"
   },
   "dependencies": {

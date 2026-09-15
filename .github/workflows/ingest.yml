@@ -35,14 +35,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # FCC-SSAL is deliberately excluded: fcc.gov sits behind Akamai bot
-      # protection that returns "Access Denied" to automated requests (curl
-      # and headless Chromium both blocked), so ingest-fcc.ts only ever
-      # re-parses the locally committed data/ssal.xlsx rather than fetching
-      # anything live. Running it here would make the freshness panel claim
-      # a daily FCC update that never actually happened. Refresh that file
-      # by hand (download from https://www.fcc.gov/approved-space-station-list,
-      # replace data/ssal.xlsx, run npm run ingest:fcc, commit).
+      # FCC-SSAL is not fetched here: fcc.gov is behind Akamai. Weekly
+      # `.github/workflows/ingest-fcc.yml` re-parses the committed
+      # data/ssal.xlsx and records workbook vintage (not a fake daily refresh).
+      # Human download steps: docs/FCC_REFRESH.md.
       - name: Run ingest pipeline (UCS + Space-Track + SEC EDGAR)
         env:
           SPACETRACK_USERNAME: ${{ secrets.SPACETRACK_USERNAME }}

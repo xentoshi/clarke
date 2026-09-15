@@ -1,9 +1,11 @@
 import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import * as XLSX from "xlsx";
 import { recordIngest } from "./lib/ingest-meta";
 import { ensureEventTables, recordSlotEvent } from "./lib/events";
+import { parseFccSheetVintage } from "./lib/fcc-vintage";
 
 const XLSX_PATH = path.join(process.cwd(), "data", "ssal.xlsx");
 const DB_PATH = path.join(process.cwd(), "data", "clarke.db");
@@ -39,15 +41,29 @@ function parseDateField(raw: unknown): string | null {
 
 function main() {
   if (!fs.existsSync(XLSX_PATH)) {
-    console.error(`File not found: ${XLSX_PATH}\nCopy ssal.xlsx to data/ssal.xlsx and re-run.`);
+    console.error(`File not found: ${XLSX_PATH}\nSee docs/FCC_REFRESH.md — copy the FCC SSAL workbook to data/ssal.xlsx and re-run.`);
     process.exit(1);
   }
 
+  const fileBuf = fs.readFileSync(XLSX_PATH);
+  if (fileBuf.length < 64) {
+    console.error(`data/ssal.xlsx is too small (${fileBuf.length} bytes) to be a valid SSAL workbook.`);
+    process.exit(1);
+  }
+  const fileSha256 = crypto.createHash("sha256").update(fileBuf).digest("hex");
+
   console.log("Parsing FCC Approved Space Station List...");
-  const wb = XLSX.readFile(XLSX_PATH, { cellDates: false });
-  const ws = wb.Sheets[wb.SheetNames[0]];
+  const wb = XLSX.read(fileBuf, { cellDates: false, type: "buffer" });
+  const sheetName = wb.SheetNames[0];
+  const fileVintage = parseFccSheetVintage(sheetName);
+  const ws = wb.Sheets[sheetName];
   const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: "" });
+  console.log(`Sheet "${sheetName}" vintage=${fileVintage ?? "unknown"} sha256=${fileSha256.slice(0, 12)}…`);
   console.log(`Parsed ${rawRows.length} rows, columns: ${Object.keys(rawRows[0] ?? {}).join(" | ")}`);
+  if (rawRows.length === 0) {
+    console.error("No rows in SSAL workbook — refusing to wipe fcc_authorizations.");
+    process.exit(1);
+  }
 
   const db = new Database(DB_PATH);
 
@@ -83,8 +99,6 @@ function main() {
       .map((r) => [r.call_sign, { licensee: r.licensee, grantStatus: r.grant_status, longitudeGeo: r.longitude_geo, orbitalLocation: r.orbital_location }]),
   );
 
-  db.exec("DELETE FROM fcc_authorizations WHERE source = 'FCC-SSAL'");
-
   const insert = db.prepare(`
     INSERT INTO fcc_authorizations (
       orbital_location, longitude_geo, satellite_name, call_sign,
@@ -111,8 +125,9 @@ function main() {
     notes: string | null;
   }
 
-  const insertMany = db.transaction((records: FccRecord[]) => {
-    for (const rec of records) insert.run(rec);
+  const insertMany = db.transaction((recs: FccRecord[]) => {
+    db.exec("DELETE FROM fcc_authorizations WHERE source = 'FCC-SSAL'");
+    for (const rec of recs) insert.run(rec);
   });
 
   let inserted = 0;
@@ -140,8 +155,17 @@ function main() {
     inserted++;
   }
 
+  if (records.length === 0) {
+    console.error("Parsed zero GEO authorizations — leaving existing fcc_authorizations unchanged.");
+    process.exit(1);
+  }
+
   insertMany(records);
-  recordIngest(db, "FCC-SSAL", inserted, "FCC Space Station Authorization List (GEO)");
+  recordIngest(db, "FCC-SSAL", inserted, `FCC Space Station Authorization List (GEO) · workbook "${sheetName}"`, {
+    fileVintage,
+    sourceAsOf: fileVintage,
+    fileSha256,
+  });
 
   const newByCallSign = new Map<string, FccRecord>(
     records.filter((r) => isRealCallSign(r.call_sign)).map((r) => [r.call_sign as string, r]),

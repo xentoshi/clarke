@@ -9,6 +9,7 @@
     "lint": "eslint",
     "ingest": "ts-node --project tsconfig.scripts.json scripts/ingest-ucs.ts",
     "ingest:fcc": "ts-node --project tsconfig.scripts.json scripts/ingest-fcc.ts",
+    "vintages": "ts-node --project tsconfig.scripts.json scripts/record-source-vintages.ts",
     "ingest:spacetrack": "tsx scripts/ingest-spacetrack.ts",
     "ingest:sec": "ts-node --project tsconfig.scripts.json scripts/ingest-sec.ts",
     "ingest:all": "npm run ingest && npm run ingest:fcc && npm run ingest:spacetrack && npm run ingest:sec",

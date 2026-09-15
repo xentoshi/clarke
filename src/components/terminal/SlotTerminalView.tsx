@@ -101,25 +101,50 @@ export function SlotTerminalView({
       </header>
 
       <section className="mb-6 border border-zinc-800 rounded-xl px-4 py-3" data-freshness-strip>
-        <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2">Data freshness (ingest clocks)</div>
+        <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2">Data vintage (not ingest clock)</div>
         <div className="grid sm:grid-cols-3 gap-2 text-xs font-mono">
           <div>
-            <span className="text-zinc-600">TLE ingest</span>
-            <div className="text-zinc-300">{formatAsOfDate(model.provenance.occupancy.asOf)}</div>
+            <span className="text-zinc-600">TLE epoch</span>
+            <div className="text-zinc-300">{model.sourceVintage.tleEpochMax ?? "—"}</div>
+            <div className="text-[10px] text-zinc-600">
+              {model.sourceVintage.tleEpochMin && model.sourceVintage.tleEpochMin !== model.sourceVintage.tleEpochMax
+                ? `window ${model.sourceVintage.tleEpochMin}–${model.sourceVintage.tleEpochMax}`
+                : "in-window sats"}
+              {model.sourceVintage.tleIngestAt ? ` · ingest ${model.sourceVintage.tleIngestAt.slice(0, 10)}` : ""}
+            </div>
           </div>
           <div>
-            <span className="text-zinc-600">FCC SSAL ingest</span>
-            <div className="text-zinc-300">{formatAsOfDate(model.provenance.fcc.asOf)}</div>
+            <span className="text-zinc-600">FCC SSAL as-of</span>
+            <div className={model.sourceVintage.fccStale ? "text-amber-300" : "text-zinc-300"}>
+              {model.sourceVintage.fccAsOf ?? "—"}
+            </div>
+            <div className="text-[10px] text-zinc-600">
+              workbook vintage{model.sourceVintage.fccIngestAt ? ` · parsed ${model.sourceVintage.fccIngestAt.slice(0, 10)}` : ""}
+            </div>
           </div>
           <div>
-            <span className="text-zinc-600">UCS catalog ingest</span>
-            <div className="text-zinc-300">{formatAsOfDate(model.provenance.ucsCatalog.asOf)}</div>
+            <span className="text-zinc-600">UCS file vintage</span>
+            <div className="text-zinc-300">{model.sourceVintage.ucsFileVintage ?? "—"}</div>
+            <div className="text-[10px] text-zinc-600">
+              latest GEO launch in snapshot{model.sourceVintage.ucsIngestAt ? ` · ingest ${model.sourceVintage.ucsIngestAt.slice(0, 10)}` : ""}
+            </div>
           </div>
         </div>
         <p className="text-[10px] text-zinc-600 mt-2 leading-relaxed">
-          Ingest time is not file vintage or TLE epoch. UCS last_run today does not mean 2026 ephemerides.
+          Ingest last_run is when Clarke parsed the file. UCS last_run today does not mean 2026 ephemerides.
         </p>
       </section>
+
+      {model.sourceVintage.fccStale && (
+        <div className="mb-6 border border-amber-900/60 bg-amber-950/30 rounded-xl px-4 py-3" data-fcc-stale-banner>
+          <p className="text-[10px] font-mono text-amber-400/90 uppercase tracking-widest mb-1">FCC SSAL stale</p>
+          <p className="text-amber-100/85 text-sm leading-relaxed">
+            FCC workbook as-of is {model.sourceVintage.fccAsOf ?? "unknown"}, older than {model.sourceVintage.fccStaleAfterDays} days.
+            Occupancy is TLE-primary and still updates; license rows may lag. Refresh path:{" "}
+            <Link href="/docs/fcc-refresh" className="underline text-amber-200 hover:text-white">FCC refresh runbook</Link>.
+          </p>
+        </div>
+      )}
 
       {(model.positionTrust.disputedCount > 0 || model.positionTrust.ucsGhosts.length > 0) && (
         <div className="mb-6 border border-amber-900/50 bg-amber-950/20 rounded-xl px-4 py-3">

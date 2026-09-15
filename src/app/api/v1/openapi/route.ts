@@ -27,7 +27,7 @@ const spec = {
         tags: ["Agents"],
         summary: "List orbital slots",
         description: "All registry positions with congestion score and heuristic valuation. Occupancy/congestion use TLE-primary longitudes.",
-        responses: { "200": { description: "{ data, meta } envelope" }, "429": { description: "Rate limited" } },
+        responses: { "200": { description: "{ data, meta } envelope. meta.data_freshness includes last_run plus file_vintage / source_as_of / TLE epoch (not ingest clock alone)." } },
       },
     },
     "/agents/slots/{slug}": {

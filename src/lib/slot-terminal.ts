@@ -25,6 +25,7 @@ import { isSafeSlug } from "./slot-utils";
 import { summarizeOperators, type OperatorShare } from "./operator-mix";
 import { buildSlotPositionTrust, type SlotPositionTrust } from "./position-authority";
 import { circularAbsDiffDeg } from "./geo-angle";
+import { slotSourceVintage, type SlotSourceVintage } from "./source-vintage";
 
 export interface TerminalComp {
   slug: string;
@@ -66,6 +67,7 @@ export interface SlotTerminalModel {
   bidAsk: CapacityBook;
   comps: TerminalComp[];
   positionTrust: SlotPositionTrust;
+  sourceVintage: SlotSourceVintage;
   provenance: MetricProvenance;
   asOf: string;
   modelRunAsOf: string | null;
@@ -113,8 +115,6 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
   const asOf = ingestAsOf(latest?.lastRun ?? null);
   const asOfDate = new Date(asOf);
   const freshness = getDataFreshness();
-  const sourceAsOf = (name: string) =>
-    ingestAsOf(freshness.find((f) => f.source === name)?.lastRun ?? null, new Date(asOf));
 
   const valuationSlot: OrbitalSlot = curated ?? {
     id: slug,
@@ -179,12 +179,22 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
     };
   });
 
-  const ucsAsOf = sourceAsOf("UCS");
-  const fccAsOf = sourceAsOf("FCC-SSAL");
-  const tleAsOf = sourceAsOf("Space-Track TLE");
+  const ucs = freshness.find((f) => f.source === "UCS");
+  const fcc = freshness.find((f) => f.source === "FCC-SSAL");
+  const tle = freshness.find((f) => f.source === "Space-Track TLE");
+  const vintageIso = (fileVintage: string | null | undefined, ingestRun: string | null | undefined) => {
+    if (fileVintage && /^\d{4}-\d{2}-\d{2}/.test(fileVintage)) {
+      return fileVintage.length === 10 ? `${fileVintage}T00:00:00.000Z` : ingestAsOf(fileVintage);
+    }
+    return ingestAsOf(ingestRun ?? null, new Date(asOf));
+  };
+  const ucsAsOf = vintageIso(ucs?.fileVintage, ucs?.lastRun);
+  const fccAsOf = vintageIso(fcc?.fileVintage, fcc?.lastRun);
+  const tleAsOf = vintageIso(tle?.fileVintage ?? tle?.tleEpochMax, tle?.lastRun);
   const modelRun = latestModelRun();
   const positionTrust = buildSlotPositionTrust(lon, sats, getGeoSatellites(), COLOCATION_TOLERANCE_DEG);
   const tlePrimaryShare = sats.length === 0 ? 0 : positionTrust.tlePrimaryCount / sats.length;
+  const sourceVintage = slotSourceVintage(sats, freshness);
 
   return {
     slug,
@@ -211,6 +221,7 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
     bidAsk: simulatedCapacityBook(valuation, congestion, asOf),
     comps,
     positionTrust,
+    sourceVintage,
     asOf,
     modelRunAsOf: modelRun?.asOf ?? null,
     provenance: {
@@ -222,18 +233,22 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
       occupancy: {
         source: "Space-Track TLE (primary) + UCS Satellite Database (fallback)",
         asOf: tleAsOf,
-        note: `±${COLOCATION_TOLERANCE_DEG}° window · ${positionTrust.tlePrimaryCount}/${sats.length} TLE-primary (${Math.round(tlePrimaryShare * 100)}%) · UCS catalog is identity/operator, not live station · TLE lon is not an FCC/ITU assignment`,
+        note: `±${COLOCATION_TOLERANCE_DEG}° window · ${positionTrust.tlePrimaryCount}/${sats.length} TLE-primary (${Math.round(tlePrimaryShare * 100)}%) · TLE epoch ${sourceVintage.tleEpochMax ?? "unknown"} · TLE lon is not an FCC/ITU assignment`,
       },
       ucsCatalog: {
         source: "UCS Satellite Database",
         asOf: ucsAsOf,
-        note: "Identity, operator, users, launch, catalog longitude — not occupancy clustering",
+        note: `File vintage (latest GEO launch in snapshot) ${sourceVintage.ucsFileVintage ?? "unknown"} · ingest clock is not catalog epoch`,
       },
       congestion: {
         source: "Clarke congestion v0 ← TLE-primary occupancy longitudes",
         asOf: tleAsOf,
       },
-      fcc: { source: "FCC Approved Space Station List", asOf: fccAsOf },
+      fcc: {
+        source: "FCC Approved Space Station List",
+        asOf: fccAsOf,
+        note: `Workbook as-of ${sourceVintage.fccAsOf ?? "unknown"} · ingest ${sourceVintage.fccIngestAt ?? "unknown"}`,
+      },
       license: { source: "FCC SSAL + UCS occupancy", asOf: fccAsOf },
       coverage: { source: "Clarke GDP/pop longitude-band heuristic", asOf: valuation.asOf },
       rights: { source: "FCC SSAL + UCS; ITU stub", asOf: fccAsOf },

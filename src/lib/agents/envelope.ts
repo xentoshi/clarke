@@ -8,6 +8,11 @@ export interface FreshnessMeta {
   last_run: string;
   row_count: number;
   age_days: number;
+  file_vintage: string | null;
+  source_as_of: string | null;
+  vintage_age_days: number;
+  tle_epoch_min: string | null;
+  tle_epoch_max: string | null;
 }
 
 export interface Envelope<T> {

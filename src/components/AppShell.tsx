@@ -54,6 +54,7 @@ export default function AppShell({ children, slots }: { children: React.ReactNod
                       { label: "Registry FAQ", href: "/orbital/faq" },
                       { label: "Data trust", href: "/docs/data-trust" },
                       { label: "Valuation v0", href: "/docs/valuation" },
+                      { label: "FCC refresh", href: "/docs/fcc-refresh" },
                     ].map((l) => (
                       <Link key={l.href} href={l.href} className="text-white/30 text-xs hover:text-white/80 transition-colors py-0.5">{l.label}</Link>
                     ))}

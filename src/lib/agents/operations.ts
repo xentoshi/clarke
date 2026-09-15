@@ -17,6 +17,7 @@ import { getDataFreshness } from "../freshness";
 import type { FreshnessMeta } from "./envelope";
 import { isSafeSlug } from "../slot-utils";
 import { buildSlotPositionTrust, type SlotPositionTrust } from "../position-authority";
+import { slotSourceVintage, type SlotSourceVintage } from "../source-vintage";
 
 export { isSafeSlug };
 
@@ -63,6 +64,7 @@ export interface SlotDossier {
   congestion: ReturnType<typeof getCongestion>;
   valuation: SlotValuation;
   positionTrust: SlotPositionTrust;
+  sourceVintage: SlotSourceVintage;
 }
 
 export function getSlotDossier(slug: string): SlotDossier | null {
@@ -79,7 +81,8 @@ export function getSlotDossier(slug: string): SlotDossier | null {
     satCount: satellites.length || congestion.factors.coLocated,
   });
   const positionTrust = buildSlotPositionTrust(slot.longitude, satellites, getGeoSatellites(), COLOCATION_TOLERANCE_DEG);
-  return { slot, satellites, fccAuthorizations, congestion, valuation, positionTrust };
+  const sourceVintage = slotSourceVintage(satellites, getDataFreshness());
+  return { slot, satellites, fccAuthorizations, congestion, valuation, positionTrust, sourceVintage };
 }
 
 // Adapter: data freshness in the snake_case shape used by the API envelope meta.
@@ -89,6 +92,11 @@ export function freshnessMeta(): FreshnessMeta[] {
     last_run: f.lastRun,
     row_count: f.rowCount,
     age_days: f.ageDays,
+    file_vintage: f.fileVintage,
+    source_as_of: f.sourceAsOf,
+    vintage_age_days: f.vintageAgeDays,
+    tle_epoch_min: f.tleEpochMin,
+    tle_epoch_max: f.tleEpochMax,
   }));
 }
 

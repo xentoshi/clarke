@@ -38,6 +38,26 @@ function clean(v: string | undefined): string | null {
   return s === "" ? null : s;
 }
 
+function latestUcsLaunchIso(dates: string[]): string | null {
+  let best: string | null = null;
+  for (const raw of dates) {
+    const iso = ucsLaunchToIso(raw);
+    if (iso && (!best || iso > best)) best = iso;
+  }
+  return best;
+}
+
+function ucsLaunchToIso(raw: string): string | null {
+  const iso = raw.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const m = raw.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (!m) return null;
+  let year = parseInt(m[3], 10);
+  if (m[3].length <= 2) year = year >= 57 ? 1900 + year : 2000 + year;
+  if (year < 1957 || year > 2100) return null;
+  return `${year}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`;
+}
+
 async function main() {
   console.log("Downloading UCS Satellite Database...");
   const raw = await fetch(UCS_URL);
@@ -181,7 +201,14 @@ async function main() {
   }
 
   insertMany(rows);
-  recordIngest(db, "UCS", total, "UCS Satellite Database (all regimes)");
+  const geoLaunches = (rows as { launch_date: string | null; orbit_class: string }[])
+    .filter((r) => r.orbit_class === "GEO" && r.launch_date)
+    .map((r) => r.launch_date as string);
+  const ucsVintage = latestUcsLaunchIso(geoLaunches);
+  recordIngest(db, "UCS", total, "UCS Satellite Database (all regimes); file vintage is latest GEO launch in the snapshot, not ingest time", {
+    fileVintage: ucsVintage,
+    sourceAsOf: ucsVintage,
+  });
   db.exec("VACUUM");
   db.close();
 

@@ -59,12 +59,13 @@ The registry is backed by a SQLite database (`data/clarke.db`) that ships commit
 
 ```bash
 npm run ingest            # UCS Satellite Database (GEO subset)
-npm run ingest:fcc        # FCC Approved Space Station List (from data/ssal.xlsx)
+npm run ingest:fcc        # FCC Approved Space Station List (from data/ssal.xlsx; see docs/FCC_REFRESH.md)
+npm run vintages          # record UCS / FCC / TLE file vintages without a full re-download
 npm run ingest:spacetrack # Space-Track satcat + TLEs (requires credentials)
 npm run ingest:all        # all of the above
 ```
 
-Each run records its timestamp and row count in an `ingest_meta` table, surfaced on the `/about` page and in the API's `meta.data_freshness`. Space-Track ingest stores satcat + TLEs and applies **TLE-primary occupancy authority**: UCS `longitude_geo` is preserved (wrap-normalized only); occupancy, congestion, and valuation v0 cluster on the TLE sub-satellite longitude when age/quality gates pass, otherwise UCS, with Δ / `positionDisputed` written as an audit trail. Against a DB that already has TLEs: `npm run apply:positions` then `npm run seed:valuations` (history is a labeled backfill, not trades).
+Each run records its timestamp, row count, and **source vintage** (UCS latest GEO launch, FCC workbook as-of, TLE epoch range) in `ingest_meta`, surfaced on Slot Terminal, `/about`, and the API's `meta.data_freshness`. Ingest `last_run` is not file vintage. Space-Track ingest stores satcat + TLEs and applies **TLE-primary occupancy authority**: UCS `longitude_geo` is preserved (wrap-normalized only); occupancy, congestion, and valuation v0 cluster on the TLE sub-satellite longitude when age/quality gates pass, otherwise UCS, with Δ / `positionDisputed` written as an audit trail. Against a DB that already has TLEs: `npm run apply:positions` then `npm run seed:valuations` (history is a labeled backfill, not trades).
 
 ---
 

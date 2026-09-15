@@ -372,9 +372,18 @@ export default function AboutPage() {
                         <span className="text-emerald-400/90 font-mono text-xs tabular-nums">{f.rowCount.toLocaleString()} rows</span>
                       </div>
                       <div className="text-white/30 text-xs font-mono">
-                        Updated {formatDate(f.lastRun)}
-                        {ageLabel(f.ageDays) && <span className="text-white/20"> · {ageLabel(f.ageDays)}</span>}
+                        Parsed {formatDate(f.lastRun)}
+                        {ageLabel(f.ageDays) && <span className="text-white/20"> · ingest {ageLabel(f.ageDays)}</span>}
                       </div>
+                      {(f.fileVintage || f.sourceAsOf || f.tleEpochMax) && (
+                        <div className={`text-xs font-mono mt-1 ${f.stale ? "text-amber-400/90" : "text-zinc-500"}`}>
+                          {f.source === "Space-Track TLE" && f.tleEpochMax
+                            ? `TLE epoch ${f.tleEpochMin && f.tleEpochMin !== f.tleEpochMax ? `${f.tleEpochMin}–${f.tleEpochMax}` : f.tleEpochMax}`
+                            : `As-of ${f.sourceAsOf || f.fileVintage}`}
+                          {f.vintageAgeDays >= 0 ? ` · ${ageLabel(f.vintageAgeDays)}` : ""}
+                          {f.stale ? " · STALE" : ""}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

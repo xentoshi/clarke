@@ -292,8 +292,14 @@ async function main() {
   const posStats = applyPositionAuthority(db);
   console.log(formatPositionApplyStats(posStats));
 
+  const tleEpochs = tleBlocks.map((b) => b.epoch).filter((e): e is string => Boolean(e)).sort();
   recordIngest(db, "Space-Track satcat", satcatData.length, "Space-Track satellite catalog");
-  recordIngest(db, "Space-Track TLE", tleBlocks.length, "Space-Track two-line element sets");
+  recordIngest(db, "Space-Track TLE", tleBlocks.length, "Space-Track two-line element sets", {
+    fileVintage: tleEpochs[tleEpochs.length - 1] ?? null,
+    sourceAsOf: tleEpochs[tleEpochs.length - 1] ?? null,
+    tleEpochMin: tleEpochs[0] ?? null,
+    tleEpochMax: tleEpochs[tleEpochs.length - 1] ?? null,
+  });
 
   db.close();
   console.log("Done.");

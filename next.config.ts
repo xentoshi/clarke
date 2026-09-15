@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
-  serverExternalPackages: ["better-sqlite3"],
+  serverExternalPackages: ["better-sqlite3", "satellite.js"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.nasa.gov" },

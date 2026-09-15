@@ -4,7 +4,8 @@ import fs from "fs";
 import { login, query, PATHS } from "./lib/spacetrack";
 import { recordIngest } from "./lib/ingest-meta";
 import { ensureEventTables, recordSlotEvent } from "./lib/events";
-import { subSatelliteLongitudeDeg, circularDiffDeg, normalizeLonDeg } from "./lib/orbit";
+import { subSatelliteLongitudeDeg, circularDiffDeg } from "./lib/orbit";
+import { applyPositionAuthority, formatPositionApplyStats } from "./lib/apply-position-authority";
 
 const DB_PATH = path.join(process.cwd(), "data", "clarke.db");
 
@@ -280,46 +281,16 @@ async function main() {
   }
   if (relocationEvents > 0) console.log(`Recorded ${relocationEvents} relocation event(s).`);
 
-  // --- Fix up UCS longitude data using Space-Track as a cross-reference ---
-  //
-  // UCS occasionally reports a GEO longitude in the 0..360 convention (e.g.
-  // 359 instead of -1) rather than Clarke's -180..180, which sorts and
-  // groups it wrong against everything else. More commonly, UCS records
-  // longitude_geo as the literal value 0 for GEO satellites whose real
-  // position isn't publicly disclosed (mostly classified military assets)
-  // rather than leaving it blank, which piles unrelated satellites onto a
-  // single position and makes it look artificially congested. Fix both,
-  // using this ingest's own TLE data as ground truth where available.
-  console.log("Cross-checking UCS longitude data...");
-
-  const updateLon = db.prepare("UPDATE satellites SET longitude_geo = ? WHERE id = ?");
-
-  const outOfRange = db.prepare(
-    "SELECT id, longitude_geo FROM satellites WHERE orbit_class = 'GEO' AND longitude_geo IS NOT NULL AND (longitude_geo > 180 OR longitude_geo <= -180)",
-  ).all() as { id: number; longitude_geo: number }[];
-  for (const row of outOfRange) updateLon.run(normalizeLonDeg(row.longitude_geo), row.id);
-  if (outOfRange.length > 0) console.log(`Normalized ${outOfRange.length} out-of-range longitude value(s).`);
-
-  const zeroLon = db.prepare(
-    "SELECT id, norad_id FROM satellites WHERE orbit_class = 'GEO' AND longitude_geo = 0",
-  ).all() as { id: number; norad_id: string | null }[];
-  const tleForNorad = db.prepare("SELECT tle1, tle2 FROM spacetrack_tles WHERE norad_id = ?");
-
-  let zeroCorrected = 0;
-  let zeroNulled = 0;
-  for (const row of zeroLon) {
-    const tle = row.norad_id ? (tleForNorad.get(row.norad_id) as { tle1: string; tle2: string } | undefined) : undefined;
-    const realLon = tle ? subSatelliteLongitudeDeg(tle.tle1, tle.tle2) : null;
-    if (realLon !== null) {
-      updateLon.run(realLon, row.id);
-      zeroCorrected++;
-    } else {
-      updateLon.run(null, row.id);
-      zeroNulled++;
-    }
-  }
-  if (zeroCorrected > 0) console.log(`Corrected ${zeroCorrected} satellite(s) misfiled at 0° using TLE data.`);
-  if (zeroNulled > 0) console.log(`Marked ${zeroNulled} satellite(s) with unknown GEO position (no public tracking data) as unknown instead of 0°.`);
+  // Dual-track occupancy: keep UCS longitude_geo as the catalog value (wrap-
+  // normalize only — do not silently replace it with a TLE). Write TLE lon,
+  // occupancy lon, Δ, source, and dispute flags as an audit trail. Live
+  // Slot Terminal / congestion / v0 cluster on TLE-primary occupancy at
+  // query time (see src/lib/position-authority.ts). Previously this step
+  // only rewrote longitude_geo = 0 placeholders and left 200+ relocated
+  // GEO payloads clustered at stale UCS longitudes.
+  console.log("Applying TLE-primary occupancy authority...");
+  const posStats = applyPositionAuthority(db);
+  console.log(formatPositionApplyStats(posStats));
 
   recordIngest(db, "Space-Track satcat", satcatData.length, "Space-Track satellite catalog");
   recordIngest(db, "Space-Track TLE", tleBlocks.length, "Space-Track two-line element sets");

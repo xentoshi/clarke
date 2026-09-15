@@ -16,7 +16,7 @@ Clarke normalizes public data across GEO, LEO, and MEO to build the orbital asse
 - **Slot Terminal** — a data-dense dossier at `/orbital/[slug]` (alias `/slot/[slug]`) with implied fair value + confidence interval, occupancy, congestion, FCC/BIU hints, a rights-chain stub, nearest comps, and a **simulated** capacity book (labeled, not live trades)
 - **Intelligence layer** — valuation model v0 (range + confidence + driver breakdown + 30-day history), a normalized 0–100 congestion / coordination-risk score, and per-source data-freshness tracking
 - **Terminal seats** — free thin registry; Pro unlocks driver breakdown, compare (up to 4), export+, and the Terminal API
-- **Data quality** — source longitude data is cross-checked against Space-Track TLEs on ingest to catch and correct placeholder or malformed positions rather than trusting them blindly
+- **Data quality** — occupancy clusters on Space-Track TLE longitude when the TLE passes published quality gates (UCS catalog longitude is kept and shown). Disagreements >2° are flagged. TLE longitude is not an FCC or ITU assignment.
 - **Agent access** — a versioned read-only HTTP API (public agents + Pro Terminal) and an MCP server expose the registry to LLM agents and tools
 - **Blog** — long-form writing on orbital infrastructure, space compute, and the space economy
 - **About** — what Clarke is, why now, data sources, registry methodology, and data quality notes, all on one page
@@ -64,7 +64,7 @@ npm run ingest:spacetrack # Space-Track satcat + TLEs (requires credentials)
 npm run ingest:all        # all of the above
 ```
 
-Each run records its timestamp and row count in an `ingest_meta` table, surfaced on the `/about` page and in the API's `meta.data_freshness`. The Space-Track step also cross-checks UCS's reported GEO longitude against live TLE data, correcting placeholder or malformed positions and flagging genuinely unknown ones instead of trusting the raw source value.
+Each run records its timestamp and row count in an `ingest_meta` table, surfaced on the `/about` page and in the API's `meta.data_freshness`. Space-Track ingest stores satcat + TLEs and applies **TLE-primary occupancy authority**: UCS `longitude_geo` is preserved (wrap-normalized only); occupancy, congestion, and valuation v0 cluster on the TLE sub-satellite longitude when age/quality gates pass, otherwise UCS, with Δ / `positionDisputed` written as an audit trail. Against a DB that already has TLEs: `npm run apply:positions` then `npm run seed:valuations` (history is a labeled backfill, not trades).
 
 ---
 
@@ -90,7 +90,7 @@ Open `/orbital` for the registry, `/orbital/101w` (or `/slot/101w`) for Slot Ter
 Valuation methodology: [`docs/VALUATION.md`](./docs/VALUATION.md) and `/docs/valuation`.
 
 ```bash
-npm test                  # valuation v0 unit tests
+npm test                  # valuation v0 + TLE occupancy authority tests
 ```
 
 ---

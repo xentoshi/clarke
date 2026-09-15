@@ -26,11 +26,11 @@ Curated `valueEstimate` strings (e.g. `$350M+`) remain visible as a hand-checked
 |---|---|---|
 | Arc desirability | Longitude band | Same corridors as the previous heuristic (Europe, North America, Asia, …) |
 | Coverage GDP/pop | `src/lib/coverage-proxy.ts` | Public regional GDP and population shares, rounded. Not a measured beam footprint. |
-| Occupancy | UCS GEO positions ±0.4° | Count of co-located satellites |
+| Occupancy | TLE-primary GEO longitude ±0.4° | Space-Track TLE when age/quality pass; UCS catalog fallback otherwise. Not an FCC/ITU assignment. |
 | Remaining life | UCS launch date + expected lifetime | UCS dates are `M/D/YY`; v0 expands 57–99 → 1957–1999 and 00–56 → 2000–2056. Missing lifetime → multiplier 1.0 (no invented youth/expiry). UCS expected lifetime is **design life**, not remaining licensed life — many GEO birds fly past it. |
 | Operator tier | Operator name vs tier-1 list | SES, Intelsat, Eutelsat, … |
 | Spectrum | Curated band tags | UCS-derived rows often have no band data |
-| Scarcity | Clarke congestion 0–100 | Density, co-location, operator contention |
+| Scarcity | Clarke congestion 0–100 | Density, co-location, operator contention on **TLE-primary** occupancy longs |
 | License / BIU | FCC SSAL + UCS occupancy | Paper filing vs in-orbit vs non-US operating |
 
 ## History

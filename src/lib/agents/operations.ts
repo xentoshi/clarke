@@ -16,6 +16,7 @@ import { valuateSlot, type SlotValuation } from "../valuation";
 import { getDataFreshness } from "../freshness";
 import type { FreshnessMeta } from "./envelope";
 import { isSafeSlug } from "../slot-utils";
+import { buildSlotPositionTrust, type SlotPositionTrust } from "../position-authority";
 
 export { isSafeSlug };
 
@@ -61,6 +62,7 @@ export interface SlotDossier {
   fccAuthorizations: FccAuthorization[];
   congestion: ReturnType<typeof getCongestion>;
   valuation: SlotValuation;
+  positionTrust: SlotPositionTrust;
 }
 
 export function getSlotDossier(slug: string): SlotDossier | null {
@@ -76,7 +78,8 @@ export function getSlotDossier(slug: string): SlotDossier | null {
     fccLicensed: fccAuthorizations.length > 0,
     satCount: satellites.length || congestion.factors.coLocated,
   });
-  return { slot, satellites, fccAuthorizations, congestion, valuation };
+  const positionTrust = buildSlotPositionTrust(slot.longitude, satellites, getGeoSatellites(), COLOCATION_TOLERANCE_DEG);
+  return { slot, satellites, fccAuthorizations, congestion, valuation, positionTrust };
 }
 
 // Adapter: data freshness in the snake_case shape used by the API envelope meta.

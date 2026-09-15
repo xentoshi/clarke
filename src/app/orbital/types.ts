@@ -16,6 +16,8 @@ export interface ExplorerRow {
   status: SlotStatus;
   satCount: number;
   satelliteNames: string[];
+  positionDisputedCount: number;
+  ucsGhostCount: number;
   congestionScore: number;
   congestionTier: CongestionTier;
   region: string;

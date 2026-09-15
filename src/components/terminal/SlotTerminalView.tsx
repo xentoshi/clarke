@@ -5,6 +5,7 @@ import type { Entitlements } from "@/lib/auth";
 import { formatAsOf, formatAsOfDate } from "@/lib/provenance";
 import { parseUcsLaunchYear } from "@/lib/occupancy-quality";
 import { formatOperatorMix } from "@/lib/operator-mix";
+import { formatLonFixed } from "@/lib/geo-angle";
 import { Metric } from "./Metric";
 import { ProGate } from "./ProGate";
 import { ValuationChart } from "./ValuationChart";
@@ -89,9 +90,24 @@ export function SlotTerminalView({
         <div className="text-right">
           <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">As of</div>
           <div className="text-zinc-300 font-mono text-sm">{formatAsOf(model.asOf)}</div>
-          <div className="text-[10px] text-zinc-600 mt-1">model {v.modelVersion} · {v.basis}</div>
+          <div className="text-[10px] text-zinc-600 mt-1">model {v.modelVersion} · {v.basis}          </div>
         </div>
       </header>
+
+      {(model.positionTrust.disputedCount > 0 || model.positionTrust.ucsGhosts.length > 0) && (
+        <div className="mb-6 border border-amber-900/50 bg-amber-950/20 rounded-xl px-4 py-3">
+          <p className="text-[10px] font-mono text-amber-400/80 uppercase tracking-widest mb-1">Position disagreement</p>
+          <p className="text-amber-100/80 text-sm leading-relaxed">
+            Occupancy clusters on Space-Track TLE longitude when the TLE passes quality gates, not on the UCS catalog longitude and not on any FCC/ITU assignment.
+            {model.positionTrust.disputedCount > 0
+              ? ` ${model.positionTrust.disputedCount} satellite${model.positionTrust.disputedCount === 1 ? "" : "s"} in this ±0.4° window have |UCS−TLE| > ${model.positionTrust.disputeThresholdDeg}°.`
+              : ""}
+            {model.positionTrust.ucsGhosts.length > 0
+              ? ` UCS still lists ${model.positionTrust.ucsGhosts.length} satellite${model.positionTrust.ucsGhosts.length === 1 ? "" : "s"} here that TLE occupancy places elsewhere (${model.positionTrust.ucsGhosts.slice(0, 3).map((g) => g.name).join(", ")}${model.positionTrust.ucsGhosts.length > 3 ? "…" : ""}).`
+              : ""}
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-px bg-white/[0.05] rounded-xl overflow-hidden mb-6 border border-white/[0.05]">
         <Metric
@@ -200,6 +216,10 @@ export function SlotTerminalView({
               <Row k="Purpose" val={model.purpose || "—"} />
               <Row k="Status" val={statusLabels[model.status]} />
               <Row k="Satellites" val={String(model.satCount)} />
+              <Row
+                k="Position source"
+                val={`${model.positionTrust.tlePrimaryCount} TLE / ${model.positionTrust.ucsFallbackCount} UCS fallback`}
+              />
               <Row k="Remaining life" val={v.occupancyQuality.detail} />
               <Row k="Coverage proxy" val={v.coverage.detail} />
             </dl>
@@ -267,19 +287,50 @@ export function SlotTerminalView({
                 <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Satellite</th>
                 <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden sm:table-cell">Operator</th>
                 <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden md:table-cell">Purpose</th>
+                <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden lg:table-cell">UCS lon</th>
+                <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden lg:table-cell">TLE lon</th>
+                <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden md:table-cell">Δ</th>
+                <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden xl:table-cell">TLE epoch</th>
                 <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Launched</th>
               </tr>
             </thead>
             <tbody>
               {model.satellites.length === 0 ? (
-                <tr><td colSpan={4} className="px-4 py-6 text-zinc-600 text-xs">No UCS satellite in orbit at this longitude.</td></tr>
+                <tr><td colSpan={8} className="px-4 py-6 text-zinc-600 text-xs">No satellite with a usable occupancy longitude in this ±0.4° window.</td></tr>
               ) : model.satellites.map((sat) => (
                 <tr key={sat.id} className="border-b border-zinc-800/50 last:border-0">
                   <td className="px-4 py-3">
-                    <div className="text-white text-xs font-mono font-medium">{sat.name}</div>
+                    <div className="text-white text-xs font-mono font-medium">
+                      {sat.name}
+                      {sat.positionDisputed && (
+                        <span className="ml-2 text-[9px] uppercase tracking-wider text-amber-400 border border-amber-900/60 px-1 py-0.5 rounded">disputed</span>
+                      )}
+                    </div>
+                    <div className="text-[10px] font-mono text-zinc-600 mt-0.5">
+                      {sat.positionSource === "tle" ? "TLE occupancy" : sat.positionSource === "ucs" ? "UCS fallback" : "no position"}
+                    </div>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell text-zinc-400 text-xs">{sat.operator ?? "—"}</td>
                   <td className="px-4 py-3 hidden md:table-cell text-zinc-500 text-xs">{sat.detailedPurpose ?? sat.purpose ?? "—"}</td>
+                  <td className="px-4 py-3 hidden lg:table-cell text-right text-zinc-500 text-xs font-mono">
+                    {sat.longitudeUcs != null ? formatLonFixed(sat.longitudeUcs, 1) : "—"}
+                  </td>
+                  <td className="px-4 py-3 hidden lg:table-cell text-right text-zinc-300 text-xs font-mono">
+                    {sat.longitudeTle != null ? formatLonFixed(sat.longitudeTle, 1) : "—"}
+                  </td>
+                  <td className="px-4 py-3 hidden md:table-cell text-right text-xs font-mono">
+                    {sat.positionDeltaDeg == null ? (
+                      <span className="text-zinc-600">—</span>
+                    ) : (
+                      <span className={sat.positionDisputed ? "text-amber-400" : "text-zinc-500"}>
+                        {sat.positionDeltaDeg.toFixed(1)}°
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 hidden xl:table-cell text-right text-zinc-500 text-xs font-mono">
+                    {sat.tleEpoch ?? "—"}
+                    {sat.tleAgeDays != null ? ` (${sat.tleAgeDays}d)` : ""}
+                  </td>
                   <td className="px-4 py-3 text-right text-zinc-500 text-xs font-mono">{parseUcsLaunchYear(sat.launchDate) ?? "—"}</td>
                 </tr>
               ))}
@@ -320,7 +371,7 @@ export function SlotTerminalView({
 
       <footer className="border-t border-zinc-800/50 pt-5 text-[11px] font-mono text-zinc-600 leading-relaxed space-y-1">
         <p>
-          Provenance · UCS satellites {formatAsOfDate(model.provenance.occupancy.asOf)} · FCC SSAL {formatAsOfDate(model.provenance.fcc.asOf)} ·
+          Provenance · occupancy TLE-primary {formatAsOfDate(model.provenance.occupancy.asOf)} · UCS catalog {formatAsOfDate(model.provenance.ucsCatalog.asOf)} · FCC SSAL {formatAsOfDate(model.provenance.fcc.asOf)} ·
           valuation {v.modelVersion} {formatAsOfDate(v.asOf)}
           {model.modelRunAsOf ? ` · snapshots seeded ${model.modelRunAsOf} (model path, not trades)` : " · history synthesized (run npm run seed:valuations to persist)"}
         </p>

@@ -29,6 +29,7 @@ export default function ValuationDocsPage() {
       × scarcity (congestion score)
       × license / brought-into-use`}</pre>
       <p className="text-zinc-500 text-sm leading-relaxed mb-6">
+        Occupancy counts use TLE-primary longitude ±0.4° (UCS fallback). TLE longitude is not an FCC or ITU assignment.
         Confidence interval widens as confidence falls (±22% / ±35% / ±50%). Government/military-only UCS users are flagged
         non-commercial. History in <span className="font-mono">data/terminal.db</span> is a seeded model path until a daily job lands — not trade prints.
       </p>

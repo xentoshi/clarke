@@ -12,7 +12,7 @@ export const metadata = buildMeta({
 const faq = [
   {
     q: "Where does this data come from?",
-    a: "Satellite names, operators, and orbital positions come from the UCS Satellite Database, a normalized catalog of active satellites maintained by the Union of Concerned Scientists and updated twice yearly. FCC authorization records, including call signs, licensed frequency bands, and in-orbit dates, come from the FCC Approved Space Station List, the official government record of all space stations authorized to operate in or serve the United States. Congestion scores are computed from satellite density in the UCS data rather than from ITU filing records, meaning they reflect the density of active operational hardware rather than the broader universe of filed and coordinated positions.",
+    a: "Satellite names, operators, and UCS catalog longitudes come from the UCS Satellite Database. Occupancy clustering (who is counted at a slot) uses a Space-Track TLE sub-satellite longitude when that TLE passes published age and quality gates, otherwise the UCS longitude. FCC authorization records come from the FCC Approved Space Station List. TLE longitude is not an FCC assignment or ITU filing. Congestion scores use TLE-primary occupancy, not ITU filing records.",
   },
   {
     q: "Why do some positions have FCC authorization data and others don't?",
@@ -20,7 +20,7 @@ const faq = [
   },
   {
     q: "What does it mean when multiple satellites appear at the same position?",
-    a: "Multiple satellites can share the same nominal orbital longitude through ITU coordination agreements, each operating on different frequency assignments that prevent mutual interference. The 19.2°E position in the Clarke registry, for example, has four distinct SES Astra satellites operating within 0.14 degrees of each other under the same nominal position. Clarke groups satellites within 0.4 degrees of a position's nominal longitude as co-located, which is the standard tolerance used in ITU coordination practice.",
+    a: "Multiple satellites can share the same nominal orbital longitude through ITU coordination agreements, each operating on different frequency assignments that prevent mutual interference. Clarke groups satellites within 0.4 degrees of a position using occupancy longitude (TLE-primary). SES-1 stays at 101°W because UCS and TLE agree; a satellite whose UCS row is stale (MUOS-2 still listed at 100.1°W) occupies at its TLE longitude instead. That TLE longitude is not an FCC or ITU assignment.",
   },
   {
     q: "How many total orbital positions exist versus what Clarke currently tracks?",

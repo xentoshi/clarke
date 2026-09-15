@@ -76,6 +76,15 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
 
             {row.description && <p className="text-zinc-400 text-sm leading-relaxed mb-5">{row.description}</p>}
 
+            {(row.positionDisputedCount > 0 || row.ucsGhostCount > 0) && (
+              <div className="text-amber-300/80 text-xs bg-amber-950/20 border border-amber-900/40 rounded px-2.5 py-2 mb-4">
+                TLE occupancy disagrees with UCS catalog
+                {row.positionDisputedCount > 0 ? ` · ${row.positionDisputedCount} disputed in-window` : ""}
+                {row.ucsGhostCount > 0 ? ` · ${row.ucsGhostCount} UCS-listed elsewhere by TLE` : ""}
+                . TLE longitude is not an FCC/ITU assignment.
+              </div>
+            )}
+
             {/* Value */}
             {v.nonCommercial ? (
               <div className="text-amber-300/80 text-xs bg-amber-950/20 border border-amber-900/40 rounded px-2.5 py-2 mb-1">

@@ -1,9 +1,18 @@
 import { getDb } from "./db";
 import { lonToSlug, slugToLon, formatLon } from "./slot-utils";
 import { parseUcsLaunchYear } from "./occupancy-quality";
+import { subSatelliteLongitudeDeg, parseTleElements } from "./orbit";
+import { circularAbsDiffDeg, withinLongitudeWindow } from "./geo-angle";
+import {
+  resolveOccupancyPosition,
+  COLOCATION_WINDOW_DEG,
+  NEIGHBORHOOD_WINDOW_DEG,
+  type PositionSource,
+} from "./position-authority";
 import type { OrbitalSlot } from "@/data/orbital-slots";
 
 export { lonToSlug, slugToLon, formatLon } from "./slot-utils";
+export { COLOCATION_WINDOW_DEG, NEIGHBORHOOD_WINDOW_DEG } from "./position-authority";
 
 export interface GeoSatellite {
   id: number;
@@ -16,7 +25,19 @@ export interface GeoSatellite {
   detailedPurpose: string | null;
   orbitClass: string;
   orbitType: string | null;
+  /** Occupancy longitude (TLE-primary). Not an FCC assignment or ITU filing. */
   longitudeGeo: number | null;
+  /** UCS-reported GEO longitude (catalog), wrap-normalized. */
+  longitudeUcs: number | null;
+  /** Space-Track TLE sub-satellite longitude at the TLE epoch, if computed. */
+  longitudeTle: number | null;
+  positionSource: PositionSource;
+  positionDeltaDeg: number | null;
+  positionDisputed: boolean;
+  tleEpoch: string | null;
+  tleAgeDays: number | null;
+  tleUsable: boolean;
+  tleRejectReason: string | null;
   launchDate: string | null;
   expectedLifetimeYears: number | null;
   contractor: string | null;
@@ -30,31 +51,139 @@ const GEO_SELECT = `
   SELECT id, name, official_name as officialName, owner_country as ownerCountry,
          operator, users, purpose, detailed_purpose as detailedPurpose,
          orbit_class as orbitClass, orbit_type as orbitType,
-         longitude_geo as longitudeGeo, launch_date as launchDate,
+         longitude_geo as longitudeUcs, launch_date as launchDate,
          expected_lifetime_years as expectedLifetimeYears,
          contractor, launch_vehicle as launchVehicle,
          cospar_id as cosparId, norad_id as noradId, comments
   FROM satellites
 `;
 
-export function getGeoSatellites(): GeoSatellite[] {
-  const db = getDb();
-  if (!db) return [];
-  return db.prepare(`${GEO_SELECT} WHERE orbit_class = 'GEO' ORDER BY longitude_geo ASC`).all() as GeoSatellite[];
+interface RawGeoSatellite {
+  id: number;
+  name: string;
+  officialName: string | null;
+  ownerCountry: string | null;
+  operator: string | null;
+  users: string | null;
+  purpose: string | null;
+  detailedPurpose: string | null;
+  orbitClass: string;
+  orbitType: string | null;
+  longitudeUcs: number | null;
+  launchDate: string | null;
+  expectedLifetimeYears: number | null;
+  contractor: string | null;
+  launchVehicle: string | null;
+  cosparId: string | null;
+  noradId: string | null;
+  comments: string | null;
 }
 
 // Tolerance constants — different contexts use different values:
 // 0.4° — co-location grouping (ITU coordination practice; occupancy window)
 // 0.6° — FCC authorization matching (FCC records use coarser longitude precision)
-export const COLOCATION_TOLERANCE_DEG = 0.4;
+export const COLOCATION_TOLERANCE_DEG = COLOCATION_WINDOW_DEG;
 export const FCC_MATCH_TOLERANCE_DEG = 0.6;
 
-export function getGeoSatellitesByLongitude(lon: number, toleranceDeg = COLOCATION_TOLERANCE_DEG): GeoSatellite[] {
+let geoCache: GeoSatellite[] | null = null;
+
+export function clearGeoSatelliteCache(): void {
+  geoCache = null;
+}
+
+interface TleJoin {
+  tle1: string;
+  tle2: string;
+  epoch: string | null;
+  ingested_at: string | null;
+}
+
+interface SatcatJoin {
+  object_type: string | null;
+  decay_date: string | null;
+  current: string | null;
+}
+
+function tableExists(name: string): boolean {
+  const db = getDb();
+  if (!db) return false;
+  const row = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(name) as { name: string } | undefined;
+  return !!row;
+}
+
+function loadTleMap(): Map<string, TleJoin> {
+  const db = getDb();
+  if (!db || !tableExists("spacetrack_tles")) return new Map();
+  const rows = db.prepare(
+    "SELECT norad_id, tle1, tle2, epoch, ingested_at FROM spacetrack_tles",
+  ).all() as (TleJoin & { norad_id: string })[];
+  return new Map(rows.map((r) => [r.norad_id, r]));
+}
+
+function loadSatcatMap(): Map<string, SatcatJoin> {
+  const db = getDb();
+  if (!db || !tableExists("spacetrack_satcat")) return new Map();
+  const rows = db.prepare(
+    "SELECT norad_id, object_type, decay_date, current FROM spacetrack_satcat",
+  ).all() as (SatcatJoin & { norad_id: string })[];
+  return new Map(rows.map((r) => [r.norad_id, { object_type: r.object_type, decay_date: r.decay_date, current: r.current }]));
+}
+
+function enrichGeoSatellite(raw: RawGeoSatellite, tles: Map<string, TleJoin>, satcat: Map<string, SatcatJoin>): GeoSatellite {
+  const tle = raw.noradId ? tles.get(raw.noradId) : undefined;
+  const cat = raw.noradId ? satcat.get(raw.noradId) : undefined;
+  let tleLongitude: number | null = null;
+  let meanMotion: number | null = null;
+  let eccentricity: number | null = null;
+  if (tle) {
+    tleLongitude = subSatelliteLongitudeDeg(tle.tle1, tle.tle2);
+    const el = parseTleElements(tle.tle2);
+    meanMotion = el.meanMotionRevPerDay;
+    eccentricity = el.eccentricity;
+  }
+  const pos = resolveOccupancyPosition({
+    ucsLongitude: raw.longitudeUcs,
+    tleLongitude,
+    tleEpoch: tle?.epoch ?? null,
+    tleIngestedAt: tle?.ingested_at ?? null,
+    tleMeanMotion: meanMotion,
+    tleEccentricity: eccentricity,
+    objectType: cat?.object_type ?? null,
+    decayDate: cat?.decay_date ?? null,
+    current: cat?.current ?? null,
+  });
+  return {
+    ...raw,
+    longitudeUcs: pos.ucsLongitude,
+    longitudeTle: pos.tleLongitude,
+    longitudeGeo: pos.occupancyLongitude,
+    positionSource: pos.source,
+    positionDeltaDeg: pos.deltaDeg,
+    positionDisputed: pos.disputed,
+    tleEpoch: pos.tleEpoch,
+    tleAgeDays: pos.tleAgeDays,
+    tleUsable: pos.tleUsable,
+    tleRejectReason: pos.tleRejectReason,
+  };
+}
+
+export function getGeoSatellites(): GeoSatellite[] {
+  if (geoCache) return geoCache;
   const db = getDb();
   if (!db) return [];
-  return db.prepare(
-    `${GEO_SELECT} WHERE orbit_class = 'GEO' AND longitude_geo BETWEEN ? AND ? ORDER BY longitude_geo ASC`
-  ).all(lon - toleranceDeg, lon + toleranceDeg) as GeoSatellite[];
+  const raw = db.prepare(`${GEO_SELECT} WHERE orbit_class = 'GEO'`).all() as RawGeoSatellite[];
+  const tles = loadTleMap();
+  const satcat = loadSatcatMap();
+  const enriched = raw.map((r) => enrichGeoSatellite(r, tles, satcat));
+  enriched.sort((a, b) => (a.longitudeGeo ?? 999) - (b.longitudeGeo ?? 999));
+  geoCache = enriched;
+  return enriched;
+}
+
+export function getGeoSatellitesByLongitude(lon: number, toleranceDeg = COLOCATION_TOLERANCE_DEG): GeoSatellite[] {
+  return getGeoSatellites()
+    .filter((s) => s.longitudeGeo !== null && withinLongitudeWindow(s.longitudeGeo, lon, toleranceDeg))
+    .sort((a, b) => (a.longitudeGeo ?? 0) - (b.longitudeGeo ?? 0));
 }
 
 export interface SatelliteStats {
@@ -89,33 +218,21 @@ export interface SlotSummary {
 }
 
 export function getGeoSlotSummaries(): SlotSummary[] {
-  const db = getDb();
-  if (!db) return [];
-  const rows = db.prepare(`
-    SELECT longitude_geo as longitudeGeo, operator, owner_country as ownerCountry, purpose
-    FROM satellites
-    WHERE orbit_class = 'GEO' AND longitude_geo IS NOT NULL
-    ORDER BY longitude_geo ASC
-  `).all() as { longitudeGeo: number; operator: string | null; ownerCountry: string | null; purpose: string | null }[];
-
-  return rows.map((r) => ({
-    longitudeGeo: r.longitudeGeo,
-    label: formatLon(r.longitudeGeo),
-    operator: r.operator ?? "",
-    ownerCountry: r.ownerCountry ?? "",
-    purpose: r.purpose,
-  }));
+  return getGeoSatellites()
+    .filter((s): s is GeoSatellite & { longitudeGeo: number } => s.longitudeGeo !== null)
+    .map((s) => ({
+      longitudeGeo: s.longitudeGeo,
+      label: formatLon(s.longitudeGeo),
+      operator: s.operator ?? "",
+      ownerCountry: s.ownerCountry ?? "",
+      purpose: s.purpose,
+    }));
 }
 
 export function getAllGeoSlugs(): string[] {
-  const db = getDb();
-  if (!db) return [];
-  const rows = db.prepare(
-    "SELECT longitude_geo FROM satellites WHERE orbit_class = 'GEO' AND longitude_geo IS NOT NULL"
-  ).all() as { longitude_geo: number }[];
   const seen = new Set<string>();
-  for (const row of rows) {
-    seen.add(lonToSlug(row.longitude_geo));
+  for (const sat of getGeoSatellites()) {
+    if (sat.longitudeGeo !== null) seen.add(lonToSlug(sat.longitudeGeo));
   }
   return [...seen];
 }
@@ -148,32 +265,29 @@ export function getNearbySlots(
   count = 4,
   minSeparationDeg = 0,
 ): { slug: string; label: string; lon: number }[] {
-  const db = getDb();
-  if (!db) return [];
-  // Fetch extra grouped longitudes when skipping the occupancy window so a
-  // dense cluster (e.g. 101°W ±0.4°) does not fill the "nearest comps" list
-  // with overlapping views of the same satellites.
-  const fetchLimit = minSeparationDeg > 0 ? Math.max(count * 12, 24) : count * 4;
-  const rows = db.prepare(`
-    SELECT longitude_geo, COUNT(*) as n
-    FROM satellites
-    WHERE orbit_class = 'GEO' AND longitude_geo IS NOT NULL
-      AND longitude_geo != ?
-    GROUP BY longitude_geo
-    ORDER BY ABS(longitude_geo - ?) ASC
-    LIMIT ?
-  `).all(lon, lon, fetchLimit) as { longitude_geo: number; n: number }[];
+  // Group occupancy longitudes (TLE-primary) rather than raw UCS catalog
+  // values, and skip the occupancy window so comps are not overlapping
+  // views of the same co-located fleet.
+  const bySlug = new Map<string, number>();
+  for (const sat of getGeoSatellites()) {
+    if (sat.longitudeGeo === null) continue;
+    const slug = lonToSlug(sat.longitudeGeo);
+    if (!bySlug.has(slug)) bySlug.set(slug, sat.longitudeGeo);
+  }
 
-  const seen = new Set<string>();
+  const ranked = [...bySlug.entries()]
+    .map(([slug, occLon]) => ({ slug, occLon, d: circularAbsDiffDeg(occLon, lon) }))
+    .filter((r) => r.d > 0)
+    .sort((a, b) => a.d - b.d);
+
   const result: { slug: string; label: string; lon: number }[] = [];
-  for (const row of rows) {
-    if (minSeparationDeg > 0 && Math.abs(row.longitude_geo - lon) <= minSeparationDeg) continue;
-    const slug = lonToSlug(row.longitude_geo);
-    if (!seen.has(slug)) {
-      seen.add(slug);
-      const displayLon = slugToLon(slug) ?? row.longitude_geo;
-      result.push({ slug, label: formatLon(displayLon), lon: row.longitude_geo });
-    }
+  const seen = new Set<string>();
+  for (const row of ranked) {
+    if (minSeparationDeg > 0 && row.d <= minSeparationDeg) continue;
+    if (seen.has(row.slug)) continue;
+    seen.add(row.slug);
+    const displayLon = slugToLon(row.slug) ?? row.occLon;
+    result.push({ slug: row.slug, label: formatLon(displayLon), lon: displayLon });
     if (result.length >= count) break;
   }
   return result;
@@ -215,9 +329,11 @@ function tierForScore(score: number): { tier: CongestionTier; label: string } {
 
 // Normalized congestion score blending three signals at a longitude:
 //   density (±2° arc occupancy), co-location (±0.4° direct neighbors), and
-//   contention (how many distinct operators share the arc). A position packed
-//   by a single operator scores lower on contention than an equally dense arc
-//   contested by many operators — the latter carries more coordination risk.
+//   contention (how many distinct operators share the arc). Positions are
+//   TLE-primary occupancy longitudes (UCS fallback when no usable TLE).
+//   A position packed by a single operator scores lower on contention than
+//   an equally dense arc contested by many operators — the latter carries
+//   more coordination risk.
 //
 // Excludes satellites Space-Track has confirmed decayed (spacetrack_satcat.
 // decay_date). GEO objects essentially never decay in the atmospheric-drag
@@ -231,21 +347,16 @@ function tierForScore(score: number): { tier: CongestionTier; label: string } {
 // (e.g. operators running inclined-orbit satellites near end of life) as
 // retired. That needs a more careful signal than this query provides.
 export function getCongestion(lon: number): CongestionData {
-  const db = getDb();
-  if (!db) return EMPTY_CONGESTION;
-
-  const rows = db.prepare(`
-    SELECT s.operator, s.longitude_geo as lon
-    FROM satellites s
-    WHERE s.orbit_class = 'GEO' AND s.longitude_geo BETWEEN ? AND ?
-      AND NOT EXISTS (
-        SELECT 1 FROM spacetrack_satcat st
-        WHERE st.norad_id = s.norad_id AND st.decay_date IS NOT NULL
-      )
-  `).all(lon - 2, lon + 2) as { operator: string | null; lon: number }[];
+  if (!getDb()) return EMPTY_CONGESTION;
+  const decayed = getDecayedNoradIds();
+  const rows = getGeoSatellites().filter((s) => {
+    if (s.longitudeGeo === null) return false;
+    if (s.noradId && decayed.has(s.noradId)) return false;
+    return withinLongitudeWindow(s.longitudeGeo, lon, NEIGHBORHOOD_WINDOW_DEG);
+  });
 
   const neighborhood = rows.length;
-  const coLocated = rows.filter((r) => Math.abs(r.lon - lon) <= COLOCATION_TOLERANCE_DEG).length;
+  const coLocated = rows.filter((r) => withinLongitudeWindow(r.longitudeGeo!, lon, COLOCATION_TOLERANCE_DEG)).length;
 
   const opCounts = new Map<string, number>();
   for (const r of rows) {
@@ -280,13 +391,12 @@ export function getCongestion(lon: number): CongestionData {
 // Normalized 0..100 congestion score per slot slug, consistent with
 // getCongestion().score. Used by the orbital listing to color positions.
 export function getAllCongestionScores(): Record<string, number> {
-  const db = getDb();
-  if (!db) return {};
-  const positions = db.prepare(
-    "SELECT DISTINCT ROUND(longitude_geo,1) as lon FROM satellites WHERE orbit_class = 'GEO' AND longitude_geo IS NOT NULL"
-  ).all() as { lon: number }[];
+  const positions = new Set<number>();
+  for (const sat of getGeoSatellites()) {
+    if (sat.longitudeGeo !== null) positions.add(Math.round(sat.longitudeGeo * 10) / 10);
+  }
   const result: Record<string, number> = {};
-  for (const { lon } of positions) {
+  for (const lon of positions) {
     result[lonToSlug(lon)] = getCongestion(lon).score;
   }
   return result;
@@ -348,27 +458,20 @@ export interface OperatorPosition {
 }
 
 export function getOperatorGeoPositions(operatorNames: string[]): OperatorPosition[] {
-  const db = getDb();
-  if (!db || operatorNames.length === 0) return [];
-  const placeholders = operatorNames.map(() => "?").join(",");
-  const rows = db.prepare(`
-    SELECT longitude_geo, operator, name
-    FROM satellites
-    WHERE orbit_class = 'GEO' AND longitude_geo IS NOT NULL AND operator IN (${placeholders})
-    ORDER BY longitude_geo ASC
-  `).all(...operatorNames) as { longitude_geo: number; operator: string; name: string }[];
-
+  if (operatorNames.length === 0) return [];
+  const wanted = new Set(operatorNames);
   const bySlug = new Map<string, OperatorPosition>();
-  for (const row of rows) {
-    const slug = lonToSlug(row.longitude_geo);
+  for (const sat of getGeoSatellites()) {
+    if (sat.longitudeGeo === null || !sat.operator || !wanted.has(sat.operator)) continue;
+    const slug = lonToSlug(sat.longitudeGeo);
     if (!bySlug.has(slug)) {
-      bySlug.set(slug, { slug, label: formatLon(row.longitude_geo), lon: row.longitude_geo, satelliteCount: 0, names: [] });
+      bySlug.set(slug, { slug, label: formatLon(sat.longitudeGeo), lon: sat.longitudeGeo, satelliteCount: 0, names: [] });
     }
     const pos = bySlug.get(slug)!;
     pos.satelliteCount++;
-    if (pos.names.length < 3) pos.names.push(row.name);
+    if (pos.names.length < 3) pos.names.push(sat.name);
   }
-  return [...bySlug.values()];
+  return [...bySlug.values()].sort((a, b) => a.lon - b.lon);
 }
 
 // NORAD IDs Space-Track has confirmed decayed (spacetrack_satcat.decay_date
@@ -421,7 +524,7 @@ export function mergeWithUcs(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
 
   const enriched = curatedSlots.map((slot) => {
     const nearby = ucs.filter(
-      (s) => s.longitudeGeo !== null && Math.abs(s.longitudeGeo - slot.longitude) <= TOLERANCE
+      (s) => s.longitudeGeo !== null && withinLongitudeWindow(s.longitudeGeo, slot.longitude, TOLERANCE)
     );
     const inferredPurpose = nearby[0]?.purpose ?? "Communications";
     return {
@@ -437,7 +540,7 @@ export function mergeWithUcs(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
   const curatedLons = curatedSlots.map((s) => s.longitude);
   const decayedNoradIds = getDecayedNoradIds();
   const ucsDerived = ucs
-    .filter((s) => s.longitudeGeo !== null && !curatedLons.some((lon) => Math.abs(lon - s.longitudeGeo!) <= TOLERANCE))
+    .filter((s) => s.longitudeGeo !== null && !curatedLons.some((lon) => withinLongitudeWindow(lon, s.longitudeGeo!, TOLERANCE)))
     .map((s) => ucsToSlot(s, decayedNoradIds));
 
   // FCC-authorized positions with no UCS satellite and no curated slot nearby
@@ -469,7 +572,7 @@ function fccOnlySlots(coveredLons: number[], toleranceDeg: number): OrbitalSlot[
 
   const slots: OrbitalSlot[] = [];
   for (const { lon, auths: group } of byLon.values()) {
-    if (coveredLons.some((c) => Math.abs(c - lon) <= toleranceDeg)) continue;
+    if (coveredLons.some((c) => withinLongitudeWindow(c, lon, toleranceDeg))) continue;
     const primary = group[0];
     const callSigns = group.map((a) => a.callSign).filter(Boolean).join(", ");
     slots.push({
@@ -549,20 +652,13 @@ export function getFccCount(): number {
 }
 
 export function getGeoLongitudes(): number[] {
-  const db = getDb();
-  if (!db) return [];
-  const rows = db.prepare(
-    "SELECT longitude_geo FROM satellites WHERE orbit_class = 'GEO' AND longitude_geo IS NOT NULL"
-  ).all() as { longitude_geo: number }[];
-  return rows.map((r) => r.longitude_geo);
+  return getGeoSatellites()
+    .map((s) => s.longitudeGeo)
+    .filter((lon): lon is number => lon !== null);
 }
 
 export function getGeoPositionCount(): number {
-  const db = getDb();
-  if (!db) return 0;
-  const rows = db.prepare(
-    "SELECT longitude_geo FROM satellites WHERE orbit_class = 'GEO' AND longitude_geo IS NOT NULL"
-  ).all() as { longitude_geo: number }[];
-  const seen = new Set(rows.map(r => lonToSlug(r.longitude_geo)));
+  const seen = new Set<string>();
+  for (const lon of getGeoLongitudes()) seen.add(lonToSlug(lon));
   return seen.size;
 }

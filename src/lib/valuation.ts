@@ -208,7 +208,7 @@ export function valuateSlot(
   const factors: ValuationFactor[] = [
     { label: "Arc desirability", multiplier: arc.mult, detail: arc.detail },
     { label: "Coverage (GDP/pop)", multiplier: coverage.multiplier, detail: coverage.detail },
-    { label: "Occupancy", multiplier: round2(occMult), detail: `${coLocated} co-located satellite${coLocated === 1 ? "" : "s"}` },
+    { label: "Occupancy", multiplier: round2(occMult), detail: `${coLocated} co-located satellite${coLocated === 1 ? "" : "s"} (TLE-primary ±0.4°)` },
     { label: "Remaining life", multiplier: quality.multiplier, detail: quality.detail },
     { label: "Operator", multiplier: op.mult, detail: op.detail },
     { label: "Spectrum", multiplier: round2(band.mult), detail: band.detail },

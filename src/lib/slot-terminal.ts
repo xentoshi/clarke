@@ -1,6 +1,7 @@
 import { slots as curatedSlots, type OrbitalSlot } from "@/data/orbital-slots";
 import {
   mergeWithUcs,
+  getGeoSatellites,
   getGeoSatellitesByLongitude,
   getFccAuthorizationsByLongitude,
   getNearbySlots,
@@ -22,6 +23,8 @@ import { ingestAsOf, type Provenance } from "./provenance";
 import { regionForLongitude } from "./regions";
 import { isSafeSlug } from "./slot-utils";
 import { summarizeOperators, type OperatorShare } from "./operator-mix";
+import { buildSlotPositionTrust, type SlotPositionTrust } from "./position-authority";
+import { circularAbsDiffDeg } from "./geo-angle";
 
 export interface TerminalComp {
   slug: string;
@@ -62,6 +65,7 @@ export interface SlotTerminalModel {
   rightsChain: RightsLink[];
   bidAsk: CapacityBook;
   comps: TerminalComp[];
+  positionTrust: SlotPositionTrust;
   provenance: MetricProvenance;
   asOf: string;
   modelRunAsOf: string | null;
@@ -171,13 +175,16 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
         satCount: nSats.length || nCong.factors.coLocated,
         asOf: asOfDate,
       }),
-      deltaDeg: Math.abs(n.lon - lon),
+      deltaDeg: circularAbsDiffDeg(n.lon, lon),
     };
   });
 
   const ucsAsOf = sourceAsOf("UCS");
   const fccAsOf = sourceAsOf("FCC-SSAL");
+  const tleAsOf = sourceAsOf("Space-Track TLE");
   const modelRun = latestModelRun();
+  const positionTrust = buildSlotPositionTrust(lon, sats, getGeoSatellites(), COLOCATION_TOLERANCE_DEG);
+  const tlePrimaryShare = sats.length === 0 ? 0 : positionTrust.tlePrimaryCount / sats.length;
 
   return {
     slug,
@@ -203,6 +210,7 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
     rightsChain: buildRightsChain({ operator, country, fccAuths, asOf: fccAsOf }),
     bidAsk: simulatedCapacityBook(valuation, congestion, asOf),
     comps,
+    positionTrust,
     asOf,
     modelRunAsOf: modelRun?.asOf ?? null,
     provenance: {
@@ -212,11 +220,19 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
         note: valuation.disclaimer,
       },
       occupancy: {
+        source: "Space-Track TLE (primary) + UCS Satellite Database (fallback)",
+        asOf: tleAsOf,
+        note: `±${COLOCATION_TOLERANCE_DEG}° window · ${positionTrust.tlePrimaryCount}/${sats.length} TLE-primary (${Math.round(tlePrimaryShare * 100)}%) · UCS catalog is identity/operator, not live station · TLE lon is not an FCC/ITU assignment`,
+      },
+      ucsCatalog: {
         source: "UCS Satellite Database",
         asOf: ucsAsOf,
-        note: `±${COLOCATION_TOLERANCE_DEG}° occupancy window · last_run is ingest time, not UCS observation time`,
+        note: "Identity, operator, users, launch, catalog longitude — not occupancy clustering",
       },
-      congestion: { source: "Clarke congestion v0 ← UCS GEO positions", asOf: ucsAsOf },
+      congestion: {
+        source: "Clarke congestion v0 ← TLE-primary occupancy longitudes",
+        asOf: tleAsOf,
+      },
       fcc: { source: "FCC Approved Space Station List", asOf: fccAsOf },
       license: { source: "FCC SSAL + UCS occupancy", asOf: fccAsOf },
       coverage: { source: "Clarke GDP/pop longitude-band heuristic", asOf: valuation.asOf },

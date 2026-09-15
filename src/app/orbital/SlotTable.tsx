@@ -74,6 +74,9 @@ export default function SlotTable({
                     {r.fccLicensed && (
                       <span className="text-sky-400/80 text-[9px] border border-sky-900/60 px-1 rounded font-mono leading-none">FCC</span>
                     )}
+                    {r.positionDisputedCount > 0 && (
+                      <span className="text-amber-400/80 text-[9px] border border-amber-900/60 px-1 rounded font-mono leading-none">Δ</span>
+                    )}
                   </div>
                 </td>
                 <td className="px-3 py-2.5 hidden sm:table-cell"><span className="text-zinc-400 text-xs">{r.operator || "—"}</span></td>

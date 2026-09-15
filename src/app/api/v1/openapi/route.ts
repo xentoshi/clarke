@@ -6,9 +6,9 @@ const spec = {
   openapi: "3.1.0",
   info: {
     title: "Clarke API",
-    version: "1.1.0",
+    version: "1.2.0",
     description:
-      "Read-only GEO registry (public agents API) plus Pro Slot Terminal endpoints. Valuation v0 is a model, not a live market price. Simulated bid/ask is labeled as such.",
+      "Read-only GEO registry (public agents API) plus Pro Slot Terminal endpoints. Occupancy is TLE-primary (Space-Track) with UCS fallback; TLE longitude is not an FCC or ITU assignment. Valuation v0 is a model, not a live market price. Simulated bid/ask is labeled as such.",
   },
   servers: [{ url: "/api/v1" }],
   tags: [
@@ -26,7 +26,7 @@ const spec = {
       get: {
         tags: ["Agents"],
         summary: "List orbital slots",
-        description: "All registry positions with congestion score and heuristic valuation.",
+        description: "All registry positions with congestion score and heuristic valuation. Occupancy/congestion use TLE-primary longitudes.",
         responses: { "200": { description: "{ data, meta } envelope" }, "429": { description: "Rate limited" } },
       },
     },
@@ -35,7 +35,7 @@ const spec = {
         tags: ["Agents"],
         summary: "Slot dossier",
         parameters: [{ name: "slug", in: "path", required: true, schema: { type: "string", example: "101w" } }],
-        responses: { "200": { description: "Slot + satellites + FCC + congestion + valuation" }, "404": { description: "Unknown slug" } },
+        responses: { "200": { description: "Slot + satellites (UCS/TLE longs, Δ, position_disputed) + FCC + congestion + valuation + positionTrust" }, "404": { description: "Unknown slug" } },
       },
     },
     "/agents/satellites": {

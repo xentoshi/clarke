@@ -13,7 +13,7 @@ Clarke normalizes public data across GEO, LEO, and MEO to build the orbital asse
 ## What it is
 
 - **Orbital registry** — a searchable, filterable, exportable explorer over every tracked GEO position, built from ITU, FCC, Space-Track, and UCS public data
-- **Slot Terminal** — a data-dense dossier at `/orbital/[slug]` (alias `/slot/[slug]`): TLE-primary occupancy, recorded FCC layers, ingest freshness, and a labeled v0 model range. Simulated capacity book, ITU/sub-lease stubs, and seeded sparklines are Experimental (collapsed, not the default first screen).
+- **GEO Slot Index** — `/index` (alias `/research`): method-note occupancy enter/leave, dispute flips, FCC deltas. Not a price index.
 - **Intelligence layer** — valuation model v0 (range + confidence + driver breakdown + 30-day history), a normalized 0–100 congestion / coordination-risk score, and per-source data-freshness tracking
 - **Terminal seats** — free thin registry; Pro unlocks driver breakdown, compare (up to 4), export+, and the Terminal API
 - **Data quality** — occupancy clusters on Space-Track TLE longitude when the TLE passes published quality gates (UCS catalog longitude is kept and shown). Disagreements >2° are flagged. TLE longitude is not an FCC or ITU assignment.

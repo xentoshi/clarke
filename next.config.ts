@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/", destination: "/orbital", permanent: true },
+      { source: "/research", destination: "/index", permanent: false },
       { source: "/docs", destination: "/about", permanent: true },
       { source: "/data", destination: "/about", permanent: true },
     ];

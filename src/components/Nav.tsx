@@ -11,6 +11,7 @@ const SearchPalette = dynamic(() => import("./SearchPalette"), { ssr: false });
 
 const navLinks = [
   { href: "/orbital", label: "Registry" },
+  { href: "/index", label: "Index" },
   { href: "/pricing", label: "Terminal" },
   { href: "/blog", label: "Blog" },
   { href: "/about", label: "About" },

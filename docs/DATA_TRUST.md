@@ -21,6 +21,8 @@ A paying skeptic’s first Slot Terminal screen is **occupancy + recorded FCC + 
 
 Pro API still returns `bidAsk` / full `rightsChain` / history so agents can inspect the stubs; the HTML default view does not present them as filled primary panels.
 
+GEO Slot Index #1 (`/index`) is distribution content from the same occupancy / FCC fields: enter/leave vs UCS, dispute flips, license-table mismatches. It does not publish prices.
+
 Tests: `src/lib/terminal-default.test.ts` asserts default primary markup does not contain the sim book or ITU stub.
 
 ## Ranked issues

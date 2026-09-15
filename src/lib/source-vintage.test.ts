@@ -43,4 +43,16 @@ describe("FCC / UCS / TLE source vintage", () => {
     assert.equal(v.tleEpochMin, "2026-09-14");
     assert.equal(v.tleEpochMax, "2026-09-15");
   });
+
+  it("does not copy fleet-wide TLE epochs onto an empty occupancy window", () => {
+    const v = slotSourceVintage(
+      [],
+      [
+        { source: "Space-Track TLE", lastRun: "2026-09-15 11:52:32", fileVintage: "2026-09-15", sourceAsOf: "2026-09-15", tleEpochMin: "2026-05-14", tleEpochMax: "2026-09-15" },
+      ],
+      new Date("2026-09-15T12:00:00Z"),
+    );
+    assert.equal(v.tleEpochMin, null);
+    assert.equal(v.tleEpochMax, null);
+  });
 });

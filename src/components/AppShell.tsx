@@ -38,6 +38,7 @@ export default function AppShell({ children, slots }: { children: React.ReactNod
                   <div className="flex flex-col gap-1">
                     {[
                       { label: "Orbital Registry", href: "/orbital" },
+                      { label: "GEO Slot Index", href: "/index" },
                       { label: "Slot Terminal", href: "/orbital/101w" },
                       { label: "Pricing", href: "/pricing" },
                       { label: "Blog", href: "/blog" },

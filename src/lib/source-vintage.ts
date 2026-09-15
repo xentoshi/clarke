@@ -87,8 +87,8 @@ export function slotSourceVintage(
     fccIngestAt: fcc?.lastRun ?? null,
     fccStale: fccIsStale(fccAsOf, now),
     fccStaleAfterDays: FCC_STALE_AFTER_DAYS,
-    tleEpochMin: epochs[0] ?? tle?.tleEpochMin ?? null,
-    tleEpochMax: epochs[epochs.length - 1] ?? tle?.tleEpochMax ?? null,
+    tleEpochMin: epochs[0] ?? null,
+    tleEpochMax: epochs[epochs.length - 1] ?? null,
     tleIngestAt: tle?.lastRun ?? null,
   };
 }

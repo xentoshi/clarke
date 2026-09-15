@@ -137,8 +137,10 @@ describe("default Terminal quarantine", () => {
     const recordedHtml = renderToStaticMarkup(
       createElement(RightsChain, { links: recordedRightsLayers(chain), variant: "recorded" }),
     );
-    assert.doesNotMatch(recordedHtml, /ITU filing/);
-    assert.doesNotMatch(recordedHtml, /Sub-lease/);
+    assert.doesNotMatch(recordedHtml, /data-rights-layer="itu"/);
+    assert.doesNotMatch(recordedHtml, /data-rights-layer="sublease"/);
+    assert.doesNotMatch(recordedHtml, /Not ingested — ITU SNS/);
+    assert.doesNotMatch(recordedHtml, /No public sub-lease registry/);
     assert.match(recordedHtml, /FCC/);
     assert.match(recordedHtml, /SES Americom/);
 

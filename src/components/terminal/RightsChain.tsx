@@ -36,7 +36,7 @@ export function RightsChain({
       {variant === "recorded" ? (
         <p className="text-[11px] text-zinc-500 mb-3 leading-relaxed">
           Recorded public layers only. FCC SSAL when present; otherwise inferred administration/operator.
-          ITU filing and sub-lease are not ingested and are not shown here.
+          Unrecorded ITU SNS and sub-lease layers are not ingested and are not shown here.
         </p>
       ) : (
         <p className="text-[11px] text-amber-200/70 mb-3 leading-relaxed">

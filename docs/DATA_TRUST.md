@@ -49,7 +49,7 @@ Ingest (`npm run ingest:spacetrack`, or `npm run apply:positions` against an exi
 | MUOS-2 (39206) | clustered at UCS **100.1°W** | occupies TLE **172.04°E**, `positionDisputed`, Δ **87.9°** |
 | SES-1 (36516) | 101°W | still 101°W (TLE **−100.98**, Δ 0.02°, not disputed) |
 | 101°W ±0.4° | 7 (DirecTV-8/9S, SES-14, SES-1, AT&T T16, SkyTerra 1, MSAT 2) | **5** (SES-1, AT&T T16, SkyTerra 1, MSAT 2, **JCSat 2A** whose TLE is −100.90; UCS listed JCSat 2A at 154°E). DirecTV-8 TLE **119.0°W**, DirecTV-9S TLE **149.2°W**, SES-14 TLE **47.5°W** leave the window and are UCS ghosts on the 101°W banner. |
-| 101°W congestion / v0 | 100 / $228M (remaining-life fix, UCS occupancy) | **80** / **$198M** ($129–268M), 5 co-located, history re-seeded as `backfill` |
+| 101°W congestion / v0 | 100 / $228M (remaining-life fix, UCS occupancy) | **80** / **$198M** ($155–242M), 5 co-located, history re-seeded as `backfill` |
 
 ## Spot checks (public API, 2026-09-15)
 
@@ -57,7 +57,7 @@ Occupancy window is ±0.4° TLE-primary unless noted.
 
 | Slot | Registry operator | Sats in window | Live v0 (point / CI) | Curated overlay | Contradictions |
 |---|---|---|---|---|---|
-| **101°W** (`101w`) | SES (curated) | **5** TLE-primary | **$198M** ($129–268M); congestion **80**. Was 7 UCS-clustered / $228M / congestion 100 after remaining-life fix. | $350M+ | Mix is no longer DirecTV-heavy in ±0.4°. JCSat 2A is in-window and `positionDisputed`. UCS ghosts: DirecTV-8/9S, SES-14. FCC still lists DIRECTV / SES / Ligado at this **license** longitude. |
+| **101°W** (`101w`) | SES (curated) | **5** TLE-primary | **$198M** ($155–242M); congestion **80**. Was 7 UCS-clustered / $228M / congestion 100 after remaining-life fix. | $350M+ | Mix is no longer DirecTV-heavy in ±0.4°. JCSat 2A is in-window and `positionDisputed`. UCS ghosts: DirecTV-8/9S, SES-14. FCC still lists DIRECTV / SES / Ligado at this **license** longitude. |
 | **19.2°E** (`19-2e`) | SES | Astra fleet (TLE ≈ UCS) | Model; congestion from TLE-primary density | $400M+ | Operators consistent (SES S.A.). Overlay ≫ model. |
 | **13°E** (`13e`) | Eutelsat | TLE-primary window | Model | $250M+ | Military COMSATBw-2 still in occupancy if TLE agrees. |
 | **72°E** (`72e`) | Intelsat | IS-22 (TLE 72.07 matches UCS) | Model | $160M+ | Congestion dominant operator can still differ in the ±2° neighborhood. |

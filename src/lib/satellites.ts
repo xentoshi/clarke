@@ -488,7 +488,8 @@ function getDecayedNoradIds(): Set<string> {
 }
 
 function ucsToSlot(sat: GeoSatellite, decayedNoradIds: Set<string>): OrbitalSlot {
-  const lon = sat.longitudeGeo ?? 0;
+  const occ = sat.longitudeGeo ?? 0;
+  const lon = slugToLon(lonToSlug(occ)) ?? occ;
   const launchYear = parseUcsLaunchYear(sat.launchDate) ?? undefined;
   return {
     id: sat.noradId ? `ucs_${sat.noradId}` : sat.cosparId ? `ucs_${sat.cosparId.replace(/[^a-z0-9]/gi, "_")}` : `ucs_geo_${String(lon).replace(".", "_")}`,

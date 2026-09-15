@@ -17,6 +17,7 @@ export default function ValuationDocsPage() {
         Clarke’s Slot Terminal fair-value figure is a model, not a live market price, appraisal, or offer to transact.
         There is no public GEO slot tape; v0 exists so operators and investors can inspect an implied range and its drivers.
         Full write-up: <span className="font-mono text-zinc-300">docs/VALUATION.md</span> in the repo.
+        Data-trust audit: <span className="font-mono text-zinc-300">docs/DATA_TRUST.md</span>.
       </p>
       <pre className="text-zinc-400 text-xs font-mono bg-black/40 border border-zinc-800 rounded-xl p-4 overflow-x-auto mb-8">{`point = $30M baseline
       × arc desirability

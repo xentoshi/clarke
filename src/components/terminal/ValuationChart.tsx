@@ -41,7 +41,7 @@ export function ValuationChart({
       <div className="flex items-baseline justify-between mb-1">
         <div className="text-white font-mono text-sm tabular-nums">{formatMoney(active.s.point)}</div>
         <div className="text-[10px] font-mono text-zinc-600">
-          {active.s.asOf} · {source === "persisted" ? "persisted snapshot" : "model backfill (not trades)"}
+          {active.s.asOf} · {source === "persisted" ? "seeded model path (not trades)" : "model backfill (not trades)"}
         </div>
       </div>
       <svg

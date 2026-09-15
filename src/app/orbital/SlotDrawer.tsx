@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { ExplorerRow } from "./types";
 import { statusLabels } from "@/data/orbital-slots";
+import { parseUcsLaunchYear } from "@/lib/occupancy-quality";
 
 interface DossierSat { id: number; name: string; operator: string | null; launchDate: string | null }
 interface DossierFcc { id: number; satelliteName: string | null; licensee: string | null; service: string | null; callSign: string | null }
@@ -14,9 +15,8 @@ interface Dossier {
 }
 
 function launchYear(date: string | null): string {
-  if (!date) return "—";
-  const y = date.split("/").pop();
-  return y && /^\d{4}$/.test(y) ? y : "—";
+  const y = parseUcsLaunchYear(date);
+  return y ? String(y) : "—";
 }
 
 export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; onClose: () => void }) {

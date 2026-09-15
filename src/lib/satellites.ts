@@ -1,5 +1,6 @@
 import { getDb } from "./db";
 import { lonToSlug, slugToLon, formatLon } from "./slot-utils";
+import { parseUcsLaunchYear } from "./occupancy-quality";
 import type { OrbitalSlot } from "@/data/orbital-slots";
 
 export { lonToSlug, slugToLon, formatLon } from "./slot-utils";
@@ -43,11 +44,12 @@ export function getGeoSatellites(): GeoSatellite[] {
 }
 
 // Tolerance constants — different contexts use different values:
-// 0.3° — tight lookup (general proximity)
-// 0.4° — co-location grouping (ITU coordination practice tolerance)
+// 0.4° — co-location grouping (ITU coordination practice; occupancy window)
 // 0.6° — FCC authorization matching (FCC records use coarser longitude precision)
+export const COLOCATION_TOLERANCE_DEG = 0.4;
+export const FCC_MATCH_TOLERANCE_DEG = 0.6;
 
-export function getGeoSatellitesByLongitude(lon: number, toleranceDeg = 0.3): GeoSatellite[] {
+export function getGeoSatellitesByLongitude(lon: number, toleranceDeg = COLOCATION_TOLERANCE_DEG): GeoSatellite[] {
   const db = getDb();
   if (!db) return [];
   return db.prepare(
@@ -138,12 +140,20 @@ export function getAllRegistrySlugs(curatedSlots: OrbitalSlot[]): string[] {
 export function getSatellitesBySlug(slug: string): GeoSatellite[] {
   const lon = slugToLon(slug);
   if (lon === null) return [];
-  return getGeoSatellitesByLongitude(lon, 0.4);
+  return getGeoSatellitesByLongitude(lon, COLOCATION_TOLERANCE_DEG);
 }
 
-export function getNearbySlots(lon: number, count = 4): { slug: string; label: string; lon: number }[] {
+export function getNearbySlots(
+  lon: number,
+  count = 4,
+  minSeparationDeg = 0,
+): { slug: string; label: string; lon: number }[] {
   const db = getDb();
   if (!db) return [];
+  // Fetch extra grouped longitudes when skipping the occupancy window so a
+  // dense cluster (e.g. 101°W ±0.4°) does not fill the "nearest comps" list
+  // with overlapping views of the same satellites.
+  const fetchLimit = minSeparationDeg > 0 ? Math.max(count * 12, 24) : count * 4;
   const rows = db.prepare(`
     SELECT longitude_geo, COUNT(*) as n
     FROM satellites
@@ -152,15 +162,17 @@ export function getNearbySlots(lon: number, count = 4): { slug: string; label: s
     GROUP BY longitude_geo
     ORDER BY ABS(longitude_geo - ?) ASC
     LIMIT ?
-  `).all(lon, lon, count) as { longitude_geo: number; n: number }[];
+  `).all(lon, lon, fetchLimit) as { longitude_geo: number; n: number }[];
 
   const seen = new Set<string>();
   const result: { slug: string; label: string; lon: number }[] = [];
   for (const row of rows) {
+    if (minSeparationDeg > 0 && Math.abs(row.longitude_geo - lon) <= minSeparationDeg) continue;
     const slug = lonToSlug(row.longitude_geo);
     if (!seen.has(slug)) {
       seen.add(slug);
-      result.push({ slug, label: formatLon(row.longitude_geo), lon: row.longitude_geo });
+      const displayLon = slugToLon(slug) ?? row.longitude_geo;
+      result.push({ slug, label: formatLon(displayLon), lon: row.longitude_geo });
     }
     if (result.length >= count) break;
   }
@@ -233,7 +245,7 @@ export function getCongestion(lon: number): CongestionData {
   `).all(lon - 2, lon + 2) as { operator: string | null; lon: number }[];
 
   const neighborhood = rows.length;
-  const coLocated = rows.filter((r) => Math.abs(r.lon - lon) <= 0.4).length;
+  const coLocated = rows.filter((r) => Math.abs(r.lon - lon) <= COLOCATION_TOLERANCE_DEG).length;
 
   const opCounts = new Map<string, number>();
   for (const r of rows) {
@@ -374,7 +386,7 @@ function getDecayedNoradIds(): Set<string> {
 
 function ucsToSlot(sat: GeoSatellite, decayedNoradIds: Set<string>): OrbitalSlot {
   const lon = sat.longitudeGeo ?? 0;
-  const launchYear = sat.launchDate ? parseInt(sat.launchDate.split("/").pop() ?? "0") : undefined;
+  const launchYear = parseUcsLaunchYear(sat.launchDate) ?? undefined;
   return {
     id: sat.noradId ? `ucs_${sat.noradId}` : sat.cosparId ? `ucs_${sat.cosparId.replace(/[^a-z0-9]/gi, "_")}` : `ucs_geo_${String(lon).replace(".", "_")}`,
     longitude: lon,
@@ -392,7 +404,7 @@ function ucsToSlot(sat: GeoSatellite, decayedNoradIds: Set<string>): OrbitalSlot
       sat.launchVehicle ? `Launched on ${sat.launchVehicle}.` : "",
       sat.comments ?? "",
     ].filter(Boolean).join(" "),
-    launched: launchYear && !isNaN(launchYear) ? launchYear : undefined,
+    launched: launchYear,
     source: "ucs",
     purpose: sat.purpose ?? undefined,
     cosparIds: sat.cosparId ? [sat.cosparId] : [],
@@ -405,7 +417,7 @@ export function mergeWithUcs(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
   const ucs = getGeoSatellites();
   if (ucs.length === 0) return curatedSlots.map((s) => ({ ...s, source: "curated" as const }));
 
-  const TOLERANCE = 0.4;
+  const TOLERANCE = COLOCATION_TOLERANCE_DEG;
 
   const enriched = curatedSlots.map((slot) => {
     const nearby = ucs.filter(
@@ -505,7 +517,7 @@ const FCC_SELECT = `
   FROM fcc_authorizations
 `;
 
-export function getFccAuthorizationsByLongitude(lon: number, toleranceDeg = 0.6): FccAuthorization[] {
+export function getFccAuthorizationsByLongitude(lon: number, toleranceDeg = FCC_MATCH_TOLERANCE_DEG): FccAuthorization[] {
   const db = getDb();
   if (!db) return [];
   return db.prepare(

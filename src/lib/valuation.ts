@@ -15,8 +15,8 @@ export { formatMoney } from "./money";
 // is, remaining satellite life, who operates it, what spectrum it carries, how
 // scarce/contested its arc is, and FCC/license / brought-into-use signals.
 // Every factor is surfaced so the number can be inspected rather than trusted
-// blindly. Curated positions carry a hand-checked estimate that takes
-// precedence as the headline figure.
+// blindly. Curated `valueEstimate` strings are a hand-checked overlay and
+// do not replace the model range (see docs/VALUATION.md).
 
 export const MODEL_VERSION = "v0";
 const BASELINE_USD = 30_000_000; // mid baseline for an occupied GEO position
@@ -147,7 +147,9 @@ export function licenseSignal(args: {
     biuLabel = "Paper filing (FCC record, no UCS satellite in orbit)";
   } else if (satCount > 0) {
     biuHint = "foreign_operating";
-    biuLabel = "Operating (non-US admin; no FCC market-access row)";
+    // Not a claim about nationality — many US government birds never appear
+    // in FCC SSAL. This only means "in orbit, no FCC market-access row."
+    biuLabel = "Operating (no FCC market-access row)";
   } else {
     biuHint = "unknown";
     biuLabel = "Unknown BIU — no in-orbit satellite and no FCC row";

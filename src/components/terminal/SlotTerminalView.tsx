@@ -3,6 +3,8 @@ import { statusColors, statusLabels, bandColors } from "@/data/orbital-slots";
 import type { SlotTerminalModel } from "@/lib/slot-terminal";
 import type { Entitlements } from "@/lib/auth";
 import { formatAsOf, formatAsOfDate } from "@/lib/provenance";
+import { parseUcsLaunchYear } from "@/lib/occupancy-quality";
+import { formatOperatorMix } from "@/lib/operator-mix";
 import { Metric } from "./Metric";
 import { ProGate } from "./ProGate";
 import { ValuationChart } from "./ValuationChart";
@@ -10,12 +12,6 @@ import { BidAskStrip } from "./BidAskStrip";
 import { RightsChain } from "./RightsChain";
 import { AddToCompare } from "./AddToCompare";
 import { CompareTray } from "./CompareTray";
-
-function parseYear(dateStr: string | null): number | null {
-  if (!dateStr) return null;
-  const year = parseInt(dateStr.split("/").pop() ?? "", 10);
-  return Number.isFinite(year) ? year : null;
-}
 
 const congTone = (tier: string) =>
   tier === "critical" || tier === "high" ? "red" :
@@ -65,6 +61,14 @@ export function SlotTerminalView({
             {model.country ? ` · ${model.country}` : ""}
             {model.purpose ? ` · ${model.purpose}` : ""}
           </p>
+          {model.operatorMix.length > 1 && (
+            <p className="text-zinc-500 text-xs mt-1.5">
+              Occupancy ±0.4°: {formatOperatorMix(model.operatorMix, model.satCount)}
+              {model.occupancyMajority && model.occupancyMajority !== model.operator
+                ? ` · window majority is not the registry operator`
+                : ""}
+            </p>
+          )}
           <div className="flex flex-wrap gap-1.5 mt-3">
             <span className={`text-[10px] px-2 py-0.5 rounded border font-mono ${statusColors[model.status]}`}>
               {statusLabels[model.status]}
@@ -107,7 +111,11 @@ export function SlotTerminalView({
         <Metric
           label="Occupancy"
           value={`${model.satCount} sat${model.satCount === 1 ? "" : "s"}`}
-          sub={`${statusLabels[model.status]} · ${model.operator || "—"}`}
+          sub={
+            model.operatorMix.length > 1
+              ? `±0.4° window · majority ${model.occupancyMajority || "—"} (${model.operatorMix[0]?.count ?? 0}/${model.satCount})`
+              : `${statusLabels[model.status]} · ${model.operator || "—"}`
+          }
           provenance={model.provenance.occupancy}
         />
         <Metric
@@ -144,6 +152,9 @@ export function SlotTerminalView({
                 </div>
               )}
               <ValuationChart series={entitlements.features.history ? model.history : model.history.slice(-7)} source={model.historySource} />
+              <p className="text-[11px] text-amber-200/60 mt-2">
+                Chart is a seeded v0 model path, not observed trades or a market tape.
+              </p>
               {!entitlements.features.history && (
                 <p className="text-[11px] text-zinc-600 mt-2">Free seats see a 7-day sparkline. <Link href="/pricing" className="text-zinc-400 hover:text-white underline">Pro unlocks 30-day persisted history.</Link></p>
               )}
@@ -178,7 +189,13 @@ export function SlotTerminalView({
           <section className="border border-zinc-800 rounded-xl p-4">
             <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3">Occupancy</h2>
             <dl className="space-y-1.5 text-xs">
-              <Row k="Operator(s)" val={model.operator || "—"} />
+              <Row k="Registry operator" val={model.operator || "—"} />
+              {model.operatorMix.length > 1 && (
+                <Row k="Window majority" val={model.occupancyMajority || "—"} />
+              )}
+              {model.operatorMix.length > 1 && (
+                <Row k="Operator mix" val={formatOperatorMix(model.operatorMix, model.satCount)} />
+              )}
               <Row k="Country" val={model.country || "—"} />
               <Row k="Purpose" val={model.purpose || "—"} />
               <Row k="Status" val={statusLabels[model.status]} />
@@ -205,6 +222,7 @@ export function SlotTerminalView({
       {model.comps.length > 0 && (
         <section className="mb-6">
           <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3">Nearest comps</h2>
+          <p className="text-[11px] text-zinc-600 mb-2">Positions outside this slot&apos;s ±0.4° occupancy window. Not transaction comps.</p>
           <div className="border border-zinc-800 rounded-xl overflow-hidden">
             <table className="w-full">
               <thead>
@@ -262,7 +280,7 @@ export function SlotTerminalView({
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell text-zinc-400 text-xs">{sat.operator ?? "—"}</td>
                   <td className="px-4 py-3 hidden md:table-cell text-zinc-500 text-xs">{sat.detailedPurpose ?? sat.purpose ?? "—"}</td>
-                  <td className="px-4 py-3 text-right text-zinc-500 text-xs font-mono">{parseYear(sat.launchDate) ?? "—"}</td>
+                  <td className="px-4 py-3 text-right text-zinc-500 text-xs font-mono">{parseUcsLaunchYear(sat.launchDate) ?? "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -304,7 +322,7 @@ export function SlotTerminalView({
         <p>
           Provenance · UCS satellites {formatAsOfDate(model.provenance.occupancy.asOf)} · FCC SSAL {formatAsOfDate(model.provenance.fcc.asOf)} ·
           valuation {v.modelVersion} {formatAsOfDate(v.asOf)}
-          {model.modelRunAsOf ? ` · snapshots seeded ${model.modelRunAsOf}` : " · history synthesized (run npm run seed:valuations to persist)"}
+          {model.modelRunAsOf ? ` · snapshots seeded ${model.modelRunAsOf} (model path, not trades)` : " · history synthesized (run npm run seed:valuations to persist)"}
         </p>
         <p>Simulated bid/ask is labeled and is not a trade tape. ITU rights are a stub until SNS ingest. Not financial advice.</p>
       </footer>

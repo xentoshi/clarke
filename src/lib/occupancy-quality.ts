@@ -1,5 +1,9 @@
 // Remaining-life / occupancy-quality signal from UCS launch date + expected
 // lifetime. Missing lifetime is not treated as evidence of youth or expiry.
+//
+// UCS stores launch dates as M/D/YY (every GEO row in the current snapshot).
+// A parser that only accepts four-digit years silently drops the entire
+// remaining-life factor even when expectedLifetimeYears is present.
 
 export interface LifetimeSat {
   launchDate: string | null;
@@ -15,11 +19,29 @@ export interface OccupancyQuality {
   detail: string;
 }
 
-function parseYear(dateStr: string | null): number | null {
+// UCS two-digit years: 57–99 → 1957–1999 (Sputnik era), 00–56 → 2000–2056.
+// Four-digit years and ISO (YYYY-MM-DD, Space-Track) pass through.
+export function parseUcsLaunchYear(dateStr: string | null | undefined): number | null {
   if (!dateStr) return null;
-  const parts = dateStr.split(/[/-]/);
-  const year = parseInt(parts[parts.length - 1] ?? "", 10);
-  return Number.isFinite(year) && year > 1950 && year < 2100 ? year : null;
+  const trimmed = dateStr.trim();
+  if (!trimmed) return null;
+
+  const iso = trimmed.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (iso) {
+    const year = parseInt(iso[1], 10);
+    return year > 1950 && year < 2100 ? year : null;
+  }
+
+  const parts = trimmed.split(/[/-]/);
+  const last = parts[parts.length - 1] ?? "";
+  const n = parseInt(last, 10);
+  if (!Number.isFinite(n)) return null;
+
+  let year = n;
+  if (last.length <= 2 && n >= 0 && n < 100) {
+    year = n >= 57 ? 1900 + n : 2000 + n;
+  }
+  return year > 1950 && year < 2100 ? year : null;
 }
 
 export function occupancyQuality(sats: LifetimeSat[], asOf: Date = new Date()): OccupancyQuality {
@@ -28,7 +50,7 @@ export function occupancyQuality(sats: LifetimeSat[], asOf: Date = new Date()): 
   const years: number[] = [];
 
   for (const s of sats) {
-    const launchYear = parseYear(s.launchDate);
+    const launchYear = parseUcsLaunchYear(s.launchDate);
     if (launchYear) years.push(launchYear);
     if (launchYear && s.expectedLifetimeYears && s.expectedLifetimeYears > 0) {
       remaining.push(s.expectedLifetimeYears - (asOfYear - launchYear));
@@ -61,7 +83,7 @@ export function occupancyQuality(sats: LifetimeSat[], asOf: Date = new Date()): 
     detail = `End of licensed life · ~${mean.toFixed(1)}y remaining (n=${remaining.length})`;
   } else {
     multiplier = 0.88;
-    detail = `Life-extended / past UCS lifetime · ~${mean.toFixed(1)}y (n=${remaining.length})`;
+    detail = `Life-extended / past UCS design life · ~${mean.toFixed(1)}y (n=${remaining.length})`;
   }
 
   return {

@@ -88,7 +88,8 @@ export function readPersistedHistory(slug: string): ValuationSnapshot[] {
     return rows.map((r) => ({
       ...r,
       nonCommercial: Boolean(r.nonCommercial),
-      source: "persisted" as const,
+      // terminal.db currently only stores the seeded v0 model path, not trades.
+      source: "backfill" as const,
     }));
   } catch {
     return [];

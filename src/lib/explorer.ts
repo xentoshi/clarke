@@ -5,6 +5,7 @@ import {
   getCongestion,
   getFccSlugSet,
   lonToSlug,
+  COLOCATION_TOLERANCE_DEG,
   type GeoSatellite,
 } from "@/lib/satellites";
 import { valuateSlot } from "@/lib/valuation";
@@ -28,7 +29,7 @@ export function buildExplorerRows(): ExplorerRow[] {
     const congestion = getCongestion(slot.longitude);
     // Same ±0.4° co-location window as Slot Terminal / ITU grouping, not the
     // sat's own rounded slug (which would split 101.08°W from curated 101°W).
-    const sats = geo.filter((s) => Math.abs(s.longitudeGeo - slot.longitude) <= 0.4);
+    const sats = geo.filter((s) => Math.abs(s.longitudeGeo - slot.longitude) <= COLOCATION_TOLERANCE_DEG);
     const satelliteNames = sats.map((s) => s.name);
     const fccLicensed = fccSet.has(slug);
     const valuation = valuateSlot(slot, congestion, {
@@ -59,7 +60,7 @@ export function buildExplorerRows(): ExplorerRow[] {
       satellite: slot.satellite,
       launched: slot.launched,
       valuation,
-      valueDisplay: slot.valueEstimate || valuation.formatted.range,
+      valueDisplay: valuation.nonCommercial ? "n/c" : valuation.formatted.range,
       biuHint: valuation.license.biuHint,
     };
   });

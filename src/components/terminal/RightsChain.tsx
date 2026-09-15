@@ -10,7 +10,11 @@ const statusClass: Record<RightsLink["status"], string> = {
 
 export function RightsChain({ links }: { links: RightsLink[] }) {
   return (
-    <ol className="space-y-0">
+    <div>
+      <p className="text-[11px] text-amber-200/70 mb-3 leading-relaxed">
+        ITU filing and sub-lease layers are quarantined stubs. Only FCC rows (when present) are recorded public licenses.
+      </p>
+      <ol className="space-y-0">
       {links.map((link, i) => (
         <li key={link.layer} className="relative pl-6 pb-5 last:pb-0">
           {i < links.length - 1 && <span className="absolute left-[7px] top-4 bottom-0 w-px bg-zinc-800" />}
@@ -31,6 +35,7 @@ export function RightsChain({ links }: { links: RightsLink[] }) {
           </div>
         </li>
       ))}
-    </ol>
+      </ol>
+    </div>
   );
 }

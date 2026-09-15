@@ -1,9 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { coverageProxy } from "./coverage-proxy";
-import { occupancyQuality } from "./occupancy-quality";
+import { occupancyQuality, parseUcsLaunchYear } from "./occupancy-quality";
 import { valuateSlot, formatMoney, licenseSignal } from "./valuation";
 import { synthesizeHistory } from "./valuation-history";
+import { summarizeOperators, formatOperatorMix } from "./operator-mix";
+import { buildRightsChain } from "./rights-chain";
 import type { OrbitalSlot } from "@/data/orbital-slots";
 import type { CongestionData } from "./satellites";
 
@@ -60,6 +62,33 @@ describe("occupancyQuality", () => {
     assert.ok(q.meanYearsRemaining !== null && q.meanYearsRemaining < 0);
     assert.ok(q.multiplier < 1);
   });
+
+  it("parses UCS two-digit launch years instead of dropping remaining life", () => {
+    const q = occupancyQuality(
+      [
+        { launchDate: "11/14/10", expectedLifetimeYears: 15 },
+        { launchDate: "4/7/95", expectedLifetimeYears: 10 },
+        { launchDate: "6/20/19", expectedLifetimeYears: 15 },
+      ],
+      new Date("2026-09-15T00:00:00Z"),
+    );
+    assert.equal(q.sampleSize, 3);
+    assert.ok(q.meanYearsRemaining !== null);
+    assert.equal(q.oldestLaunchYear, 1995);
+    assert.equal(q.newestLaunchYear, 2019);
+    assert.doesNotMatch(q.detail, /no usable lifetime data/);
+  });
+});
+
+describe("parseUcsLaunchYear", () => {
+  it("expands UCS M/D/YY dates into four-digit years", () => {
+    assert.equal(parseUcsLaunchYear("11/14/10"), 2010);
+    assert.equal(parseUcsLaunchYear("4/7/95"), 1995);
+    assert.equal(parseUcsLaunchYear("3/17/23"), 2023);
+    assert.equal(parseUcsLaunchYear("6/1/2010"), 2010);
+    assert.equal(parseUcsLaunchYear("2010-04-24"), 2010);
+    assert.equal(parseUcsLaunchYear(null), null);
+  });
 });
 
 describe("licenseSignal", () => {
@@ -73,6 +102,13 @@ describe("licenseSignal", () => {
     const s = licenseSignal({ status: "active", fccLicensed: true, satCount: 3 });
     assert.equal(s.biuHint, "brought_into_use");
     assert.ok(s.multiplier > 1);
+  });
+
+  it("does not call a US operator without an FCC row a non-US admin", () => {
+    const s = licenseSignal({ status: "active", fccLicensed: false, satCount: 1 });
+    assert.equal(s.biuHint, "foreign_operating");
+    assert.match(s.biuLabel, /no FCC market-access row/i);
+    assert.doesNotMatch(s.biuLabel, /non-US admin/i);
   });
 });
 
@@ -91,6 +127,9 @@ describe("valuateSlot v0", () => {
     assert.ok(v.factors.some((f) => f.label === "Coverage (GDP/pop)"));
     assert.ok(v.factors.some((f) => f.label === "License / BIU"));
     assert.match(v.disclaimer, /not a live market price/);
+    const life = v.factors.find((f) => f.label === "Remaining life");
+    assert.ok(life);
+    assert.doesNotMatch(life.detail, /no usable lifetime data/);
   });
 
   it("does not present commercial confidence for government-only users", () => {
@@ -112,5 +151,47 @@ describe("synthesizeHistory", () => {
     assert.equal(hist[hist.length - 1].asOf, "2026-09-15");
     assert.equal(hist[hist.length - 1].point, v.point);
     assert.equal(hist[0].source, "backfill");
+  });
+});
+
+describe("operator mix", () => {
+  it("does not treat occupancy-window majority as the only operator", () => {
+    const mix = summarizeOperators([
+      { operator: "DirecTV, Inc." },
+      { operator: "DirecTV, Inc." },
+      { operator: "DirecTV, Inc." },
+      { operator: "SES S.A." },
+      { operator: "SES S.A." },
+      { operator: "LightSquared" },
+      { operator: "Mobile Satellite Ventures" },
+    ]);
+    assert.equal(mix[0].operator, "DirecTV, Inc.");
+    assert.equal(mix[0].count, 3);
+    assert.equal(mix.find((m) => m.operator === "SES S.A.")?.count, 2);
+    assert.match(formatOperatorMix(mix, 7), /DirecTV, Inc\. 3\/7/);
+    assert.match(formatOperatorMix(mix, 7), /SES S\.A\. 2\/7/);
+  });
+});
+
+describe("rights chain", () => {
+  it("quarantines the ITU row and does not pick the first FCC licensee as the sole holder", () => {
+    const chain = buildRightsChain({
+      operator: "SES",
+      country: "USA",
+      asOf: "2026-09-15T00:00:00.000Z",
+      fccAuths: [
+        { id: 1, orbitalLocation: "101.3 W.L.", longitudeGeo: -101.3, satelliteName: "SKYTERRA-1", callSign: "S2358", licensee: "Ligado Networks Subsidiary, LLC, Debtor-in-Possession", administration: "U.S.A.", service: "MSS", frequencyRange: null, dateInOrbit: null, grantStatus: "Grant", notes: null },
+        { id: 2, orbitalLocation: "101 W.L.", longitudeGeo: -101, satelliteName: "SES-1", callSign: "S2807", licensee: "SES Americom, Inc.", administration: "U.S.A.", service: "FSS", frequencyRange: null, dateInOrbit: null, grantStatus: "Grant", notes: null },
+        { id: 3, orbitalLocation: "101 W.L.", longitudeGeo: -101, satelliteName: "DIRECTV D9S", callSign: "S2669", licensee: "DIRECTV Enterprises, LLC", administration: "U.S.A.", service: "BSS", frequencyRange: null, dateInOrbit: null, grantStatus: "Grant", notes: null },
+      ],
+    });
+    const itu = chain.find((l) => l.layer === "itu");
+    const license = chain.find((l) => l.layer === "operator_license");
+    assert.equal(itu?.status, "stub");
+    assert.match(itu?.holder ?? "", /Not ingested/i);
+    assert.equal(license?.holder, "3 FCC licensees");
+    assert.match(license?.detail ?? "", /SES Americom/);
+    assert.match(license?.detail ?? "", /Ligado/);
+    assert.doesNotMatch(license?.holder ?? "", /Ligado/);
   });
 });

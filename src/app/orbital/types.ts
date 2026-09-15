@@ -26,7 +26,7 @@ export interface ExplorerRow {
   satellite?: string;
   launched?: number;
   valuation: SlotValuation;
-  valueDisplay: string; // curated estimate if present, else modeled range
+  valueDisplay: string; // modeled v0 range (curated overlay is separate)
   biuHint: SlotValuation["license"]["biuHint"];
 }
 

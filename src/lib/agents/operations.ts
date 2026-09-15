@@ -8,6 +8,7 @@ import {
   getCongestion,
   lonToSlug,
   slugToLon,
+  COLOCATION_TOLERANCE_DEG,
   type GeoSatellite,
   type FccAuthorization,
 } from "../satellites";
@@ -40,13 +41,15 @@ export function listSlots(): SlotListItem[] {
   return mergeWithUcs(curatedSlots).map((slot) => {
     const congestion = getCongestion(slot.longitude);
     const slug = lonToSlug(slot.longitude);
+    const satellites = getGeoSatellitesByLongitude(slot.longitude, COLOCATION_TOLERANCE_DEG);
     return {
       ...slot,
       slug,
       congestionScore: congestion.score,
       valuation: valuateSlot(slot, congestion, {
+        satellites,
         fccLicensed: fccSet.has(slug),
-        satCount: congestion.factors.coLocated,
+        satCount: satellites.length || congestion.factors.coLocated,
       }),
     };
   });
@@ -65,7 +68,7 @@ export function getSlotDossier(slug: string): SlotDossier | null {
   const merged = mergeWithUcs(curatedSlots);
   const slot = merged.find((s) => lonToSlug(s.longitude) === slug);
   if (!slot) return null;
-  const satellites = getGeoSatellitesByLongitude(slot.longitude);
+  const satellites = getGeoSatellitesByLongitude(slot.longitude, COLOCATION_TOLERANCE_DEG);
   const fccAuthorizations = getFccAuthorizationsByLongitude(slot.longitude);
   const congestion = getCongestion(slot.longitude);
   const valuation = valuateSlot(slot, congestion, {

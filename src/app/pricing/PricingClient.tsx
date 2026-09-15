@@ -54,7 +54,7 @@ export default function PricingClient({
           <div className="text-white text-2xl font-bold mb-4">$0</div>
           <ul className="text-zinc-400 text-sm space-y-2 mb-6">
             <li>Public GEO registry</li>
-            <li>Limited Slot Terminal (headline value, occupancy, congestion, FCC, comps)</li>
+            <li>Limited Slot Terminal (occupancy, FCC, freshness, labeled model)</li>
             <li>CSV without driver columns</li>
             <li>Public agents API (rate-limited)</li>
           </ul>
@@ -66,7 +66,7 @@ export default function PricingClient({
           <div className="text-zinc-600 text-xs mb-4">Stripe when configured · demo seat otherwise</div>
           <ul className="text-zinc-300 text-sm space-y-2 mb-6">
             <li>Full valuation v0 driver breakdown</li>
-            <li>30-day model history</li>
+            <li>30-day model-path backfill (Experimental — not trades)</li>
             <li>Compare up to 4 slots</li>
             <li>Export+ (drivers, BIU, remaining life)</li>
             <li>Terminal API + key (300 req/min)</li>

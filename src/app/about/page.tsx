@@ -245,7 +245,7 @@ export default function AboutPage() {
                 { path: "GET /api/v1/agents/slots/{slug}", desc: "Full dossier for one slot: record, satellites at that longitude, FCC authorizations, congestion breakdown, and heuristic valuation." },
                 { path: "GET /api/v1/agents/satellites", desc: "GEO satellites from the UCS database. Optional filters: operator, ownerCountry, limit (max 1000)." },
                 { path: "GET /api/v1/openapi", desc: "OpenAPI 3.1 document covering agents and Pro Terminal routes." },
-                { path: "GET /api/v1/terminal/slots/{slug}", desc: "Pro: Slot Terminal model — occupancy, rights-chain stub, valuation v0 + history, simulated capacity book, comps." },
+                { path: "GET /api/v1/terminal/slots/{slug}", desc: "Pro: Slot Terminal model — TLE-primary occupancy, recorded FCC layers, valuation v0. Simulated book / ITU stubs are labeled experimental, not the default view." },
                 { path: "GET /api/v1/terminal/valuations/{slug}/history", desc: "Pro: daily valuation snapshots (persisted or model backfill). Not trade prints." },
               ].map((e) => (
                 <div key={e.path} className="border border-zinc-800 rounded-lg px-4 py-3 bg-zinc-900/5">

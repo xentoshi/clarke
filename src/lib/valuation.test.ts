@@ -123,6 +123,8 @@ describe("valuateSlot v0", () => {
     assert.ok(v.point > 0);
     assert.ok(v.low < v.point && v.high > v.point);
     assert.equal(v.modelVersion, "v0");
+    assert.equal(v.basis, "model");
+    assert.equal(v.curatedEstimate, "$350M+");
     assert.equal(v.confidence, "high");
     assert.ok(v.factors.some((f) => f.label === "Coverage (GDP/pop)"));
     assert.ok(v.factors.some((f) => f.label === "License / BIU"));

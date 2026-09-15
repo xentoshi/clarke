@@ -18,7 +18,7 @@ point = $30M baseline
 
 Confidence interval: ±22% (high) / ±35% (medium) / ±50% (low) around the point. High confidence is reserved for curated positions; government/military-only UCS `users` are flagged non-commercial and forced to low confidence.
 
-Curated `valueEstimate` strings (e.g. `$350M+`) remain visible as a hand-checked overlay; they do **not** replace the model range.
+Curated `valueEstimate` strings (e.g. `$350M+`) are a **hand estimate / curated opinion** (class M). They are secondary to the v0 range and do **not** replace it. Valuation `basis` is always `model`.
 
 ## Inputs
 
@@ -35,11 +35,11 @@ Curated `valueEstimate` strings (e.g. `$350M+`) remain visible as a hand-checked
 
 ## History
 
-`npm run seed:valuations` writes 30 daily snapshots per slot into `data/terminal.db`. Until a real daily job exists, those points are a **deterministic model path** (smooth drift from the current v0 point), labeled `backfill` even when read back from SQLite — not observed trades. Re-run the seed after ingest or model changes.
+`npm run seed:valuations` writes 30 daily snapshots per slot into `data/terminal.db`. Until a real daily job exists, those points are a **deterministic model path** (smooth drift from the current v0 point), labeled `backfill` even when read back from SQLite — not observed trades. Re-run the seed after ingest or model changes. The sparkline is **not on the default Terminal**; it sits behind Experimental disclosure as “MODEL BACKFILL — not trades.”
 
 ## What v0 is not
 
 - Not a live bid/ask or last trade
 - Not an ITU deed or FCC license valuation
 - Not advice to buy, lease, or file
-- Simulated capacity books on the Terminal are labeled SIMULATED and derived from the same midpoint + congestion
+- Simulated capacity books are Experimental, labeled SIMULATED, derived from the same midpoint + congestion, and are not on the default Terminal first screen

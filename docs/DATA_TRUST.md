@@ -6,6 +6,23 @@ Honest one-liner for distribution:
 
 > Clarke v0 is a public-registry view (TLE-primary occupancy, UCS identity, FCC SSAL licenses) plus a transparent heuristic implied-value range. It is not a live market, not an ITU deed, and not an appraisal. Curated dollar overlays are hand-checked opinions and do not replace the model. TLE longitude is a tracked-object location, never an FCC assignment or ITU filing.
 
+## Default Terminal quarantine (this change)
+
+A paying skeptic’s first Slot Terminal screen is **occupancy + recorded FCC + ingest freshness + labeled v0 model**. Market cosplay is not default UI.
+
+| Surface | Default Terminal | Why |
+|---|---|---|
+| Simulated capacity book | **Quarantined.** Behind explicit Experimental disclosure only. Not on free/default first screen. | Function of v0 midpoint + congestion. There is no public GEO bid/ask feed. Showing it as a Bloomberg strip implied a market. |
+| ITU filing layer | **Quarantined stub.** Collapsed under Experimental “Unrecorded layers.” | SNS is not ingested. A filled panel would look like a deed. |
+| Sub-lease / capacity-lease layer | **Quarantined stub.** Same Experimental disclosure. | No public sub-lease registry. Must not look like a named lessee. |
+| Seeded valuation sparkline | **Quarantined.** Experimental “model backfill — not trades.” Hidden from default. | `terminal.db` is a deterministic v0 path, not prints. |
+| Curated `$NNN M+` overlay | **Visible, secondary.** Class **M** “hand estimate / curated opinion,” under the model range, not a competing headline. Valuation `basis` is always `model`. | Overlay can diverge ~2× from v0. V/M/S discipline. |
+| Recorded FCC rows + TLE-primary occupancy | **Primary.** | Named public sources. |
+
+Pro API still returns `bidAsk` / full `rightsChain` / history so agents can inspect the stubs; the HTML default view does not present them as filled primary panels.
+
+Tests: `src/lib/terminal-default.test.ts` asserts default primary markup does not contain the sim book or ITU stub.
+
 ## Ranked issues
 
 | Rank | Severity | Issue | Status in this change |
@@ -18,8 +35,9 @@ Honest one-liner for distribution:
 | 6 | **Medium** | BIU label “Operating (non-US admin)” on US DoD birds with no FCC row (MUOS-2). | **Fixed.** Wording is “no FCC market-access row.” |
 | 7 | **Medium** | Occupancy grouping 0.3° (agents dossier default) vs 0.4° (Terminal / congestion). | **Fixed.** Default co-location window is 0.4°. |
 | 8 | **Medium** | Agents list valuation omitted satellite lifetimes, so remaining life stayed 1.0 even after a parser fix. | **Fixed.** `listSlots` / explorer / seed pass the occupancy window. |
-| 9 | **Won’t invent** | Curated overlay ($350M+ at 101°W, $400M+ at 19.2°E) is far from v0. After remaining-life fix UCS occupancy was **$228M at 101°W**; after TLE-primary occupancy **$198M** (5 sats, congestion 80). | Overlay stays labeled; model remains the fair-value figure. No new prices invented. |
+| 9 | **Won’t invent** | Curated overlay ($350M+ at 101°W, $400M+ at 19.2°E) is far from v0. After remaining-life fix UCS occupancy was **$228M at 101°W**; after TLE-primary occupancy **$198M** (5 sats, congestion 80). | Overlay is class M, secondary to the model; `basis` is always `model`. No new prices invented. |
 | 10 | **Open** | UCS ingest `last_run` is today; the **file vintage is ~May 2023** (latest GEO launch in DB is 2023). Terminal “as of today” is ingest time. FCC SSAL ~21 days stale by design (`ingest.yml` skips it). ITU SNS is not ingested. NORAD/COSPAR omitted from UI (known UCS ID errors); API still returns them. Duplicate slugs for absorbed longitudes remain. | Documented. |
+| 11 | **High (UI)** | Simulated book, ITU/sub-lease stubs, and seeded sparkline still sat on the default Terminal as filled panels. | **Fixed.** Quarantined behind Experimental disclosure. See Default Terminal quarantine. |
 
 ## Position authority (TLE-primary occupancy)
 
@@ -100,16 +118,16 @@ Legend: **V** = verified from a named public source in this product · **M** = m
 | Congestion score / tier | M | TLE-primary density ±2°, co-location ±0.4°, operator contention. Decayed Space-Track objects excluded; graveyard/inclined not classified. |
 | Congestion dominant operator | V | Majority in ±2° neighborhood — often a different company than the registry row (ISRO vs Intelsat at 72°E). |
 | Fair value point / CI | M | $30M × drivers. **Not a quote.** CI is a confidence spread, not a statistical interval. |
-| Curated `$NNN M+` overlay | M | Hand-checked opinion. Not the model. Can diverge by 2×. |
+| Curated `$NNN M+` overlay | M | Hand-checked opinion. Secondary to v0. Not the model, not a headline. Can diverge by 2×. |
 | Coverage GDP/pop | M | Longitude band heuristic (`coverage-proxy.ts`). Not a measured beam. |
 | Spectrum bands | V/M | Curated tags only. UCS-derived rows often empty. |
 | License / BIU | M | Heuristic: UCS sat + FCC row ≠ ITU brought-into-use. “Paper filing” can be a UCS lag (163°W). |
-| FCC table (call sign, licensee, service) | V | SSAL. Freshness is the FCC ingest, not “today.” Notes can mention later ICFS grants. |
-| Rights: national admin / FCC licensees | V | FCC when present; else inferred country. |
-| Rights: ITU filing | S | Not ingested. Quarantined stub. |
-| Rights: sub-lease | S | No public feed. Quarantined stub. |
-| Simulated capacity book | S | Function of v0 midpoint + congestion. Labeled SIMULATED. |
-| Valuation chart / 30-day history | S | Seeded model path. Not trades. |
+| FCC table (call sign, licensee, service) | V | SSAL. Freshness is the FCC ingest, not “today.” Notes can mention later ICFS grants. Default Terminal primary. |
+| Rights: national admin / FCC licensees | V | FCC when present; else inferred country. Default Terminal primary. |
+| Rights: ITU filing | S | Not ingested. **Quarantined** — Experimental only; not a filled panel. |
+| Rights: sub-lease | S | No public feed. **Quarantined** — Experimental only. |
+| Simulated capacity book | S | Function of v0 midpoint + congestion. **Quarantined** from default Terminal; Experimental disclosure. |
+| Valuation chart / 30-day history | S | Seeded model path. **Quarantined** from default; labeled MODEL BACKFILL. Not trades. |
 | Data freshness `age_days` | V | Ingest clock. UCS `0 days` ≠ live catalog. FCC ~21 days is real. |
 | Non-commercial flag | V | UCS `users` without “Commercial.” |
 | NORAD / COSPAR (API) | M | Stored from UCS; some historical IDs were wrong. UI still hides them. |
@@ -129,6 +147,7 @@ Legend: **V** = verified from a named public source in this product · **M** = m
 - Live transponder bids, last trade, or slot appraisal.
 - ITU deed / brought-into-use as recorded (BIU is a Clarke hint).
 - That the curated overlay is the model, or that history is a price index.
+- That the default Terminal is a market (simulated book is Experimental only).
 - That “operator” means exclusive holder of the longitude (it does not).
 - That UCS `last_run` today means 2026 ephemerides.
 - That a TLE sub-satellite longitude is the FCC-authorized or ITU-filed location.

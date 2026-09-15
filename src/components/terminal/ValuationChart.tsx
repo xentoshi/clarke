@@ -30,7 +30,7 @@ export function ValuationChart({
   }, [series, pad.l, pad.r, pad.t, pad.b]);
 
   if (pts.length === 0) {
-    return <div className="text-zinc-600 text-xs">No history yet. Run <span className="font-mono">npm run seed:valuations</span>.</div>;
+    return <div className="text-zinc-600 text-xs">No model-path backfill yet. Run <span className="font-mono">npm run seed:valuations</span>. Not a trade tape.</div>;
   }
 
   const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
@@ -40,8 +40,8 @@ export function ValuationChart({
     <div>
       <div className="flex items-baseline justify-between mb-1">
         <div className="text-white font-mono text-sm tabular-nums">{formatMoney(active.s.point)}</div>
-        <div className="text-[10px] font-mono text-zinc-600">
-          {active.s.asOf} · {source === "persisted" ? "seeded model path (not trades)" : "model backfill (not trades)"}
+        <div className="text-[10px] font-mono text-amber-400/80 uppercase tracking-widest">
+          {active.s.asOf} · {source === "persisted" ? "seeded SQLite path" : "synthesized"} · MODEL BACKFILL — not trades
         </div>
       </div>
       <svg

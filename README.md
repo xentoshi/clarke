@@ -13,7 +13,7 @@ Clarke normalizes public data across GEO, LEO, and MEO to build the orbital asse
 ## What it is
 
 - **Orbital registry** — a searchable, filterable, exportable explorer over every tracked GEO position, built from ITU, FCC, Space-Track, and UCS public data
-- **Slot Terminal** — a data-dense dossier at `/orbital/[slug]` (alias `/slot/[slug]`) with implied fair value + confidence interval, occupancy, congestion, FCC/BIU hints, a rights-chain stub, nearest comps, and a **simulated** capacity book (labeled, not live trades)
+- **Slot Terminal** — a data-dense dossier at `/orbital/[slug]` (alias `/slot/[slug]`): TLE-primary occupancy, recorded FCC layers, ingest freshness, and a labeled v0 model range. Simulated capacity book, ITU/sub-lease stubs, and seeded sparklines are Experimental (collapsed, not the default first screen).
 - **Intelligence layer** — valuation model v0 (range + confidence + driver breakdown + 30-day history), a normalized 0–100 congestion / coordination-risk score, and per-source data-freshness tracking
 - **Terminal seats** — free thin registry; Pro unlocks driver breakdown, compare (up to 4), export+, and the Terminal API
 - **Data quality** — occupancy clusters on Space-Track TLE longitude when the TLE passes published quality gates (UCS catalog longitude is kept and shown). Disagreements >2° are flagged. TLE longitude is not an FCC or ITU assignment.
@@ -36,7 +36,7 @@ Clarke exposes its registry as machine-readable data for LLM agents and tools.
 | `GET /api/v1/agents/satellites` | GEO satellites (filter by `operator`, `ownerCountry`, `limit`) |
 | `GET /api/v1/openapi` | OpenAPI 3.1 spec for agents + Terminal routes |
 | `GET /api/v1/terminal/slots` | **Pro** — Terminal summaries |
-| `GET /api/v1/terminal/slots/{slug}` | **Pro** — full Terminal model (rights, history, simulated book, comps) |
+| `GET /api/v1/terminal/slots/{slug}` | **Pro** — full Terminal model (occupancy, FCC, valuation; experimental stubs included but labeled) |
 | `GET /api/v1/terminal/valuations/{slug}` | **Pro** — current valuation v0 |
 | `GET /api/v1/terminal/valuations/{slug}/history` | **Pro** — daily model snapshots |
 | `GET /api/v1/terminal/compare?slugs=` | **Pro** — up to 4 slots |
@@ -87,7 +87,7 @@ npm run dev
 
 Open `/orbital` for the registry, `/orbital/101w` (or `/slot/101w`) for Slot Terminal, `/login` for a free or **Demo Pro** seat, `/pricing` for the gate.
 
-Valuation methodology: [`docs/VALUATION.md`](./docs/VALUATION.md) and `/docs/valuation`.
+Valuation methodology: [`docs/VALUATION.md`](./docs/VALUATION.md) and `/docs/valuation`. Data trust: [`docs/DATA_TRUST.md`](./docs/DATA_TRUST.md) and `/docs/data-trust`.
 
 ```bash
 npm test                  # valuation v0 + TLE occupancy authority tests

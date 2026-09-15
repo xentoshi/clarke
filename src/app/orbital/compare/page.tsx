@@ -3,7 +3,6 @@ import { buildMeta } from "@/lib/metadata";
 import { getEntitlements } from "@/lib/auth";
 import { buildSlotTerminal } from "@/lib/slot-terminal";
 import { isSafeSlug } from "@/lib/slot-utils";
-import { formatMoney } from "@/lib/money";
 import { statusLabels } from "@/data/orbital-slots";
 import { formatAsOfDate } from "@/lib/provenance";
 
@@ -63,7 +62,7 @@ export default async function ComparePage({
     { key: "biu", label: "BIU / license", get: (m) => m.valuation.license.biuLabel },
     { key: "cov", label: "Coverage proxy", get: (m) => m.valuation.coverage.band.label },
     { key: "life", label: "Remaining life", get: (m) => m.valuation.occupancyQuality.meanYearsRemaining == null ? "—" : `${m.valuation.occupancyQuality.meanYearsRemaining}y` },
-    { key: "mid", label: "Simulated mid", get: (m) => m.bidAsk.midUsd ? formatMoney(m.bidAsk.midUsd) : "—" },
+    { key: "fcc", label: "FCC rows", get: (m) => String(m.fccAuthorizations.length) },
     { key: "asof", label: "As of", get: (m) => formatAsOfDate(m.asOf) },
   ];
 

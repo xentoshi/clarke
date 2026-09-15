@@ -92,10 +92,13 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
               </div>
             ) : (
               <div className="space-y-1 mb-1">
-                {v.basis === "curated" && v.curatedEstimate && (
-                  <div className="flex justify-between text-xs py-1 border-b border-zinc-900"><span className="text-zinc-600">Curated value</span><span className="text-white font-mono">{v.curatedEstimate}</span></div>
+                <div className="flex justify-between text-xs py-1 border-b border-zinc-900"><span className="text-zinc-600">Modeled range (v0)</span><span className="text-zinc-300 font-mono">{v.formatted.range}</span></div>
+                {v.curatedEstimate && (
+                  <div className="flex justify-between text-xs py-1 border-b border-zinc-900">
+                    <span className="text-zinc-600">Hand estimate / curated opinion</span>
+                    <span className="text-zinc-500 font-mono">{v.curatedEstimate}</span>
+                  </div>
                 )}
-                <div className="flex justify-between text-xs py-1 border-b border-zinc-900"><span className="text-zinc-600">Modeled range</span><span className="text-zinc-300 font-mono">{v.formatted.range}</span></div>
                 <div className="flex justify-between text-xs py-1 border-b border-zinc-900"><span className="text-zinc-600">Confidence</span><span className={`font-mono ${v.confidence === "high" ? "text-emerald-400" : v.confidence === "medium" ? "text-amber-400" : "text-zinc-400"}`}>{v.confidence}</span></div>
               </div>
             )}

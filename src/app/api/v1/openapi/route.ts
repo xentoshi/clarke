@@ -8,7 +8,7 @@ const spec = {
     title: "Clarke API",
     version: "1.2.0",
     description:
-      "Read-only GEO registry (public agents API) plus Pro Slot Terminal endpoints. Occupancy is TLE-primary (Space-Track) with UCS fallback; TLE longitude is not an FCC or ITU assignment. Valuation v0 is a model, not a live market price. Simulated bid/ask is labeled as such.",
+      "Read-only GEO registry (public agents API) plus Pro Slot Terminal endpoints. Occupancy is TLE-primary (Space-Track) with UCS fallback; TLE longitude is not an FCC or ITU assignment. Valuation v0 is a model, not a live market price. Simulated bid/ask and ITU stubs are experimental, not the default Terminal view.",
   },
   servers: [{ url: "/api/v1" }],
   tags: [
@@ -64,7 +64,7 @@ const spec = {
         summary: "Full Slot Terminal model",
         security: [{ ApiKey: [] }, { ClarkeKey: [] }],
         parameters: [{ name: "slug", in: "path", required: true, schema: { type: "string", example: "101w" } }],
-        responses: { "200": { description: "Occupancy, rights chain, valuation, history, simulated book, comps" } },
+        responses: { "200": { description: "Occupancy, recorded FCC, valuation; experimental stubs (sim book, ITU) labeled" } },
       },
     },
     "/terminal/valuations/{slug}": {

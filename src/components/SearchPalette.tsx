@@ -24,9 +24,10 @@ const typeLabels: Record<Result["type"], string> = {
 
 const pages = [
   { label: "Orbital Registry", sub: "Search and filter every tracked GEO orbital position", href: "/orbital" },
-  { label: "Slot Terminal · 101°W", sub: "Sample hot slot — fair value, occupancy, rights, simulated book", href: "/orbital/101w" },
+  { label: "Slot Terminal · 101°W", sub: "Sample hot slot — occupancy, FCC, freshness, labeled model", href: "/orbital/101w" },
   { label: "Pricing / Terminal seats", sub: "Free registry vs Pro Slot Terminal", href: "/pricing" },
   { label: "About Clarke", sub: "How it works, data sources, methodology, and the agents API", href: "/about" },
+  { label: "Data trust", sub: "What Slot Terminal will and will not claim", href: "/docs/data-trust" },
 ];
 
 function search(q: string, slots: OrbitalSlot[]): Result[] {
@@ -37,7 +38,7 @@ function search(q: string, slots: OrbitalSlot[]): Result[] {
     ...slots
       .filter((s) => s.label.toLowerCase().includes(lq) || s.operator.toLowerCase().includes(lq) || s.country.toLowerCase().includes(lq))
       .slice(0, 6)
-      .map((s) => ({ type: "slot" as const, label: s.label, sub: s.valueEstimate ? `${s.operator} · ${s.valueEstimate}` : s.operator, href: `/orbital/${lonToSlug(s.longitude)}` })),
+      .map((s) => ({ type: "slot" as const, label: s.label, sub: s.valueEstimate ? `${s.operator} · hand estimate ${s.valueEstimate}` : s.operator, href: `/orbital/${lonToSlug(s.longitude)}` })),
 
     ...pages
       .filter((p) => p.label.toLowerCase().includes(lq) || p.sub.toLowerCase().includes(lq))

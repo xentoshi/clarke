@@ -15,7 +15,7 @@ export { formatMoney } from "./money";
 // is, remaining satellite life, who operates it, what spectrum it carries, how
 // scarce/contested its arc is, and FCC/license / brought-into-use signals.
 // Every factor is surfaced so the number can be inspected rather than trusted
-// blindly. Curated `valueEstimate` strings are a hand-checked overlay and
+// blindly. Curated `valueEstimate` strings are a hand-checked overlay (class M) and
 // do not replace the model range (see docs/VALUATION.md).
 
 export const MODEL_VERSION = "v0";
@@ -51,7 +51,7 @@ export interface SlotValuation {
   point: number;
   high: number;
   confidence: Confidence;
-  basis: "model" | "curated";
+  basis: "model";
   curatedEstimate?: string;
   factors: ValuationFactor[];
   formatted: { low: string; point: string; high: string; range: string };
@@ -253,7 +253,9 @@ export function valuateSlot(
     point,
     high,
     confidence,
-    basis: curatedEstimate ? "curated" : "model",
+    // Fair-value figure is always the v0 model. Curated $ overlays are a
+    // secondary hand estimate, never the valuation basis.
+    basis: "model",
     curatedEstimate,
     factors,
     nonCommercial: nonCommercial.flagged,

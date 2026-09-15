@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import type { Provenance } from "@/lib/provenance";
 import { formatAsOfDate } from "@/lib/provenance";
+import type { TrustClass } from "@/lib/terminal-default";
+import { TrustMark } from "./TrustMark";
 
 export function Metric({
   label,
@@ -8,12 +10,14 @@ export function Metric({
   sub,
   provenance,
   tone = "white",
+  trust,
 }: {
   label: string;
   value: ReactNode;
   sub?: ReactNode;
   provenance: Provenance;
   tone?: "white" | "emerald" | "amber" | "red" | "sky";
+  trust?: TrustClass;
 }) {
   const valueClass =
     tone === "emerald" ? "text-emerald-400" :
@@ -24,7 +28,10 @@ export function Metric({
 
   return (
     <div className="bg-zinc-950 px-4 py-4 min-w-0">
-      <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest truncate">{label}</div>
+      <div className="flex items-center gap-1.5 min-w-0">
+        <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest truncate">{label}</div>
+        {trust && <TrustMark cls={trust} />}
+      </div>
       <div className={`font-mono font-bold text-xl mt-1 tabular-nums leading-tight ${valueClass}`}>{value}</div>
       {sub && <div className="text-[11px] text-zinc-500 mt-1 leading-snug">{sub}</div>}
       <div className="text-[10px] font-mono text-zinc-700 mt-2 truncate" title={`${provenance.source} · ${provenance.asOf}`}>

@@ -31,7 +31,7 @@ export default function ValuationDocsPage() {
       <p className="text-zinc-500 text-sm leading-relaxed mb-6">
         Occupancy counts use TLE-primary longitude ±0.4° (UCS fallback). TLE longitude is not an FCC or ITU assignment.
         Confidence interval widens as confidence falls (±22% / ±35% / ±50%). Government/military-only UCS users are flagged
-        non-commercial. History in <span className="font-mono">data/terminal.db</span> is a seeded model path until a daily job lands — not trade prints.
+        History in <span className="font-mono">data/terminal.db</span> is a seeded model path — quarantined from the default Terminal, labeled backfill, not trade prints.
       </p>
       <div className="flex gap-4 text-sm">
         <Link href="/orbital/101w" className="text-white hover:text-zinc-300">Open 101°W Terminal →</Link>

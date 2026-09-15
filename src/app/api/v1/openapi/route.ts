@@ -35,7 +35,7 @@ const spec = {
         tags: ["Agents"],
         summary: "Slot dossier",
         parameters: [{ name: "slug", in: "path", required: true, schema: { type: "string", example: "101w" } }],
-        responses: { "200": { description: "Slot + satellites (UCS/TLE longs, Δ, position_disputed) + FCC + congestion + valuation + positionTrust" }, "404": { description: "Unknown slug" } },
+        responses: { "200": { description: "Slot + satellites + FCC + congestion + valuation + positionTrust + sourceVintage (UCS file vintage, FCC as-of, TLE epoch)" }, "404": { description: "Unknown slug" } },
       },
     },
     "/agents/satellites": {

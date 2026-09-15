@@ -1,0 +1,35 @@
+import type { ReactNode } from "react";
+import type { Provenance } from "@/lib/provenance";
+import { formatAsOfDate } from "@/lib/provenance";
+
+export function Metric({
+  label,
+  value,
+  sub,
+  provenance,
+  tone = "white",
+}: {
+  label: string;
+  value: ReactNode;
+  sub?: ReactNode;
+  provenance: Provenance;
+  tone?: "white" | "emerald" | "amber" | "red" | "sky";
+}) {
+  const valueClass =
+    tone === "emerald" ? "text-emerald-400" :
+    tone === "amber" ? "text-amber-400" :
+    tone === "red" ? "text-red-400" :
+    tone === "sky" ? "text-sky-400" :
+    "text-white";
+
+  return (
+    <div className="bg-zinc-950 px-4 py-4 min-w-0">
+      <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest truncate">{label}</div>
+      <div className={`font-mono font-bold text-xl mt-1 tabular-nums leading-tight ${valueClass}`}>{value}</div>
+      {sub && <div className="text-[11px] text-zinc-500 mt-1 leading-snug">{sub}</div>}
+      <div className="text-[10px] font-mono text-zinc-700 mt-2 truncate" title={`${provenance.source} · ${provenance.asOf}`}>
+        {provenance.source} · {formatAsOfDate(provenance.asOf)}
+      </div>
+    </div>
+  );
+}

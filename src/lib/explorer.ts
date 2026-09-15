@@ -5,9 +5,12 @@ import {
   getCongestion,
   getFccSlugSet,
   lonToSlug,
+  type GeoSatellite,
 } from "@/lib/satellites";
 import { valuateSlot } from "@/lib/valuation";
 import { regionForLongitude } from "@/lib/regions";
+import { getLatestIngest } from "@/lib/freshness";
+import { ingestAsOf } from "@/lib/provenance";
 import type { ExplorerRow } from "@/app/orbital/types";
 
 // Server-side builder for the orbital explorer. Computes one enriched row per
@@ -16,23 +19,33 @@ import type { ExplorerRow } from "@/app/orbital/types";
 export function buildExplorerRows(): ExplorerRow[] {
   const merged = mergeWithUcs(curatedSlots);
   const fccSet = getFccSlugSet();
+  const asOf = new Date(ingestAsOf(getLatestIngest()?.lastRun ?? null));
 
-  // One pass over all GEO satellites, grouped by slot slug, for co-located
-  // names + counts (used for the Sats column and satellite-name search).
   const namesBySlug = new Map<string, string[]>();
+  const satsBySlug = new Map<string, GeoSatellite[]>();
   for (const sat of getGeoSatellites()) {
     if (sat.longitudeGeo === null) continue;
     const slug = lonToSlug(sat.longitudeGeo);
-    const list = namesBySlug.get(slug);
-    if (list) list.push(sat.name);
+    const names = namesBySlug.get(slug);
+    if (names) names.push(sat.name);
     else namesBySlug.set(slug, [sat.name]);
+    const list = satsBySlug.get(slug);
+    if (list) list.push(sat);
+    else satsBySlug.set(slug, [sat]);
   }
 
   return merged.map((slot) => {
     const slug = lonToSlug(slot.longitude);
     const congestion = getCongestion(slot.longitude);
-    const valuation = valuateSlot(slot, congestion);
     const satelliteNames = namesBySlug.get(slug) ?? [];
+    const sats = satsBySlug.get(slug) ?? [];
+    const fccLicensed = fccSet.has(slug);
+    const valuation = valuateSlot(slot, congestion, {
+      satellites: sats,
+      fccLicensed,
+      satCount: satelliteNames.length || congestion.factors.coLocated,
+      asOf,
+    });
 
     return {
       id: slot.id,
@@ -48,7 +61,7 @@ export function buildExplorerRows(): ExplorerRow[] {
       congestionScore: congestion.score,
       congestionTier: congestion.tier,
       region: regionForLongitude(slot.longitude),
-      fccLicensed: fccSet.has(slug),
+      fccLicensed,
       bands: slot.bands,
       coverage: slot.coverage,
       description: slot.description,
@@ -56,6 +69,7 @@ export function buildExplorerRows(): ExplorerRow[] {
       launched: slot.launched,
       valuation,
       valueDisplay: slot.valueEstimate || valuation.formatted.range,
+      biuHint: valuation.license.biuHint,
     };
   });
 }

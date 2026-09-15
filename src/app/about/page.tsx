@@ -235,7 +235,7 @@ export default function AboutPage() {
 
           <Section id="agents" title="Agents API">
             <p className="text-zinc-500 text-sm leading-relaxed mb-6">
-              Clarke exposes a read-only HTTP API and a Model Context Protocol server so autonomous agents and LLM-based assistants can query the registry without scraping HTML. The same operations layer backs both transports, so HTTP responses and MCP tool results stay in sync. No authentication is required; reads are public, rate-limited, and cached.
+              Clarke exposes a read-only HTTP API and a Model Context Protocol server so autonomous agents and LLM-based assistants can query the registry without scraping HTML. The same operations layer backs both transports, so HTTP responses and MCP tool results stay in sync. The public agents API requires no authentication. Slot Terminal routes require a Pro seat or API key.
             </p>
 
             <h3 className="text-white text-sm font-semibold mb-3">HTTP endpoints</h3>
@@ -244,6 +244,9 @@ export default function AboutPage() {
                 { path: "GET /api/v1/agents/slots", desc: "All orbital slots (curated + UCS-derived), merged and sorted by longitude, each with a congestion score and heuristic valuation." },
                 { path: "GET /api/v1/agents/slots/{slug}", desc: "Full dossier for one slot: record, satellites at that longitude, FCC authorizations, congestion breakdown, and heuristic valuation." },
                 { path: "GET /api/v1/agents/satellites", desc: "GEO satellites from the UCS database. Optional filters: operator, ownerCountry, limit (max 1000)." },
+                { path: "GET /api/v1/openapi", desc: "OpenAPI 3.1 document covering agents and Pro Terminal routes." },
+                { path: "GET /api/v1/terminal/slots/{slug}", desc: "Pro: Slot Terminal model — occupancy, rights-chain stub, valuation v0 + history, simulated capacity book, comps." },
+                { path: "GET /api/v1/terminal/valuations/{slug}/history", desc: "Pro: daily valuation snapshots (persisted or model backfill). Not trade prints." },
               ].map((e) => (
                 <div key={e.path} className="border border-zinc-800 rounded-lg px-4 py-3 bg-zinc-900/5">
                   <div className="text-white font-mono text-xs mb-1">{e.path}</div>
@@ -270,9 +273,9 @@ export default function AboutPage() {
             <h3 className="text-white text-sm font-semibold mb-3">Rate limits and validation</h3>
             <div className="space-y-3 mb-6">
               {[
-                { label: "RATE LIMIT", body: "60 requests per minute per IP, enforced in-memory per serverless instance. A 429 response includes a Retry-After header in seconds. No authentication is required." },
+                { label: "RATE LIMIT", body: "Public agents API: 60 requests per minute per IP. Pro Terminal API: 300/min per key or session. A 429 response includes a Retry-After header in seconds." },
                 { label: "INPUT VALIDATION", body: "All path slugs are validated against /^[a-z0-9-]+$/ and query parameters against per-field regex caps. Path traversal attempts and injection patterns return 400. Tickers are restricted to /^[A-Z0-9.-]{1,10}$/." },
-                { label: "CORS", body: "All routes allow cross-origin reads (Access-Control-Allow-Origin: *) with GET and OPTIONS only. Preflight responses cache for 24 hours." },
+                { label: "CORS", body: "All routes allow cross-origin reads (Access-Control-Allow-Origin: *) with GET and OPTIONS (Terminal also POST for keys). Preflight responses cache for 24 hours. Pro routes accept Authorization: Bearer or X-Clarke-Key." },
               ].map((s) => (
                 <div key={s.label} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
                   <div className="text-xs font-mono text-zinc-600 mb-3">{`// ${s.label}`}</div>
@@ -297,7 +300,7 @@ export default function AboutPage() {
   }
 }`}</pre>
               <p className="text-zinc-500 text-xs leading-relaxed mt-3">
-                Available tools: <span className="font-mono">clarke_list_slots</span>, <span className="font-mono">clarke_get_slot</span>, <span className="font-mono">clarke_list_satellites</span>.
+                Available tools: <span className="font-mono">clarke_list_slots</span>, <span className="font-mono">clarke_get_slot</span>, <span className="font-mono">clarke_get_terminal</span>, <span className="font-mono">clarke_list_satellites</span>.
               </p>
             </div>
 
@@ -437,7 +440,7 @@ export default function AboutPage() {
                 { title: "Authorization layer", body: `FCC authorization records from the Approved Space Station List are ingested as a second layer on top of the UCS satellite data. For each GEO position, Clarke queries the FCC table for any authorization within 0.6 degrees of the nominal longitude. Where a match exists, the detail page for that position shows the FCC call sign, licensee name, authorized frequency bands, administration, and in-orbit date. Where no match exists, the position has no US FCC authorization, which is expected for satellites licensed under non-US administrations.` },
                 { title: "Co-location grouping", body: "Multiple satellites operating at the same nominal longitude are grouped together using a tolerance of 0.4 degrees. This matches the standard ITU coordination practice where satellites in the same coordination filing cluster within fractions of a degree. The grouping ensures that the four SES Astra satellites at 19.2°E, for example, all appear together on a single position page rather than as four separate entries." },
                 { title: "Congestion scoring", body: "The congestion score is a normalized 0 to 100 index blending three signals at a position: arc density (active GEO satellites within 2 degrees on either side), direct co-location (satellites within 0.4 degrees), and contention (the number of distinct operators sharing the arc). Density contributes up to 50 points, co-location up to 30, and operator contention up to 20. A position packed by a single operator scores lower on contention than an equally dense arc contested by many operators, because multi-operator arcs carry a heavier interference-coordination burden. The tiers are Sparse for 0 to 14, Low for 15 to 34, Moderate for 35 to 54, High for 55 to 74, and Critical for 75 to 100. Scores reflect active operational satellites from the UCS database rather than filed ITU positions, so they understate coordination pressure in arcs with heavy filing or squatting activity." },
-                { title: "Valuation model", body: "Each position carries a heuristic implied valuation, expressed as a range rather than a point figure because it is derived from public data, not transaction records. A baseline value, calibrated against disclosed transaction prices in public M&A filings, bankruptcy proceedings (Intelsat, 2020), and analyst reports from Northern Sky Research and Euroconsult, is multiplied by five observable factors: arc desirability (where the longitude sits relative to high-value markets such as the European Ku corridor, North America, and Asia), occupancy (the number of co-located active satellites), operator tier (whether a tier-1 operator holds the position), spectrum (the authorized frequency bands, where known), and scarcity (the congestion score). Every factor and its multiplier is shown on the position page so the estimate can be inspected. Confidence is high for curated positions, medium for active positions with a known operator, and low for sparsely-attributed UCS-derived entries; the range widens as confidence falls. This is an analytical model, not an appraisal, a quote, or investment advice." },
+                { title: "Valuation model v0", body: "Each position carries a heuristic implied valuation, expressed as a range rather than a point figure because it is derived from public data, not transaction records. A $30M baseline is multiplied by arc desirability, a GDP/population coverage proxy by longitude band, occupancy (co-located satellites), remaining-life quality from UCS lifetime fields, operator tier, spectrum (when known), scarcity (congestion score), and FCC/license plus paper-vs-brought-into-use signals. Every factor and its multiplier is shown on the Slot Terminal (Pro) so the estimate can be inspected. Confidence is high for curated positions, medium for active positions with a known operator, and low for sparsely-attributed UCS-derived entries; the range widens as confidence falls. History is a seeded 30-day model path in data/terminal.db, not observed trades. This is an analytical model, not an appraisal, a quote, or investment advice. See /docs/valuation." },
               ].map((item) => (
                 <div key={item.title} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
                   <div className="text-white text-sm font-semibold mb-2">{item.title}</div>

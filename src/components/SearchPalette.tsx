@@ -23,7 +23,9 @@ const typeLabels: Record<Result["type"], string> = {
 };
 
 const pages = [
-  { label: "Orbital Slots", sub: "Search and filter every tracked GEO orbital position", href: "/orbital" },
+  { label: "Orbital Registry", sub: "Search and filter every tracked GEO orbital position", href: "/orbital" },
+  { label: "Slot Terminal · 101°W", sub: "Sample hot slot — fair value, occupancy, rights, simulated book", href: "/orbital/101w" },
+  { label: "Pricing / Terminal seats", sub: "Free registry vs Pro Slot Terminal", href: "/pricing" },
   { label: "About Clarke", sub: "How it works, data sources, methodology, and the agents API", href: "/about" },
 ];
 

@@ -8,8 +8,9 @@ import SlotTable from "./SlotTable";
 import SlotDrawer from "./SlotDrawer";
 import CsvExportDialog from "./CsvExportDialog";
 import { EMPTY_FACETS, type ExplorerRow, type Facets, type SortKey, type SortDir } from "./types";
+import { CompareTray } from "@/components/terminal/CompareTray";
 
-export default function OrbitalExplorer({ rows, updated }: { rows: ExplorerRow[]; updated: string | null }) {
+export default function OrbitalExplorer({ rows, updated, pro }: { rows: ExplorerRow[]; updated: string | null; pro: boolean }) {
   const [facets, setFacets] = useState<Facets>(EMPTY_FACETS);
   const [sortKey, setSortKey] = useState<SortKey>("longitude");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -53,6 +54,7 @@ export default function OrbitalExplorer({ rows, updated }: { rows: ExplorerRow[]
         case "operator": return a.operator.localeCompare(b.operator) * dir;
         case "satCount": return (a.satCount - b.satCount) * dir;
         case "congestionScore": return (a.congestionScore - b.congestionScore) * dir;
+        case "value": return (a.valuation.point - b.valuation.point) * dir;
         default: return (a.longitude - b.longitude) * dir;
       }
     });
@@ -102,7 +104,8 @@ export default function OrbitalExplorer({ rows, updated }: { rows: ExplorerRow[]
       </div>
 
       {selected && <SlotDrawer row={selected} onClose={() => setSelected(null)} />}
-      {csvOpen && <CsvExportDialog rows={filtered} onClose={() => setCsvOpen(false)} />}
+      {csvOpen && <CsvExportDialog rows={filtered} onClose={() => setCsvOpen(false)} pro={pro} />}
+      <CompareTray pro={pro} />
     </>
   );
 }

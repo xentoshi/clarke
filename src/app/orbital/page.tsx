@@ -3,17 +3,19 @@ import { buildMeta } from "@/lib/metadata";
 import OrbitalExplorer from "./OrbitalExplorer";
 import { buildExplorerRows } from "@/lib/explorer";
 import { getLatestIngest } from "@/lib/freshness";
+import { getEntitlements } from "@/lib/auth";
 
 export const metadata = buildMeta({
   title: "Orbital Registry",
-  description: "Search, filter, and compare every tracked GEO orbital position — operators, congestion scores, FCC filing status, and CSV export.",
+  description: "Search, filter, and compare every tracked GEO orbital position — operators, congestion scores, FCC filing status, valuation v0, and CSV export.",
   tag: "Registry",
   path: "/orbital",
 });
 
-export default function OrbitalPage() {
+export default async function OrbitalPage() {
   const rows = buildExplorerRows();
   const latest = getLatestIngest();
+  const { pro } = await getEntitlements();
   const updated = latest
     ? new Date(latest.lastRun.replace(" ", "T") + "Z").toLocaleDateString("en-US", {
         year: "numeric", month: "short", day: "numeric", timeZone: "UTC",
@@ -27,10 +29,14 @@ export default function OrbitalPage() {
           <p className="text-zinc-600 text-xs font-mono mb-3">{"// ORBITAL_REGISTRY"}</p>
           <h1 className="text-2xl font-bold text-white mb-2">Orbital Registry</h1>
           <p className="text-zinc-500 text-sm leading-relaxed">
-            Every tracked GEO position, by longitude. Search, filter, compare, export.
+            Every tracked GEO position, by longitude. Search, filter, open Slot Terminal, compare, export.
+            Fair value is model v0, not a live market price.
           </p>
         </div>
         <div className="flex items-center gap-4 shrink-0 mt-1">
+          <Link href="/orbital/101w" className="text-zinc-300 text-xs hover:text-white transition-colors">
+            Sample Terminal →
+          </Link>
           <Link href="/orbital/changes" className="text-zinc-600 text-xs hover:text-zinc-300 transition-colors">
             Changes →
           </Link>
@@ -42,7 +48,7 @@ export default function OrbitalPage() {
           </Link>
         </div>
       </div>
-      <OrbitalExplorer rows={rows} updated={updated} />
+      <OrbitalExplorer rows={rows} updated={updated} pro={pro} />
     </div>
   );
 }

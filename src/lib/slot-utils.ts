@@ -1,3 +1,11 @@
+// Path slugs are lowercase letters, digits, and hyphens — the shape produced
+// by lonToSlug. Used to reject traversal / injection before any DB lookup.
+export const SAFE_SLUG = /^[a-z0-9-]+$/;
+
+export function isSafeSlug(slug: string): boolean {
+  return SAFE_SLUG.test(slug);
+}
+
 export function lonToSlug(lon: number): string {
   const rounded = Math.round(Math.abs(lon) * 10) / 10;
   const dir = lon >= 0 ? "e" : "w";

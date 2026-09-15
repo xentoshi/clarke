@@ -27,9 +27,10 @@ export interface ExplorerRow {
   launched?: number;
   valuation: SlotValuation;
   valueDisplay: string; // curated estimate if present, else modeled range
+  biuHint: SlotValuation["license"]["biuHint"];
 }
 
-export type SortKey = "longitude" | "operator" | "satCount" | "congestionScore";
+export type SortKey = "longitude" | "operator" | "satCount" | "congestionScore" | "value";
 export type SortDir = "asc" | "desc";
 
 export interface Facets {

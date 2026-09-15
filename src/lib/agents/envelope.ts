@@ -50,8 +50,8 @@ export function ok<T>(data: T, opts: OkOptions = {}): NextResponse {
       "Cache-Control": `public, s-maxage=${cacheSeconds}, stale-while-revalidate=${staleSeconds}`,
       ETag: etag,
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "If-None-Match",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "If-None-Match, Authorization, X-Clarke-Key, Content-Type",
       "Access-Control-Expose-Headers": "ETag",
     },
   });
@@ -77,13 +77,33 @@ export function badRequest(message: string): NextResponse {
   );
 }
 
+export function unauthorized(message: string): NextResponse {
+  return NextResponse.json(
+    { error: message, upgrade: "/pricing" },
+    {
+      status: 401,
+      headers: { "Access-Control-Allow-Origin": "*" },
+    },
+  );
+}
+
+export function forbidden(message: string): NextResponse {
+  return NextResponse.json(
+    { error: message, upgrade: "/pricing" },
+    {
+      status: 403,
+      headers: { "Access-Control-Allow-Origin": "*" },
+    },
+  );
+}
+
 export function preflight(): NextResponse {
   return new NextResponse(null, {
     status: 204,
     headers: {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "If-None-Match",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "If-None-Match, Authorization, X-Clarke-Key, Content-Type",
       "Access-Control-Max-Age": "86400",
     },
   });

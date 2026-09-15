@@ -10,7 +10,8 @@ import type { OrbitalSlot } from "@/data/orbital-slots";
 const SearchPalette = dynamic(() => import("./SearchPalette"), { ssr: false });
 
 const navLinks = [
-  { href: "/orbital", label: "Orbital Slots" },
+  { href: "/orbital", label: "Registry" },
+  { href: "/pricing", label: "Terminal" },
   { href: "/blog", label: "Blog" },
   { href: "/about", label: "About" },
 ];
@@ -31,6 +32,13 @@ export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); setSearchOpen((o) => !o); }
+      if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const t = e.target as HTMLElement | null;
+        const tag = t?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || t?.isContentEditable) return;
+        e.preventDefault();
+        setSearchOpen(true);
+      }
       if (e.key === "Escape") { setSearchOpen(false); }
     };
     window.addEventListener("keydown", handler);
@@ -65,9 +73,10 @@ export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <span className="hidden sm:block text-xs">Search</span>
-              <kbd className="hidden sm:block text-xs bg-zinc-800 px-1 py-0.5 rounded font-mono">⌘K</kbd>
+              <kbd className="hidden sm:block text-xs bg-zinc-800 px-1 py-0.5 rounded font-mono">/</kbd>
             </button>
 
+            <Link href="/login" className="hidden sm:block text-xs text-white/40 hover:text-white px-2">Sign in</Link>
             <button onClick={() => setMobileOpen((o) => !o)} className="lg:hidden p-2.5 sm:p-2 text-zinc-400 hover:text-white transition-colors">
               {mobileOpen
                 ? <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -85,6 +94,7 @@ export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
                   {link.label}
                 </Link>
               ))}
+              <Link href="/login" className="px-3 py-2 text-sm text-white/40 hover:text-white">Sign in</Link>
             </nav>
           </div>
         )}

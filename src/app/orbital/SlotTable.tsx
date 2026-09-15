@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import type { ExplorerRow, SortKey, SortDir } from "./types";
 import type { CongestionTier } from "@/lib/satellites";
 import type { SlotStatus } from "@/data/orbital-slots";
+import { AddToCompare } from "@/components/terminal/AddToCompare";
 
 const statusDot: Record<SlotStatus, string> = {
   active: "#34d399", filed: "#60a5fa", squatted: "#fbbf24", inactive: "#52525b",
@@ -13,12 +15,13 @@ const congestionDot: Record<CongestionTier, string> = {
 };
 
 const COLUMNS: { key: SortKey | null; label: string; align: "left" | "right"; cls?: string }[] = [
+  { key: null, label: "", align: "left" },
   { key: "longitude", label: "Slot", align: "left" },
   { key: "operator", label: "Operator", align: "left", cls: "hidden sm:table-cell" },
   { key: null, label: "Country", align: "left", cls: "hidden lg:table-cell" },
-  { key: null, label: "Purpose", align: "left", cls: "hidden md:table-cell" },
   { key: "satCount", label: "Sats", align: "right", cls: "hidden lg:table-cell" },
   { key: "congestionScore", label: "Cong.", align: "right" },
+  { key: "value", label: "Fair value", align: "right" },
 ];
 
 export default function SlotTable({
@@ -43,7 +46,7 @@ export default function SlotTable({
               {COLUMNS.map((c, i) => (
                 <th key={i}
                   onClick={c.key ? () => onSort(c.key!) : undefined}
-                  className={`px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium ${c.align === "right" ? "text-right" : "text-left"} ${c.cls ?? ""} ${c.key ? "cursor-pointer hover:text-zinc-400 select-none" : ""}`}>
+                  className={`px-3 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium ${c.align === "right" ? "text-right" : "text-left"} ${c.cls ?? ""} ${c.key ? "cursor-pointer hover:text-zinc-400 select-none" : ""}`}>
                   {c.label}{arrow(c.key)}
                 </th>
               ))}
@@ -58,24 +61,34 @@ export default function SlotTable({
                 className={`border-b border-zinc-800/50 cursor-pointer transition-colors last:border-b-0 ${
                   selectedSlug === r.slug ? "bg-zinc-800/40" : "hover:bg-zinc-900/40"
                 }`}>
-                <td className="px-4 py-2.5">
+                <td className="px-2 py-2 w-10" onClick={(e) => e.stopPropagation()}>
+                  <AddToCompare slug={r.slug} className="px-1.5 py-0.5 text-[10px]" />
+                </td>
+                <td className="px-3 py-2.5">
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: statusDot[r.status] }} />
-                    <span className="text-white text-xs font-mono font-bold">{r.label}</span>
+                    <Link href={`/orbital/${r.slug}`} onClick={(e) => e.stopPropagation()}
+                      className="text-white text-xs font-mono font-bold hover:text-zinc-300">
+                      {r.label}
+                    </Link>
                     {r.fccLicensed && (
                       <span className="text-sky-400/80 text-[9px] border border-sky-900/60 px-1 rounded font-mono leading-none">FCC</span>
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-2.5 hidden sm:table-cell"><span className="text-zinc-400 text-xs">{r.operator || "—"}</span></td>
-                <td className="px-4 py-2.5 hidden lg:table-cell"><span className="text-zinc-600 text-xs">{r.country || "—"}</span></td>
-                <td className="px-4 py-2.5 hidden md:table-cell"><span className="text-zinc-500 text-xs">{r.purpose ?? "—"}</span></td>
-                <td className="px-4 py-2.5 text-right hidden lg:table-cell"><span className="text-zinc-500 text-xs font-mono">{r.satCount}</span></td>
-                <td className="px-4 py-2.5 text-right">
+                <td className="px-3 py-2.5 hidden sm:table-cell"><span className="text-zinc-400 text-xs">{r.operator || "—"}</span></td>
+                <td className="px-3 py-2.5 hidden lg:table-cell"><span className="text-zinc-600 text-xs">{r.country || "—"}</span></td>
+                <td className="px-3 py-2.5 text-right hidden lg:table-cell"><span className="text-zinc-500 text-xs font-mono">{r.satCount}</span></td>
+                <td className="px-3 py-2.5 text-right">
                   <div className="flex items-center justify-end gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full" style={{ background: congestionDot[r.congestionTier] }} />
                     <span className="text-zinc-500 text-xs font-mono">{r.congestionScore}</span>
                   </div>
+                </td>
+                <td className="px-3 py-2.5 text-right">
+                  <span className="text-zinc-200 text-xs font-mono">
+                    {r.valuation.nonCommercial ? "n/c" : r.valuation.formatted.point}
+                  </span>
                 </td>
               </tr>
             ))}

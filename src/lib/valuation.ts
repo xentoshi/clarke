@@ -1,16 +1,24 @@
 import { getCongestion, type CongestionData } from "./satellites";
-import type { OrbitalSlot } from "@/data/orbital-slots";
+import type { OrbitalSlot, SlotStatus } from "@/data/orbital-slots";
+import { coverageProxy, type CoverageProxy } from "./coverage-proxy";
+import { occupancyQuality, type LifetimeSat, type OccupancyQuality } from "./occupancy-quality";
+import { formatMoney } from "./money";
 
-// Transparent heuristic valuation for GEO orbital positions.
+export { formatMoney } from "./money";
+
+// Transparent heuristic valuation for GEO orbital positions. Model version v0.
 //
 // This is NOT a market quote. It is a public-data heuristic that estimates an
-// implied value RANGE for a position by multiplying a baseline against five
-// observable factors: where the slot sits relative to high-value markets, how
-// commercially active it is, who operates it, what spectrum it carries, and how
-// scarce/contested its arc is. Every factor is surfaced so the number can be
-// inspected rather than trusted blindly. Curated positions carry a hand-checked
-// estimate that takes precedence as the headline figure.
+// implied value RANGE for a position by multiplying a baseline against
+// observable factors: where the slot sits relative to high-value markets, the
+// GDP/population footprint of that longitude band, how commercially active it
+// is, remaining satellite life, who operates it, what spectrum it carries, how
+// scarce/contested its arc is, and FCC/license / brought-into-use signals.
+// Every factor is surfaced so the number can be inspected rather than trusted
+// blindly. Curated positions carry a hand-checked estimate that takes
+// precedence as the headline figure.
 
+export const MODEL_VERSION = "v0";
 const BASELINE_USD = 30_000_000; // mid baseline for an occupied GEO position
 
 export type Confidence = "low" | "medium" | "high";
@@ -19,6 +27,23 @@ export interface ValuationFactor {
   label: string;
   multiplier: number;
   detail: string;
+}
+
+export type BiuHint = "brought_into_use" | "paper_filing" | "foreign_operating" | "unknown";
+
+export interface LicenseSignal {
+  fccLicensed: boolean;
+  biuHint: BiuHint;
+  biuLabel: string;
+  multiplier: number;
+  detail: string;
+}
+
+export interface ValuationContext {
+  satellites?: LifetimeSat[];
+  fccLicensed?: boolean;
+  satCount?: number;
+  asOf?: Date;
 }
 
 export interface SlotValuation {
@@ -38,7 +63,16 @@ export interface SlotValuation {
   // these rows. See nonCommercialReason for what triggered the flag.
   nonCommercial: boolean;
   nonCommercialReason?: string;
+  modelVersion: typeof MODEL_VERSION;
+  asOf: string;
+  coverage: CoverageProxy;
+  occupancyQuality: OccupancyQuality;
+  license: LicenseSignal;
+  disclaimer: string;
 }
+
+export const VALUATION_DISCLAIMER =
+  "Valuation v0 is a model-based implied fair-value range from public registry data, not a live market price, appraisal, or offer to transact.";
 
 // UCS "users" values that mean this satellite has no commercial component at
 // all (pure "Government", "Military", "Government/Civil", etc.). Anything
@@ -97,21 +131,71 @@ function bandPremium(bands: OrbitalSlot["bands"]): { mult: number; detail: strin
   return { mult, detail: present.length ? `${present.join("/")}-band` : "Other bands" };
 }
 
-export function formatMoney(usd: number): string {
-  if (usd >= 1e9) return `$${(usd / 1e9).toFixed(usd / 1e9 >= 10 ? 0 : 1)}B`;
-  if (usd >= 1e6) return `$${Math.round(usd / 1e6)}M`;
-  return `$${Math.round(usd / 1e3)}K`;
+export function licenseSignal(args: {
+  status: SlotStatus;
+  fccLicensed: boolean;
+  satCount: number;
+}): LicenseSignal {
+  const { status, fccLicensed, satCount } = args;
+  let biuHint: BiuHint;
+  let biuLabel: string;
+  if (satCount > 0 && fccLicensed) {
+    biuHint = "brought_into_use";
+    biuLabel = "Brought into use (in-orbit + FCC record)";
+  } else if (satCount === 0 && fccLicensed) {
+    biuHint = "paper_filing";
+    biuLabel = "Paper filing (FCC record, no UCS satellite in orbit)";
+  } else if (satCount > 0) {
+    biuHint = "foreign_operating";
+    biuLabel = "Operating (non-US admin; no FCC market-access row)";
+  } else {
+    biuHint = "unknown";
+    biuLabel = "Unknown BIU — no in-orbit satellite and no FCC row";
+  }
+
+  let multiplier = 1.0;
+  let detail = biuLabel;
+  if (status === "squatted") {
+    multiplier = 0.82;
+    detail = `${biuLabel} · registry status squatted`;
+  } else if (status === "inactive") {
+    multiplier = 0.85;
+    detail = `${biuLabel} · registry status inactive`;
+  } else if (status === "filed" && satCount === 0) {
+    multiplier = 0.88;
+    detail = `${biuLabel} · filed, not occupied`;
+  } else if (fccLicensed && satCount > 0) {
+    multiplier = 1.1;
+    detail = `${biuLabel} · US market access`;
+  } else if (satCount > 0) {
+    multiplier = 1.0;
+  }
+
+  return { fccLicensed, biuHint, biuLabel, multiplier: round2(multiplier), detail };
 }
 
 // Pass a precomputed congestion to avoid a redundant DB query when the caller
 // already has one (e.g. list views that color by congestion and value together).
-export function valuateSlot(slot: OrbitalSlot, congestion?: CongestionData): SlotValuation {
+export function valuateSlot(
+  slot: OrbitalSlot,
+  congestion?: CongestionData,
+  ctx: ValuationContext = {},
+): SlotValuation {
+  const asOf = ctx.asOf ?? new Date();
   const cong = congestion ?? getCongestion(slot.longitude);
-  const coLocated = cong.factors.coLocated;
+  const coLocated = ctx.satCount ?? cong.factors.coLocated;
+  const fccLicensed = ctx.fccLicensed ?? false;
 
   const arc = arcDesirability(slot.longitude);
+  const coverage = coverageProxy(slot.longitude);
+  const quality = occupancyQuality(ctx.satellites ?? [], asOf);
   const op = operatorTier(slot.operator ?? "");
   const band = bandPremium(slot.bands);
+  const license = licenseSignal({
+    status: slot.status,
+    fccLicensed,
+    satCount: coLocated,
+  });
   const nonCommercial = nonCommercialFlag(slot.users);
 
   // Occupancy: an active, multi-satellite position is generating revenue.
@@ -121,17 +205,28 @@ export function valuateSlot(slot: OrbitalSlot, congestion?: CongestionData): Slo
 
   const factors: ValuationFactor[] = [
     { label: "Arc desirability", multiplier: arc.mult, detail: arc.detail },
+    { label: "Coverage (GDP/pop)", multiplier: coverage.multiplier, detail: coverage.detail },
     { label: "Occupancy", multiplier: round2(occMult), detail: `${coLocated} co-located satellite${coLocated === 1 ? "" : "s"}` },
+    { label: "Remaining life", multiplier: quality.multiplier, detail: quality.detail },
     { label: "Operator", multiplier: op.mult, detail: op.detail },
     { label: "Spectrum", multiplier: round2(band.mult), detail: band.detail },
     { label: "Scarcity", multiplier: round2(scarcityMult), detail: `Congestion score ${cong.score}` },
+    { label: "License / BIU", multiplier: license.multiplier, detail: license.detail },
   ];
   if (nonCommercial.flagged) {
     factors.push({ label: "Ownership", multiplier: 1, detail: `${nonCommercial.reason} — not a leasable commercial position; figures below are the model's raw output, not a market estimate` });
   }
 
   const point = Math.round(
-    BASELINE_USD * arc.mult * occMult * op.mult * band.mult * scarcityMult,
+    BASELINE_USD *
+      arc.mult *
+      coverage.multiplier *
+      occMult *
+      quality.multiplier *
+      op.mult *
+      band.mult *
+      scarcityMult *
+      license.multiplier,
   );
 
   // Confidence reflects how much real data backs the estimate. A flagged
@@ -161,6 +256,12 @@ export function valuateSlot(slot: OrbitalSlot, congestion?: CongestionData): Slo
     factors,
     nonCommercial: nonCommercial.flagged,
     nonCommercialReason: nonCommercial.reason,
+    modelVersion: MODEL_VERSION,
+    asOf: asOf.toISOString(),
+    coverage,
+    occupancyQuality: quality,
+    license,
+    disclaimer: VALUATION_DISCLAIMER,
     formatted: {
       low: formatMoney(low),
       point: formatMoney(point),

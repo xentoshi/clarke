@@ -52,6 +52,18 @@ export function createServer(): McpServer {
   );
 
   server.tool(
+    "clarke_get_terminal",
+    "Slot Terminal model for one GEO position: occupancy, rights-chain stub, valuation v0 with drivers, 30-day model history (backfill unless seeded), simulated capacity book (labeled, not live trades), and nearest comps.",
+    { slug: z.string().regex(SAFE_SLUG).describe("Slot slug, e.g. '101w'") },
+    async ({ slug }) => {
+      const { buildSlotTerminal } = await import("../lib/slot-terminal");
+      const model = buildSlotTerminal(slug);
+      if (!model) return errorResult(`No slot at slug '${slug}'`);
+      return textResult(model);
+    },
+  );
+
+  server.tool(
     "clarke_list_satellites",
     "List GEO satellites from the UCS Satellite Database, optionally filtered by operator or owner country. Returns up to `limit` rows (default unlimited; max 1000).",
     {

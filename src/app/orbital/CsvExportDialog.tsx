@@ -8,6 +8,7 @@ interface Column {
   header: string;
   get: (r: ExplorerRow) => string | number;
   default: boolean;
+  plus?: boolean;
 }
 
 const COLUMNS: Column[] = [
@@ -26,6 +27,12 @@ const COLUMNS: Column[] = [
   { id: "value_point", header: "Value Mid (USD)", get: (r) => r.valuation.point, default: true },
   { id: "value_high", header: "Value High (USD)", get: (r) => r.valuation.high, default: true },
   { id: "confidence", header: "Confidence", get: (r) => r.valuation.confidence, default: true },
+  { id: "model", header: "Model", get: (r) => r.valuation.modelVersion, default: true },
+  { id: "biu", header: "BIU hint", get: (r) => r.biuHint, default: false, plus: true },
+  { id: "life", header: "Years remaining", get: (r) => r.valuation.occupancyQuality.meanYearsRemaining ?? "", default: false, plus: true },
+  { id: "gdp", header: "GDP index", get: (r) => r.valuation.coverage.gdpIndex, default: false, plus: true },
+  { id: "pop", header: "Pop index", get: (r) => r.valuation.coverage.popIndex, default: false, plus: true },
+  { id: "drivers", header: "Drivers", get: (r) => r.valuation.factors.map((f) => `${f.label}:${f.multiplier}`).join("|"), default: false, plus: true },
 ];
 
 function escapeCsv(value: string | number): string {
@@ -33,9 +40,10 @@ function escapeCsv(value: string | number): string {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-export default function CsvExportDialog({ rows, onClose }: { rows: ExplorerRow[]; onClose: () => void }) {
+export default function CsvExportDialog({ rows, onClose, pro }: { rows: ExplorerRow[]; onClose: () => void; pro: boolean }) {
+  const visible = COLUMNS.filter((c) => pro || !c.plus);
   const [selected, setSelected] = useState<Set<string>>(
-    () => new Set(COLUMNS.filter((c) => c.default).map((c) => c.id)),
+    () => new Set(visible.filter((c) => c.default).map((c) => c.id)),
   );
 
   const toggle = (id: string) =>
@@ -46,7 +54,7 @@ export default function CsvExportDialog({ rows, onClose }: { rows: ExplorerRow[]
     });
 
   const download = () => {
-    const cols = COLUMNS.filter((c) => selected.has(c.id));
+    const cols = visible.filter((c) => selected.has(c.id));
     if (cols.length === 0) return;
     const header = cols.map((c) => escapeCsv(c.header)).join(",");
     const body = rows.map((r) => cols.map((c) => escapeCsv(c.get(r))).join(",")).join("\n");
@@ -73,9 +81,10 @@ export default function CsvExportDialog({ rows, onClose }: { rows: ExplorerRow[]
         </div>
         <p className="text-zinc-500 text-xs mb-4">
           {rows.length.toLocaleString()} position{rows.length === 1 ? "" : "s"} in the current view. Choose columns:
+          {!pro && <span className="block mt-1 text-zinc-600">Export+ driver columns require a <a href="/pricing" className="text-zinc-400 underline">Pro seat</a>.</span>}
         </p>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-5">
-          {COLUMNS.map((c) => (
+          {visible.map((c) => (
             <button key={c.id} onClick={() => toggle(c.id)}
               className="flex items-center gap-2 text-left text-xs text-zinc-400 hover:text-zinc-200 transition-colors">
               <span className={`w-3 h-3 rounded-[3px] border shrink-0 ${selected.has(c.id) ? "bg-emerald-500 border-emerald-500" : "border-zinc-700"}`} />

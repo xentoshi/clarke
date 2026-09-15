@@ -148,8 +148,10 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
             <div className="text-zinc-500 text-[10px] uppercase tracking-wider font-medium mt-5 mb-2">Status</div>
             <div className="text-zinc-300 text-xs">{statusLabels[row.status]}</div>
 
-            <div className="mt-6 pt-5 border-t border-zinc-800 text-center">
-              <Link href={`/orbital/${row.slug}`} className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors">Open full page →</Link>
+            <div className="mt-6 pt-5 border-t border-zinc-800 text-center space-y-2">
+              <Link href={`/orbital/${row.slug}`} className="inline-block text-white text-xs font-medium hover:text-zinc-300">
+                Open Slot Terminal →
+              </Link>
             </div>
           </div>
         )}

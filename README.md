@@ -13,9 +13,11 @@ Clarke normalizes public data across GEO, LEO, and MEO to build the orbital asse
 ## What it is
 
 - **Orbital registry** — a searchable, filterable, exportable explorer over every tracked GEO position, built from ITU, FCC, Space-Track, and UCS public data
-- **Intelligence layer** — a heuristic valuation model (value range + confidence + factor breakdown), a normalized 0–100 congestion / coordination-risk score, and per-source data-freshness tracking
+- **Slot Terminal** — a data-dense dossier at `/orbital/[slug]` (alias `/slot/[slug]`) with implied fair value + confidence interval, occupancy, congestion, FCC/BIU hints, a rights-chain stub, nearest comps, and a **simulated** capacity book (labeled, not live trades)
+- **Intelligence layer** — valuation model v0 (range + confidence + driver breakdown + 30-day history), a normalized 0–100 congestion / coordination-risk score, and per-source data-freshness tracking
+- **Terminal seats** — free thin registry; Pro unlocks driver breakdown, compare (up to 4), export+, and the Terminal API
 - **Data quality** — source longitude data is cross-checked against Space-Track TLEs on ingest to catch and correct placeholder or malformed positions rather than trusting them blindly
-- **Agent access** — a versioned read-only HTTP API and an MCP server expose the registry to LLM agents and tools
+- **Agent access** — a versioned read-only HTTP API (public agents + Pro Terminal) and an MCP server expose the registry to LLM agents and tools
 - **Blog** — long-form writing on orbital infrastructure, space compute, and the space economy
 - **About** — what Clarke is, why now, data sources, registry methodology, and data quality notes, all on one page
 
@@ -32,6 +34,14 @@ Clarke exposes its registry as machine-readable data for LLM agents and tools.
 | `GET /api/v1/agents/slots` | All orbital positions, each with a congestion score and heuristic valuation |
 | `GET /api/v1/agents/slots/{slug}` | Full dossier for one slot: co-located satellites, FCC authorizations, congestion + valuation breakdowns |
 | `GET /api/v1/agents/satellites` | GEO satellites (filter by `operator`, `ownerCountry`, `limit`) |
+| `GET /api/v1/openapi` | OpenAPI 3.1 spec for agents + Terminal routes |
+| `GET /api/v1/terminal/slots` | **Pro** — Terminal summaries |
+| `GET /api/v1/terminal/slots/{slug}` | **Pro** — full Terminal model (rights, history, simulated book, comps) |
+| `GET /api/v1/terminal/valuations/{slug}` | **Pro** — current valuation v0 |
+| `GET /api/v1/terminal/valuations/{slug}/history` | **Pro** — daily model snapshots |
+| `GET /api/v1/terminal/compare?slugs=` | **Pro** — up to 4 slots |
+
+Pro Terminal routes accept a session cookie or `Authorization: Bearer ck_live_…` / `X-Clarke-Key`. Mint a key from `/account` while signed in as Pro. Public agents API stays unauthenticated (60 req/min/IP); Pro keys get 300 req/min.
 
 **MCP server** — the same registry as tools for Claude Code, Cursor, and other MCP clients:
 
@@ -39,7 +49,7 @@ Clarke exposes its registry as machine-readable data for LLM agents and tools.
 npm run mcp
 ```
 
-Tools: `clarke_list_slots`, `clarke_get_slot`, `clarke_list_satellites`. See the header of `scripts/clarke-mcp.ts` for a sample client config.
+Tools: `clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`, `clarke_list_satellites`. See the header of `scripts/clarke-mcp.ts` for a sample client config.
 
 ---
 
@@ -71,7 +81,16 @@ Each run records its timestamp and row count in an `ingest_meta` table, surfaced
 
 ```bash
 npm install
+npm run seed:valuations   # persist 30-day v0 history into data/terminal.db
 npm run dev
+```
+
+Open `/orbital` for the registry, `/orbital/101w` (or `/slot/101w`) for Slot Terminal, `/login` for a free or **Demo Pro** seat, `/pricing` for the gate.
+
+Valuation methodology: [`docs/VALUATION.md`](./docs/VALUATION.md) and `/docs/valuation`.
+
+```bash
+npm test                  # valuation v0 unit tests
 ```
 
 ---
@@ -81,6 +100,10 @@ npm run dev
 | Variable | Required | Description |
 |---|---|---|
 | `NEXT_PUBLIC_URL` | Yes (prod) | Canonical URL |
+| `AUTH_SECRET` | Yes (prod) | HMAC secret for session cookies and API keys |
+| `STRIPE_SECRET_KEY` | No | Stripe secret for Pro Checkout. If unset, `/pricing` issues a labeled demo Pro seat |
+| `STRIPE_PRICE_ID` | No | Stripe Price id for a Terminal seat subscription |
+| `STRIPE_WEBHOOK_SECRET` | No | TODO: verify `checkout.session.completed` in `/api/billing/webhook` |
 | `SPACETRACK_USERNAME` | No | Space-Track login (for `npm run ingest:spacetrack`) |
 | `SPACETRACK_PASSWORD` | No | Space-Track password (for `npm run ingest:spacetrack`) |
 | `PV_SECRET` | No | Secret to read the internal page-view counter at `/api/pv` |

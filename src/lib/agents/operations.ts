@@ -4,6 +4,7 @@ import {
   getGeoSatellites,
   getGeoSatellitesByLongitude,
   getFccAuthorizationsByLongitude,
+  getFccSlugSet,
   getCongestion,
   lonToSlug,
   slugToLon,
@@ -13,18 +14,12 @@ import {
 import { valuateSlot, type SlotValuation } from "../valuation";
 import { getDataFreshness } from "../freshness";
 import type { FreshnessMeta } from "./envelope";
+import { isSafeSlug } from "../slot-utils";
+
+export { isSafeSlug };
 
 // All operations are pure read-only views over local data + SQLite.
 // Shared by HTTP routes and the MCP server so they stay in sync.
-
-// Slug validation — only lowercase letters, digits, and hyphens. Prevents
-// path traversal and limits surface area to the shape produced by lonToSlug
-// and src/data/orbital-slots.ts.
-const SAFE_SLUG = /^[a-z0-9-]+$/;
-
-export function isSafeSlug(slug: string): boolean {
-  return SAFE_SLUG.test(slug);
-}
 
 // -------- Slots --------
 
@@ -41,13 +36,18 @@ export interface SlotListItem extends OrbitalSlot {
 }
 
 export function listSlots(): SlotListItem[] {
+  const fccSet = getFccSlugSet();
   return mergeWithUcs(curatedSlots).map((slot) => {
     const congestion = getCongestion(slot.longitude);
+    const slug = lonToSlug(slot.longitude);
     return {
       ...slot,
-      slug: lonToSlug(slot.longitude),
+      slug,
       congestionScore: congestion.score,
-      valuation: valuateSlot(slot, congestion),
+      valuation: valuateSlot(slot, congestion, {
+        fccLicensed: fccSet.has(slug),
+        satCount: congestion.factors.coLocated,
+      }),
     };
   });
 }
@@ -68,7 +68,11 @@ export function getSlotDossier(slug: string): SlotDossier | null {
   const satellites = getGeoSatellitesByLongitude(slot.longitude);
   const fccAuthorizations = getFccAuthorizationsByLongitude(slot.longitude);
   const congestion = getCongestion(slot.longitude);
-  const valuation = valuateSlot(slot, congestion);
+  const valuation = valuateSlot(slot, congestion, {
+    satellites,
+    fccLicensed: fccAuthorizations.length > 0,
+    satCount: satellites.length || congestion.factors.coLocated,
+  });
   return { slot, satellites, fccAuthorizations, congestion, valuation };
 }
 

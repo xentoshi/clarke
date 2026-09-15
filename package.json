@@ -12,6 +12,8 @@
     "ingest:spacetrack": "ts-node --project tsconfig.scripts.json scripts/ingest-spacetrack.ts",
     "ingest:sec": "ts-node --project tsconfig.scripts.json scripts/ingest-sec.ts",
     "ingest:all": "npm run ingest && npm run ingest:fcc && npm run ingest:spacetrack && npm run ingest:sec",
+    "seed:valuations": "tsx scripts/seed-valuations.ts",
+    "test": "tsx --test src/lib/valuation.test.ts",
     "mcp": "tsx scripts/clarke-mcp.ts"
   },
   "dependencies": {

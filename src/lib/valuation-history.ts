@@ -48,7 +48,7 @@ export function synthesizeHistory(
   const out: ValuationSnapshot[] = [];
   for (let i = days - 1; i >= 0; i--) {
     const day = addUtcDays(end, -i);
-    const drift = 1 + 0.035 * Math.sin(phase + i / 18);
+    const drift = i === 0 ? 1 : 1 + 0.035 * Math.sin(phase + i / 18);
     const point = Math.round(valuation.point * drift);
     const ratio = valuation.point > 0 ? point / valuation.point : 1;
     out.push({

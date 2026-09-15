@@ -110,6 +110,7 @@ describe("synthesizeHistory", () => {
     const hist = synthesizeHistory("101w", v, 10, new Date("2026-09-15T00:00:00Z"));
     assert.equal(hist.length, 10);
     assert.equal(hist[hist.length - 1].asOf, "2026-09-15");
+    assert.equal(hist[hist.length - 1].point, v.point);
     assert.equal(hist[0].source, "backfill");
   });
 });

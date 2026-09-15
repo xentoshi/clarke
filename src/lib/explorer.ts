@@ -21,29 +21,20 @@ export function buildExplorerRows(): ExplorerRow[] {
   const fccSet = getFccSlugSet();
   const asOf = new Date(ingestAsOf(getLatestIngest()?.lastRun ?? null));
 
-  const namesBySlug = new Map<string, string[]>();
-  const satsBySlug = new Map<string, GeoSatellite[]>();
-  for (const sat of getGeoSatellites()) {
-    if (sat.longitudeGeo === null) continue;
-    const slug = lonToSlug(sat.longitudeGeo);
-    const names = namesBySlug.get(slug);
-    if (names) names.push(sat.name);
-    else namesBySlug.set(slug, [sat.name]);
-    const list = satsBySlug.get(slug);
-    if (list) list.push(sat);
-    else satsBySlug.set(slug, [sat]);
-  }
+  const geo = getGeoSatellites().filter((s): s is GeoSatellite & { longitudeGeo: number } => s.longitudeGeo !== null);
 
   return merged.map((slot) => {
     const slug = lonToSlug(slot.longitude);
     const congestion = getCongestion(slot.longitude);
-    const satelliteNames = namesBySlug.get(slug) ?? [];
-    const sats = satsBySlug.get(slug) ?? [];
+    // Same ±0.4° co-location window as Slot Terminal / ITU grouping, not the
+    // sat's own rounded slug (which would split 101.08°W from curated 101°W).
+    const sats = geo.filter((s) => Math.abs(s.longitudeGeo - slot.longitude) <= 0.4);
+    const satelliteNames = sats.map((s) => s.name);
     const fccLicensed = fccSet.has(slug);
     const valuation = valuateSlot(slot, congestion, {
       satellites: sats,
       fccLicensed,
-      satCount: satelliteNames.length || congestion.factors.coLocated,
+      satCount: sats.length || congestion.factors.coLocated,
       asOf,
     });
 
@@ -56,7 +47,7 @@ export function buildExplorerRows(): ExplorerRow[] {
       country: slot.country,
       purpose: slot.purpose ?? null,
       status: slot.status,
-      satCount: satelliteNames.length || congestion.factors.coLocated,
+      satCount: sats.length || congestion.factors.coLocated,
       satelliteNames,
       congestionScore: congestion.score,
       congestionTier: congestion.tier,

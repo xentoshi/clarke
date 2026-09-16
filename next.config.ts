@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   serverExternalPackages: ["better-sqlite3", "satellite.js"],
+  outputFileTracingIncludes: {
+    "/docs": ["./docs/*.md"],
+    "/docs/**": ["./docs/*.md"],
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.nasa.gov" },
@@ -18,7 +22,6 @@ const nextConfig: NextConfig = {
     return [
       { source: "/", destination: "/orbital", permanent: true },
       { source: "/research", destination: "/index", permanent: false },
-      { source: "/docs", destination: "/docs/data-trust", permanent: false },
       { source: "/data", destination: "/about", permanent: true },
     ];
   },

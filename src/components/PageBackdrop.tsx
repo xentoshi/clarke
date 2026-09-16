@@ -2,10 +2,15 @@
 
 import { usePathname } from "next/navigation";
 
-/** Registry + Terminal are data surfaces: solid near-black, no Earth wallpaper. */
+/** Registry, Terminal, and Docs are data surfaces: solid near-black, no Earth wallpaper. */
 export function isDataSurface(pathname: string | null): boolean {
   if (!pathname) return false;
-  return pathname === "/orbital" || pathname.startsWith("/orbital/");
+  return (
+    pathname === "/orbital" ||
+    pathname.startsWith("/orbital/") ||
+    pathname === "/docs" ||
+    pathname.startsWith("/docs/")
+  );
 }
 
 export function PageBackdrop() {

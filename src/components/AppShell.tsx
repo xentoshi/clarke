@@ -40,6 +40,7 @@ export default function AppShell({ children, slots }: { children: React.ReactNod
                   <div className="text-white/30 text-xs uppercase tracking-widest mb-4 font-medium">Resources</div>
                   <div className="flex flex-col gap-1">
                     {[
+                      { label: "Docs", href: "/docs" },
                       { label: "About", href: "/about" },
                       { label: "Registry FAQ", href: "/orbital/faq" },
                       { label: "Data trust", href: "/docs/data-trust" },

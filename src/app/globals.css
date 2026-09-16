@@ -162,3 +162,183 @@ code, .font-mono, [class*="font-mono"] {
   white-space: pre;
   overflow-x: auto;
 }
+
+/* Public docs (GFM tables, runbooks, methodology) */
+.prose-docs {
+  max-width: none;
+}
+
+.prose-docs p {
+  color: #a1a1aa;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  margin-bottom: 1.25rem;
+}
+
+.prose-docs h1 {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose-docs h2 {
+  color: #ffffff;
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-top: 2.75rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  letter-spacing: -0.01em;
+}
+
+.prose-docs h3 {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: var(--font-ibm-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-docs ul,
+.prose-docs ol {
+  margin: 0 0 1.25rem;
+  padding-left: 1.4rem;
+  color: #a1a1aa;
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.prose-docs ul {
+  list-style: disc;
+}
+
+.prose-docs ol {
+  list-style: decimal;
+}
+
+.prose-docs li::marker {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.prose-docs li {
+  margin-bottom: 0.35rem;
+}
+
+.prose-docs li > p {
+  margin-bottom: 0.35rem;
+}
+
+.prose-docs li ul,
+.prose-docs li ol {
+  margin-top: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-docs strong {
+  color: #e4e4e7;
+  font-weight: 600;
+}
+
+.prose-docs a {
+  color: #d4d4d8;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.prose-docs a:hover {
+  color: #ffffff;
+}
+
+.prose-docs code {
+  font-family: var(--font-ibm-mono), 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.8125em;
+  color: #d4d4d8;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
+}
+
+.prose-docs pre {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  padding: 1rem 1.15rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+
+.prose-docs pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: #a1a1aa;
+  font-size: 0.75rem;
+  line-height: 1.7;
+}
+
+.prose-docs blockquote {
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 0.15rem 0 0.15rem 1.15rem;
+  margin: 1.5rem 0;
+}
+
+.prose-docs blockquote p {
+  color: #d4d4d8;
+  margin-bottom: 0;
+}
+
+.prose-docs .table-wrap {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+}
+
+.prose-docs table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.prose-docs th {
+  text-align: left;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.6875rem;
+  font-family: var(--font-ibm-mono), 'IBM Plex Mono', ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  white-space: nowrap;
+}
+
+.prose-docs td {
+  color: #a1a1aa;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  vertical-align: top;
+}
+
+.prose-docs tr:last-child td {
+  border-bottom: none;
+}
+
+.prose-docs .docs-mark {
+  font-family: var(--font-ibm-mono), 'IBM Plex Mono', ui-monospace, monospace;
+  font-weight: 500;
+}
+
+.prose-docs .docs-mark-v { color: #34d399; }
+.prose-docs .docs-mark-m { color: #38bdf8; }
+.prose-docs .docs-mark-s { color: #fbbf24; }
+.prose-docs .docs-mark-b { color: #fb7185; }

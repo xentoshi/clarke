@@ -1,10 +1,8 @@
 # Data trust audit — Slot Terminal / registry (Sep 2026)
 
-Clarke is a public-data **registry plus heuristic model**, not a market. This note is the pre-monetization audit of what a paying operator can and cannot trust on Slot Terminal and `/api/v1/agents/slots/{slug}`.
+Clarke is the registry for orbital infrastructure: a public-data **registry plus labeled heuristic model**. This page is the audit of what a paying operator can trust on Slot Terminal and `/api/v1/agents/slots/{slug}`.
 
-Honest one-liner for distribution:
-
-> Clarke v0 is a public-registry view (TLE-primary occupancy, UCS identity, FCC SSAL licenses) plus a transparent heuristic implied-value range. It is not a live market, not an ITU deed, and not an appraisal. Curated dollar overlays are hand-checked opinions and do not replace the model. TLE longitude is a tracked-object location, never an FCC assignment or ITU filing.
+> Clarke v0 is a public-registry view (TLE-primary occupancy, UCS identity, FCC SSAL licenses) plus a transparent heuristic implied-value range. It is not a live exchange, not an ITU deed, and not an appraisal. Curated dollar overlays are hand-checked opinions and do not replace the model. TLE longitude is a tracked-object location, never an FCC assignment or ITU filing.
 
 ## Product chrome (Sep 2026 design pass)
 
@@ -17,18 +15,18 @@ Registry and Slot Terminal are data surfaces. First screens answer who is on sta
 | Trust bar | FCC stale and position disagreement share one compact line (`FCC SSAL stale · Position disagreement · Details`) with expand-in-place. Not stacked orange banners. |
 | Unlock Pro | Driver-panel gate only. Verified occupancy is never blurred or paywalled. |
 | Nav | Registry · Index · Docs. Terminal opens from a registry row (sample: `/orbital/101w`). |
-| Wallpaper | Solid near-black + hairline borders on `/orbital` and `/orbital/[slug]`. Earth imagery stays off those surfaces. |
+| Wallpaper | Solid near-black + hairline borders on `/orbital`, `/orbital/[slug]`, and `/docs`. Earth imagery stays off those surfaces. |
 
-## Default Terminal quarantine (this change)
+## Default Terminal quarantine
 
-A paying skeptic’s first Slot Terminal screen is **occupancy + recorded FCC + ingest freshness + labeled v0 model**. Market cosplay is not default UI.
+The default Slot Terminal screen is **occupancy + recorded FCC + ingest freshness + labeled v0 model**. Simulated trading UI is not the default.
 
 | Surface | Default Terminal | Why |
 |---|---|---|
-| Simulated capacity book | **Quarantined.** Behind explicit Experimental disclosure only. Not on free/default first screen. | Function of v0 midpoint + congestion. There is no public GEO bid/ask feed. Showing it as a Bloomberg strip implied a market. |
-| ITU filing layer | **Quarantined stub.** Collapsed under Experimental “Unrecorded layers.” | SNS is not ingested. A filled panel would look like a deed. |
+| Simulated capacity book | **Quarantined.** Behind explicit Experimental disclosure only. Not on free/default first screen. | Function of v0 midpoint + congestion. There is no public GEO bid/ask feed. Showing it as a live order book would overclaim. |
+| ITU filing layer | **Quarantined stub.** Collapsed under Experimental “Unrecorded layers.” | SNS is not ingested. A filled panel would look like a recorded deed. |
 | Sub-lease / capacity-lease layer | **Quarantined stub.** Same Experimental disclosure. | No public sub-lease registry. Must not look like a named lessee. |
-| Seeded valuation sparkline | **Quarantined.** Experimental “model backfill — not trades.” Hidden from default. | `terminal.db` is a deterministic v0 path, not prints. |
+| Seeded valuation sparkline | **Quarantined.** Experimental “model backfill — not trades.” Hidden from default. | `terminal.db` is a deterministic v0 path, not observed trades. |
 | Curated `$NNN M+` overlay | **Visible, secondary.** Class **M** “hand estimate / curated opinion,” under the model range, not a competing headline. Valuation `basis` is always `model`. | Overlay can diverge ~2× from v0. V/M/S discipline. |
 | Recorded FCC rows + TLE-primary occupancy | **Primary.** | Named public sources. |
 
@@ -40,9 +38,9 @@ Tests: `src/lib/terminal-default.test.ts` asserts default primary markup does no
 
 ## Ranked issues
 
-| Rank | Severity | Issue | Status in this change |
+| Rank | Severity | Issue | Status |
 |---|---|---|---|
-| 1 | **High** | Remaining-life factor said “no usable lifetime data” on every GEO row. UCS stores **590/590** launch dates as `M/D/YY` (`11/14/10`); the parser required year > 1950, so `expectedLifetimeYears` was ignored. Terminal also printed launch years as `10` / `95` / `6`. UCS-derived `slot.launched` was `13` for MUOS-2. | **Fixed.** Shared `parseUcsLaunchYear`; remaining-life now uses design-life remaining. Re-seed snapshots after this change. |
+| 1 | **High** | Remaining-life factor said “no usable lifetime data” on every GEO row. UCS stores **590/590** launch dates as `M/D/YY` (`11/14/10`); the parser required year > 1950, so `expectedLifetimeYears` was ignored. Terminal also printed launch years as `10` / `95` / `6`. UCS-derived `slot.launched` was `13` for MUOS-2. | **Fixed.** Shared `parseUcsLaunchYear`; remaining-life now uses design-life remaining. Re-seed snapshots after the parser fix. |
 | 2 | **High** | Operator contradiction at 101°W: registry/API `slot.operator=SES`, Terminal header = DirecTV (majority of ±0.4° window), congestion dominant = DirecTV (±2°). Occupancy metric implied DirecTV holds all 7 sats. Rights chain named Ligado DIP as *the* licensee because FCC rows are ordered west-to-east. | **Fixed.** Header uses registry/curated operator; occupancy mix is explicit; rights chain lists all FCC licensees. |
 | 3 | **High** | “Nearest comps” were other longitudes **inside the same occupancy window** (101.08°W, 100.81°W, …), each re-bundling the same satellites with near-identical model values. | **Fixed.** Comps exclude ±0.4°. |
 | 4 | **High** | Seeded valuation history shown as “persisted snapshot.” `terminal.db` only stores a deterministic v0 path. FCC provenance used the **latest any-source ingest**, so a 21-day-old SSAL looked like “Sep 15.” | **Fixed.** History labeled backfill; FCC/UCS `asOf` is per-source. |
@@ -116,7 +114,7 @@ Fleet-wide, matching UCS GEO rows to Clarke TLEs: **204/512 differ by >2°, 168/
 
 ## Field trust matrix (Slot Terminal)
 
-Legend: **V** = verified from a named public source in this product · **M** = modeled / heuristic, labeled · **S** = stub or simulated · **B** = bug or inconsistency (fixed in this PR unless marked open)
+Legend: **V** = verified from a named public source in this product · **M** = modeled / heuristic, labeled · **S** = stub or simulated · **B** = bug or inconsistency (fixed unless marked open)
 
 | Field | Class | Source / notes |
 |---|---|---|
@@ -164,14 +162,14 @@ Legend: **V** = verified from a named public source in this product · **M** = m
 - Live transponder bids, last trade, or slot appraisal.
 - ITU deed / brought-into-use as recorded (BIU is a Clarke hint).
 - That the curated overlay is the model, or that history is a price index.
-- That the default Terminal is a market (simulated book is Experimental only).
+- That the default Terminal is a live exchange (simulated book is Experimental only).
 - That “operator” means exclusive holder of the longitude (it does not).
 - That UCS `last_run` today means 2026 ephemerides.
 - That a TLE sub-satellite longitude is the FCC-authorized or ITU-filed location.
 
 ## Re-ingest
 
-Scheduled `ingest.yml` already runs UCS then Space-Track; the Space-Track step now applies TLE-primary audit columns. FCC is weekly (`ingest-fcc.yml`) against committed `data/ssal.xlsx` — see [`docs/FCC_REFRESH.md`](./FCC_REFRESH.md). Against a DB that already has TLEs:
+Scheduled `ingest.yml` already runs UCS then Space-Track; the Space-Track step now applies TLE-primary audit columns. FCC is weekly (`ingest-fcc.yml`) against committed `data/ssal.xlsx` — see [FCC SSAL refresh](./FCC_REFRESH.md). Against a DB that already has TLEs:
 
 ```
 npm run apply:positions    # audit columns; live occupancy also recomputes at query time
@@ -182,9 +180,9 @@ npm run seed:valuations    # backfill model path (not trades) after occupancy/mo
 
 Space-Track credentials are required only for a live TLE refresh (`npm run ingest:spacetrack`), not for `apply:positions` or `ingest:fcc`.
 
-## Minimal further trust-hardening (not in this PR)
+## Not yet shipped
 
 1. Group registry rows so absorbed longitudes are not separate pages.
 2. ITU BR IFIC when licensed — replace the stub rather than decorating it.
-3. Daily valuation job that writes `source=model_run` only after ingest, still never `source=trade` until a tape exists.
-4. A real FCC download when the agency publishes a bot-reachable file; until then the human replace-xlsx steps in FCC_REFRESH.md.
+3. Daily valuation job that writes `source=model_run` only after ingest, still never `source=trade` until observed trades exist.
+4. A real FCC download when the agency publishes a bot-reachable file; until then the human replace-xlsx steps in [FCC SSAL refresh](./FCC_REFRESH.md).

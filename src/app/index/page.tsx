@@ -160,6 +160,8 @@ export default function GeoSlotIndexPage() {
             </ul>
             <p className="text-zinc-500 text-sm mt-4 leading-relaxed">
               Feeds this edition: UCS file vintage {edition.vintage.ucsFileVintage ?? "—"} · FCC SSAL as-of {edition.vintage.fccAsOf ?? "—"} · TLE epoch through {edition.vintage.tleEpochMax ?? "—"}. See{" "}
+              <Link href="/docs" className="text-zinc-300 underline hover:text-white">Docs</Link>
+              {" · "}
               <Link href="/docs/data-trust" className="text-zinc-300 underline hover:text-white">data trust</Link>
               {" · "}
               <Link href="/docs/valuation" className="text-zinc-300 underline hover:text-white">valuation v0</Link>

@@ -88,7 +88,7 @@ npm run dev
 
 Open `/orbital` for the registry, `/orbital/101w` (or `/slot/101w`) for Slot Terminal, `/login` for a free or **Demo Pro** seat, `/pricing` for the gate.
 
-Valuation methodology: [`docs/VALUATION.md`](./docs/VALUATION.md) and `/docs/valuation`. Data trust: [`docs/DATA_TRUST.md`](./docs/DATA_TRUST.md) and `/docs/data-trust`.
+Public methodology: [`/docs`](https://clarkebelt.finance/docs) — data trust, valuation v0, FCC SSAL refresh. Repo copies: [`docs/DATA_TRUST.md`](./docs/DATA_TRUST.md), [`docs/VALUATION.md`](./docs/VALUATION.md), [`docs/FCC_REFRESH.md`](./docs/FCC_REFRESH.md).
 
 ```bash
 npm test                  # valuation v0 + TLE occupancy authority tests

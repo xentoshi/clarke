@@ -449,7 +449,7 @@ export default function AboutPage() {
                 { title: "Authorization layer", body: `FCC authorization records from the Approved Space Station List are ingested as a second layer on top of the UCS satellite data. For each GEO position, Clarke queries the FCC table for any authorization within 0.6 degrees of the nominal longitude. Where a match exists, the detail page for that position shows the FCC call sign, licensee name, authorized frequency bands, administration, and in-orbit date. Where no match exists, the position has no US FCC authorization, which is expected for satellites licensed under non-US administrations.` },
                 { title: "Co-location grouping", body: "Multiple satellites operating at the same nominal longitude are grouped together using a tolerance of 0.4 degrees on the occupancy longitude (Space-Track TLE when usable, otherwise UCS). This matches ITU co-location practice. The grouping is physical occupancy, not an FCC or ITU assignment: SES-1 stays at 101°W because its TLE agrees with UCS; MUOS-2, whose UCS row still says 100.1°W, occupies at its TLE near 172°E." },
                 { title: "Congestion scoring", body: "The congestion score is a normalized 0 to 100 index blending three signals at a position: arc density (GEO satellites whose occupancy longitude is within 2 degrees), direct co-location (within 0.4 degrees), and contention (distinct operators). Occupancy longitude is TLE-primary. Density contributes up to 50 points, co-location up to 30, and operator contention up to 20. A position packed by a single operator scores lower on contention than an equally dense arc contested by many operators, because multi-operator arcs carry a heavier interference-coordination burden. The tiers are Sparse for 0 to 14, Low for 15 to 34, Moderate for 35 to 54, High for 55 to 74, and Critical for 75 to 100. Scores reflect tracked hardware, not filed ITU positions, so they understate coordination pressure in arcs with heavy filing or squatting activity." },
-                { title: "Valuation model v0", body: "Each position carries a heuristic implied valuation, expressed as a range rather than a point figure because it is derived from public data, not transaction records. A $30M baseline is multiplied by arc desirability, a GDP/population coverage proxy by longitude band, occupancy (co-located satellites), remaining-life quality from UCS lifetime fields, operator tier, spectrum (when known), scarcity (congestion score), and FCC/license plus paper-vs-brought-into-use signals. Every factor and its multiplier is shown on the Slot Terminal (Pro) so the estimate can be inspected. Confidence is high for curated positions, medium for active positions with a known operator, and low for sparsely-attributed UCS-derived entries; the range widens as confidence falls. History is a seeded 30-day model path in data/terminal.db, not observed trades. This is an analytical model, not an appraisal, a quote, or investment advice. See /docs/valuation." },
+                { title: "Valuation model v0", body: "Each position carries a heuristic implied valuation, expressed as a range rather than a point figure because it is derived from public data, not transaction records. A $30M baseline is multiplied by arc desirability, a GDP/population coverage proxy by longitude band, occupancy (co-located satellites), remaining-life quality from UCS lifetime fields, operator tier, spectrum (when known), scarcity (congestion score), and FCC/license plus paper-vs-brought-into-use signals. Every factor and its multiplier is shown on the Slot Terminal (Pro) so the estimate can be inspected. Confidence is high for curated positions, medium for active positions with a known operator, and low for sparsely-attributed UCS-derived entries; the range widens as confidence falls. History is a seeded 30-day model path in data/terminal.db, not observed trades. This is an analytical model, not an appraisal, a quote, or investment advice." },
               ].map((item) => (
                 <div key={item.title} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
                   <div className="text-white text-sm font-semibold mb-2">{item.title}</div>
@@ -457,6 +457,16 @@ export default function AboutPage() {
                 </div>
               ))}
             </div>
+            <p className="text-zinc-500 text-sm mt-6 leading-relaxed">
+              Full methodology:{" "}
+              <Link href="/docs" className="text-zinc-300 underline hover:text-white">Docs</Link>
+              {" · "}
+              <Link href="/docs/data-trust" className="text-zinc-300 underline hover:text-white">data trust</Link>
+              {" · "}
+              <Link href="/docs/valuation" className="text-zinc-300 underline hover:text-white">valuation v0</Link>
+              {" · "}
+              <Link href="/docs/fcc-refresh" className="text-zinc-300 underline hover:text-white">FCC refresh</Link>.
+            </p>
           </Section>
 
         </div>

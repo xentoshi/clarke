@@ -25,7 +25,10 @@ const typeLabels: Record<Result["type"], string> = {
 const pages = [
   { label: "GEO Slot Index #1", sub: "Occupancy enter/leave, dispute flips, FCC deltas — not prices", href: "/index" },
   { label: "Slot Terminal · 101°W", sub: "Sample hot slot — occupancy, FCC, freshness, labeled model", href: "/orbital/101w" },
-  { label: "Data trust", sub: "What Slot Terminal will and will not claim", href: "/docs/data-trust" },
+  { label: "Docs", sub: "Occupancy, rights, freshness, and the labeled model", href: "/docs" },
+  { label: "Data trust", sub: "Field trust matrix, TLE-primary occupancy, V/M/S legend", href: "/docs/data-trust" },
+  { label: "Valuation v0", sub: "$30M baseline formula, drivers, confidence bands", href: "/docs/valuation" },
+  { label: "FCC SSAL refresh", sub: "Workbook vintage and the replace-xlsx runbook", href: "/docs/fcc-refresh" },
   { label: "Pricing", sub: "Free registry vs Pro driver breakdown, compare, export+", href: "/pricing" },
   { label: "About Clarke", sub: "How it works, data sources, methodology, and the agents API", href: "/about" },
 ];
@@ -42,7 +45,7 @@ function search(q: string, slots: OrbitalSlot[]): Result[] {
 
     ...pages
       .filter((p) => p.label.toLowerCase().includes(lq) || p.sub.toLowerCase().includes(lq))
-      .slice(0, 2)
+      .slice(0, 4)
       .map((p) => ({ type: "page" as const, ...p })),
   ].slice(0, 12);
 }

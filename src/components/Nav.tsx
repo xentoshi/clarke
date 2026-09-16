@@ -12,12 +12,12 @@ const SearchPalette = dynamic(() => import("./SearchPalette"), { ssr: false });
 const navLinks = [
   { href: "/orbital", label: "Registry" },
   { href: "/index", label: "Index" },
-  { href: "/docs/data-trust", label: "Docs" },
+  { href: "/docs", label: "Docs" },
 ];
 
 function navActive(pathname: string, href: string): boolean {
   if (href === "/orbital") return pathname === "/orbital" || pathname.startsWith("/orbital/");
-  if (href === "/docs/data-trust") return pathname.startsWith("/docs");
+  if (href === "/docs") return pathname === "/docs" || pathname.startsWith("/docs/");
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

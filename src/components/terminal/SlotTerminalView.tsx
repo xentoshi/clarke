@@ -321,7 +321,7 @@ export function SlotTerminalView({
         </ProGate>
         <p className="px-4 py-3 text-[11px] text-zinc-600 leading-relaxed border-t border-white/[0.08]">
           {v.disclaimer}{" "}
-          <Link href="/about#registry-methodology" className="text-zinc-400 hover:text-white underline">Methodology</Link>
+          <Link href="/docs" className="text-zinc-400 hover:text-white underline">Methodology</Link>
           {" · "}
           <Link href="/docs/valuation" className="text-zinc-400 hover:text-white underline">Valuation v0</Link>
           {" · "}

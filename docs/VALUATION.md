@@ -1,6 +1,6 @@
 # Valuation v0
 
-Clarke’s Slot Terminal fair-value figure is a **model**, not a live market price, appraisal, or offer to transact. There is no public GEO slot tape; v0 exists so operators and investors can inspect an implied range and its drivers.
+Clarke’s Slot Terminal fair-value figure is a labeled **model**: a documented heuristic so operators and investors can inspect an implied range and its drivers. It is not a live exchange price, an appraisal, or an offer to transact.
 
 ## Formula
 

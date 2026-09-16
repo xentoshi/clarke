@@ -43,7 +43,7 @@ export default async function OrbitalPage() {
           <Link href="/orbital/faq" className="text-zinc-600 text-xs hover:text-zinc-300 transition-colors">
             FAQ →
           </Link>
-          <Link href="/about#agents" className="text-zinc-600 text-xs hover:text-zinc-300 transition-colors">
+          <Link href="/docs" className="text-zinc-600 text-xs hover:text-zinc-300 transition-colors">
             Docs →
           </Link>
         </div>

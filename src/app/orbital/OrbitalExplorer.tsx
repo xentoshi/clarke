@@ -17,6 +17,7 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
   const [selected, setSelected] = useState<ExplorerRow | null>(null);
   const [csvOpen, setCsvOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [showFairValue, setShowFairValue] = useState(false);
 
   const filterCount =
     facets.regions.length + facets.operators.length + facets.bands.length + facets.statuses.length +
@@ -52,6 +53,7 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
     out.sort((a, b) => {
       switch (sortKey) {
         case "operator": return a.operator.localeCompare(b.operator) * dir;
+        case "status": return a.status.localeCompare(b.status) * dir;
         case "satCount": return (a.satCount - b.satCount) * dir;
         case "congestionScore": return (a.congestionScore - b.congestionScore) * dir;
         case "value": return (a.valuation.point - b.valuation.point) * dir;
@@ -64,7 +66,18 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
   const onSort = (key: SortKey) => {
     if (key === sortKey) { setSortDir((d) => (d === "asc" ? "desc" : "asc")); return; }
     setSortKey(key);
-    setSortDir(key === "longitude" || key === "operator" ? "asc" : "desc");
+    setSortDir(key === "longitude" || key === "operator" || key === "status" ? "asc" : "desc");
+  };
+
+  const onToggleFairValue = () => {
+    setShowFairValue((on) => {
+      const next = !on;
+      if (!next && sortKey === "value") {
+        setSortKey("longitude");
+        setSortDir("asc");
+      }
+      return next;
+    });
   };
 
   return (
@@ -83,6 +96,14 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
           className="lg:hidden shrink-0 border border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white rounded-lg px-3 py-2 text-xs font-medium transition-colors">
           Filters{filterCount > 0 ? ` (${filterCount})` : ""}
         </button>
+        <button onClick={onToggleFairValue}
+          className={`shrink-0 border rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+            showFairValue
+              ? "border-zinc-600 text-white"
+              : "border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white"
+          }`}>
+          {showFairValue ? "Hide fair value" : "Show fair value"}
+        </button>
         <button onClick={() => setCsvOpen(true)}
           className="shrink-0 border border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white rounded-lg px-3 py-2 text-xs font-medium transition-colors">
           Download CSV
@@ -96,7 +117,8 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
         <div className="flex-1 min-w-0">
           <div className="text-zinc-600 text-xs mb-2 font-mono">{filtered.length.toLocaleString()} of {rows.length.toLocaleString()} positions</div>
           <SlotTable rows={filtered} sortKey={sortKey} sortDir={sortDir} onSort={onSort}
-            onSelect={(r) => setSelected((cur) => (cur?.slug === r.slug ? null : r))} selectedSlug={selected?.slug ?? null} />
+            onSelect={(r) => setSelected((cur) => (cur?.slug === r.slug ? null : r))} selectedSlug={selected?.slug ?? null}
+            showFairValue={showFairValue} />
           <div className="mt-4 flex items-center justify-end">
             <Link href="/orbital/faq" className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors">Questions about the data? Read the FAQ →</Link>
           </div>

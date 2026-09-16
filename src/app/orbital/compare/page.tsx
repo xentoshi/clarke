@@ -50,20 +50,20 @@ export default async function ComparePage({
   }
 
   const rows: { key: string; label: string; get: (m: NonNullable<(typeof models)[number]>) => string }[] = [
+    { key: "op", label: "Operator", get: (m) => m.operator || "—" },
+    { key: "st", label: "Status", get: (m) => statusLabels[m.status] },
+    { key: "sats", label: "Occupancy", get: (m) => String(m.satCount) },
+    { key: "cong", label: "Congestion", get: (m) => `${m.congestion.score} · ${m.congestion.label}` },
+    { key: "biu", label: "BIU / license", get: (m) => m.valuation.license.biuLabel },
+    { key: "fcc", label: "FCC rows", get: (m) => String(m.fccAuthorizations.length) },
+    { key: "asof", label: "As of", get: (m) => formatAsOfDate(m.asOf) },
+    { key: "co", label: "Country", get: (m) => m.country || "—" },
+    { key: "pur", label: "Purpose", get: (m) => m.purpose || "—" },
+    { key: "cov", label: "Coverage proxy", get: (m) => m.valuation.coverage.band.label },
+    { key: "life", label: "Remaining life", get: (m) => m.valuation.occupancyQuality.meanYearsRemaining == null ? "—" : `${m.valuation.occupancyQuality.meanYearsRemaining}y` },
     { key: "fv", label: "Fair value (v0)", get: (m) => m.valuation.nonCommercial ? "n/c" : m.valuation.formatted.point },
     { key: "ci", label: "Confidence interval", get: (m) => m.valuation.formatted.range },
     { key: "conf", label: "Confidence", get: (m) => m.valuation.confidence },
-    { key: "op", label: "Operator", get: (m) => m.operator || "—" },
-    { key: "co", label: "Country", get: (m) => m.country || "—" },
-    { key: "pur", label: "Purpose", get: (m) => m.purpose || "—" },
-    { key: "st", label: "Status", get: (m) => statusLabels[m.status] },
-    { key: "sats", label: "Satellites", get: (m) => String(m.satCount) },
-    { key: "cong", label: "Congestion", get: (m) => `${m.congestion.score} · ${m.congestion.label}` },
-    { key: "biu", label: "BIU / license", get: (m) => m.valuation.license.biuLabel },
-    { key: "cov", label: "Coverage proxy", get: (m) => m.valuation.coverage.band.label },
-    { key: "life", label: "Remaining life", get: (m) => m.valuation.occupancyQuality.meanYearsRemaining == null ? "—" : `${m.valuation.occupancyQuality.meanYearsRemaining}y` },
-    { key: "fcc", label: "FCC rows", get: (m) => String(m.fccAuthorizations.length) },
-    { key: "asof", label: "As of", get: (m) => formatAsOfDate(m.asOf) },
   ];
 
   return (

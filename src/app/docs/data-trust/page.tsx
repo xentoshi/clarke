@@ -20,9 +20,11 @@ export default function DataTrustDocsPage() {
       </p>
       <h2 className="text-white font-semibold text-sm mb-2">Default Slot Terminal</h2>
       <p className="text-zinc-500 text-sm leading-relaxed mb-4">
-        The first screen is occupancy, recorded FCC layers, ingest freshness, and a labeled v0 model.
-        Simulated capacity books, ITU filing stubs, sub-lease stubs, and seeded valuation sparklines are
-        quarantined behind an explicit Experimental disclosure. They must not look like filled market panels.
+        The first screen is occupancy, recorded FCC layers, ingest freshness, and a labeled v0 model
+        (last among KPIs). Warnings share one Trust bar with expand-in-place. Simulated capacity books,
+        ITU filing stubs, sub-lease stubs, and seeded valuation sparklines are quarantined behind an
+        explicit Experimental disclosure. They must not look like filled market panels. Fair value is
+        hidden by default on the registry.
       </p>
       <p className="text-zinc-500 text-sm leading-relaxed mb-8">
         Legend: <span className="font-mono text-emerald-400">V</span> verified from a named public source ·{" "}

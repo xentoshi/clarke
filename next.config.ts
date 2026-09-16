@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/", destination: "/orbital", permanent: true },
       { source: "/research", destination: "/index", permanent: false },
-      { source: "/docs", destination: "/about", permanent: true },
+      { source: "/docs", destination: "/docs/data-trust", permanent: false },
       { source: "/data", destination: "/about", permanent: true },
     ];
   },

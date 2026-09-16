@@ -2,7 +2,7 @@ import Link from "next/link";
 import { statusColors, statusLabels, bandColors } from "@/data/orbital-slots";
 import type { SlotTerminalModel } from "@/lib/slot-terminal";
 import type { Entitlements } from "@/lib/auth";
-import { formatAsOf, formatAsOfDate } from "@/lib/provenance";
+import { formatAsOfDate } from "@/lib/provenance";
 import { parseUcsLaunchYear } from "@/lib/occupancy-quality";
 import { formatOperatorMix } from "@/lib/operator-mix";
 import { formatLonFixed } from "@/lib/geo-angle";
@@ -16,6 +16,7 @@ import { AddToCompare } from "./AddToCompare";
 import { CompareTray } from "./CompareTray";
 import { ExperimentalDisclosure } from "./ExperimentalDisclosure";
 import { TrustMark } from "./TrustMark";
+import { TrustBar } from "./TrustBar";
 
 const congTone = (tier: string) =>
   tier === "critical" || tier === "high" ? "red" :
@@ -30,8 +31,6 @@ export function SlotTerminalView({
   entitlements: Entitlements;
 }) {
   const v = model.valuation;
-  const confidenceTone =
-    v.confidence === "high" ? "emerald" : v.confidence === "medium" ? "amber" : "white";
   const recordedRights = recordedRightsLayers(model.rightsChain);
   const stubRights = stubRightsLayers(model.rightsChain);
 
@@ -41,128 +40,58 @@ export function SlotTerminalView({
         <div className="flex items-center gap-3 text-xs font-mono">
           <Link href="/orbital" className="text-white/30 hover:text-white/70">Registry</Link>
           <span className="text-white/15">/</span>
-          <span className="text-white/50">Slot Terminal</span>
+          <span className="text-white/50">{model.label}</span>
         </div>
         <div className="flex items-center gap-2">
           <AddToCompare slug={model.slug} />
           <Link href={`/orbital/compare?s=${model.slug}`} className="text-xs text-zinc-500 hover:text-white">
             Compare view
           </Link>
-          {!entitlements.pro && (
-            <Link href="/pricing" className="text-xs bg-white text-black rounded px-2.5 py-1 font-bold hover:bg-zinc-200">
-              Unlock Pro
-            </Link>
-          )}
         </div>
       </div>
 
       <div data-terminal-primary>
-      <header className="mb-5 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-zinc-600 text-[10px] font-mono tracking-widest uppercase mb-1">
-            GEO · {model.longitude >= 0 ? "EAST" : "WEST"} · {model.region} · {model.slug}
+      <header className="mb-4" data-terminal-header>
+        <p className="text-zinc-600 text-[10px] font-mono tracking-widest uppercase mb-1">
+          GEO · {model.longitude >= 0 ? "EAST" : "WEST"} · {model.region} · {model.slug}
+        </p>
+        <h1 className="text-3xl sm:text-4xl font-bold text-white font-mono tracking-tight">{model.label}</h1>
+        <p className="text-zinc-400 text-sm mt-1">
+          {model.operator || "Unknown operator"}
+          {model.country ? ` · ${model.country}` : ""}
+          {model.purpose ? ` · ${model.purpose}` : ""}
+        </p>
+        {model.operatorMix.length > 1 && (
+          <p className="text-zinc-500 text-xs mt-1.5">
+            Occupancy ±0.4°: {formatOperatorMix(model.operatorMix, model.satCount)}
+            {model.occupancyMajority && model.occupancyMajority !== model.operator
+              ? ` · window majority is not the registry operator`
+              : ""}
           </p>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white font-mono tracking-tight">{model.label}</h1>
-          <p className="text-zinc-400 text-sm mt-1">
-            {model.operator || "Unknown operator"}
-            {model.country ? ` · ${model.country}` : ""}
-            {model.purpose ? ` · ${model.purpose}` : ""}
-          </p>
-          {model.operatorMix.length > 1 && (
-            <p className="text-zinc-500 text-xs mt-1.5">
-              Occupancy ±0.4°: {formatOperatorMix(model.operatorMix, model.satCount)}
-              {model.occupancyMajority && model.occupancyMajority !== model.operator
-                ? ` · window majority is not the registry operator`
-                : ""}
-            </p>
+        )}
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          <span className={`text-[10px] px-2 py-0.5 rounded border font-mono ${statusColors[model.status]}`}>
+            {statusLabels[model.status]}
+          </span>
+          <span className="text-[10px] px-2 py-0.5 rounded border border-zinc-700 text-zinc-400 font-mono">
+            {v.license.biuLabel}
+          </span>
+          {model.fccAuthorizations.length > 0 && (
+            <span className="text-[10px] px-2 py-0.5 rounded border border-sky-900/60 text-sky-400 font-mono">
+              FCC ×{model.fccAuthorizations.length}
+            </span>
           )}
-          <div className="flex flex-wrap gap-1.5 mt-3">
-            <span className={`text-[10px] px-2 py-0.5 rounded border font-mono ${statusColors[model.status]}`}>
-              {statusLabels[model.status]}
-            </span>
-            <span className="text-[10px] px-2 py-0.5 rounded border border-zinc-700 text-zinc-400 font-mono">
-              {v.license.biuLabel}
-            </span>
-            {model.fccAuthorizations.length > 0 && (
-              <span className="text-[10px] px-2 py-0.5 rounded border border-sky-900/60 text-sky-400 font-mono">
-                FCC ×{model.fccAuthorizations.length}
-              </span>
-            )}
-            {model.bands.map((b) => (
-              <span key={b} className={`text-[10px] px-2 py-0.5 rounded border font-mono ${bandColors[b]}`}>{b}</span>
-            ))}
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">Model as of</div>
-          <div className="text-zinc-300 font-mono text-sm">{formatAsOf(v.asOf)}</div>
-          <div className="text-[10px] text-zinc-600 mt-1">model {v.modelVersion} · labeled heuristic</div>
+          {model.bands.map((b) => (
+            <span key={b} className={`text-[10px] px-2 py-0.5 rounded border font-mono ${bandColors[b]}`}>{b}</span>
+          ))}
         </div>
       </header>
 
-      <section className="mb-6 border border-zinc-800 rounded-xl px-4 py-3" data-freshness-strip>
-        <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2">Data vintage (not ingest clock)</div>
-        <div className="grid sm:grid-cols-3 gap-2 text-xs font-mono">
-          <div>
-            <span className="text-zinc-600">TLE epoch</span>
-            <div className="text-zinc-300">{model.sourceVintage.tleEpochMax ?? "—"}</div>
-            <div className="text-[10px] text-zinc-600">
-              {model.sourceVintage.tleEpochMin && model.sourceVintage.tleEpochMin !== model.sourceVintage.tleEpochMax
-                ? `window ${model.sourceVintage.tleEpochMin}–${model.sourceVintage.tleEpochMax}`
-                : "in-window sats"}
-              {model.sourceVintage.tleIngestAt ? ` · ingest ${model.sourceVintage.tleIngestAt.slice(0, 10)}` : ""}
-            </div>
-          </div>
-          <div>
-            <span className="text-zinc-600">FCC SSAL as-of</span>
-            <div className={model.sourceVintage.fccStale ? "text-amber-300" : "text-zinc-300"}>
-              {model.sourceVintage.fccAsOf ?? "—"}
-            </div>
-            <div className="text-[10px] text-zinc-600">
-              workbook vintage{model.sourceVintage.fccIngestAt ? ` · parsed ${model.sourceVintage.fccIngestAt.slice(0, 10)}` : ""}
-            </div>
-          </div>
-          <div>
-            <span className="text-zinc-600">UCS file vintage</span>
-            <div className="text-zinc-300">{model.sourceVintage.ucsFileVintage ?? "—"}</div>
-            <div className="text-[10px] text-zinc-600">
-              latest GEO launch in snapshot{model.sourceVintage.ucsIngestAt ? ` · ingest ${model.sourceVintage.ucsIngestAt.slice(0, 10)}` : ""}
-            </div>
-          </div>
-        </div>
-        <p className="text-[10px] text-zinc-600 mt-2 leading-relaxed">
-          Ingest last_run is when Clarke parsed the file. UCS last_run today does not mean 2026 ephemerides.
-        </p>
-      </section>
+      <TrustBar vintage={model.sourceVintage} positionTrust={model.positionTrust} />
 
-      {model.sourceVintage.fccStale && (
-        <div className="mb-6 border border-amber-900/60 bg-amber-950/30 rounded-xl px-4 py-3" data-fcc-stale-banner>
-          <p className="text-[10px] font-mono text-amber-400/90 uppercase tracking-widest mb-1">FCC SSAL stale</p>
-          <p className="text-amber-100/85 text-sm leading-relaxed">
-            FCC workbook as-of is {model.sourceVintage.fccAsOf ?? "unknown"}, older than {model.sourceVintage.fccStaleAfterDays} days.
-            Occupancy is TLE-primary and still updates; license rows may lag. Refresh path:{" "}
-            <Link href="/docs/fcc-refresh" className="underline text-amber-200 hover:text-white">FCC refresh runbook</Link>.
-          </p>
-        </div>
-      )}
-
-      {(model.positionTrust.disputedCount > 0 || model.positionTrust.ucsGhosts.length > 0) && (
-        <div className="mb-6 border border-amber-900/50 bg-amber-950/20 rounded-xl px-4 py-3">
-          <p className="text-[10px] font-mono text-amber-400/80 uppercase tracking-widest mb-1">Position disagreement</p>
-          <p className="text-amber-100/80 text-sm leading-relaxed">
-            Occupancy clusters on Space-Track TLE longitude when the TLE passes quality gates, not on the UCS catalog longitude and not on any FCC/ITU assignment.
-            {model.positionTrust.disputedCount > 0
-              ? ` ${model.positionTrust.disputedCount} satellite${model.positionTrust.disputedCount === 1 ? "" : "s"} in this ±0.4° window have |UCS−TLE| > ${model.positionTrust.disputeThresholdDeg}°.`
-              : ""}
-            {model.positionTrust.ucsGhosts.length > 0
-              ? ` UCS still lists ${model.positionTrust.ucsGhosts.length} satellite${model.positionTrust.ucsGhosts.length === 1 ? "" : "s"} here that TLE occupancy places elsewhere (${model.positionTrust.ucsGhosts.slice(0, 3).map((g) => g.name).join(", ")}${model.positionTrust.ucsGhosts.length > 3 ? "…" : ""}).`
-              : ""}
-          </p>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-px bg-white/[0.05] rounded-xl overflow-hidden mb-6 border border-white/[0.05]">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-px bg-white/[0.08] overflow-hidden mb-6 border border-white/[0.08]">
         <Metric
+          kpi="occupancy"
           label="Occupancy"
           value={`${model.satCount} sat${model.satCount === 1 ? "" : "s"}`}
           sub={
@@ -174,6 +103,7 @@ export function SlotTerminalView({
           trust="V"
         />
         <Metric
+          kpi="rights"
           label="License / FCC"
           value={v.license.biuHint.replace(/_/g, " ")}
           sub={model.fccAuthorizations.length ? `${model.fccAuthorizations.length} FCC rows` : "No FCC row"}
@@ -182,6 +112,20 @@ export function SlotTerminalView({
           tone={v.license.biuHint === "paper_filing" ? "amber" : v.license.biuHint === "brought_into_use" ? "emerald" : "white"}
         />
         <Metric
+          kpi="freshness"
+          label="Freshness"
+          value={model.sourceVintage.tleEpochMax ?? "—"}
+          sub={
+            model.sourceVintage.fccStale
+              ? `FCC SSAL ${model.sourceVintage.fccAsOf ?? "—"} stale`
+              : `FCC ${model.sourceVintage.fccAsOf ?? "—"} · UCS ${model.sourceVintage.ucsFileVintage ?? "—"}`
+          }
+          provenance={model.provenance.fcc}
+          trust="V"
+          tone={model.sourceVintage.fccStale ? "amber" : "white"}
+        />
+        <Metric
+          kpi="congestion"
           label="Congestion"
           value={`${model.congestion.score}`}
           sub={`${model.congestion.label} · ${model.congestion.factors.coLocated} co-located`}
@@ -190,83 +134,19 @@ export function SlotTerminalView({
           tone={congTone(model.congestion.tier)}
         />
         <Metric
+          kpi="fair-value"
           label="Fair value (v0)"
           value={v.nonCommercial ? "n/c" : v.formatted.point}
-          sub={v.nonCommercial ? "Not commercially valued" : `${v.formatted.range} CI · labeled model`}
+          sub={v.nonCommercial ? "Not commercially valued" : `${v.confidence} · ${v.formatted.range} CI · labeled model`}
           provenance={model.provenance.fairValue}
           trust="M"
           tone={v.nonCommercial ? "amber" : "white"}
-        />
-        <Metric
-          label="Confidence"
-          value={v.confidence}
-          sub={`${Math.round(((v.high - v.low) / Math.max(v.point, 1)) * 50)}% half-spread`}
-          provenance={model.provenance.fairValue}
-          trust="M"
-          tone={confidenceTone}
         />
       </div>
 
       <div className="grid lg:grid-cols-12 gap-5 mb-6">
         <div className="lg:col-span-7 space-y-5">
-          <section className="border border-zinc-800 rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
-              <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Implied fair value</h2>
-              <span className="text-[10px] font-mono text-zinc-600">labeled model · not a live market price</span>
-            </div>
-            <div className="px-4 py-4">
-              {v.nonCommercial ? (
-                <p className="text-amber-300/90 text-sm mb-3">{v.nonCommercialReason}. Raw model range {v.formatted.range} is shown for inspection only.</p>
-              ) : (
-                <div className="mb-3">
-                  <div className="flex items-baseline gap-3 flex-wrap">
-                    <span className="text-3xl font-mono font-bold text-white">{v.formatted.point}</span>
-                    <span className="text-zinc-500 font-mono text-sm">{v.formatted.range} CI</span>
-                    <TrustMark cls="M" />
-                  </div>
-                  {v.curatedEstimate && (
-                    <p className="text-[11px] text-zinc-500 mt-2 leading-relaxed" data-curated-overlay="hand-estimate">
-                      <TrustMark cls="M" className="mr-1 align-middle" />
-                      Hand estimate / curated opinion: {v.curatedEstimate}. Secondary to the model range above —
-                      not a competing headline, not a trade, not the fair-value figure.
-                    </p>
-                  )}
-                </div>
-              )}
-              <p className="text-[11px] text-zinc-600 leading-relaxed">
-                No trade tape. Seeded model-path sparklines are Experimental, not default Terminal.
-              </p>
-            </div>
-            <ProGate entitled={entitlements.features.valuationBreakdown} title="Driver breakdown is Pro">
-              <table className="w-full">
-                <tbody>
-                  {v.factors.map((f) => (
-                    <tr key={f.label} className="border-t border-zinc-800/50">
-                      <td className="px-4 py-2 text-zinc-300 text-xs font-medium w-40">{f.label}</td>
-                      <td className="px-2 py-2 text-zinc-500 text-xs">{f.detail}</td>
-                      <td className="px-4 py-2 text-right">
-                        <span className={`text-xs font-mono ${f.multiplier > 1 ? "text-emerald-400" : f.multiplier < 1 ? "text-orange-400" : "text-zinc-500"}`}>
-                          ×{f.multiplier.toFixed(2)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </ProGate>
-            <p className="px-4 py-3 text-[11px] text-zinc-600 leading-relaxed border-t border-zinc-800">
-              {v.disclaimer}{" "}
-              <Link href="/about#registry-methodology" className="text-zinc-400 hover:text-white underline">Methodology</Link>
-              {" · "}
-              <Link href="/docs/valuation" className="text-zinc-400 hover:text-white underline">Valuation v0</Link>
-              {" · "}
-              <Link href="/docs/data-trust" className="text-zinc-400 hover:text-white underline">Data trust</Link>
-            </p>
-          </section>
-        </div>
-
-        <div className="lg:col-span-5 space-y-5">
-          <section className="border border-zinc-800 rounded-xl p-4">
+          <section className="border border-white/[0.08] p-4">
             <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3">Occupancy</h2>
             <dl className="space-y-1.5 text-xs">
               <Row k="Registry operator" val={model.operator || "—"} />
@@ -291,8 +171,10 @@ export function SlotTerminalView({
               {model.provenance.occupancy.source} · {formatAsOfDate(model.provenance.occupancy.asOf)}
             </div>
           </section>
+        </div>
 
-          <section className="border border-zinc-800 rounded-xl p-4">
+        <div className="lg:col-span-5 space-y-5">
+          <section className="border border-white/[0.08] p-4">
             <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3">Recorded rights (FCC)</h2>
             <RightsChain links={recordedRights} variant="recorded" />
           </section>
@@ -304,10 +186,10 @@ export function SlotTerminalView({
           <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3">
             FCC / license signals ({model.fccAuthorizations.length})
           </h2>
-          <div className="border border-sky-900/40 rounded-xl overflow-hidden">
+          <div className="border border-sky-900/40 overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-950">
+                <tr className="border-b border-white/[0.08] bg-[#060608]">
                   <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Satellite</th>
                   <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden sm:table-cell">Licensee</th>
                   <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden md:table-cell">Service</th>
@@ -316,7 +198,7 @@ export function SlotTerminalView({
               </thead>
               <tbody>
                 {model.fccAuthorizations.map((auth) => (
-                  <tr key={auth.id} className="border-b border-zinc-800/50 last:border-0">
+                  <tr key={auth.id} className="border-b border-white/[0.04] last:border-0">
                     <td className="px-4 py-3 text-white text-xs font-mono">{auth.satelliteName ?? "—"}</td>
                     <td className="px-4 py-3 hidden sm:table-cell text-zinc-400 text-xs">{auth.licensee ?? "—"}</td>
                     <td className="px-4 py-3 hidden md:table-cell text-zinc-500 text-xs">{auth.service ?? "—"}</td>
@@ -336,10 +218,10 @@ export function SlotTerminalView({
         <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3">
           Co-located satellites ({model.satellites.length})
         </h2>
-        <div className="border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="border border-white/[0.08] overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-950">
+              <tr className="border-b border-white/[0.08] bg-[#060608]">
                 <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Satellite</th>
                 <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden sm:table-cell">Operator</th>
                 <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden md:table-cell">Purpose</th>
@@ -354,7 +236,7 @@ export function SlotTerminalView({
               {model.satellites.length === 0 ? (
                 <tr><td colSpan={8} className="px-4 py-6 text-zinc-600 text-xs">No satellite with a usable occupancy longitude in this ±0.4° window.</td></tr>
               ) : model.satellites.map((sat) => (
-                <tr key={sat.id} className="border-b border-zinc-800/50 last:border-0">
+                <tr key={sat.id} className="border-b border-white/[0.04] last:border-0">
                   <td className="px-4 py-3">
                     <div className="text-white text-xs font-mono font-medium">
                       {sat.name}
@@ -395,14 +277,66 @@ export function SlotTerminalView({
         </div>
       </section>
 
+      <section className="mb-6 border border-white/[0.08] overflow-hidden" data-fair-value-panel>
+        <div className="px-4 py-3 border-b border-white/[0.08] flex items-center justify-between">
+          <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Implied fair value</h2>
+          <span className="text-[10px] font-mono text-zinc-600">labeled model · not a live market price</span>
+        </div>
+        <div className="px-4 py-4">
+          {v.nonCommercial ? (
+            <p className="text-amber-300/90 text-sm mb-3">{v.nonCommercialReason}. Raw model range {v.formatted.range} is shown for inspection only.</p>
+          ) : (
+            <p className="text-xs font-mono text-zinc-500 mb-3">
+              v0 {v.formatted.point} · {v.formatted.range} CI · {v.confidence}
+              <TrustMark cls="M" className="ml-1.5 align-middle" />
+            </p>
+          )}
+          {v.curatedEstimate && (
+            <p className="text-[11px] text-zinc-500 mb-3 leading-relaxed" data-curated-overlay="hand-estimate">
+              <TrustMark cls="M" className="mr-1 align-middle" />
+              Hand estimate / curated opinion: {v.curatedEstimate}. Secondary to the model range —
+              not a competing headline, not a trade, not the fair-value figure.
+            </p>
+          )}
+          <p className="text-[11px] text-zinc-600 leading-relaxed">
+            No trade tape. Seeded model-path sparklines are Experimental, not default Terminal.
+          </p>
+        </div>
+        <ProGate entitled={entitlements.features.valuationBreakdown} title="Driver breakdown is Pro">
+          <table className="w-full">
+            <tbody>
+              {v.factors.map((f) => (
+                <tr key={f.label} className="border-t border-white/[0.04]">
+                  <td className="px-4 py-2 text-zinc-300 text-xs font-medium w-40">{f.label}</td>
+                  <td className="px-2 py-2 text-zinc-500 text-xs">{f.detail}</td>
+                  <td className="px-4 py-2 text-right">
+                    <span className={`text-xs font-mono ${f.multiplier > 1 ? "text-emerald-400" : f.multiplier < 1 ? "text-orange-400" : "text-zinc-500"}`}>
+                      ×{f.multiplier.toFixed(2)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </ProGate>
+        <p className="px-4 py-3 text-[11px] text-zinc-600 leading-relaxed border-t border-white/[0.08]">
+          {v.disclaimer}{" "}
+          <Link href="/about#registry-methodology" className="text-zinc-400 hover:text-white underline">Methodology</Link>
+          {" · "}
+          <Link href="/docs/valuation" className="text-zinc-400 hover:text-white underline">Valuation v0</Link>
+          {" · "}
+          <Link href="/docs/data-trust" className="text-zinc-400 hover:text-white underline">Data trust</Link>
+        </p>
+      </section>
+
       {model.comps.length > 0 && (
         <section className="mb-6">
           <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3">Nearest comps</h2>
           <p className="text-[11px] text-zinc-600 mb-2">Positions outside this slot&apos;s ±0.4° occupancy window. Not transaction comps.</p>
-          <div className="border border-zinc-800 rounded-xl overflow-hidden">
+          <div className="border border-white/[0.08] overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-950">
+                <tr className="border-b border-white/[0.08] bg-[#060608]">
                   <th className="text-left px-4 py-2 text-[10px] uppercase tracking-wider text-zinc-600 font-medium">Slot</th>
                   <th className="text-left px-4 py-2 text-[10px] uppercase tracking-wider text-zinc-600 font-medium hidden sm:table-cell">Operator</th>
                   <th className="text-right px-4 py-2 text-[10px] uppercase tracking-wider text-zinc-600 font-medium">Δ</th>
@@ -413,7 +347,7 @@ export function SlotTerminalView({
               </thead>
               <tbody>
                 {model.comps.map((c) => (
-                  <tr key={c.slug} className="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-900/40">
+                  <tr key={c.slug} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03]">
                     <td className="px-4 py-2">
                       <Link href={`/orbital/${c.slug}`} className="text-white text-xs font-mono hover:text-zinc-300">{c.label}</Link>
                     </td>
@@ -421,7 +355,7 @@ export function SlotTerminalView({
                     <td className="px-4 py-2 text-zinc-500 text-xs font-mono text-right">{c.deltaDeg.toFixed(1)}°</td>
                     <td className="px-4 py-2 text-zinc-500 text-xs font-mono text-right">{c.satCount}</td>
                     <td className="px-4 py-2 text-zinc-500 text-xs font-mono text-right">{c.congestionScore}</td>
-                    <td className="px-4 py-2 text-zinc-300 text-xs font-mono text-right">
+                    <td className="px-4 py-2 text-zinc-500 text-xs font-mono text-right">
                       {c.valuation.nonCommercial ? "n/c" : c.valuation.formatted.point}
                     </td>
                   </tr>
@@ -455,7 +389,7 @@ export function SlotTerminalView({
         </ExperimentalDisclosure>
       </div>
 
-      <footer className="border-t border-zinc-800/50 pt-5 text-[11px] font-mono text-zinc-600 leading-relaxed space-y-1">
+      <footer className="border-t border-white/[0.08] pt-5 text-[11px] font-mono text-zinc-600 leading-relaxed space-y-1">
         <p>
           Provenance · occupancy TLE-primary {formatAsOfDate(model.provenance.occupancy.asOf)} · UCS catalog {formatAsOfDate(model.provenance.ucsCatalog.asOf)} · FCC SSAL {formatAsOfDate(model.provenance.fcc.asOf)} ·
           valuation {v.modelVersion} {formatAsOfDate(v.asOf)}

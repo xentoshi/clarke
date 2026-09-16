@@ -11,6 +11,7 @@ export function Metric({
   provenance,
   tone = "white",
   trust,
+  kpi,
 }: {
   label: string;
   value: ReactNode;
@@ -18,6 +19,7 @@ export function Metric({
   provenance: Provenance;
   tone?: "white" | "emerald" | "amber" | "red" | "sky";
   trust?: TrustClass;
+  kpi?: string;
 }) {
   const valueClass =
     tone === "emerald" ? "text-emerald-400" :
@@ -27,7 +29,7 @@ export function Metric({
     "text-white";
 
   return (
-    <div className="bg-zinc-950 px-4 py-4 min-w-0">
+    <div className="bg-[#060608] px-4 py-4 min-w-0" data-kpi={kpi}>
       <div className="flex items-center gap-1.5 min-w-0">
         <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest truncate">{label}</div>
         {trust && <TrustMark cls={trust} />}

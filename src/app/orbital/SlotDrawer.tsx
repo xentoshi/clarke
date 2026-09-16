@@ -76,30 +76,19 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
 
             {row.description && <p className="text-zinc-400 text-sm leading-relaxed mb-5">{row.description}</p>}
 
+            <div className="text-zinc-500 text-[10px] uppercase tracking-wider font-medium mb-2">Occupancy</div>
+            <div className="space-y-0.5 mb-1">
+              <FactorLine label="Status" value={statusLabels[row.status]} />
+              <FactorLine label="Satellites" value={String(row.satCount)} />
+              <FactorLine label="FCC" value={row.fccLicensed ? "licensed" : "—"} />
+            </div>
+
             {(row.positionDisputedCount > 0 || row.ucsGhostCount > 0) && (
-              <div className="text-amber-300/80 text-xs bg-amber-950/20 border border-amber-900/40 rounded px-2.5 py-2 mb-4">
+              <div className="text-amber-300/80 text-xs border border-white/[0.08] px-2.5 py-2 mt-3 mb-1">
                 TLE occupancy disagrees with UCS catalog
                 {row.positionDisputedCount > 0 ? ` · ${row.positionDisputedCount} disputed in-window` : ""}
                 {row.ucsGhostCount > 0 ? ` · ${row.ucsGhostCount} UCS-listed elsewhere by TLE` : ""}
                 . TLE longitude is not an FCC/ITU assignment.
-              </div>
-            )}
-
-            {/* Value */}
-            {v.nonCommercial ? (
-              <div className="text-amber-300/80 text-xs bg-amber-950/20 border border-amber-900/40 rounded px-2.5 py-2 mb-1">
-                Not commercially valued — {v.nonCommercialReason?.replace("UCS classifies this satellite's users as ", "users: ")}
-              </div>
-            ) : (
-              <div className="space-y-1 mb-1">
-                <div className="flex justify-between text-xs py-1 border-b border-zinc-900"><span className="text-zinc-600">Modeled range (v0)</span><span className="text-zinc-300 font-mono">{v.formatted.range}</span></div>
-                {v.curatedEstimate && (
-                  <div className="flex justify-between text-xs py-1 border-b border-zinc-900">
-                    <span className="text-zinc-600">Hand estimate / curated opinion</span>
-                    <span className="text-zinc-500 font-mono">{v.curatedEstimate}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-xs py-1 border-b border-zinc-900"><span className="text-zinc-600">Confidence</span><span className={`font-mono ${v.confidence === "high" ? "text-emerald-400" : v.confidence === "medium" ? "text-amber-400" : "text-zinc-400"}`}>{v.confidence}</span></div>
               </div>
             )}
 
@@ -112,14 +101,6 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
                 <FactorLine label="Operators / dominant" value={`${dossier.congestion.factors.distinctOperators}${dossier.congestion.factors.dominantOperator ? ` · ${dossier.congestion.factors.dominantOperator} ${Math.round(dossier.congestion.factors.dominantShare * 100)}%` : ""}`} />
               </div>
             ) : loading ? <div className="text-zinc-700 text-xs">Loading…</div> : null}
-
-            {/* Valuation factors */}
-            <div className="text-zinc-500 text-[10px] uppercase tracking-wider font-medium mt-5 mb-2">Valuation factors</div>
-            <div className="space-y-0.5">
-              {v.factors.map((f) => (
-                <FactorLine key={f.label} label={f.label} value={`×${f.multiplier.toFixed(2)}`} accent />
-              ))}
-            </div>
 
             {/* Bands + coverage */}
             {(row.bands.length > 0 || row.coverage.length > 0) && (
@@ -156,11 +137,23 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
               </>
             )}
 
-            {/* Status */}
-            <div className="text-zinc-500 text-[10px] uppercase tracking-wider font-medium mt-5 mb-2">Status</div>
-            <div className="text-zinc-300 text-xs">{statusLabels[row.status]}</div>
+            {/* Model — secondary to occupancy / rights */}
+            <div className="text-zinc-500 text-[10px] uppercase tracking-wider font-medium mt-5 mb-2">Fair value (v0)</div>
+            {v.nonCommercial ? (
+              <div className="text-amber-300/80 text-xs border border-white/[0.08] px-2.5 py-2">
+                Not commercially valued — {v.nonCommercialReason?.replace("UCS classifies this satellite's users as ", "users: ")}
+              </div>
+            ) : (
+              <div className="space-y-0.5">
+                <FactorLine label="Modeled range" value={v.formatted.range} />
+                {v.curatedEstimate && (
+                  <FactorLine label="Hand estimate" value={v.curatedEstimate} />
+                )}
+                <FactorLine label="Confidence" value={v.confidence} />
+              </div>
+            )}
 
-            <div className="mt-6 pt-5 border-t border-zinc-800 text-center space-y-2">
+            <div className="mt-6 pt-5 border-t border-white/[0.08] text-center space-y-2">
               <Link href={`/orbital/${row.slug}`} className="inline-block text-white text-xs font-medium hover:text-zinc-300">
                 Open Slot Terminal →
               </Link>
@@ -172,11 +165,11 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
   );
 }
 
-function FactorLine({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function FactorLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-3 text-xs py-0.5">
       <span className="text-zinc-600 truncate">{label}</span>
-      <span className={`font-mono shrink-0 ${accent ? "text-emerald-400" : "text-zinc-300"}`}>{value}</span>
+      <span className="font-mono shrink-0 text-zinc-300">{value}</span>
     </div>
   );
 }

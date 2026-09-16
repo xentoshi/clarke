@@ -25,9 +25,9 @@ const typeLabels: Record<Result["type"], string> = {
 const pages = [
   { label: "GEO Slot Index #1", sub: "Occupancy enter/leave, dispute flips, FCC deltas — not prices", href: "/index" },
   { label: "Slot Terminal · 101°W", sub: "Sample hot slot — occupancy, FCC, freshness, labeled model", href: "/orbital/101w" },
-  { label: "Pricing / Terminal seats", sub: "Free registry vs Pro Slot Terminal", href: "/pricing" },
-  { label: "About Clarke", sub: "How it works, data sources, methodology, and the agents API", href: "/about" },
   { label: "Data trust", sub: "What Slot Terminal will and will not claim", href: "/docs/data-trust" },
+  { label: "Pricing", sub: "Free registry vs Pro driver breakdown, compare, export+", href: "/pricing" },
+  { label: "About Clarke", sub: "How it works, data sources, methodology, and the agents API", href: "/about" },
 ];
 
 function search(q: string, slots: OrbitalSlot[]): Result[] {

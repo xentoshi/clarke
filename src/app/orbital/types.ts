@@ -32,7 +32,7 @@ export interface ExplorerRow {
   biuHint: SlotValuation["license"]["biuHint"];
 }
 
-export type SortKey = "longitude" | "operator" | "satCount" | "congestionScore" | "value";
+export type SortKey = "longitude" | "operator" | "status" | "satCount" | "congestionScore" | "value";
 export type SortDir = "asc" | "desc";
 
 export interface Facets {

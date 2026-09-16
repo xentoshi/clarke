@@ -12,10 +12,14 @@ const SearchPalette = dynamic(() => import("./SearchPalette"), { ssr: false });
 const navLinks = [
   { href: "/orbital", label: "Registry" },
   { href: "/index", label: "Index" },
-  { href: "/pricing", label: "Terminal" },
-  { href: "/blog", label: "Blog" },
-  { href: "/about", label: "About" },
+  { href: "/docs/data-trust", label: "Docs" },
 ];
+
+function navActive(pathname: string, href: string): boolean {
+  if (href === "/orbital") return pathname === "/orbital" || pathname.startsWith("/orbital/");
+  if (href === "/docs/data-trust") return pathname.startsWith("/docs");
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
   const pathname = usePathname();
@@ -61,7 +65,7 @@ export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
           <nav className="hidden lg:flex items-center gap-0.5">
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href}
-                className={`px-3 py-1.5 text-sm rounded-sm transition-colors ${pathname === link.href ? "text-white bg-white/8" : "text-white/40 hover:text-white hover:bg-white/5"}`}>
+                className={`px-3 py-1.5 text-sm rounded-sm transition-colors ${navActive(pathname, link.href) ? "text-white bg-white/8" : "text-white/40 hover:text-white hover:bg-white/5"}`}>
                 {link.label}
               </Link>
             ))}
@@ -91,7 +95,7 @@ export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
             <nav className="grid grid-cols-1 gap-1">
               {navLinks.map((link) => (
                 <Link key={link.href} href={link.href}
-                  className={`px-3 py-2 text-sm rounded-sm transition-colors ${pathname === link.href ? "text-white bg-white/8" : "text-white/40 hover:text-white hover:bg-white/5"}`}>
+                  className={`px-3 py-2 text-sm rounded-sm transition-colors ${navActive(pathname, link.href) ? "text-white bg-white/8" : "text-white/40 hover:text-white hover:bg-white/5"}`}>
                   {link.label}
                 </Link>
               ))}

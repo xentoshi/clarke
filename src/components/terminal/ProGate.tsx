@@ -19,7 +19,7 @@ export function ProGate({
           <div className="text-white text-sm font-semibold mb-1">{title}</div>
           <p className="text-zinc-400 text-xs mb-3">Full driver breakdown, compare, export+, and API sit behind a Terminal seat.</p>
           <div className="flex items-center justify-center gap-3">
-            <Link href="/pricing" className="bg-white text-black rounded px-3 py-1.5 text-xs font-bold hover:bg-zinc-200">
+            <Link href="/pricing" data-unlock-pro className="bg-white text-black rounded px-3 py-1.5 text-xs font-bold hover:bg-zinc-200">
               Unlock Pro
             </Link>
             <Link href="/login" className="text-zinc-400 hover:text-white text-xs">

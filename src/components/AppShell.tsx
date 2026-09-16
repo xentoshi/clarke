@@ -1,24 +1,13 @@
 import Nav from "@/components/Nav";
 import Link from "next/link";
 import type { OrbitalSlot } from "@/data/orbital-slots";
+import { PageBackdrop } from "@/components/PageBackdrop";
 
 export default function AppShell({ children, slots }: { children: React.ReactNode; slots: OrbitalSlot[] }) {
   return (
     <div className="flex flex-col min-h-screen bg-[#060608]">
+      <PageBackdrop />
 
-      {/* Background image fixed behind all content */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute inset-0"
-          style={{
-            backgroundImage: "url('/nasa-footer.jpg')",
-            backgroundSize: "180%",
-            backgroundPosition: "center center",
-            opacity: 0.42,
-          }} />
-        <div className="absolute inset-0" style={{ background: "rgba(6,6,8,0.72)" }} />
-      </div>
-
-      {/* All content sits above the fixed images */}
       <div className="relative z-10 flex flex-col min-h-screen">
         <Nav slots={slots} />
         <main className="flex-1">{children}</main>
@@ -39,7 +28,7 @@ export default function AppShell({ children, slots }: { children: React.ReactNod
                     {[
                       { label: "Orbital Registry", href: "/orbital" },
                       { label: "GEO Slot Index", href: "/index" },
-                      { label: "Slot Terminal", href: "/orbital/101w" },
+                      { label: "Sample Terminal", href: "/orbital/101w" },
                       { label: "Pricing", href: "/pricing" },
                       { label: "Blog", href: "/blog" },
                     ].map((l) => (

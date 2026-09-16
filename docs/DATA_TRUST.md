@@ -6,6 +6,19 @@ Honest one-liner for distribution:
 
 > Clarke v0 is a public-registry view (TLE-primary occupancy, UCS identity, FCC SSAL licenses) plus a transparent heuristic implied-value range. It is not a live market, not an ITU deed, and not an appraisal. Curated dollar overlays are hand-checked opinions and do not replace the model. TLE longitude is a tracked-object location, never an FCC assignment or ITU filing.
 
+## Product chrome (Sep 2026 design pass)
+
+Registry and Slot Terminal are data surfaces. First screens answer who is on station, rights, and freshness. Dollars are secondary.
+
+| Surface | Rule |
+|---|---|
+| Registry columns | Occupancy, status, congestion, FCC are the default spine. Fair value is off until **Show fair value**. |
+| Slot Terminal fold | Title + operator mix → one Trust bar (TLE/FCC/UCS dates + V/M/S + collapsed warnings) → KPIs occupancy / rights / freshness first, labeled model last. |
+| Trust bar | FCC stale and position disagreement share one compact line (`FCC SSAL stale · Position disagreement · Details`) with expand-in-place. Not stacked orange banners. |
+| Unlock Pro | Driver-panel gate only. Verified occupancy is never blurred or paywalled. |
+| Nav | Registry · Index · Docs. Terminal opens from a registry row (sample: `/orbital/101w`). |
+| Wallpaper | Solid near-black + hairline borders on `/orbital` and `/orbital/[slug]`. Earth imagery stays off those surfaces. |
+
 ## Default Terminal quarantine (this change)
 
 A paying skeptic’s first Slot Terminal screen is **occupancy + recorded FCC + ingest freshness + labeled v0 model**. Market cosplay is not default UI.
@@ -38,7 +51,7 @@ Tests: `src/lib/terminal-default.test.ts` asserts default primary markup does no
 | 7 | **Medium** | Occupancy grouping 0.3° (agents dossier default) vs 0.4° (Terminal / congestion). | **Fixed.** Default co-location window is 0.4°. |
 | 8 | **Medium** | Agents list valuation omitted satellite lifetimes, so remaining life stayed 1.0 even after a parser fix. | **Fixed.** `listSlots` / explorer / seed pass the occupancy window. |
 | 9 | **Won’t invent** | Curated overlay ($350M+ at 101°W, $400M+ at 19.2°E) is far from v0. After remaining-life fix UCS occupancy was **$228M at 101°W**; after TLE-primary occupancy **$198M** (5 sats, congestion 80). | Overlay is class M, secondary to the model; `basis` is always `model`. No new prices invented. |
-| 10 | **Open** | UCS ingest `last_run` is today; the **file vintage is ~May 2023** (latest GEO launch in DB is 2023). Terminal now shows file vintage / TLE epoch / FCC workbook as-of separately from ingest clock. FCC SSAL workbook vintage can still lag (sheet “Updated 30 April 2026”). ITU SNS is not ingested. NORAD/COSPAR omitted from UI; API still returns them. Duplicate slugs for absorbed longitudes remain. | Vintage fields + FCC stale banner shipped; weekly `ingest:fcc` re-parse documented. |
+| 10 | **Open** | UCS ingest `last_run` is today; the **file vintage is ~May 2023** (latest GEO launch in DB is 2023). Terminal now shows file vintage / TLE epoch / FCC workbook as-of separately from ingest clock. FCC SSAL workbook vintage can still lag (sheet “Updated 30 April 2026”). ITU SNS is not ingested. NORAD/COSPAR omitted from UI; API still returns them. Duplicate slugs for absorbed longitudes remain. | Vintage fields + compact Trust bar (FCC stale / position disagreement expand-in-place); weekly `ingest:fcc` re-parse documented. |
 | 11 | **High (UI)** | Simulated book, ITU/sub-lease stubs, and seeded sparkline still sat on the default Terminal as filled panels. | **Fixed.** Quarantined behind Experimental disclosure. See Default Terminal quarantine. |
 
 ## Position authority (TLE-primary occupancy)
@@ -110,7 +123,7 @@ Legend: **V** = verified from a named public source in this product · **M** = m
 | Longitude label / slug | V/M | Registry slug is the curated / occupancy / FCC position. Occupancy clustering uses **TLE-primary** longitude, not UCS `longitude_geo`. TLE lon is **not** an FCC assignment or ITU filing. |
 | UCS longitude | V | UCS catalog. Stale vs TLE for 204/512 matched GEO objects. Shown next to TLE. |
 | TLE longitude / epoch | V | Space-Track TLE at ingest. Sub-satellite lon at TLE epoch (`tsince=0`). |
-| `positionDisputed` | M | Circular \|UCS−TLE\| > 2°. Slot banner when in-window sats disagree or UCS ghosts remain. |
+| `positionDisputed` | M | Circular \|UCS−TLE\| > 2°. Trust bar chip when in-window sats disagree or UCS ghosts remain. |
 | Co-located satellite names, operators, purposes | V | UCS identity. Names checked well; operators can be stale (LightSquared, “DirecTV, Inc.”). |
 | Satellite count | M | Count of GEO rows whose **occupancy** lon is in ±0.4°, not a unique ITU network count. |
 | Launch year | V | UCS `M/D/YY` now parsed. Was **B**. |
@@ -132,7 +145,7 @@ Legend: **V** = verified from a named public source in this product · **M** = m
 | Valuation chart / 30-day history | S | Seeded model path. **Quarantined** from default; labeled MODEL BACKFILL. Not trades. |
 | Data freshness `age_days` | V | Ingest clock (`last_run`). Not file vintage. |
 | File vintage / source as-of | V | UCS: latest GEO launch in snapshot. FCC: SSAL sheet “Updated …”. TLE: epoch min/max. Shown on Terminal + agents `meta.data_freshness`. |
-| FCC stale banner | V | Workbook as-of older than 14 days. Occupancy does not wait on FCC. |
+| FCC stale / position disagreement | V | Workbook as-of older than 14 days, or in-window \|UCS−TLE\| / UCS ghosts. Compact Trust bar chips; details expand in place. Occupancy does not wait on FCC. |
 | Non-commercial flag | V | UCS `users` without “Commercial.” |
 | NORAD / COSPAR (API) | M | Stored from UCS; some historical IDs were wrong. UI still hides them. |
 

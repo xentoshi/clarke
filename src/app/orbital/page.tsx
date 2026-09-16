@@ -29,8 +29,8 @@ export default async function OrbitalPage() {
           <p className="text-zinc-600 text-xs font-mono mb-3">{"// ORBITAL_REGISTRY"}</p>
           <h1 className="text-2xl font-bold text-white mb-2">Orbital Registry</h1>
           <p className="text-zinc-500 text-sm leading-relaxed">
-            Every tracked GEO position, by longitude. Search, filter, open Slot Terminal, compare, export.
-            Fair value is model v0, not a live market price.
+            Every tracked GEO position, by longitude. Occupancy, status, congestion, FCC — then open Slot Terminal from a row.
+            Fair value is a labeled model, hidden by default.
           </p>
         </div>
         <div className="flex items-center gap-4 shrink-0 mt-1">

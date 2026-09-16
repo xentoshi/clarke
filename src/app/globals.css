@@ -208,10 +208,22 @@ code, .font-mono, [class*="font-mono"] {
 .prose-docs ul,
 .prose-docs ol {
   margin: 0 0 1.25rem;
-  padding-left: 1.25rem;
+  padding-left: 1.4rem;
   color: #a1a1aa;
   font-size: 0.875rem;
   line-height: 1.7;
+}
+
+.prose-docs ul {
+  list-style: disc;
+}
+
+.prose-docs ol {
+  list-style: decimal;
+}
+
+.prose-docs li::marker {
+  color: rgba(255, 255, 255, 0.28);
 }
 
 .prose-docs li {

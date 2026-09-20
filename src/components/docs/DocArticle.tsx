@@ -21,7 +21,6 @@ export default function DocArticle({ doc, showLegend = false }: { doc: LoadedDoc
 
       <div className="mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:gap-16 xl:gap-24">
         <article className="min-w-0">
-          <p className="text-muted text-sm mb-2">{doc.kicker.replaceAll("_", " ")}</p>
           <h1 className="text-3xl sm:text-4xl font-semibold text-ink tracking-tight mb-4">{doc.title}</h1>
           <div className="border border-line bg-surface px-4 py-4 mb-10">
             <div className="text-xs text-faint mb-2">Summary</div>

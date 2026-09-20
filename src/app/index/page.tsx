@@ -137,7 +137,7 @@ export default function GeoSlotIndexPage() {
       <div className="lg:grid lg:grid-cols-[1fr_200px] lg:gap-16">
         <div className="min-w-0 max-w-2xl">
           <p className="text-muted text-sm mb-2">GEO Slot Index · Edition 1</p>
-          <h1 className="text-3xl sm:text-4xl font-semibold text-ink tracking-tight mb-4">{edition.title}</h1>
+          <h1 className="text-3xl sm:text-4xl font-semibold text-ink tracking-tight mb-4">GEO Slot Index #1</h1>
           <p className="text-muted text-lg leading-relaxed mb-10">
             A method-note snapshot of five GEO longitudes from Clarke&apos;s public feeds. This edition counts occupancy enter/leave (TLE vs UCS), dispute flips, and FCC license-table mismatches. It does not say prices rose, and it is not a market.
           </p>

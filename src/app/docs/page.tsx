@@ -34,9 +34,6 @@ export default function DocsHubPage() {
             href={doc.href}
             className="group block border border-line bg-surface px-5 py-6 hover:border-line-strong transition-colors"
           >
-            <div className="text-xs text-faint mb-2">
-              {doc.kicker.replaceAll("_", " ")}
-            </div>
             <h2 className="text-ink font-semibold text-lg mb-2 group-hover:text-muted transition-colors">
               {doc.title}
             </h2>

@@ -25,9 +25,7 @@ function identityCopy(model: SlotTerminalModel): string {
   const fcc = model.fccAuthorizations.length > 0
     ? `an FCC license (${model.fccAuthorizations.length} ${model.fccAuthorizations.length === 1 ? "row" : "rows"})`
     : "no FCC row";
-  const extra = [model.purpose, model.country].filter(Boolean).join(", ");
-  const tail = extra ? `, ${extra}` : "";
-  return `${operator}, with ${sats} and ${fcc}${tail}.`;
+  return `${operator}, with ${sats} and ${fcc}.`;
 }
 
 function biuCopy(hint: string): string {

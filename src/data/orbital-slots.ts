@@ -545,10 +545,10 @@ export const slots: OrbitalSlot[] = [
 ];
 
 export const statusColors: Record<SlotStatus, string> = {
-  active: "text-emerald-400 bg-emerald-950 border-emerald-800",
-  filed: "text-blue-400 bg-blue-950 border-blue-800",
-  squatted: "text-amber-400 bg-amber-950 border-amber-800",
-  inactive: "text-zinc-500 bg-zinc-900 border-zinc-700",
+  active: "text-verified bg-verified/8 border-verified/30",
+  filed: "text-ink bg-canvas border-line",
+  squatted: "text-stale bg-stale/8 border-stale/35",
+  inactive: "text-faint bg-canvas border-line",
 };
 
 export const statusLabels: Record<SlotStatus, string> = {
@@ -559,10 +559,10 @@ export const statusLabels: Record<SlotStatus, string> = {
 };
 
 export const bandColors: Record<Band, string> = {
-  C: "text-sky-400 bg-sky-950 border-sky-800",
-  Ku: "text-violet-400 bg-violet-950 border-violet-800",
-  Ka: "text-rose-400 bg-rose-950 border-rose-800",
-  X: "text-orange-400 bg-orange-950 border-orange-800",
-  L: "text-teal-400 bg-teal-950 border-teal-800",
-  S: "text-yellow-400 bg-yellow-950 border-yellow-800",
+  C: "text-ink bg-canvas border-line",
+  Ku: "text-ink bg-canvas border-line",
+  Ka: "text-ink bg-canvas border-line",
+  X: "text-ink bg-canvas border-line",
+  L: "text-ink bg-canvas border-line",
+  S: "text-ink bg-canvas border-line",
 };

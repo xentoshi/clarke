@@ -249,14 +249,14 @@ describe("product chrome — Fair value, Trust bar, Terminal fold", () => {
     assert.match(html, /data-terminal-experimental="sim-book"/);
   });
 
-  it("treats registry, Terminal, and Docs routes as data surfaces (no Earth wallpaper)", () => {
+  it("uses a light registry canvas on every public route (no Earth wallpaper)", () => {
     assert.equal(isDataSurface("/orbital"), true);
     assert.equal(isDataSurface("/orbital/101w"), true);
     assert.equal(isDataSurface("/orbital/compare"), true);
     assert.equal(isDataSurface("/docs"), true);
     assert.equal(isDataSurface("/docs/data-trust"), true);
-    assert.equal(isDataSurface("/index"), false);
-    assert.equal(isDataSurface("/about"), false);
-    assert.equal(isDataSurface("/blog"), false);
+    assert.equal(isDataSurface("/index"), true);
+    assert.equal(isDataSurface("/about"), true);
+    assert.equal(isDataSurface("/blog"), true);
   });
 });

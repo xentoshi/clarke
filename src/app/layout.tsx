@@ -4,18 +4,18 @@ import Script from "next/script";
 import AppShell from "@/components/AppShell";
 import Analytics from "@/components/Analytics";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
-import { Manrope, IBM_Plex_Mono } from "next/font/google";
+import { Inter, IBM_Plex_Mono } from "next/font/google";
 import { slots as curatedSlots } from "@/data/orbital-slots";
 import { mergeWithUcs } from "@/lib/satellites";
 
-const manrope = Manrope({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-manrope",
+  variable: "--font-sans",
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["400", "500"],
   variable: "--font-ibm-mono",
 });
 
@@ -33,8 +33,8 @@ const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN ?? "";
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const allSlots = mergeWithUcs(curatedSlots);
   return (
-    <html lang="en" className={`h-full ${manrope.variable} ${ibmPlexMono.variable}`}>
-      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100 overflow-x-hidden">
+    <html lang="en" className={`h-full ${inter.variable} ${ibmPlexMono.variable}`}>
+      <body className="min-h-full flex flex-col bg-canvas text-ink overflow-x-hidden">
         {PLAUSIBLE_DOMAIN && (
           <Script
             src="https://plausible.io/js/script.js"

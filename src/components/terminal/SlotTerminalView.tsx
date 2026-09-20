@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { statusColors, statusLabels, bandColors } from "@/data/orbital-slots";
+import { statusLabels } from "@/data/orbital-slots";
 import type { SlotTerminalModel } from "@/lib/slot-terminal";
 import type { Entitlements } from "@/lib/auth";
 import { formatAsOfDate } from "@/lib/provenance";
@@ -23,6 +23,18 @@ const congTone = (tier: string) =>
   tier === "moderate" ? "amber" :
   tier === "low" ? "sky" : "white" as const;
 
+function identityCopy(model: SlotTerminalModel): string {
+  const operator = model.operator
+    ? `${model.operator} is the registry operator.`
+    : "Registry operator is unknown.";
+  const sats = `${model.satCount} satellite${model.satCount === 1 ? "" : "s"} on station.`;
+  const fcc = model.fccAuthorizations.length > 0
+    ? `FCC licensed (${model.fccAuthorizations.length} ${model.fccAuthorizations.length === 1 ? "row" : "rows"}).`
+    : "No FCC row.";
+  const extra = [model.purpose, model.country].filter(Boolean).join(", ");
+  return extra ? `${operator} ${sats} ${fcc} ${extra}.` : `${operator} ${sats} ${fcc}`;
+}
+
 export function SlotTerminalView({
   model,
   entitlements,
@@ -35,61 +47,44 @@ export function SlotTerminalView({
   const stubRights = stubRightsLayers(model.rightsChain);
 
   return (
-    <div className="max-w-[1440px] mx-auto px-3 sm:px-5 py-6">
-      <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
-        <div className="flex items-center gap-3 text-xs font-mono">
-          <Link href="/orbital" className="text-white/30 hover:text-white/70">Registry</Link>
-          <span className="text-white/15">/</span>
-          <span className="text-white/50">{model.label}</span>
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-10">
+      <div className="flex items-center justify-between gap-3 mb-8 flex-wrap">
+        <div className="flex items-center gap-2 text-sm">
+          <Link href="/orbital" className="text-muted hover:text-ink">Registry</Link>
+          <span className="text-faint">/</span>
+          <span className="font-mono text-ink">{model.label}</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <AddToCompare slug={model.slug} />
-          <Link href={`/orbital/compare?s=${model.slug}`} className="text-xs text-zinc-500 hover:text-white">
+          <Link href={`/orbital/compare?s=${model.slug}`} className="text-sm text-muted hover:text-ink">
             Compare view
           </Link>
         </div>
       </div>
 
       <div data-terminal-primary>
-      <header className="mb-4" data-terminal-header>
-        <p className="text-zinc-600 text-[10px] font-mono tracking-widest uppercase mb-1">
-          GEO · {model.longitude >= 0 ? "EAST" : "WEST"} · {model.region} · {model.slug}
+      <header className="mb-3" data-terminal-header>
+        <p className="text-muted text-sm mb-1">
+          {model.region}
+          {model.longitude >= 0 ? " · East" : " · West"}
         </p>
-        <h1 className="text-3xl sm:text-4xl font-bold text-white font-mono tracking-tight">{model.label}</h1>
-        <p className="text-zinc-400 text-sm mt-1">
-          {model.operator || "Unknown operator"}
-          {model.country ? ` · ${model.country}` : ""}
-          {model.purpose ? ` · ${model.purpose}` : ""}
+        <h1 className="text-4xl sm:text-5xl font-semibold text-ink font-mono tracking-tight">{model.label}</h1>
+        <p className="text-ink text-lg mt-3 leading-relaxed max-w-3xl">
+          {identityCopy(model)}
         </p>
         {model.operatorMix.length > 1 && (
-          <p className="text-zinc-500 text-xs mt-1.5">
+          <p className="text-muted text-sm mt-2 leading-relaxed max-w-3xl">
             Occupancy ±0.4°: {formatOperatorMix(model.operatorMix, model.satCount)}
             {model.occupancyMajority && model.occupancyMajority !== model.operator
-              ? ` · window majority is not the registry operator`
-              : ""}
+              ? `. Window majority is not the registry operator.`
+              : "."}
           </p>
         )}
-        <div className="flex flex-wrap gap-1.5 mt-3">
-          <span className={`text-[10px] px-2 py-0.5 rounded border font-mono ${statusColors[model.status]}`}>
-            {statusLabels[model.status]}
-          </span>
-          <span className="text-[10px] px-2 py-0.5 rounded border border-zinc-700 text-zinc-400 font-mono">
-            {v.license.biuLabel}
-          </span>
-          {model.fccAuthorizations.length > 0 && (
-            <span className="text-[10px] px-2 py-0.5 rounded border border-sky-900/60 text-sky-400 font-mono">
-              FCC ×{model.fccAuthorizations.length}
-            </span>
-          )}
-          {model.bands.map((b) => (
-            <span key={b} className={`text-[10px] px-2 py-0.5 rounded border font-mono ${bandColors[b]}`}>{b}</span>
-          ))}
-        </div>
       </header>
 
       <TrustBar vintage={model.sourceVintage} positionTrust={model.positionTrust} />
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-px bg-white/[0.08] overflow-hidden mb-6 border border-white/[0.08]">
+      <div className="grid md:grid-cols-3 gap-3 mb-3">
         <Metric
           kpi="occupancy"
           label="Occupancy"
@@ -124,6 +119,9 @@ export function SlotTerminalView({
           trust="V"
           tone={model.sourceVintage.fccStale ? "amber" : "white"}
         />
+      </div>
+
+      <div className="max-w-md mb-8">
         <Metric
           kpi="congestion"
           label="Congestion"
@@ -133,22 +131,13 @@ export function SlotTerminalView({
           trust="M"
           tone={congTone(model.congestion.tier)}
         />
-        <Metric
-          kpi="fair-value"
-          label="Fair value (v0)"
-          value={v.nonCommercial ? "n/c" : v.formatted.point}
-          sub={v.nonCommercial ? "Not commercially valued" : `${v.confidence} · ${v.formatted.range} CI · labeled model`}
-          provenance={model.provenance.fairValue}
-          trust="M"
-          tone={v.nonCommercial ? "amber" : "white"}
-        />
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-5 mb-6">
+      <div className="grid lg:grid-cols-12 gap-6 mb-8">
         <div className="lg:col-span-7 space-y-5">
-          <section className="border border-white/[0.08] p-4">
-            <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3">Occupancy</h2>
-            <dl className="space-y-1.5 text-xs">
+          <section className="border border-line bg-surface p-5">
+            <h2 className="text-sm text-muted mb-4">Occupancy</h2>
+            <dl className="space-y-2 text-sm">
               <Row k="Registry operator" val={model.operator || "—"} />
               {model.operatorMix.length > 1 && (
                 <Row k="Window majority" val={model.occupancyMajority || "—"} />
@@ -166,110 +155,113 @@ export function SlotTerminalView({
               />
               <Row k="Remaining life" val={v.occupancyQuality.detail} />
               <Row k="Coverage proxy" val={v.coverage.detail} />
+              {model.bands.length > 0 && (
+                <Row k="Bands" val={model.bands.join(", ")} />
+              )}
             </dl>
-            <div className="text-[10px] font-mono text-zinc-700 mt-3">
+            <div className="text-xs font-mono text-faint mt-4">
               {model.provenance.occupancy.source} · {formatAsOfDate(model.provenance.occupancy.asOf)}
             </div>
           </section>
         </div>
 
         <div className="lg:col-span-5 space-y-5">
-          <section className="border border-white/[0.08] p-4">
-            <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3">Recorded rights (FCC)</h2>
+          <section className="border border-line bg-surface p-5">
+            <h2 className="text-sm text-muted mb-4">Recorded rights (FCC)</h2>
             <RightsChain links={recordedRights} variant="recorded" />
           </section>
         </div>
       </div>
 
       {model.fccAuthorizations.length > 0 && (
-        <section className="mb-6">
-          <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3">
+        <section className="mb-8">
+          <h2 className="text-sm text-muted mb-3">
             FCC / license signals ({model.fccAuthorizations.length})
           </h2>
-          <div className="border border-sky-900/40 overflow-hidden">
+          <div className="border border-line bg-surface overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/[0.08] bg-[#060608]">
-                  <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Satellite</th>
-                  <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden sm:table-cell">Licensee</th>
-                  <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden md:table-cell">Service</th>
-                  <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Call sign</th>
+                <tr className="border-b border-line bg-canvas">
+                  <th className="text-left px-4 py-2.5 text-faint text-xs font-medium">Satellite</th>
+                  <th className="text-left px-4 py-2.5 text-faint text-xs font-medium hidden sm:table-cell">Licensee</th>
+                  <th className="text-left px-4 py-2.5 text-faint text-xs font-medium hidden md:table-cell">Service</th>
+                  <th className="text-right px-4 py-2.5 text-faint text-xs font-medium">Call sign</th>
                 </tr>
               </thead>
               <tbody>
                 {model.fccAuthorizations.map((auth) => (
-                  <tr key={auth.id} className="border-b border-white/[0.04] last:border-0">
-                    <td className="px-4 py-3 text-white text-xs font-mono">{auth.satelliteName ?? "—"}</td>
-                    <td className="px-4 py-3 hidden sm:table-cell text-zinc-400 text-xs">{auth.licensee ?? "—"}</td>
-                    <td className="px-4 py-3 hidden md:table-cell text-zinc-500 text-xs">{auth.service ?? "—"}</td>
-                    <td className="px-4 py-3 text-right text-sky-400 text-xs font-mono">{auth.callSign ?? "—"}</td>
+                  <tr key={auth.id} className="border-b border-line last:border-0">
+                    <td className="px-4 py-3 text-ink text-sm">{auth.satelliteName ?? "—"}</td>
+                    <td className="px-4 py-3 hidden sm:table-cell text-muted text-sm">{auth.licensee ?? "—"}</td>
+                    <td className="px-4 py-3 hidden md:table-cell text-muted text-sm">{auth.service ?? "—"}</td>
+                    <td className="px-4 py-3 text-right text-ink text-sm font-mono">{auth.callSign ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <p className="text-[10px] font-mono text-zinc-600 mt-2">
+          <p className="text-xs font-mono text-faint mt-2">
             {model.provenance.fcc.source} · {formatAsOfDate(model.provenance.fcc.asOf)} · class V
           </p>
         </section>
       )}
 
-      <section className="mb-6">
-        <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3">
+      <section className="mb-8">
+        <h2 className="text-sm text-muted mb-3">
           Co-located satellites ({model.satellites.length})
         </h2>
-        <div className="border border-white/[0.08] overflow-hidden">
+        <div className="border border-line bg-surface overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/[0.08] bg-[#060608]">
-                <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Satellite</th>
-                <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden sm:table-cell">Operator</th>
-                <th className="text-left px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden md:table-cell">Purpose</th>
-                <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden lg:table-cell">UCS lon</th>
-                <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden lg:table-cell">TLE lon</th>
-                <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden md:table-cell">Δ</th>
-                <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium hidden xl:table-cell">TLE epoch</th>
-                <th className="text-right px-4 py-2.5 text-zinc-600 text-[10px] uppercase tracking-wider font-medium">Launched</th>
+              <tr className="border-b border-line bg-canvas">
+                <th className="text-left px-4 py-2.5 text-faint text-xs font-medium">Satellite</th>
+                <th className="text-left px-4 py-2.5 text-faint text-xs font-medium hidden sm:table-cell">Operator</th>
+                <th className="text-left px-4 py-2.5 text-faint text-xs font-medium hidden md:table-cell">Purpose</th>
+                <th className="text-right px-4 py-2.5 text-faint text-xs font-medium hidden lg:table-cell">UCS lon</th>
+                <th className="text-right px-4 py-2.5 text-faint text-xs font-medium hidden lg:table-cell">TLE lon</th>
+                <th className="text-right px-4 py-2.5 text-faint text-xs font-medium hidden md:table-cell">Δ</th>
+                <th className="text-right px-4 py-2.5 text-faint text-xs font-medium hidden xl:table-cell">TLE epoch</th>
+                <th className="text-right px-4 py-2.5 text-faint text-xs font-medium">Launched</th>
               </tr>
             </thead>
             <tbody>
               {model.satellites.length === 0 ? (
-                <tr><td colSpan={8} className="px-4 py-6 text-zinc-600 text-xs">No satellite with a usable occupancy longitude in this ±0.4° window.</td></tr>
+                <tr><td colSpan={8} className="px-4 py-6 text-muted text-sm">No satellite with a usable occupancy longitude in this ±0.4° window.</td></tr>
               ) : model.satellites.map((sat) => (
-                <tr key={sat.id} className="border-b border-white/[0.04] last:border-0">
+                <tr key={sat.id} className="border-b border-line last:border-0">
                   <td className="px-4 py-3">
-                    <div className="text-white text-xs font-mono font-medium">
+                    <div className="text-ink text-sm font-medium">
                       {sat.name}
                       {sat.positionDisputed && (
-                        <span className="ml-2 text-[9px] uppercase tracking-wider text-amber-400 border border-amber-900/60 px-1 py-0.5 rounded">disputed</span>
+                        <span className="ml-2 text-xs text-stale border border-stale/35 px-1 py-0.5 rounded-sm">disputed</span>
                       )}
                     </div>
-                    <div className="text-[10px] font-mono text-zinc-600 mt-0.5">
+                    <div className="text-xs text-faint mt-0.5">
                       {sat.positionSource === "tle" ? "TLE occupancy" : sat.positionSource === "ucs" ? "UCS fallback" : "no position"}
                     </div>
                   </td>
-                  <td className="px-4 py-3 hidden sm:table-cell text-zinc-400 text-xs">{sat.operator ?? "—"}</td>
-                  <td className="px-4 py-3 hidden md:table-cell text-zinc-500 text-xs">{sat.detailedPurpose ?? sat.purpose ?? "—"}</td>
-                  <td className="px-4 py-3 hidden lg:table-cell text-right text-zinc-500 text-xs font-mono">
+                  <td className="px-4 py-3 hidden sm:table-cell text-muted text-sm">{sat.operator ?? "—"}</td>
+                  <td className="px-4 py-3 hidden md:table-cell text-muted text-sm">{sat.detailedPurpose ?? sat.purpose ?? "—"}</td>
+                  <td className="px-4 py-3 hidden lg:table-cell text-right text-muted text-sm font-mono">
                     {sat.longitudeUcs != null ? formatLonFixed(sat.longitudeUcs, 1) : "—"}
                   </td>
-                  <td className="px-4 py-3 hidden lg:table-cell text-right text-zinc-300 text-xs font-mono">
+                  <td className="px-4 py-3 hidden lg:table-cell text-right text-ink text-sm font-mono">
                     {sat.longitudeTle != null ? formatLonFixed(sat.longitudeTle, 1) : "—"}
                   </td>
-                  <td className="px-4 py-3 hidden md:table-cell text-right text-xs font-mono">
+                  <td className="px-4 py-3 hidden md:table-cell text-right text-sm font-mono">
                     {sat.positionDeltaDeg == null ? (
-                      <span className="text-zinc-600">—</span>
+                      <span className="text-faint">—</span>
                     ) : (
-                      <span className={sat.positionDisputed ? "text-amber-400" : "text-zinc-500"}>
+                      <span className={sat.positionDisputed ? "text-stale" : "text-muted"}>
                         {sat.positionDeltaDeg.toFixed(1)}°
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 hidden xl:table-cell text-right text-zinc-500 text-xs font-mono">
+                  <td className="px-4 py-3 hidden xl:table-cell text-right text-muted text-sm font-mono">
                     {sat.tleEpoch ?? "—"}
                     {sat.tleAgeDays != null ? ` (${sat.tleAgeDays}d)` : ""}
                   </td>
-                  <td className="px-4 py-3 text-right text-zinc-500 text-xs font-mono">{parseUcsLaunchYear(sat.launchDate) ?? "—"}</td>
+                  <td className="px-4 py-3 text-right text-muted text-sm font-mono">{parseUcsLaunchYear(sat.launchDate) ?? "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -277,28 +269,32 @@ export function SlotTerminalView({
         </div>
       </section>
 
-      <section className="mb-6 border border-white/[0.08] overflow-hidden" data-fair-value-panel>
-        <div className="px-4 py-3 border-b border-white/[0.08] flex items-center justify-between">
-          <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Implied fair value</h2>
-          <span className="text-[10px] font-mono text-zinc-600">labeled model · not a live market price</span>
+      <section className="mb-8 border border-line bg-surface overflow-hidden" data-fair-value-panel>
+        <div className="px-5 py-3 border-b border-line flex items-center justify-between">
+          <h2 className="text-sm text-muted">Implied fair value</h2>
+          <span className="text-xs text-faint">Labeled model. Not a live market price.</span>
         </div>
-        <div className="px-4 py-4">
+        <Metric
+          kpi="fair-value"
+          label="Fair value (v0)"
+          value={v.nonCommercial ? "n/c" : v.formatted.point}
+          sub={v.nonCommercial ? "Not commercially valued" : `${v.confidence} · ${v.formatted.range} CI · labeled model`}
+          provenance={model.provenance.fairValue}
+          trust="M"
+          tone={v.nonCommercial ? "amber" : "white"}
+        />
+        <div className="px-5 py-4 border-t border-line">
           {v.nonCommercial ? (
-            <p className="text-amber-300/90 text-sm mb-3">{v.nonCommercialReason}. Raw model range {v.formatted.range} is shown for inspection only.</p>
-          ) : (
-            <p className="text-xs font-mono text-zinc-500 mb-3">
-              v0 {v.formatted.point} · {v.formatted.range} CI · {v.confidence}
-              <TrustMark cls="M" className="ml-1.5 align-middle" />
-            </p>
-          )}
+            <p className="text-stale text-sm mb-3">{v.nonCommercialReason}. Raw model range {v.formatted.range} is shown for inspection only.</p>
+          ) : null}
           {v.curatedEstimate && (
-            <p className="text-[11px] text-zinc-500 mb-3 leading-relaxed" data-curated-overlay="hand-estimate">
+            <p className="text-sm text-muted mb-3 leading-relaxed" data-curated-overlay="hand-estimate">
               <TrustMark cls="M" className="mr-1 align-middle" />
-              Hand estimate / curated opinion: {v.curatedEstimate}. Secondary to the model range —
-              not a competing headline, not a trade, not the fair-value figure.
+              Hand estimate / curated opinion: {v.curatedEstimate}. Secondary to the model range.
+              Not a competing headline, not a trade, not the fair-value figure.
             </p>
           )}
-          <p className="text-[11px] text-zinc-600 leading-relaxed">
+          <p className="text-sm text-faint leading-relaxed">
             No trade tape. Seeded model-path sparklines are Experimental, not default Terminal.
           </p>
         </div>
@@ -306,11 +302,11 @@ export function SlotTerminalView({
           <table className="w-full">
             <tbody>
               {v.factors.map((f) => (
-                <tr key={f.label} className="border-t border-white/[0.04]">
-                  <td className="px-4 py-2 text-zinc-300 text-xs font-medium w-40">{f.label}</td>
-                  <td className="px-2 py-2 text-zinc-500 text-xs">{f.detail}</td>
-                  <td className="px-4 py-2 text-right">
-                    <span className={`text-xs font-mono ${f.multiplier > 1 ? "text-emerald-400" : f.multiplier < 1 ? "text-orange-400" : "text-zinc-500"}`}>
+                <tr key={f.label} className="border-t border-line">
+                  <td className="px-5 py-2 text-ink text-sm font-medium w-40">{f.label}</td>
+                  <td className="px-2 py-2 text-muted text-sm">{f.detail}</td>
+                  <td className="px-5 py-2 text-right">
+                    <span className={`text-sm font-mono ${f.multiplier > 1 ? "text-verified" : f.multiplier < 1 ? "text-stale" : "text-faint"}`}>
                       ×{f.multiplier.toFixed(2)}
                     </span>
                   </td>
@@ -319,43 +315,43 @@ export function SlotTerminalView({
             </tbody>
           </table>
         </ProGate>
-        <p className="px-4 py-3 text-[11px] text-zinc-600 leading-relaxed border-t border-white/[0.08]">
+        <p className="px-5 py-3 text-sm text-faint leading-relaxed border-t border-line">
           {v.disclaimer}{" "}
-          <Link href="/docs" className="text-zinc-400 hover:text-white underline">Methodology</Link>
+          <Link href="/docs" className="text-ink hover:text-muted underline">Methodology</Link>
           {" · "}
-          <Link href="/docs/valuation" className="text-zinc-400 hover:text-white underline">Valuation v0</Link>
+          <Link href="/docs/valuation" className="text-ink hover:text-muted underline">Valuation v0</Link>
           {" · "}
-          <Link href="/docs/data-trust" className="text-zinc-400 hover:text-white underline">Data trust</Link>
+          <Link href="/docs/data-trust" className="text-ink hover:text-muted underline">Data trust</Link>
         </p>
       </section>
 
       {model.comps.length > 0 && (
-        <section className="mb-6">
-          <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3">Nearest comps</h2>
-          <p className="text-[11px] text-zinc-600 mb-2">Positions outside this slot&apos;s ±0.4° occupancy window. Not transaction comps.</p>
-          <div className="border border-white/[0.08] overflow-hidden">
+        <section className="mb-8">
+          <h2 className="text-sm text-muted mb-2">Nearest comps</h2>
+          <p className="text-sm text-faint mb-3">Positions outside this slot&apos;s ±0.4° occupancy window. Not transaction comps.</p>
+          <div className="border border-line bg-surface overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/[0.08] bg-[#060608]">
-                  <th className="text-left px-4 py-2 text-[10px] uppercase tracking-wider text-zinc-600 font-medium">Slot</th>
-                  <th className="text-left px-4 py-2 text-[10px] uppercase tracking-wider text-zinc-600 font-medium hidden sm:table-cell">Operator</th>
-                  <th className="text-right px-4 py-2 text-[10px] uppercase tracking-wider text-zinc-600 font-medium">Δ</th>
-                  <th className="text-right px-4 py-2 text-[10px] uppercase tracking-wider text-zinc-600 font-medium">Sats</th>
-                  <th className="text-right px-4 py-2 text-[10px] uppercase tracking-wider text-zinc-600 font-medium">Cong.</th>
-                  <th className="text-right px-4 py-2 text-[10px] uppercase tracking-wider text-zinc-600 font-medium">Fair value</th>
+                <tr className="border-b border-line bg-canvas">
+                  <th className="text-left px-4 py-2 text-xs text-faint font-medium">Slot</th>
+                  <th className="text-left px-4 py-2 text-xs text-faint font-medium hidden sm:table-cell">Operator</th>
+                  <th className="text-right px-4 py-2 text-xs text-faint font-medium">Δ</th>
+                  <th className="text-right px-4 py-2 text-xs text-faint font-medium">Sats</th>
+                  <th className="text-right px-4 py-2 text-xs text-faint font-medium">Cong.</th>
+                  <th className="text-right px-4 py-2 text-xs text-faint font-medium">Fair value</th>
                 </tr>
               </thead>
               <tbody>
                 {model.comps.map((c) => (
-                  <tr key={c.slug} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03]">
+                  <tr key={c.slug} className="border-b border-line last:border-0 hover:bg-canvas">
                     <td className="px-4 py-2">
-                      <Link href={`/orbital/${c.slug}`} className="text-white text-xs font-mono hover:text-zinc-300">{c.label}</Link>
+                      <Link href={`/orbital/${c.slug}`} className="text-ink text-sm font-mono hover:text-muted">{c.label}</Link>
                     </td>
-                    <td className="px-4 py-2 text-zinc-400 text-xs hidden sm:table-cell">{c.operator || "—"}</td>
-                    <td className="px-4 py-2 text-zinc-500 text-xs font-mono text-right">{c.deltaDeg.toFixed(1)}°</td>
-                    <td className="px-4 py-2 text-zinc-500 text-xs font-mono text-right">{c.satCount}</td>
-                    <td className="px-4 py-2 text-zinc-500 text-xs font-mono text-right">{c.congestionScore}</td>
-                    <td className="px-4 py-2 text-zinc-500 text-xs font-mono text-right">
+                    <td className="px-4 py-2 text-muted text-sm hidden sm:table-cell">{c.operator || "—"}</td>
+                    <td className="px-4 py-2 text-muted text-sm font-mono text-right">{c.deltaDeg.toFixed(1)}°</td>
+                    <td className="px-4 py-2 text-muted text-sm font-mono text-right">{c.satCount}</td>
+                    <td className="px-4 py-2 text-muted text-sm font-mono text-right">{c.congestionScore}</td>
+                    <td className="px-4 py-2 text-faint text-sm font-mono text-right">
                       {c.valuation.nonCommercial ? "n/c" : c.valuation.formatted.point}
                     </td>
                   </tr>
@@ -367,15 +363,15 @@ export function SlotTerminalView({
       )}
       </div>
 
-      <div className="space-y-4 mb-6">
+      <div className="space-y-3 mb-8">
         <ExperimentalDisclosure id="model-backfill" title="Seeded v0 model path (not trades)">
-          <p className="text-[11px] font-mono text-amber-300/80 uppercase tracking-widest mb-2">
-            Model backfill — not observed trades, not a price index
+          <p className="text-xs text-stale mb-2">
+            Model backfill. Not observed trades, not a price index.
           </p>
           <ValuationChart series={entitlements.features.history ? model.history : model.history.slice(-7)} source={model.historySource} />
           {!entitlements.features.history && (
-            <p className="text-[11px] text-zinc-600 mt-2">
-              Free seats see a 7-day backfill. <Link href="/pricing" className="text-zinc-400 hover:text-white underline">Pro unlocks 30-day persisted model path.</Link>
+            <p className="text-sm text-faint mt-2">
+              Free seats see a 7-day backfill. <Link href="/pricing" className="text-ink hover:text-muted underline">Pro unlocks 30-day persisted model path.</Link>
             </p>
           )}
         </ExperimentalDisclosure>
@@ -389,7 +385,7 @@ export function SlotTerminalView({
         </ExperimentalDisclosure>
       </div>
 
-      <footer className="border-t border-white/[0.08] pt-5 text-[11px] font-mono text-zinc-600 leading-relaxed space-y-1">
+      <footer className="border-t border-line pt-5 text-sm text-faint leading-relaxed space-y-1">
         <p>
           Provenance · occupancy TLE-primary {formatAsOfDate(model.provenance.occupancy.asOf)} · UCS catalog {formatAsOfDate(model.provenance.ucsCatalog.asOf)} · FCC SSAL {formatAsOfDate(model.provenance.fcc.asOf)} ·
           valuation {v.modelVersion} {formatAsOfDate(v.asOf)}
@@ -407,8 +403,8 @@ export function SlotTerminalView({
 function Row({ k, val }: { k: string; val: string }) {
   return (
     <div className="flex justify-between gap-3">
-      <dt className="text-zinc-600 shrink-0">{k}</dt>
-      <dd className="text-zinc-300 text-right">{val}</dd>
+      <dt className="text-faint shrink-0">{k}</dt>
+      <dd className="text-ink text-right">{val}</dd>
     </div>
   );
 }

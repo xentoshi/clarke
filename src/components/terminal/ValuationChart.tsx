@@ -30,7 +30,7 @@ export function ValuationChart({
   }, [series, pad.l, pad.r, pad.t, pad.b]);
 
   if (pts.length === 0) {
-    return <div className="text-zinc-600 text-xs">No model-path backfill yet. Run <span className="font-mono">npm run seed:valuations</span>. Not a trade tape.</div>;
+    return <div className="text-muted text-sm">No model-path backfill yet. Run <span className="font-mono">npm run seed:valuations</span>. Not a trade tape.</div>;
   }
 
   const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
@@ -39,14 +39,14 @@ export function ValuationChart({
   return (
     <div>
       <div className="flex items-baseline justify-between mb-1">
-        <div className="text-white font-mono text-sm tabular-nums">{formatMoney(active.s.point)}</div>
-        <div className="text-[10px] font-mono text-amber-400/80 uppercase tracking-widest">
-          {active.s.asOf} · {source === "persisted" ? "seeded SQLite path" : "synthesized"} · MODEL BACKFILL — not trades
+        <div className="text-ink font-mono text-sm tabular-nums">{formatMoney(active.s.point)}</div>
+        <div className="text-xs text-stale">
+          {active.s.asOf} · {source === "persisted" ? "seeded SQLite path" : "synthesized"} · model backfill, not trades
         </div>
       </div>
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="w-full h-28 text-emerald-400"
+        className="w-full h-28 text-verified"
         onMouseLeave={() => setHover(null)}
       >
         <path d={line} fill="none" stroke="currentColor" strokeWidth="1.5" />

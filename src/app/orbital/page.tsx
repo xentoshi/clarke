@@ -7,7 +7,7 @@ import { getEntitlements } from "@/lib/auth";
 
 export const metadata = buildMeta({
   title: "Orbital Registry",
-  description: "Search, filter, and compare every tracked GEO orbital position — operators, congestion scores, FCC filing status, valuation v0, and CSV export.",
+  description: "Search, filter, and compare every tracked GEO orbital position. Occupancy, congestion scores, FCC filing status, and Slot Terminal.",
   tag: "Registry",
   path: "/orbital",
 });
@@ -24,27 +24,27 @@ export default async function OrbitalPage() {
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-10">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <p className="text-zinc-600 text-xs font-mono mb-3">{"// ORBITAL_REGISTRY"}</p>
-          <h1 className="text-2xl font-bold text-white mb-2">Orbital Registry</h1>
-          <p className="text-zinc-500 text-sm leading-relaxed">
-            Every tracked GEO position, by longitude. Occupancy, status, congestion, FCC — then open Slot Terminal from a row.
-            Fair value is a labeled model, hidden by default.
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div className="max-w-2xl">
+          <p className="text-muted text-sm mb-2">Registry</p>
+          <h1 className="text-3xl sm:text-4xl font-semibold text-ink tracking-tight mb-3">Orbital Registry</h1>
+          <p className="text-muted text-base leading-relaxed">
+            Every tracked GEO position, by longitude. Who is on station, whether the FCC licensed it, and what is uncertain.
+            Open a row for the Slot Terminal. Fair value is a labeled model, hidden by default.
           </p>
         </div>
         <div className="flex items-center gap-4 shrink-0 mt-1">
-          <Link href="/orbital/101w" className="text-zinc-300 text-xs hover:text-white transition-colors">
+          <Link href="/orbital/101w" className="text-ink text-sm hover:text-muted transition-colors">
             Sample Terminal →
           </Link>
-          <Link href="/orbital/changes" className="text-zinc-600 text-xs hover:text-zinc-300 transition-colors">
-            Changes →
+          <Link href="/orbital/changes" className="text-muted text-sm hover:text-ink transition-colors">
+            Changes
           </Link>
-          <Link href="/orbital/faq" className="text-zinc-600 text-xs hover:text-zinc-300 transition-colors">
-            FAQ →
+          <Link href="/orbital/faq" className="text-muted text-sm hover:text-ink transition-colors">
+            FAQ
           </Link>
-          <Link href="/docs" className="text-zinc-600 text-xs hover:text-zinc-300 transition-colors">
-            Docs →
+          <Link href="/docs" className="text-muted text-sm hover:text-ink transition-colors">
+            Docs
           </Link>
         </div>
       </div>

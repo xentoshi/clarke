@@ -51,7 +51,7 @@ export default async function BlogPostPage({ params }: { params: Promise<Params>
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
       <div className="mb-12">
-        <Link href="/blog" className="text-white/30 text-xs font-mono hover:text-white/60 transition-colors">
+        <Link href="/blog" className="text-muted text-sm hover:text-ink transition-colors">
           ← Blog
         </Link>
       </div>
@@ -60,14 +60,14 @@ export default async function BlogPostPage({ params }: { params: Promise<Params>
         <div className="min-w-0">
           <header className="mb-12 max-w-2xl">
             <div className="flex items-center gap-3 mb-5">
-              <span className="text-[10px] font-mono text-white/25 tracking-widest uppercase">{post.tag}</span>
-              <span className="text-white/10 text-xs">·</span>
-              <span className="text-[10px] font-mono text-white/25">{formatDate(post.date)}</span>
-              <span className="text-white/10 text-xs">·</span>
-              <span className="text-[10px] font-mono text-white/25">{post.readingMinutes} min read</span>
+              <span className="text-xs text-faint">{post.tag}</span>
+              <span className="text-faint text-xs">·</span>
+              <span className="text-xs text-faint">{formatDate(post.date)}</span>
+              <span className="text-faint text-xs">·</span>
+              <span className="text-xs text-faint">{post.readingMinutes} min read</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight mb-4">{post.title}</h1>
-            <p className="text-zinc-400 text-lg leading-relaxed">{post.subtitle}</p>
+            <h1 className="text-3xl sm:text-4xl font-semibold text-ink leading-tight tracking-tight mb-4">{post.title}</h1>
+            <p className="text-muted text-lg leading-relaxed">{post.subtitle}</p>
           </header>
 
           <article className="prose-clarke max-w-2xl">

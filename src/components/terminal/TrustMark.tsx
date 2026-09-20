@@ -1,9 +1,9 @@
 import { TRUST_CLASS_LABEL, type TrustClass } from "@/lib/terminal-default";
 
 const tone: Record<TrustClass, string> = {
-  V: "text-emerald-400/90 border-emerald-800/50",
-  M: "text-sky-400/90 border-sky-800/50",
-  S: "text-amber-400/90 border-amber-800/50",
+  V: "text-verified border-verified/30 bg-verified/8",
+  M: "text-ink border-line bg-canvas",
+  S: "text-stale border-stale/35 bg-stale/8",
 };
 
 export function TrustMark({
@@ -16,7 +16,7 @@ export function TrustMark({
   return (
     <span
       title={TRUST_CLASS_LABEL[cls]}
-      className={`inline-flex items-center text-[9px] font-mono tracking-widest uppercase px-1 py-0.5 rounded border ${tone[cls]} ${className}`}
+      className={`inline-flex items-center text-[10px] font-mono px-1 py-0.5 rounded-sm border ${tone[cls]} ${className}`}
     >
       {cls}
     </span>

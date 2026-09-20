@@ -335,7 +335,7 @@ export default function DesigningForMarsPost() {
       </p>
 
       <h2 id="sources">Sources</h2>
-      <ol className="text-zinc-600 text-xs space-y-1 font-mono">
+      <ol className="text-faint text-xs space-y-1 font-mono">
         <li>D.M. Hassler et al., &quot;Mars&apos; Surface Radiation Environment Measured with the Mars Science Laboratory&apos;s Curiosity Rover,&quot; Science (December 2013)</li>
         <li>Southwest Research Institute, &quot;SwRI scientists publish first radiation measurements from the surface of Mars&quot; (December 2013)</li>
         <li>National Academies of Sciences, Engineering, and Medicine, &quot;Space Radiation and Astronaut Health: Managing and Communicating Cancer Risks&quot; (June 2021)</li>

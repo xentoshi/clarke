@@ -23,7 +23,7 @@ function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
         <thead>
           <tr>
             {headers.map((h) => (
-              <th key={h} className="text-left text-white/50 font-mono uppercase tracking-wider px-4 py-2 border border-zinc-800 bg-zinc-900/40">{h}</th>
+              <th key={h} className="text-left text-faint text-xs font-medium px-4 py-2 border border-line bg-canvas">{h}</th>
             ))}
           </tr>
         </thead>
@@ -31,7 +31,7 @@ function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
           {rows.map((row, i) => (
             <tr key={i}>
               {row.map((cell, j) => (
-                <td key={j} className="px-4 py-2 text-zinc-400 border border-zinc-800 leading-relaxed">{cell}</td>
+                <td key={j} className="px-4 py-2 text-muted border border-line leading-relaxed">{cell}</td>
               ))}
             </tr>
           ))}
@@ -44,9 +44,9 @@ function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
 export default function OrbitalDataCentersEngineeringPost() {
   return (
     <>
-      <div className="border border-zinc-700 rounded-xl p-6 bg-zinc-900/30 mb-10">
-        <div className="text-white/30 text-[10px] font-mono tracking-[0.3em] uppercase mb-3">TL;DR</div>
-        <ul className="space-y-2 text-zinc-400 text-sm leading-relaxed">
+      <div className="border border-line p-6 bg-surface mb-10">
+        <div className="text-faint text-xs mb-3">Summary</div>
+        <ul className="space-y-2 text-muted text-sm leading-relaxed">
           <li>Terrestrial hyperscale data centers face serious physical limitations: power grid constraints, cooling water depletion, land use, and grid instability.</li>
           <li>Orbital data centers offer continuous 24/7 solar energy at over 95% capacity factor and passive radiative cooling with a PUE of 1.01–1.05, compared to 1.2–2.0 on the ground.</li>
           <li>Hardware is already in orbit. Starcloud flew an H100 in November 2025. NVIDIA released a dedicated space chip in March 2026. Google and SpaceX are in active talks. China has been operating AI compute in orbit for over 1,000 days.</li>
@@ -470,7 +470,7 @@ export default function OrbitalDataCentersEngineeringPost() {
       </p>
 
       <h2 id="sources">Sources</h2>
-      <ol className="text-zinc-600 text-xs space-y-1 font-mono">
+      <ol className="text-faint text-xs space-y-1 font-mono">
         <li>CNBC, &quot;Nvidia-Backed Starcloud Trains First AI Model in Space, Orbital Data Centers&quot; (December 10, 2025)</li>
         <li>TechCrunch, &quot;Starcloud Raises $170 Million Series A to Build Data Centers in Space&quot; (March 30, 2026)</li>
         <li>SpaceNews, &quot;Starcloud Achieves Unicorn Status With $170 Million Raise for Orbital Data Centers&quot; (March 2026)</li>

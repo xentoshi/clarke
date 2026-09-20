@@ -1,19 +1,37 @@
 @import "tailwindcss";
 
 :root {
-  --background: #060608;
-  --foreground: #fafafa;
+  --background: #f5f4ef;
+  --foreground: #141413;
+  --surface: #ffffff;
+  --muted: #5c5b56;
+  --faint: #8a8983;
+  --line: #e2e0d8;
+  --line-strong: #cfcdc4;
+  --verified: #1a7a4c;
+  --stale: #a15c07;
+  --danger: #b42318;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-canvas: var(--background);
+  --color-ink: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-verified: var(--verified);
+  --color-stale: var(--stale);
+  --color-danger: var(--danger);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-manrope), 'Manrope', system-ui, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -22,20 +40,21 @@ code, .font-mono, [class*="font-mono"] {
 }
 
 ::selection {
-  background: #52525b;
+  background: #ddd9cc;
+  color: var(--foreground);
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
-  border-radius: 3px;
+  background: var(--line-strong);
+  border-radius: 4px;
 }
 
 @keyframes ticker {
@@ -62,29 +81,26 @@ code, .font-mono, [class*="font-mono"] {
 
 /* Blog prose */
 .prose-clarke p {
-  color: #a1a1aa;
-  font-size: 0.9375rem;
-  line-height: 1.8;
+  color: var(--muted);
+  font-size: 1.0625rem;
+  line-height: 1.75;
   margin-bottom: 1.5rem;
 }
 
 .prose-clarke h2 {
-  color: #ffffff;
-  font-size: 1.125rem;
-  font-weight: 700;
+  color: var(--foreground);
+  font-size: 1.375rem;
+  font-weight: 600;
   margin-top: 3rem;
-  margin-bottom: 0.75rem;
-  letter-spacing: -0.01em;
+  margin-bottom: 0.85rem;
+  letter-spacing: -0.02em;
 }
 
 .prose-clarke h3 {
-  color: rgba(255,255,255,0.7);
-  font-size: 0.8125rem;
+  color: var(--foreground);
+  font-size: 1.0625rem;
   font-weight: 600;
-  font-family: var(--font-ibm-mono), monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  margin-top: 2.5rem;
+  margin-top: 2.25rem;
   margin-bottom: 0.5rem;
 }
 
@@ -95,41 +111,38 @@ code, .font-mono, [class*="font-mono"] {
 }
 
 .prose-clarke ul li {
-  color: #71717a;
-  font-size: 0.875rem;
+  color: var(--muted);
+  font-size: 1rem;
   line-height: 1.7;
   padding-left: 1.25rem;
   position: relative;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.35rem;
 }
 
 .prose-clarke ul li::before {
   content: "·";
   position: absolute;
   left: 0;
-  color: rgba(255,255,255,0.2);
+  color: var(--faint);
 }
 
 .prose-clarke .layer-block {
-  border-left: 1px solid rgba(255,255,255,0.08);
+  border-left: 1px solid var(--line);
   padding-left: 1.5rem;
   margin-top: 2rem;
   margin-bottom: 2rem;
 }
 
 .prose-clarke .layer-number {
-  font-family: var(--font-ibm-mono), monospace;
-  font-size: 0.6875rem;
-  color: rgba(255,255,255,0.2);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  font-size: 0.8125rem;
+  color: var(--faint);
   margin-bottom: 0.25rem;
 }
 
 .prose-clarke .layer-title {
-  color: #ffffff;
-  font-size: 1rem;
-  font-weight: 700;
+  color: var(--foreground);
+  font-size: 1.125rem;
+  font-weight: 600;
   margin-bottom: 0.75rem;
 }
 
@@ -141,22 +154,21 @@ code, .font-mono, [class*="font-mono"] {
 }
 
 .prose-clarke .company-tag {
-  font-family: var(--font-ibm-mono), monospace;
-  font-size: 0.6875rem;
-  color: rgba(255,255,255,0.3);
-  border: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.75rem;
+  color: var(--muted);
+  border: 1px solid var(--line);
   padding: 0.2rem 0.5rem;
   border-radius: 2px;
 }
 
 .prose-clarke .dep-graph {
-  background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 4px;
   padding: 1.5rem;
   font-family: var(--font-ibm-mono), monospace;
   font-size: 0.75rem;
-  color: rgba(255,255,255,0.35);
+  color: var(--muted);
   line-height: 1.9;
   margin: 2rem 0;
   white-space: pre;
@@ -169,38 +181,36 @@ code, .font-mono, [class*="font-mono"] {
 }
 
 .prose-docs p {
-  color: #a1a1aa;
-  font-size: 0.9375rem;
+  color: var(--muted);
+  font-size: 1.0625rem;
   line-height: 1.75;
   margin-bottom: 1.25rem;
 }
 
 .prose-docs h1 {
-  color: #ffffff;
-  font-size: 1.5rem;
-  font-weight: 700;
+  color: var(--foreground);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   margin-top: 2.5rem;
   margin-bottom: 0.75rem;
 }
 
 .prose-docs h2 {
-  color: #ffffff;
-  font-size: 1.125rem;
-  font-weight: 700;
+  color: var(--foreground);
+  font-size: 1.25rem;
+  font-weight: 600;
   margin-top: 2.75rem;
   margin-bottom: 0.75rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  letter-spacing: -0.01em;
+  border-bottom: 1px solid var(--line);
+  letter-spacing: -0.02em;
 }
 
 .prose-docs h3 {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.8125rem;
+  color: var(--foreground);
+  font-size: 1rem;
   font-weight: 600;
-  font-family: var(--font-ibm-mono), monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
   margin-top: 2rem;
   margin-bottom: 0.5rem;
 }
@@ -209,8 +219,8 @@ code, .font-mono, [class*="font-mono"] {
 .prose-docs ol {
   margin: 0 0 1.25rem;
   padding-left: 1.4rem;
-  color: #a1a1aa;
-  font-size: 0.875rem;
+  color: var(--muted);
+  font-size: 1rem;
   line-height: 1.7;
 }
 
@@ -223,11 +233,11 @@ code, .font-mono, [class*="font-mono"] {
 }
 
 .prose-docs li::marker {
-  color: rgba(255, 255, 255, 0.28);
+  color: var(--faint);
 }
 
 .prose-docs li {
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.4rem;
 }
 
 .prose-docs li > p {
@@ -241,34 +251,34 @@ code, .font-mono, [class*="font-mono"] {
 }
 
 .prose-docs strong {
-  color: #e4e4e7;
+  color: var(--foreground);
   font-weight: 600;
 }
 
 .prose-docs a {
-  color: #d4d4d8;
+  color: var(--foreground);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .prose-docs a:hover {
-  color: #ffffff;
+  color: var(--muted);
 }
 
 .prose-docs code {
   font-family: var(--font-ibm-mono), 'IBM Plex Mono', ui-monospace, monospace;
   font-size: 0.8125em;
-  color: #d4d4d8;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--foreground);
+  background: #eceae3;
+  border: 1px solid var(--line);
   padding: 0.1em 0.35em;
   border-radius: 2px;
 }
 
 .prose-docs pre {
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
   padding: 1rem 1.15rem;
   margin: 1.5rem 0;
   overflow-x: auto;
@@ -278,54 +288,52 @@ code, .font-mono, [class*="font-mono"] {
   background: transparent;
   border: 0;
   padding: 0;
-  color: #a1a1aa;
-  font-size: 0.75rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
   line-height: 1.7;
 }
 
 .prose-docs blockquote {
-  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  border-left: 2px solid var(--line-strong);
   padding: 0.15rem 0 0.15rem 1.15rem;
   margin: 1.5rem 0;
 }
 
 .prose-docs blockquote p {
-  color: #d4d4d8;
+  color: var(--foreground);
   margin-bottom: 0;
 }
 
 .prose-docs .table-wrap {
   overflow-x: auto;
   margin: 1.5rem 0;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 2px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
 }
 
 .prose-docs table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.55;
 }
 
 .prose-docs th {
   text-align: left;
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 0.6875rem;
-  font-family: var(--font-ibm-mono), 'IBM Plex Mono', ui-monospace, monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  color: var(--faint);
+  font-size: 0.75rem;
   font-weight: 500;
-  padding: 0.65rem 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--background);
   white-space: nowrap;
 }
 
 .prose-docs td {
-  color: #a1a1aa;
-  padding: 0.65rem 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid var(--line);
   vertical-align: top;
 }
 
@@ -338,7 +346,7 @@ code, .font-mono, [class*="font-mono"] {
   font-weight: 500;
 }
 
-.prose-docs .docs-mark-v { color: #34d399; }
-.prose-docs .docs-mark-m { color: #38bdf8; }
-.prose-docs .docs-mark-s { color: #fbbf24; }
-.prose-docs .docs-mark-b { color: #fb7185; }
+.prose-docs .docs-mark-v { color: var(--verified); }
+.prose-docs .docs-mark-m { color: var(--foreground); }
+.prose-docs .docs-mark-s { color: var(--stale); }
+.prose-docs .docs-mark-b { color: var(--danger); }

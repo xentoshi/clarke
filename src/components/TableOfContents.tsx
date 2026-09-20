@@ -30,7 +30,7 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
 
   return (
     <nav className="space-y-0.5">
-      <div className="text-[10px] font-mono text-white/20 tracking-[0.2em] uppercase mb-4">Contents</div>
+      <div className="text-xs text-faint mb-4">Contents</div>
       {items.map((item) => (
         <a
           key={item.id}
@@ -39,12 +39,12 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
             e.preventDefault();
             document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
           }}
-          className={`block py-1 text-xs leading-snug transition-colors ${
+          className={`block py-1 text-sm leading-snug transition-colors ${
             item.sub ? "pl-3" : ""
           } ${
             activeId === item.id
-              ? "text-white"
-              : "text-white/25 hover:text-white/60"
+              ? "text-ink"
+              : "text-faint hover:text-ink"
           }`}
         >
           {item.label}

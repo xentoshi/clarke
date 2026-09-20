@@ -22,7 +22,7 @@ const sections = [
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
     <section id={id} className="mb-16 scroll-mt-20">
-      <h2 className="text-white font-bold text-lg mb-6 pb-3 border-b border-zinc-800">{title}</h2>
+      <h2 className="text-ink font-bold text-lg mb-6 pb-3 border-b border-line">{title}</h2>
       {children}
     </section>
   );
@@ -129,7 +129,7 @@ export default function AboutPage() {
 
       {/* What Clarke is */}
       <div className="max-w-3xl mb-10">
-        <p className="text-zinc-300 text-lg leading-relaxed mb-5">
+        <p className="text-ink text-lg leading-relaxed mb-5">
           Clarke is the data infrastructure for orbital real estate. Positions in geostationary orbit
           are licensed by the ITU, sublicensed to operators, and increasingly fought over as the belt
           fills up, but the market trading on them is still negotiated deal by deal, with no public record
@@ -137,7 +137,7 @@ export default function AboutPage() {
           data into a structured registry: what&apos;s at a position, who holds it, how congested it is,
           and what it&apos;s worth.
         </p>
-        <p className="text-zinc-500 text-base leading-relaxed">
+        <p className="text-muted text-base leading-relaxed">
           Orbital infrastructure changes hands for hundreds of billions of dollars through satellite
           acquisitions, spectrum leasing, fleet consolidations, and regulatory transfers, yet there is no
           unified data layer, no public pricing index, and no canonical registry of ownership, congestion,
@@ -154,44 +154,44 @@ export default function AboutPage() {
           { title: "Congestion", body: "How contested an arc is, scored 0-100 from live density and operator overlap." },
           { title: "Valuation", body: "What a position implies in dollar terms, modeled from disclosed M&A and analyst comps." },
         ].map((p) => (
-          <div key={p.title} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-            <div className="text-white text-sm font-semibold mb-2">{p.title}</div>
-            <p className="text-zinc-500 text-xs leading-relaxed">{p.body}</p>
+          <div key={p.title} className="border border-line rounded-xl p-5 bg-surface">
+            <div className="text-ink text-sm font-semibold mb-2">{p.title}</div>
+            <p className="text-muted text-xs leading-relaxed">{p.body}</p>
           </div>
         ))}
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-px bg-white/[0.04] rounded-xl overflow-hidden mb-10 max-w-3xl">
+      <div className="grid grid-cols-3 gap-px bg-line rounded-xl overflow-hidden mb-10 max-w-3xl">
         {[
           { value: `${geoCount}`, label: "GEO satellites tracked (registry)" },
           { value: `${positionCount}`, label: "Positions tracked" },
           { value: `${fccCount}`, label: "FCC authorizations" },
         ].map((s) => (
-          <div key={s.label} className="bg-zinc-950 px-5 py-5 text-center">
-            <div className="text-white font-bold font-mono text-xl mb-1">{s.value}</div>
-            <div className="text-white/25 text-[10px] font-mono tracking-widest uppercase leading-tight">{s.label}</div>
+          <div key={s.label} className="bg-surface px-5 py-5 text-center">
+            <div className="text-ink font-bold font-mono text-xl mb-1">{s.value}</div>
+            <div className="text-faint text-xs leading-tight">{s.label}</div>
           </div>
         ))}
       </div>
 
       <div className="mb-6 max-w-3xl">
         <Link href="/orbital"
-          className="inline-flex items-center gap-2 bg-white text-black rounded-lg px-5 py-2.5 text-sm font-bold hover:bg-zinc-200 transition-colors">
+          className="inline-flex items-center gap-2 bg-ink text-canvas rounded-lg px-5 py-2.5 text-sm font-bold hover:bg-ink/85 transition-colors">
           Explore the registry →
         </Link>
       </div>
 
-      <p className="text-zinc-600 text-sm leading-relaxed mb-16 max-w-3xl">
+      <p className="text-faint text-sm leading-relaxed mb-16 max-w-3xl">
         Named after Arthur C. Clarke, who first described geostationary orbit in 1945. The Clarke Belt,
         the ring of satellites 35,786 km above the equator, is named in his honor.
       </p>
 
       {/* Mobile nav — horizontal scroll */}
-      <div className="lg:hidden flex gap-2 overflow-x-auto pb-3 mb-6 border-b border-zinc-800 scrollbar-none">
+      <div className="lg:hidden flex gap-2 overflow-x-auto pb-3 mb-6 border-b border-line scrollbar-none">
         {sections.map((s) => (
           <a key={s.id} href={`#${s.id}`}
-            className="shrink-0 text-zinc-500 text-xs hover:text-white transition-colors px-3 py-1.5 border border-zinc-800 rounded-full whitespace-nowrap">
+            className="shrink-0 text-muted text-xs hover:text-ink transition-colors px-3 py-1.5 border border-line rounded-full whitespace-nowrap">
             {s.label}
           </a>
         ))}
@@ -202,7 +202,7 @@ export default function AboutPage() {
           <div className="sticky top-20 space-y-1">
             {sections.map((s) => (
               <a key={s.id} href={`#${s.id}`}
-                className="block text-zinc-500 text-xs hover:text-white transition-colors py-1.5 border-l border-zinc-800 pl-3 hover:border-zinc-500">
+                className="block text-muted text-xs hover:text-ink transition-colors py-1.5 border-l border-line pl-3 hover:border-ink">
                 {s.label}
               </a>
             ))}
@@ -212,7 +212,7 @@ export default function AboutPage() {
         <div className="flex-1 min-w-0">
 
           <Section id="why-now" title="Why Now?">
-            <p className="text-zinc-400 text-sm leading-relaxed mb-6">
+            <p className="text-muted text-sm leading-relaxed mb-6">
               The geostationary belt is a fixed resource, and the market built on top of it is entering
               a period of forced clarity. Consolidation, spectrum pressure from low-orbit constellations,
               and rising scrutiny of unused filings are pushing an opaque asset class toward the kind of
@@ -225,20 +225,20 @@ export default function AboutPage() {
                 { title: "Filed is not occupied", body: "The ITU found that 45% of investigated satellite networks showed no proof of being brought into use, a practice known as slot squatting. As pressure builds to reclaim underused positions for real deployment, the gap between what is filed on paper and what is actually operating in orbit becomes the question regulators, operators, and acquirers all need answered." },
                 { title: "No public data layer exists yet", body: "Hundreds of billions of dollars in orbital infrastructure change hands through acquisitions, spectrum leases, and fleet consolidations, with no unified registry, no public pricing index, and no canonical record of who holds what. Real estate, terrestrial spectrum, and even domain names each converged on public registries once enough value moved through them. Orbital slots are already trading at that scale; they are just missing the reference layer." },
               ].map((item) => (
-                <div key={item.title} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-                  <div className="text-white text-sm font-semibold mb-2">{item.title}</div>
-                  <p className="text-zinc-500 text-xs leading-relaxed">{item.body}</p>
+                <div key={item.title} className="border border-line rounded-xl p-5 bg-surface">
+                  <div className="text-ink text-sm font-semibold mb-2">{item.title}</div>
+                  <p className="text-muted text-xs leading-relaxed">{item.body}</p>
                 </div>
               ))}
             </div>
           </Section>
 
           <Section id="agents" title="Agents API">
-            <p className="text-zinc-500 text-sm leading-relaxed mb-6">
+            <p className="text-muted text-sm leading-relaxed mb-6">
               Clarke exposes a read-only HTTP API and a Model Context Protocol server so autonomous agents and LLM-based assistants can query the registry without scraping HTML. The same operations layer backs both transports, so HTTP responses and MCP tool results stay in sync. The public agents API requires no authentication. Slot Terminal routes require a Pro seat or API key.
             </p>
 
-            <h3 className="text-white text-sm font-semibold mb-3">HTTP endpoints</h3>
+            <h3 className="text-ink text-sm font-semibold mb-3">HTTP endpoints</h3>
             <div className="space-y-2 mb-6">
               {[
                 { path: "GET /api/v1/agents/slots", desc: "All orbital slots (curated + UCS-derived), merged and sorted by longitude, each with a congestion score and heuristic valuation." },
@@ -248,19 +248,19 @@ export default function AboutPage() {
                 { path: "GET /api/v1/terminal/slots/{slug}", desc: "Pro: Slot Terminal model — TLE-primary occupancy, recorded FCC layers, valuation v0. Simulated book / ITU stubs are labeled experimental, not the default view." },
                 { path: "GET /api/v1/terminal/valuations/{slug}/history", desc: "Pro: daily valuation snapshots (persisted or model backfill). Not trade prints." },
               ].map((e) => (
-                <div key={e.path} className="border border-zinc-800 rounded-lg px-4 py-3 bg-zinc-900/5">
-                  <div className="text-white font-mono text-xs mb-1">{e.path}</div>
-                  <div className="text-zinc-500 text-xs leading-relaxed">{e.desc}</div>
+                <div key={e.path} className="border border-line rounded-lg px-4 py-3 bg-surface">
+                  <div className="text-ink font-mono text-xs mb-1">{e.path}</div>
+                  <div className="text-muted text-xs leading-relaxed">{e.desc}</div>
                 </div>
               ))}
             </div>
 
-            <h3 className="text-white text-sm font-semibold mb-3">Response shape</h3>
-            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10 mb-6">
-              <p className="text-zinc-500 text-xs leading-relaxed mb-3">
-                Every successful response is a JSON envelope with a versioned <span className="font-mono text-zinc-300">data</span> field and a <span className="font-mono text-zinc-300">meta</span> object containing the API version, generation timestamp, and (for list endpoints) the row count. Responses carry <span className="font-mono text-zinc-300">ETag</span> and <span className="font-mono text-zinc-300">Cache-Control: public, s-maxage=300, stale-while-revalidate=60</span> headers; agents are expected to send <span className="font-mono text-zinc-300">If-None-Match</span> for conditional requests.
+            <h3 className="text-ink text-sm font-semibold mb-3">Response shape</h3>
+            <div className="border border-line rounded-xl p-5 bg-surface mb-6">
+              <p className="text-muted text-xs leading-relaxed mb-3">
+                Every successful response is a JSON envelope with a versioned <span className="font-mono text-ink">data</span> field and a <span className="font-mono text-ink">meta</span> object containing the API version, generation timestamp, and (for list endpoints) the row count. Responses carry <span className="font-mono text-ink">ETag</span> and <span className="font-mono text-ink">Cache-Control: public, s-maxage=300, stale-while-revalidate=60</span> headers; agents are expected to send <span className="font-mono text-ink">If-None-Match</span> for conditional requests.
               </p>
-              <pre className="text-zinc-400 text-xs font-mono bg-black/40 border border-zinc-800/60 rounded p-3 overflow-x-auto">{`{
+              <pre className="text-muted text-xs font-mono bg-canvas border border-line rounded p-3 overflow-x-auto">{`{
   "data": { ... },
   "meta": {
     "version": "1.0",
@@ -270,27 +270,27 @@ export default function AboutPage() {
 }`}</pre>
             </div>
 
-            <h3 className="text-white text-sm font-semibold mb-3">Rate limits and validation</h3>
+            <h3 className="text-ink text-sm font-semibold mb-3">Rate limits and validation</h3>
             <div className="space-y-3 mb-6">
               {[
-                { label: "RATE LIMIT", body: "Public agents API: 60 requests per minute per IP. Pro Terminal API: 300/min per key or session. A 429 response includes a Retry-After header in seconds." },
-                { label: "INPUT VALIDATION", body: "All path slugs are validated against /^[a-z0-9-]+$/ and query parameters against per-field regex caps. Path traversal attempts and injection patterns return 400. Tickers are restricted to /^[A-Z0-9.-]{1,10}$/." },
+                { label: "Rate limit", body: "Public agents API: 60 requests per minute per IP. Pro Terminal API: 300/min per key or session. A 429 response includes a Retry-After header in seconds." },
+                { label: "Input validation", body: "All path slugs are validated against /^[a-z0-9-]+$/ and query parameters against per-field regex caps. Path traversal attempts and injection patterns return 400. Tickers are restricted to /^[A-Z0-9.-]{1,10}$/." },
                 { label: "CORS", body: "All routes allow cross-origin reads (Access-Control-Allow-Origin: *) with GET and OPTIONS (Terminal also POST for keys). Preflight responses cache for 24 hours. Pro routes accept Authorization: Bearer or X-Clarke-Key." },
               ].map((s) => (
-                <div key={s.label} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-                  <div className="text-xs font-mono text-zinc-600 mb-3">{`// ${s.label}`}</div>
-                  <p className="text-zinc-500 text-xs leading-relaxed">{s.body}</p>
+                <div key={s.label} className="border border-line rounded-xl p-5 bg-surface">
+                  <div className="text-xs text-faint mb-3">{s.label}</div>
+                  <p className="text-muted text-xs leading-relaxed">{s.body}</p>
                 </div>
               ))}
             </div>
 
-            <h3 className="text-white text-sm font-semibold mb-3">Model Context Protocol (MCP) server</h3>
-            <p className="text-zinc-500 text-sm leading-relaxed mb-4">
+            <h3 className="text-ink text-sm font-semibold mb-3">Model Context Protocol (MCP) server</h3>
+            <p className="text-muted text-sm leading-relaxed mb-4">
               The same operations are exposed as MCP tools so Claude Code, Cursor, and any other MCP-compatible client can query Clarke in plain English. The server runs locally over stdio and reads directly from the SQLite database; no network round-trip to Clarke is involved beyond what the host process does on its own.
             </p>
-            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10 mb-6">
-              <div className="text-xs font-mono text-zinc-600 mb-3">{"// MCP CONFIG"}</div>
-              <pre className="text-zinc-400 text-xs font-mono bg-black/40 border border-zinc-800/60 rounded p-3 overflow-x-auto">{`{
+            <div className="border border-line rounded-xl p-5 bg-surface mb-6">
+              <div className="text-xs text-faint mb-3">MCP config</div>
+              <pre className="text-muted text-xs font-mono bg-canvas border border-line rounded p-3 overflow-x-auto">{`{
   "mcpServers": {
     "clarke": {
       "command": "npm",
@@ -299,43 +299,43 @@ export default function AboutPage() {
     }
   }
 }`}</pre>
-              <p className="text-zinc-500 text-xs leading-relaxed mt-3">
+              <p className="text-muted text-xs leading-relaxed mt-3">
                 Available tools: <span className="font-mono">clarke_list_slots</span>, <span className="font-mono">clarke_get_slot</span>, <span className="font-mono">clarke_get_terminal</span>, <span className="font-mono">clarke_list_satellites</span>.
               </p>
             </div>
 
-            <h3 className="text-white text-sm font-semibold mb-3">Scope and roadmap</h3>
-            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-              <p className="text-zinc-500 text-xs leading-relaxed">
+            <h3 className="text-ink text-sm font-semibold mb-3">Scope and roadmap</h3>
+            <div className="border border-line rounded-xl p-5 bg-surface">
+              <p className="text-muted text-xs leading-relaxed">
                 The current surface is read-only. Event streams and metered access for high-volume agent consumers are on the roadmap but not implemented.
               </p>
             </div>
           </Section>
 
           <Section id="orbital-slots" title="Orbital Slots">
-            <div className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10 mb-6">
-              <p className="text-zinc-400 text-sm leading-relaxed mb-3">
-                Geostationary orbit sits exactly 35,786 km above the equator, the altitude at which a satellite&apos;s orbital period matches Earth&apos;s rotation. From the ground it appears stationary. The International Telecommunication Union manages this ring globally, allocating roughly 1,800 positions to member states who sublicense to private operators. See <a href="#why-now" className="text-zinc-300 hover:text-white underline">Why Now?</a> for how scarce that ring actually is in practice.
+            <div className="border border-line rounded-xl p-5 bg-surface mb-6">
+              <p className="text-muted text-sm leading-relaxed mb-3">
+                Geostationary orbit sits exactly 35,786 km above the equator, the altitude at which a satellite&apos;s orbital period matches Earth&apos;s rotation. From the ground it appears stationary. The International Telecommunication Union manages this ring globally, allocating roughly 1,800 positions to member states who sublicense to private operators. See <a href="#why-now" className="text-ink hover:text-ink underline">Why Now?</a> for how scarce that ring actually is in practice.
               </p>
-              <p className="text-zinc-500 text-xs leading-relaxed">Source: Aerospace Corporation, &quot;Orbital Slots for Everyone?&quot; (2018).</p>
+              <p className="text-muted text-xs leading-relaxed">Source: Aerospace Corporation, &quot;Orbital Slots for Everyone?&quot; (2018).</p>
             </div>
 
-            <h3 className="text-white text-sm font-semibold mb-3">Status definitions</h3>
+            <h3 className="text-ink text-sm font-semibold mb-3">Status definitions</h3>
             <div className="space-y-2 mb-6">
               {[
-                { status: "Active",   color: "text-emerald-400 border-emerald-800 bg-emerald-950", desc: "Satellite confirmed operational. Verified against UCS database and operator disclosures." },
-                { status: "Filed",    color: "text-blue-400 border-blue-800 bg-blue-950",          desc: "ITU filing submitted and accepted but satellite not yet launched or operational." },
-                { status: "Squatted", color: "text-amber-400 border-amber-800 bg-amber-950",       desc: "Filing exists but slot appears underutilized or not actively serving its licensed coverage area." },
-                { status: "Inactive", color: "text-zinc-500 border-zinc-700 bg-zinc-900",          desc: "Satellite decommissioned. Slot rights may still be held by the operator." },
+                { status: "Active",   color: "text-verified border-verified/30 bg-verified/8", desc: "Satellite confirmed operational. Verified against UCS database and operator disclosures." },
+                { status: "Filed",    color: "text-ink border-line bg-canvas",          desc: "ITU filing submitted and accepted but satellite not yet launched or operational." },
+                { status: "Squatted", color: "text-stale border-stale/35 bg-stale/8",       desc: "Filing exists but slot appears underutilized or not actively serving its licensed coverage area." },
+                { status: "Inactive", color: "text-muted border-line bg-canvas",          desc: "Satellite decommissioned. Slot rights may still be held by the operator." },
               ].map((s) => (
                 <div key={s.status} className="flex items-start gap-3">
                   <span className={`text-xs px-1.5 py-0.5 rounded border font-medium shrink-0 ${s.color}`}>{s.status}</span>
-                  <p className="text-zinc-500 text-xs leading-relaxed">{s.desc}</p>
+                  <p className="text-muted text-xs leading-relaxed">{s.desc}</p>
                 </div>
               ))}
             </div>
 
-            <h3 className="text-white text-sm font-semibold mb-3">Frequency bands</h3>
+            <h3 className="text-ink text-sm font-semibold mb-3">Frequency bands</h3>
             <div className="space-y-1.5">
               {[
                 { band: "C",  range: "3.7–4.2 GHz",  desc: "Legacy cable TV distribution. Large dishes, rain-resistant. Widely used in Africa, Asia, and Latin America." },
@@ -343,17 +343,17 @@ export default function AboutPage() {
                 { band: "Ka", range: "26.5–40 GHz",   desc: "High-throughput broadband. Gigabit-class capacity per satellite but susceptible to rain fade." },
                 { band: "X",  range: "8–12 GHz",      desc: "Military and government communications. Restricted to state and defense use in most jurisdictions." },
               ].map((b) => (
-                <div key={b.band} className="border border-zinc-800 rounded-lg px-4 py-2.5 flex items-start gap-4 bg-zinc-900/5">
-                  <span className="text-white font-bold font-mono text-sm w-6 shrink-0">{b.band}</span>
-                  <span className="text-zinc-500 text-xs font-mono w-36 shrink-0">{b.range}</span>
-                  <span className="text-zinc-500 text-xs leading-relaxed">{b.desc}</span>
+                <div key={b.band} className="border border-line rounded-lg px-4 py-2.5 flex items-start gap-4 bg-surface">
+                  <span className="text-ink font-bold font-mono text-sm w-6 shrink-0">{b.band}</span>
+                  <span className="text-muted text-xs font-mono w-36 shrink-0">{b.range}</span>
+                  <span className="text-muted text-xs leading-relaxed">{b.desc}</span>
                 </div>
               ))}
             </div>
           </Section>
 
           <Section id="data-sources" title="Data Sources">
-            <p className="text-zinc-400 text-sm leading-relaxed mb-8">
+            <p className="text-muted text-sm leading-relaxed mb-8">
               The orbital asset market is opaque, fragmented, and priced through information asymmetry.
               The data to change that is almost entirely public. It is just scattered across a dozen
               institutions, each with a different format, cadence, and level of accessibility.
@@ -363,20 +363,20 @@ export default function AboutPage() {
 
             {freshness.length > 0 && (
               <div className="mb-10">
-                <div className="text-white/30 text-[11px] font-mono tracking-[0.3em] uppercase mb-4">Live data freshness</div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/[0.04] border border-white/[0.04]">
+                <div className="text-faint text-xs mb-4">Live data freshness</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line border border-line">
                   {freshness.map((f) => (
-                    <div key={f.source} className="bg-zinc-950 p-4">
+                    <div key={f.source} className="bg-surface p-4">
                       <div className="flex items-baseline justify-between gap-3 mb-1">
-                        <span className="text-white text-sm font-bold">{f.source}</span>
-                        <span className="text-emerald-400/90 font-mono text-xs tabular-nums">{f.rowCount.toLocaleString()} rows</span>
+                        <span className="text-ink text-sm font-bold">{f.source}</span>
+                        <span className="text-verified font-mono text-xs tabular-nums">{f.rowCount.toLocaleString()} rows</span>
                       </div>
-                      <div className="text-white/30 text-xs font-mono">
+                      <div className="text-faint text-xs">
                         Parsed {formatDate(f.lastRun)}
-                        {ageLabel(f.ageDays) && <span className="text-white/20"> · ingest {ageLabel(f.ageDays)}</span>}
+                        {ageLabel(f.ageDays) && <span className="text-faint"> · ingest {ageLabel(f.ageDays)}</span>}
                       </div>
                       {(f.fileVintage || f.sourceAsOf || f.tleEpochMax) && (
-                        <div className={`text-xs font-mono mt-1 ${f.stale ? "text-amber-400/90" : "text-zinc-500"}`}>
+                        <div className={`text-xs font-mono mt-1 ${f.stale ? "text-stale" : "text-muted"}`}>
                           {f.source === "Space-Track TLE" && f.tleEpochMax
                             ? `TLE epoch ${f.tleEpochMin && f.tleEpochMin !== f.tleEpochMax ? `${f.tleEpochMin}–${f.tleEpochMax}` : f.tleEpochMax}`
                             : `As-of ${f.sourceAsOf || f.fileVintage}`}
@@ -390,9 +390,9 @@ export default function AboutPage() {
               </div>
             )}
 
-            <div className="space-y-px bg-white/[0.04]">
+            <div className="space-y-px bg-line">
               {sources.map((s) => (
-                <div key={s.abbr} className="bg-zinc-950 p-6 sm:p-8">
+                <div key={s.abbr} className="bg-surface p-6 sm:p-8">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
                     <div>
                       <div className="flex items-center gap-2.5 mb-1">
@@ -400,24 +400,24 @@ export default function AboutPage() {
                           href={s.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-white font-bold text-base hover:text-white/70 transition-colors"
+                          className="text-ink font-bold text-base hover:text-muted transition-colors"
                         >
                           {s.name} ↗
                         </a>
                         {s.status === "live" ? (
-                          <span className="text-[10px] font-mono text-emerald-400 border border-emerald-800/60 bg-emerald-950/40 px-1.5 py-0.5 rounded leading-none">Live</span>
+                          <span className="text-[10px] font-mono text-verified border border-verified/30 bg-verified/8 px-1.5 py-0.5 rounded leading-none">Live</span>
                         ) : (
-                          <span className="text-[10px] font-mono text-zinc-600 border border-zinc-800 px-1.5 py-0.5 rounded leading-none">Planned</span>
+                          <span className="text-[10px] font-mono text-faint border border-line px-1.5 py-0.5 rounded leading-none">Planned</span>
                         )}
                       </div>
-                      <div className="text-white/30 text-xs font-mono">{s.abbr}</div>
+                      <div className="text-faint text-xs">{s.abbr}</div>
                     </div>
-                    <div className="text-[10px] font-mono text-white/20 tracking-widest uppercase shrink-0 pt-1">
+                    <div className="text-faint text-xs shrink-0 pt-1">
                       {s.cadence}
                     </div>
                   </div>
-                  <p className="text-zinc-500 text-sm leading-relaxed mb-3">{s.what}</p>
-                  <p className="text-zinc-400 text-sm leading-relaxed border-l border-white/[0.08] pl-4">
+                  <p className="text-muted text-sm leading-relaxed mb-3">{s.what}</p>
+                  <p className="text-muted text-sm leading-relaxed border-l border-line pl-4">
                     {s.why}
                   </p>
                 </div>
@@ -434,9 +434,9 @@ export default function AboutPage() {
                 { title: "Status labels", body: "Position status labels in the registry (Active, Filed, Squatted, Inactive) are derived from the UCS classification, which marks satellites as active based on reported operational status at the time of the snapshot. The UCS does not independently verify operational status in real time, and updates follow its twice-yearly cadence, so decommissions and new launches typically take up to six months to show up after they are publicly announced." },
                 { title: "SEC financial data currency", body: "Viasat and SES both have current SEC financial data (Viasat through its most recent 10-Q, SES through its FY2025 20-F). Telesat's structured XBRL data caps at fiscal year 2021, the SEC's system has no more recent tagged financial facts for the entity on file, despite Telesat's ongoing 6-K filings since then. Treat Telesat's revenue and income figures as historical reference points, not current financials." },
               ].map((item) => (
-                <div key={item.title} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-                  <div className="text-white text-sm font-semibold mb-2">{item.title}</div>
-                  <p className="text-zinc-500 text-xs leading-relaxed">{item.body}</p>
+                <div key={item.title} className="border border-line rounded-xl p-5 bg-surface">
+                  <div className="text-ink text-sm font-semibold mb-2">{item.title}</div>
+                  <p className="text-muted text-xs leading-relaxed">{item.body}</p>
                 </div>
               ))}
             </div>
@@ -451,21 +451,21 @@ export default function AboutPage() {
                 { title: "Congestion scoring", body: "The congestion score is a normalized 0 to 100 index blending three signals at a position: arc density (GEO satellites whose occupancy longitude is within 2 degrees), direct co-location (within 0.4 degrees), and contention (distinct operators). Occupancy longitude is TLE-primary. Density contributes up to 50 points, co-location up to 30, and operator contention up to 20. A position packed by a single operator scores lower on contention than an equally dense arc contested by many operators, because multi-operator arcs carry a heavier interference-coordination burden. The tiers are Sparse for 0 to 14, Low for 15 to 34, Moderate for 35 to 54, High for 55 to 74, and Critical for 75 to 100. Scores reflect tracked hardware, not filed ITU positions, so they understate coordination pressure in arcs with heavy filing or squatting activity." },
                 { title: "Valuation model v0", body: "Each position carries a heuristic implied valuation, expressed as a range rather than a point figure because it is derived from public data, not transaction records. A $30M baseline is multiplied by arc desirability, a GDP/population coverage proxy by longitude band, occupancy (co-located satellites), remaining-life quality from UCS lifetime fields, operator tier, spectrum (when known), scarcity (congestion score), and FCC/license plus paper-vs-brought-into-use signals. Every factor and its multiplier is shown on the Slot Terminal (Pro) so the estimate can be inspected. Confidence is high for curated positions, medium for active positions with a known operator, and low for sparsely-attributed UCS-derived entries; the range widens as confidence falls. History is a seeded 30-day model path in data/terminal.db, not observed trades. This is an analytical model, not an appraisal, a quote, or investment advice." },
               ].map((item) => (
-                <div key={item.title} className="border border-zinc-800 rounded-xl p-5 bg-zinc-900/10">
-                  <div className="text-white text-sm font-semibold mb-2">{item.title}</div>
-                  <p className="text-zinc-500 text-xs leading-relaxed">{item.body}</p>
+                <div key={item.title} className="border border-line rounded-xl p-5 bg-surface">
+                  <div className="text-ink text-sm font-semibold mb-2">{item.title}</div>
+                  <p className="text-muted text-xs leading-relaxed">{item.body}</p>
                 </div>
               ))}
             </div>
-            <p className="text-zinc-500 text-sm mt-6 leading-relaxed">
+            <p className="text-muted text-sm mt-6 leading-relaxed">
               Full methodology:{" "}
-              <Link href="/docs" className="text-zinc-300 underline hover:text-white">Docs</Link>
+              <Link href="/docs" className="text-ink underline hover:text-ink">Docs</Link>
               {" · "}
-              <Link href="/docs/data-trust" className="text-zinc-300 underline hover:text-white">data trust</Link>
+              <Link href="/docs/data-trust" className="text-ink underline hover:text-ink">data trust</Link>
               {" · "}
-              <Link href="/docs/valuation" className="text-zinc-300 underline hover:text-white">valuation v0</Link>
+              <Link href="/docs/valuation" className="text-ink underline hover:text-ink">valuation v0</Link>
               {" · "}
-              <Link href="/docs/fcc-refresh" className="text-zinc-300 underline hover:text-white">FCC refresh</Link>.
+              <Link href="/docs/fcc-refresh" className="text-ink underline hover:text-ink">FCC refresh</Link>.
             </p>
           </Section>
 

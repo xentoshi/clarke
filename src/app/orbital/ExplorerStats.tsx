@@ -21,12 +21,12 @@ export default function ExplorerStats({ rows, updated }: { rows: ExplorerRow[]; 
     <div className="flex flex-wrap items-baseline gap-x-7 gap-y-2">
       {stats.map((s) => (
         <div key={s.label} className="flex items-baseline gap-2">
-          <span className="text-white font-mono font-bold text-sm">{s.value}</span>
-          <span className="text-zinc-600 text-xs">{s.label}</span>
+          <span className={`text-ink font-semibold text-sm ${s.label === "densest" ? "font-mono" : "tabular-nums"}`}>{s.value}</span>
+          <span className="text-faint text-sm">{s.label}</span>
         </div>
       ))}
       {updated && (
-        <span className="text-zinc-700 text-xs font-mono w-full sm:w-auto sm:ml-auto">Data updated {updated}</span>
+        <span className="text-faint text-sm w-full sm:w-auto sm:ml-auto">Data updated <span className="font-mono">{updated}</span></span>
       )}
     </div>
   );

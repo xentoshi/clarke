@@ -14,12 +14,12 @@ export const metadata = buildMeta({
 export default function DocsHubPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
-      <p className="text-zinc-600 text-xs font-mono mb-3">{"// DOCS"}</p>
-      <h1 className="text-3xl font-bold text-white mb-4">Clarke Docs</h1>
-      <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+      <p className="text-muted text-sm mb-2">Docs</p>
+      <h1 className="text-3xl sm:text-4xl font-semibold text-ink tracking-tight mb-4">Clarke Docs</h1>
+      <p className="text-ink text-lg leading-relaxed mb-4">
         How to read occupancy, rights, freshness, and the labeled model.
       </p>
-      <p className="text-zinc-500 text-sm leading-relaxed mb-8">
+      <p className="text-muted text-base leading-relaxed mb-8">
         Clarke is the registry for orbital infrastructure. These notes are the public methodology:
         what is verified from a named source, what is modeled, and what is quarantined behind
         Experimental on Slot Terminal.
@@ -32,27 +32,27 @@ export default function DocsHubPage() {
           <Link
             key={doc.href}
             href={doc.href}
-            className="group block border border-white/[0.06] rounded-sm bg-white/[0.02] px-5 py-6 hover:bg-white/[0.04] transition-colors"
+            className="group block border border-line bg-surface px-5 py-6 hover:border-line-strong transition-colors"
           >
-            <div className="text-[10px] font-mono text-white/25 tracking-widest uppercase mb-2">
-              {doc.kicker}
+            <div className="text-xs text-faint mb-2">
+              {doc.kicker.replaceAll("_", " ")}
             </div>
-            <h2 className="text-white font-bold text-lg mb-2 group-hover:text-white/80 transition-colors">
+            <h2 className="text-ink font-semibold text-lg mb-2 group-hover:text-muted transition-colors">
               {doc.title}
             </h2>
-            <p className="text-zinc-500 text-sm leading-relaxed">{doc.summary}</p>
+            <p className="text-muted text-sm leading-relaxed">{doc.summary}</p>
           </Link>
         ))}
       </div>
 
       <nav className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-        <Link href="/orbital/101w" className="text-white hover:text-zinc-300">
+        <Link href="/orbital/101w" className="text-ink hover:text-muted">
           101°W Terminal →
         </Link>
-        <Link href="/index" className="text-zinc-500 hover:text-zinc-300">
+        <Link href="/index" className="text-muted hover:text-ink">
           GEO Slot Index →
         </Link>
-        <Link href="/about#registry-methodology" className="text-zinc-500 hover:text-zinc-300">
+        <Link href="/about#registry-methodology" className="text-muted hover:text-ink">
           About: registry methodology →
         </Link>
       </nav>

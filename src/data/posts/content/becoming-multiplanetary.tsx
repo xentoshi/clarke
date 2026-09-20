@@ -29,7 +29,7 @@ function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
         <thead>
           <tr>
             {headers.map((h) => (
-              <th key={h} className="text-left text-white/50 font-mono uppercase tracking-wider px-4 py-2 border border-zinc-800 bg-zinc-900/40">{h}</th>
+              <th key={h} className="text-left text-faint text-xs font-medium px-4 py-2 border border-line bg-canvas">{h}</th>
             ))}
           </tr>
         </thead>
@@ -37,7 +37,7 @@ function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
           {rows.map((row, i) => (
             <tr key={i}>
               {row.map((cell, j) => (
-                <td key={j} className="px-4 py-2 text-zinc-400 border border-zinc-800 leading-relaxed">{cell}</td>
+                <td key={j} className="px-4 py-2 text-muted border border-line leading-relaxed">{cell}</td>
               ))}
             </tr>
           ))}
@@ -50,9 +50,9 @@ function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
 export default function MultiplanetaryPost() {
   return (
     <>
-      <div className="border border-zinc-700 rounded-xl p-6 bg-zinc-900/30 mb-10">
-        <div className="text-white/30 text-[10px] font-mono tracking-[0.3em] uppercase mb-3">TL;DR</div>
-        <ul className="space-y-2 text-zinc-400 text-sm leading-relaxed">
+      <div className="border border-line p-6 bg-surface mb-10">
+        <div className="text-faint text-xs mb-3">Summary</div>
+        <ul className="space-y-2 text-muted text-sm leading-relaxed">
           <li>Getting a self-sustaining human presence on another planet is fourteen problems stacked in sequence. You cannot skip steps.</li>
           <li>A 2020 engineering model puts the minimum threshold for technical survival on Mars at 110 people. Estimates for long-term genetic resilience across generations run much higher, and come from a different body of research entirely.</li>
           <li>Reproduction in reduced gravity is an open problem. A 2026 Adelaide University study found a roughly 30% drop in fertilization rates in simulated microgravity. Full-term pregnancy in Martian or Lunar gravity has never been tested.</li>
@@ -737,7 +737,7 @@ export default function MultiplanetaryPost() {
       </p>
 
       <h2 id="sources">Sources</h2>
-      <ol className="text-zinc-600 text-xs space-y-1 font-mono">
+      <ol className="text-faint text-xs space-y-1 font-mono">
         <li>Nature Scientific Reports, Jean-Marc Salotti, &quot;Minimum Number of Settlers for Survival on Another Planet&quot; (2020)</li>
         <li>Communications Biology, &quot;Simulated microgravity alters sperm navigation, fertilization, and embryo development in mammals&quot; (University of Adelaide, Robinson Research Institute, 2026)</li>
         <li>iScience / Cell Press, &quot;Effect of microgravity on mammalian embryo development evaluated at the International Space Station&quot; (2023)</li>

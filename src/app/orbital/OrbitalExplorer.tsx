@@ -82,45 +82,44 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
 
   return (
     <>
-      <div className="mb-4"><ExplorerStats rows={rows} updated={updated} /></div>
+      <div className="mb-5"><ExplorerStats rows={rows} updated={updated} /></div>
 
-      {/* Controls */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-5">
         <input
           value={facets.search}
           onChange={(e) => setFacets({ ...facets, search: e.target.value })}
           placeholder="Search slot, operator, country, satellite…"
-          className="flex-1 min-w-0 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
+          className="flex-1 min-w-0 bg-surface border border-line rounded-sm px-3 py-2 text-sm text-ink placeholder:text-faint focus:outline-none focus:border-line-strong transition-colors"
         />
         <button onClick={() => setFiltersOpen((o) => !o)}
-          className="lg:hidden shrink-0 border border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white rounded-lg px-3 py-2 text-xs font-medium transition-colors">
+          className="lg:hidden shrink-0 border border-line text-ink hover:border-line-strong rounded-sm px-3 py-2 text-sm transition-colors">
           Filters{filterCount > 0 ? ` (${filterCount})` : ""}
         </button>
         <button onClick={onToggleFairValue}
-          className={`shrink-0 border rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+          className={`shrink-0 border rounded-sm px-3 py-2 text-sm transition-colors ${
             showFairValue
-              ? "border-zinc-600 text-white"
-              : "border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white"
+              ? "border-line-strong text-ink bg-surface"
+              : "border-line text-muted hover:border-line-strong hover:text-ink"
           }`}>
           {showFairValue ? "Hide fair value" : "Show fair value"}
         </button>
         <button onClick={() => setCsvOpen(true)}
-          className="shrink-0 border border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white rounded-lg px-3 py-2 text-xs font-medium transition-colors">
+          className="shrink-0 border border-line text-ink hover:border-line-strong rounded-sm px-3 py-2 text-sm transition-colors">
           Download CSV
         </button>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        <aside className={`lg:w-52 shrink-0 ${filtersOpen ? "block bg-zinc-950 border border-zinc-800 rounded-xl p-4" : "hidden"} lg:block lg:bg-transparent lg:border-0 lg:rounded-none lg:p-0`}>
+      <div className="flex flex-col lg:flex-row gap-8">
+        <aside className={`lg:w-52 shrink-0 ${filtersOpen ? "block bg-surface border border-line p-4" : "hidden"} lg:block lg:bg-transparent lg:border-0 lg:p-0`}>
           <FacetPanel facets={facets} onChange={setFacets} operatorOptions={operatorOptions} />
         </aside>
         <div className="flex-1 min-w-0">
-          <div className="text-zinc-600 text-xs mb-2 font-mono">{filtered.length.toLocaleString()} of {rows.length.toLocaleString()} positions</div>
+          <div className="text-faint text-sm mb-2">{filtered.length.toLocaleString()} of {rows.length.toLocaleString()} positions</div>
           <SlotTable rows={filtered} sortKey={sortKey} sortDir={sortDir} onSort={onSort}
             onSelect={(r) => setSelected((cur) => (cur?.slug === r.slug ? null : r))} selectedSlug={selected?.slug ?? null}
             showFairValue={showFairValue} />
           <div className="mt-4 flex items-center justify-end">
-            <Link href="/orbital/faq" className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors">Questions about the data? Read the FAQ →</Link>
+            <Link href="/orbital/faq" className="text-muted hover:text-ink text-sm transition-colors">Questions about the data? Read the FAQ →</Link>
           </div>
         </div>
       </div>

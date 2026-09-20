@@ -56,35 +56,38 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
 
   return (
     <>
-      <div className={`fixed inset-0 bg-black/50 z-30 transition-opacity duration-300 ${shown ? "opacity-100" : "opacity-0"}`} onClick={onClose} />
-      <div className={`fixed top-0 right-0 bottom-0 w-full sm:w-[420px] bg-zinc-950 border-l border-zinc-800 overflow-y-auto z-40 transition-transform duration-300 ease-out ${shown ? "translate-x-0" : "translate-x-full"}`}>
+      <div className={`fixed inset-0 bg-ink/20 z-30 transition-opacity duration-300 ${shown ? "opacity-100" : "opacity-0"}`} onClick={onClose} />
+      <div className={`fixed top-0 right-0 bottom-0 w-full sm:w-[420px] bg-surface border-l border-line overflow-y-auto z-40 transition-transform duration-300 ease-out ${shown ? "translate-x-0" : "translate-x-full"}`}>
         {row && v && (
           <div className="p-6">
-            {/* Header */}
             <div className="flex items-start justify-between gap-4 mb-4">
               <div>
-                <div className="text-zinc-500 text-xs font-mono mb-1">{row.label} · {row.region}</div>
-                <h2 className="text-white font-bold text-lg leading-tight">
+                <div className="text-muted text-sm mb-1">
+                  <span className="font-mono">{row.label}</span>
+                  {" · "}
+                  {row.region}
+                </div>
+                <h2 className="text-ink font-semibold text-xl leading-tight">
                   {row.operator || "Unknown operator"}
                 </h2>
-                <div className="text-zinc-500 text-xs mt-0.5">
+                <div className="text-muted text-sm mt-0.5">
                   {row.country || "—"}{row.satellite ? ` · ${row.satellite}` : ""}
                 </div>
               </div>
-              <button onClick={onClose} className="text-zinc-600 hover:text-zinc-300 transition-colors text-xl leading-none" aria-label="Close">×</button>
+              <button onClick={onClose} className="text-faint hover:text-ink transition-colors text-xl leading-none" aria-label="Close">×</button>
             </div>
 
-            {row.description && <p className="text-zinc-400 text-sm leading-relaxed mb-5">{row.description}</p>}
+            {row.description && <p className="text-muted text-sm leading-relaxed mb-5">{row.description}</p>}
 
-            <div className="text-zinc-500 text-[10px] uppercase tracking-wider font-medium mb-2">Occupancy</div>
+            <div className="text-faint text-xs mb-2">Occupancy</div>
             <div className="space-y-0.5 mb-1">
               <FactorLine label="Status" value={statusLabels[row.status]} />
               <FactorLine label="Satellites" value={String(row.satCount)} />
-              <FactorLine label="FCC" value={row.fccLicensed ? "licensed" : "—"} />
+              <FactorLine label="FCC" value={row.fccLicensed ? "Yes" : "No"} />
             </div>
 
             {(row.positionDisputedCount > 0 || row.ucsGhostCount > 0) && (
-              <div className="text-amber-300/80 text-xs border border-white/[0.08] px-2.5 py-2 mt-3 mb-1">
+              <div className="text-stale text-sm border border-stale/30 px-2.5 py-2 mt-3 mb-1">
                 TLE occupancy disagrees with UCS catalog
                 {row.positionDisputedCount > 0 ? ` · ${row.positionDisputedCount} disputed in-window` : ""}
                 {row.ucsGhostCount > 0 ? ` · ${row.ucsGhostCount} UCS-listed elsewhere by TLE` : ""}
@@ -92,43 +95,39 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
               </div>
             )}
 
-            {/* Congestion */}
-            <div className="text-zinc-500 text-[10px] uppercase tracking-wider font-medium mt-5 mb-2">Congestion · {row.congestionScore} / 100</div>
+            <div className="text-faint text-xs mt-5 mb-2">Congestion · {row.congestionScore} / 100</div>
             {dossier ? (
               <div className="space-y-0.5">
                 <FactorLine label="Co-located (±0.4°)" value={String(dossier.congestion.factors.coLocated)} />
                 <FactorLine label="Neighborhood (±2°)" value={String(dossier.congestion.factors.neighborhood)} />
                 <FactorLine label="Operators / dominant" value={`${dossier.congestion.factors.distinctOperators}${dossier.congestion.factors.dominantOperator ? ` · ${dossier.congestion.factors.dominantOperator} ${Math.round(dossier.congestion.factors.dominantShare * 100)}%` : ""}`} />
               </div>
-            ) : loading ? <div className="text-zinc-700 text-xs">Loading…</div> : null}
+            ) : loading ? <div className="text-faint text-sm">Loading…</div> : null}
 
-            {/* Bands + coverage */}
             {(row.bands.length > 0 || row.coverage.length > 0) && (
               <>
-                <div className="text-zinc-500 text-[10px] uppercase tracking-wider font-medium mt-5 mb-2">Spectrum & coverage</div>
+                <div className="text-faint text-xs mt-5 mb-2">Spectrum and coverage</div>
                 <div className="flex flex-wrap gap-1.5">
-                  {row.bands.map((b) => <span key={b} className="text-[10px] px-1.5 py-0.5 rounded border border-zinc-700 text-zinc-400 font-mono">{b}-band</span>)}
-                  {row.coverage.map((c) => <span key={c} className="text-[10px] px-1.5 py-0.5 rounded border border-zinc-800 text-zinc-500">{c}</span>)}
+                  {row.bands.map((b) => <span key={b} className="text-xs px-1.5 py-0.5 rounded-sm border border-line text-muted">{b}-band</span>)}
+                  {row.coverage.map((c) => <span key={c} className="text-xs px-1.5 py-0.5 rounded-sm border border-line text-muted">{c}</span>)}
                 </div>
               </>
             )}
 
-            {/* Co-located satellites */}
             {dossier && dossier.satellites.length > 0 && (
               <>
-                <div className="text-zinc-500 text-[10px] uppercase tracking-wider font-medium mt-5 mb-2">Co-located satellites ({dossier.satellites.length})</div>
+                <div className="text-faint text-xs mt-5 mb-2">Co-located satellites ({dossier.satellites.length})</div>
                 <div className="space-y-0.5">
                   {dossier.satellites.slice(0, 8).map((s) => <FactorLine key={s.id} label={s.name} value={launchYear(s.launchDate)} />)}
                 </div>
               </>
             )}
 
-            {/* FCC */}
             {dossier && (
               <>
-                <div className="text-zinc-500 text-[10px] uppercase tracking-wider font-medium mt-5 mb-2">FCC authorizations ({dossier.fccAuthorizations.length})</div>
+                <div className="text-faint text-xs mt-5 mb-2">FCC authorizations ({dossier.fccAuthorizations.length})</div>
                 {dossier.fccAuthorizations.length === 0 ? (
-                  <div className="text-zinc-700 text-xs">No US authorization on record</div>
+                  <div className="text-faint text-sm">No US authorization on record</div>
                 ) : (
                   <div className="space-y-0.5">
                     {dossier.fccAuthorizations.slice(0, 6).map((a) => <FactorLine key={a.id} label={a.satelliteName ?? a.licensee ?? "—"} value={a.callSign ?? a.service ?? ""} />)}
@@ -137,11 +136,10 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
               </>
             )}
 
-            {/* Model — secondary to occupancy / rights */}
-            <div className="text-zinc-500 text-[10px] uppercase tracking-wider font-medium mt-5 mb-2">Fair value (v0)</div>
+            <div className="text-faint text-xs mt-5 mb-2">Fair value (v0)</div>
             {v.nonCommercial ? (
-              <div className="text-amber-300/80 text-xs border border-white/[0.08] px-2.5 py-2">
-                Not commercially valued — {v.nonCommercialReason?.replace("UCS classifies this satellite's users as ", "users: ")}
+              <div className="text-stale text-sm border border-line px-2.5 py-2">
+                Not commercially valued. {v.nonCommercialReason?.replace("UCS classifies this satellite's users as ", "users: ")}
               </div>
             ) : (
               <div className="space-y-0.5">
@@ -153,8 +151,8 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
               </div>
             )}
 
-            <div className="mt-6 pt-5 border-t border-white/[0.08] text-center space-y-2">
-              <Link href={`/orbital/${row.slug}`} className="inline-block text-white text-xs font-medium hover:text-zinc-300">
+            <div className="mt-6 pt-5 border-t border-line text-center space-y-2">
+              <Link href={`/orbital/${row.slug}`} className="inline-block text-ink text-sm font-medium hover:text-muted">
                 Open Slot Terminal →
               </Link>
             </div>
@@ -167,10 +165,9 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
 
 function FactorLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between gap-3 text-xs py-0.5">
-      <span className="text-zinc-600 truncate">{label}</span>
-      <span className="font-mono shrink-0 text-zinc-300">{value}</span>
+    <div className="flex justify-between gap-3 text-sm py-0.5">
+      <span className="text-faint truncate">{label}</span>
+      <span className="font-mono shrink-0 text-ink">{value}</span>
     </div>
   );
 }
-

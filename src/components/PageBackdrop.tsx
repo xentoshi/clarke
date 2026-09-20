@@ -1,6 +1,6 @@
 "use client";
 
-/** Every public route is a light registry canvas. Earth imagery is not used. */
+/** Every public route is a dark registry canvas. Earth imagery is not used. */
 export function isDataSurface(_pathname: string | null): boolean {
   return true;
 }

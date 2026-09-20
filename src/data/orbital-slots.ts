@@ -552,9 +552,9 @@ export const statusColors: Record<SlotStatus, string> = {
 };
 
 export const statusLabels: Record<SlotStatus, string> = {
-  active: "Active",
-  filed: "Filed",
-  squatted: "Squatted",
+  active: "On station",
+  filed: "Paper filing",
+  squatted: "On station, unlicensed",
   inactive: "Inactive",
 };
 

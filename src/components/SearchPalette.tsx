@@ -85,7 +85,7 @@ export default function SearchPalette({ slots, onClose }: { slots: OrbitalSlot[]
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4" onClick={close}>
-      <div className="absolute inset-0 bg-ink/30" />
+      <div className="absolute inset-0 bg-black/55" />
       <div className="relative w-full max-w-xl bg-surface border border-line shadow-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 px-4 py-3 border-b border-line">
           <svg className="w-4 h-4 text-faint shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

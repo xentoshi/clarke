@@ -11,52 +11,49 @@ export default function DocArticle({ doc, showLegend = false }: { doc: LoadedDoc
   const others = DOC_PAGES.filter((d) => d.slug !== doc.slug);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20">
       <Link
         href="/docs"
-        className="text-muted text-sm hover:text-ink transition-colors"
+        className="text-muted text-[14px] hover:text-ink transition-colors"
       >
-        ← Docs
+        Docs
       </Link>
 
-      <div className="mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:gap-16 xl:gap-24">
+      <div className="mt-10 lg:grid lg:grid-cols-[minmax(0,40rem)_11rem] lg:gap-20 xl:gap-28">
         <article className="min-w-0">
-          <h1 className="text-3xl sm:text-4xl font-semibold text-ink tracking-tight mb-4">{doc.title}</h1>
-          <div className="border border-line bg-surface px-4 py-4 mb-10">
-            <div className="text-xs text-faint mb-2">Summary</div>
-            <p className="text-muted text-sm leading-relaxed">{doc.tldr}</p>
-          </div>
-          {showLegend && <TrustLegend className="mb-10" />}
+          <h1 className="text-4xl sm:text-5xl font-semibold text-ink tracking-tight mb-6 leading-[1.12]">{doc.title}</h1>
+          <p className="text-muted text-lg leading-relaxed mb-12">{doc.tldr}</p>
+          {showLegend && <TrustLegend className="mb-12" />}
           <MarkdownBody html={doc.html} />
 
-          <nav className="mt-14 pt-8 border-t border-line flex flex-wrap gap-x-5 gap-y-2 text-sm">
+          <nav className="mt-16 pt-8 border-t border-line flex flex-wrap gap-x-5 gap-y-2 text-[14px]">
             <Link href="/orbital/101w" className="text-ink hover:text-muted">
-              101°W Terminal →
+              101°W Terminal
             </Link>
             <Link href="/index" className="text-muted hover:text-ink">
-              GEO Slot Index →
+              GEO Slot Index
             </Link>
             <Link href="/about#registry-methodology" className="text-muted hover:text-ink">
-              About: registry methodology →
+              About: registry methodology
             </Link>
             {others.map((d) => (
               <Link key={d.href} href={d.href} className="text-muted hover:text-ink">
-                {d.title} →
+                {d.title}
               </Link>
             ))}
           </nav>
         </article>
 
         <aside className="hidden lg:block">
-          <div className="sticky top-20 space-y-10">
+          <div className="sticky top-10 space-y-10">
             {doc.toc.length > 0 && <TableOfContents items={doc.toc} />}
             <nav className="space-y-0.5">
-              <div className="text-xs text-faint mb-4">Docs</div>
+              <div className="text-[12px] text-faint mb-4">Docs</div>
               {DOC_PAGES.map((d) => (
                 <Link
                   key={d.href}
                   href={d.href}
-                  className={`block py-1 text-sm leading-snug transition-colors ${
+                  className={`block py-1 text-[14px] leading-snug transition-colors ${
                     d.slug === doc.slug ? "text-ink" : "text-faint hover:text-ink"
                   }`}
                 >

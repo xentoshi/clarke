@@ -15,10 +15,10 @@ function formatDate(iso: string) {
 
 export default function BlogPage() {
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-20">
       <div className="mb-16">
-        <div className="text-muted text-sm mb-3">Blog</div>
-        <h1 className="text-3xl sm:text-4xl font-semibold text-ink tracking-tight">Thinking on space infrastructure.</h1>
+        <div className="text-muted text-[14px] mb-3">Blog</div>
+        <h1 className="text-4xl sm:text-5xl font-semibold text-ink tracking-tight leading-[1.12]">Thinking on space infrastructure.</h1>
       </div>
 
       <div className="divide-y divide-line border-y border-line">

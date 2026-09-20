@@ -40,9 +40,9 @@ export default function PricingClient({
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-16">
-      <p className="text-muted text-sm mb-2">Seats</p>
-      <h1 className="text-3xl font-semibold text-ink tracking-tight mb-3">Slot Terminal seats</h1>
+    <div className="max-w-3xl mx-auto px-4 py-20">
+      <p className="text-muted text-[14px] mb-3">Seats</p>
+      <h1 className="text-4xl sm:text-5xl font-semibold text-ink tracking-tight mb-4">Slot Terminal seats</h1>
       <p className="text-muted text-base mb-10 leading-relaxed max-w-2xl">
         The public registry stays free. Deep valuation, compare, export+, and the Terminal API sit behind a Pro seat.
         {email && <span className="block mt-2 text-ink font-mono text-sm">{email} · {pro ? "Pro" : "Free"}</span>}

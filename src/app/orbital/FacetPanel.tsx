@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import type { Facets } from "./types";
 import type { Band, SlotStatus } from "@/data/orbital-slots";
+import { statusLabels } from "@/data/orbital-slots";
 import { REGIONS } from "@/lib/regions";
 
 const ALL_BANDS: Band[] = ["C", "Ku", "Ka", "X", "L", "S"];
@@ -19,8 +21,26 @@ function activeCount(f: Facets): number {
   );
 }
 
-function Check({ on }: { on: boolean }) {
-  return <span className={`w-3 h-3 rounded-[3px] border shrink-0 ${on ? "bg-ink border-ink" : "border-line-strong"}`} />;
+function Chip({
+  on, children, onClick,
+}: {
+  on: boolean;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-2.5 py-1 text-[13px] rounded-full border transition-colors ${
+        on
+          ? "border-ink/40 bg-ink text-canvas"
+          : "border-line text-muted hover:text-ink hover:border-line-strong"
+      }`}
+    >
+      {children}
+    </button>
+  );
 }
 
 export default function FacetPanel({
@@ -32,86 +52,78 @@ export default function FacetPanel({
 }) {
   const set = (patch: Partial<Facets>) => onChange({ ...facets, ...patch });
   const n = activeCount(facets);
+  const [more, setMore] = useState(false);
 
   return (
-    <div className="text-sm">
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-ink font-medium">Filters{n > 0 ? ` (${n})` : ""}</span>
+    <div className="text-[13px]">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-4">
+        <span className="text-faint shrink-0">Region</span>
+        {REGIONS.map((r) => (
+          <Chip key={r} on={facets.regions.includes(r)} onClick={() => set({ regions: toggle(facets.regions, r) })}>
+            {r}
+          </Chip>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-4">
+        <span className="text-faint shrink-0">Status</span>
+        {ALL_STATUSES.map((s) => (
+          <Chip key={s} on={facets.statuses.includes(s)} onClick={() => set({ statuses: toggle(facets.statuses, s) })}>
+            {statusLabels[s]}
+          </Chip>
+        ))}
+        <span className="text-faint shrink-0 ml-2">Band</span>
+        {ALL_BANDS.map((b) => (
+          <Chip key={b} on={facets.bands.includes(b)} onClick={() => set({ bands: toggle(facets.bands, b) })}>
+            {b}
+          </Chip>
+        ))}
+        <Chip on={facets.fccOnly} onClick={() => set({ fccOnly: !facets.fccOnly })}>
+          FCC licensed
+        </Chip>
+        <button
+          type="button"
+          onClick={() => setMore((o) => !o)}
+          className="text-muted hover:text-ink transition-colors"
+        >
+          {more ? "Fewer filters" : "More"}
+        </button>
         {n > 0 && (
           <button
+            type="button"
             onClick={() => onChange({ ...facets, regions: [], operators: [], bands: [], statuses: [], congestionMin: 0, congestionMax: 100, fccOnly: false })}
             className="text-faint hover:text-ink transition-colors"
           >
-            Clear
+            Clear ({n})
           </button>
         )}
       </div>
 
-      <div className="mb-5">
-        <div className="text-faint text-xs mb-2">Region</div>
-        {REGIONS.map((r) => (
-          <button key={r} onClick={() => set({ regions: toggle(facets.regions, r) })}
-            className="flex items-center gap-2 w-full text-left py-0.5 text-muted hover:text-ink transition-colors">
-            <Check on={facets.regions.includes(r)} /> {r}
-          </button>
-        ))}
-      </div>
-
-      <div className="mb-5">
-        <div className="text-faint text-xs mb-2">Operator</div>
-        {operatorOptions.map((o) => (
-          <button key={o.name} onClick={() => set({ operators: toggle(facets.operators, o.name) })}
-            className="flex items-center gap-2 w-full text-left py-0.5 text-muted hover:text-ink transition-colors">
-            <Check on={facets.operators.includes(o.name)} />
-            <span className="truncate flex-1">{o.name}</span>
-            <span className="text-faint tabular-nums">{o.count}</span>
-          </button>
-        ))}
-      </div>
-
-      <div className="mb-5">
-        <div className="text-faint text-xs mb-2">Bands</div>
-        <div className="flex flex-wrap gap-1.5">
-          {ALL_BANDS.map((b) => (
-            <button key={b} onClick={() => set({ bands: toggle(facets.bands, b) })}
-              className={`px-2 py-0.5 rounded-sm border transition-colors ${
-                facets.bands.includes(b) ? "bg-ink border-ink text-canvas" : "border-line text-muted hover:border-line-strong"
-              }`}>
-              {b}
-            </button>
-          ))}
+      {more && (
+        <div className="pt-1 pb-3 space-y-4">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span className="text-faint shrink-0">Operator</span>
+            {operatorOptions.map((o) => (
+              <Chip key={o.name} on={facets.operators.includes(o.name)} onClick={() => set({ operators: toggle(facets.operators, o.name) })}>
+                {o.name}
+                <span className="text-faint tabular-nums ml-1">{o.count}</span>
+              </Chip>
+            ))}
+          </div>
+          <div className="max-w-sm">
+            <div className="text-faint mb-1.5">
+              Congestion {facets.congestionMin}–{facets.congestionMax}
+            </div>
+            <input type="range" min={0} max={100} value={facets.congestionMin}
+              onChange={(e) => set({ congestionMin: Math.min(Number(e.target.value), facets.congestionMax) })}
+              className="w-full accent-ink" />
+            <input type="range" min={0} max={100} value={facets.congestionMax}
+              onChange={(e) => set({ congestionMax: Math.max(Number(e.target.value), facets.congestionMin) })}
+              className="w-full accent-ink" />
+            <p className="text-faint text-xs mt-1.5 leading-snug">Band data exists for curated slots only.</p>
+          </div>
         </div>
-        <p className="text-faint text-xs mt-1.5 leading-snug">Band data exists for curated slots only.</p>
-      </div>
-
-      <div className="mb-5">
-        <div className="text-faint text-xs mb-2">Status</div>
-        {ALL_STATUSES.map((s) => (
-          <button key={s} onClick={() => set({ statuses: toggle(facets.statuses, s) })}
-            className="flex items-center gap-2 w-full text-left py-0.5 text-muted hover:text-ink transition-colors capitalize">
-            <Check on={facets.statuses.includes(s)} /> {s}
-          </button>
-        ))}
-      </div>
-
-      <div className="mb-5">
-        <div className="text-faint text-xs mb-2">
-          Congestion <span className="font-mono">{facets.congestionMin}–{facets.congestionMax}</span>
-        </div>
-        <input type="range" min={0} max={100} value={facets.congestionMin}
-          onChange={(e) => set({ congestionMin: Math.min(Number(e.target.value), facets.congestionMax) })}
-          className="w-full accent-ink" />
-        <input type="range" min={0} max={100} value={facets.congestionMax}
-          onChange={(e) => set({ congestionMax: Math.max(Number(e.target.value), facets.congestionMin) })}
-          className="w-full accent-ink" />
-      </div>
-
-      <div className="space-y-1.5">
-        <button onClick={() => set({ fccOnly: !facets.fccOnly })}
-          className="flex items-center gap-2 w-full text-left text-muted hover:text-ink transition-colors">
-          <Check on={facets.fccOnly} /> FCC licensed only
-        </button>
-      </div>
+      )}
     </div>
   );
 }

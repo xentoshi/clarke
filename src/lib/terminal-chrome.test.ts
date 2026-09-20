@@ -249,7 +249,7 @@ describe("product chrome — Fair value, Trust bar, Terminal fold", () => {
     assert.match(html, /data-terminal-experimental="sim-book"/);
   });
 
-  it("uses a light registry canvas on every public route (no Earth wallpaper)", () => {
+  it("uses a dark registry canvas on every public route (no Earth wallpaper)", () => {
     assert.equal(isDataSurface("/orbital"), true);
     assert.equal(isDataSurface("/orbital/101w"), true);
     assert.equal(isDataSurface("/orbital/compare"), true);

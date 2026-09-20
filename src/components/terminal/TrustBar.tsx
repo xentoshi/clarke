@@ -18,8 +18,8 @@ export function TrustBar({
   const disagreement = positionTrust.disputedCount > 0 || positionTrust.ucsGhosts.length > 0;
 
   return (
-    <section className="mb-8" data-trust-bar data-freshness-strip>
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm text-muted">
+    <section className="mb-4" data-trust-bar data-freshness-strip>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[15px] text-muted">
         <p className="min-w-0 leading-relaxed">
           TLE as of <span className="font-mono text-ink">{vintage.tleEpochMax ?? "—"}</span>
           {". "}
@@ -46,7 +46,7 @@ export function TrustBar({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="ml-auto text-sm text-muted hover:text-ink shrink-0"
+          className="ml-auto text-[14px] text-muted hover:text-ink shrink-0"
           aria-expanded={open}
         >
           {open ? "Hide" : "Details"}
@@ -54,7 +54,7 @@ export function TrustBar({
       </div>
 
       {open && (
-        <div className="mt-4 px-4 py-4 border border-line bg-surface space-y-3">
+        <div className="mt-5 space-y-4">
           <div className="grid sm:grid-cols-3 gap-3 text-sm">
             <div>
               <span className="text-faint">TLE epoch</span>

@@ -56,7 +56,7 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
 
   return (
     <>
-      <div className={`fixed inset-0 bg-ink/20 z-30 transition-opacity duration-300 ${shown ? "opacity-100" : "opacity-0"}`} onClick={onClose} />
+      <div className={`fixed inset-0 bg-black/50 z-30 transition-opacity duration-300 ${shown ? "opacity-100" : "opacity-0"}`} onClick={onClose} />
       <div className={`fixed top-0 right-0 bottom-0 w-full sm:w-[420px] bg-surface border-l border-line overflow-y-auto z-40 transition-transform duration-300 ease-out ${shown ? "translate-x-0" : "translate-x-full"}`}>
         {row && v && (
           <div className="p-6">
@@ -167,7 +167,7 @@ function FactorLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-3 text-sm py-0.5">
       <span className="text-faint truncate">{label}</span>
-      <span className="font-mono shrink-0 text-ink">{value}</span>
+      <span className="shrink-0 text-ink tabular-nums">{value}</span>
     </div>
   );
 }

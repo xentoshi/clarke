@@ -22,7 +22,7 @@ const sections = [
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
     <section id={id} className="mb-16 scroll-mt-20">
-      <h2 className="text-ink font-bold text-lg mb-6 pb-3 border-b border-line">{title}</h2>
+      <h2 className="text-ink font-semibold text-2xl tracking-tight mb-6">{title}</h2>
       {children}
     </section>
   );
@@ -169,7 +169,7 @@ export default function AboutPage() {
           { value: `${fccCount}`, label: "FCC authorizations" },
         ].map((s) => (
           <div key={s.label} className="bg-surface px-5 py-5 text-center">
-            <div className="text-ink font-bold font-mono text-xl mb-1">{s.value}</div>
+            <div className="text-ink font-semibold tabular-nums text-xl mb-1">{s.value}</div>
             <div className="text-faint text-xs leading-tight">{s.label}</div>
           </div>
         ))}
@@ -323,9 +323,9 @@ export default function AboutPage() {
             <h3 className="text-ink text-sm font-semibold mb-3">Status definitions</h3>
             <div className="space-y-2 mb-6">
               {[
-                { status: "Active",   color: "text-verified border-verified/30 bg-verified/8", desc: "Satellite confirmed operational. Verified against UCS database and operator disclosures." },
-                { status: "Filed",    color: "text-ink border-line bg-canvas",          desc: "ITU filing submitted and accepted but satellite not yet launched or operational." },
-                { status: "Squatted", color: "text-stale border-stale/35 bg-stale/8",       desc: "Filing exists but slot appears underutilized or not actively serving its licensed coverage area." },
+                { status: "On station",   color: "text-verified border-verified/30 bg-verified/8", desc: "Satellite confirmed operational. Verified against UCS database and operator disclosures." },
+                { status: "Paper filing",    color: "text-ink border-line bg-canvas",          desc: "ITU filing submitted and accepted but satellite not yet launched or operational." },
+                { status: "On station, unlicensed", color: "text-stale border-stale/35 bg-stale/8",       desc: "Filing exists but slot appears underutilized or not actively serving its licensed coverage area." },
                 { status: "Inactive", color: "text-muted border-line bg-canvas",          desc: "Satellite decommissioned. Slot rights may still be held by the operator." },
               ].map((s) => (
                 <div key={s.status} className="flex items-start gap-3">
@@ -431,7 +431,7 @@ export default function AboutPage() {
                 { title: "UCS vs TLE longitude", body: "Occupancy clustering prefers a Space-Track TLE sub-satellite longitude when the TLE was fresh at ingest and passes GEO-payload quality gates (active payload, eccentricity, mean motion). UCS longitude remains the catalog value and is shown next to the TLE with a Δ and a disputed flag when they differ by more than 2°. TLE longitude is not an FCC license location or ITU filing. Of 512 GEO objects with both sources (TLE epoch 2026-09-15), 204 disagree by more than 2°." },
                 { title: "Satellite identifiers", body: "The UCS database includes NORAD catalog numbers and COSPAR international designators for each satellite. These identifiers are stored in Clarke's database but are not displayed to users. A spot-check of nine satellites against independent Celestrak records found that five had incorrect NORAD IDs, with some pointing to entirely different satellites at different orbital positions and one pointing to decayed re-entry debris. The satellite names, operator names, and orbital positions were generally accurate in the same check. Identifiers will be surfaced once they have been validated against an authoritative source." },
                 { title: "FCC coverage scope", body: `The ${fccCount} FCC authorizations in Clarke cover US-licensed operators and foreign operators with FCC-granted US market access. Satellites licensed entirely under non-US administrations, including most European, Russian, Chinese, and Asian operators, do not appear in FCC records and will show no authorization data on their position pages. This is a reflection of jurisdiction, not a gap in data collection.` },
-                { title: "Status labels", body: "Position status labels in the registry (Active, Filed, Squatted, Inactive) are derived from the UCS classification, which marks satellites as active based on reported operational status at the time of the snapshot. The UCS does not independently verify operational status in real time, and updates follow its twice-yearly cadence, so decommissions and new launches typically take up to six months to show up after they are publicly announced." },
+                { title: "Status labels", body: "Position status labels in the registry (On station, Paper filing, On station unlicensed, Inactive) are derived from the UCS classification, which marks satellites as active based on reported operational status at the time of the snapshot. The UCS does not independently verify operational status in real time, and updates follow its twice-yearly cadence, so decommissions and new launches typically take up to six months to show up after they are publicly announced." },
                 { title: "SEC financial data currency", body: "Viasat and SES both have current SEC financial data (Viasat through its most recent 10-Q, SES through its FY2025 20-F). Telesat's structured XBRL data caps at fiscal year 2021, the SEC's system has no more recent tagged financial facts for the entity on file, despite Telesat's ongoing 6-K filings since then. Treat Telesat's revenue and income figures as historical reference points, not current financials." },
               ].map((item) => (
                 <div key={item.title} className="border border-line rounded-xl p-5 bg-surface">

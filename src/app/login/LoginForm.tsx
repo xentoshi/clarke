@@ -28,8 +28,8 @@ export default function LoginForm() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-20">
-      <p className="text-muted text-sm mb-2">Seats</p>
-      <h1 className="text-3xl font-semibold text-ink tracking-tight mb-2">Sign in</h1>
+      <p className="text-muted text-[14px] mb-3">Seats</p>
+      <h1 className="text-4xl font-semibold text-ink tracking-tight mb-3">Sign in</h1>
       <p className="text-muted text-sm mb-6 leading-relaxed">
         Passwordless stub for the MVP. Any email issues a session cookie. Use Demo Pro to review the paid Terminal without Stripe.
       </p>

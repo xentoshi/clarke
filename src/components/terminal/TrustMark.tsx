@@ -16,7 +16,7 @@ export function TrustMark({
   return (
     <span
       title={TRUST_CLASS_LABEL[cls]}
-      className={`inline-flex items-center text-[10px] font-mono px-1 py-0.5 rounded-sm border ${tone[cls]} ${className}`}
+      className={`inline-flex items-center text-[11px] px-1 py-0.5 rounded-sm border ${tone[cls]} ${className}`}
     >
       {cls}
     </span>

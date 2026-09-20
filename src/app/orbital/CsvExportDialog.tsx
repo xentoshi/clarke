@@ -74,7 +74,7 @@ export default function CsvExportDialog({ rows, onClose, pro }: { rows: Explorer
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-ink/25" />
+      <div className="absolute inset-0 bg-black/55" />
       <div onClick={(e) => e.stopPropagation()}
         className="relative bg-surface border border-line p-6 w-full max-w-md shadow-lg">
         <div className="flex items-center justify-between mb-1">

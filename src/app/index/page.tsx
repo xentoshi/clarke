@@ -27,14 +27,14 @@ function lon(v: number | null): string {
 }
 
 function MoveList({ items, empty }: { items: OccupancyMove[]; empty: string }) {
-  if (items.length === 0) return <p className="text-faint text-sm">{empty}</p>;
+  if (items.length === 0) return <p className="text-faint text-[15px]">{empty}</p>;
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-3">
       {items.map((m) => (
-        <li key={`${m.kind}-${m.name}`} className="text-sm text-ink leading-relaxed">
+        <li key={`${m.kind}-${m.name}`} className="text-[16px] text-ink leading-relaxed">
           <span className="font-medium">{m.name}</span>
-          <span className="text-faint text-xs font-mono"> · UCS {lon(m.ucsLon)} · TLE {lon(m.tleLon)}</span>
-          <div className="text-muted text-sm mt-0.5">{m.detail}</div>
+          <span className="text-faint text-[13px] font-mono"> · UCS {lon(m.ucsLon)} · TLE {lon(m.tleLon)}</span>
+          <div className="text-muted text-[15px] mt-0.5">{m.detail}</div>
         </li>
       ))}
     </ul>
@@ -43,88 +43,88 @@ function MoveList({ items, empty }: { items: OccupancyMove[]; empty: string }) {
 
 function Dossier({ d, headingId }: { d: GeoSlotIndexDossier; headingId: string }) {
   return (
-    <section id={headingId} className="mb-14 scroll-mt-20">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
-        <h2 className="text-ink font-semibold text-xl font-mono">{d.label}</h2>
-        <Link href={`/orbital/${d.slug}`} className="text-sm text-muted hover:text-ink">
-          Open Slot Terminal →
+    <section id={headingId} className="mb-20 scroll-mt-10">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
+        <h2 className="text-ink font-semibold text-3xl font-mono tracking-tight">{d.label}</h2>
+        <Link href={`/orbital/${d.slug}`} className="text-[14px] text-muted hover:text-ink">
+          Open Slot Terminal
         </Link>
       </div>
-      <p className="text-muted text-sm mb-4 leading-relaxed">
+      <p className="text-muted text-[16px] mb-10 leading-relaxed">
         Registry operator {d.operator || "—"}. Occupancy ±0.4° TLE-primary: {d.satCount} sat{d.satCount === 1 ? "" : "s"}
         {d.paperFiling ? " · paper FCC filing (no occupancy longitude in window)" : ""}. Congestion {d.congestionScore} ({d.congestionLabel}). BIU hint: {d.biuHint.replace(/_/g, " ")}.
       </p>
 
-      <div className="grid md:grid-cols-2 gap-4 mb-4">
-        <div className="border border-line bg-surface p-4">
-          <h3 className="text-sm text-verified mb-2">Occupancy entered</h3>
-          <p className="text-xs text-faint mb-2">TLE in this window, UCS catalog longitude not in this window.</p>
-          <MoveList items={d.entered} empty="No TLE arrivals vs UCS catalog this edition." />
-        </div>
-        <div className="border border-line bg-surface p-4">
-          <h3 className="text-sm text-stale mb-2">Occupancy left</h3>
-          <p className="text-xs text-faint mb-2">UCS still lists the bird here; TLE occupancy is elsewhere (ghosts).</p>
-          <MoveList items={d.left} empty="No UCS ghosts this edition." />
-        </div>
+      <h3 className="text-verified text-[15px] font-medium mb-2">Occupancy entered</h3>
+      <p className="text-faint text-[13px] mb-3">TLE in this window, UCS catalog longitude not in this window.</p>
+      <div className="mb-10">
+        <MoveList items={d.entered} empty="No TLE arrivals vs UCS catalog this edition." />
       </div>
 
-      <div className="border border-line bg-surface p-4 mb-4">
-        <h3 className="text-sm text-stale mb-2">Dispute flips (|UCS−TLE| &gt; 2°)</h3>
+      <h3 className="text-stale text-[15px] font-medium mb-2">Occupancy left</h3>
+      <p className="text-faint text-[13px] mb-3">UCS still lists the bird here; TLE occupancy is elsewhere (ghosts).</p>
+      <div className="mb-10">
+        <MoveList items={d.left} empty="No UCS ghosts this edition." />
+      </div>
+
+      <h3 className="text-stale text-[15px] font-medium mb-3">Dispute flips (|UCS−TLE| &gt; 2°)</h3>
+      <div className="mb-10">
         {d.disputeFlips.length === 0 ? (
-          <p className="text-faint text-sm">No in-window satellite is flagged positionDisputed.</p>
+          <p className="text-faint text-[15px]">No in-window satellite is flagged positionDisputed.</p>
         ) : (
-          <ul className="space-y-1.5">
+          <ul className="space-y-2">
             {d.disputeFlips.map((f) => (
-              <li key={f.name} className="text-sm text-ink font-mono">
-                {f.name} · Δ {f.deltaDeg?.toFixed(1) ?? "—"}° · UCS {lon(f.ucsLon)} · TLE {lon(f.tleLon)}
+              <li key={f.name} className="text-[15px] text-ink">
+                {f.name}
+                <span className="font-mono text-faint text-[13px]">
+                  {" "}· Δ {f.deltaDeg?.toFixed(1) ?? "—"}° · UCS {lon(f.ucsLon)} · TLE {lon(f.tleLon)}
+                </span>
               </li>
             ))}
           </ul>
         )}
       </div>
 
-      <div className="border border-line bg-surface p-4">
-        <h3 className="text-sm text-ink mb-2">
-          FCC deltas (license longitude vs occupancy)
-        </h3>
-        {d.fccRows.length === 0 ? (
-          <p className="text-muted text-sm">No FCC SSAL row at this longitude (expected for many non-US administrations).</p>
-        ) : (
-          <>
-            <table className="w-full text-sm mb-3">
-              <thead>
-                <tr className="text-faint text-left">
-                  <th className="py-1 font-medium">Call sign</th>
-                  <th className="py-1 font-medium hidden sm:table-cell">Satellite</th>
-                  <th className="py-1 font-medium">Licensee</th>
+      <h3 className="text-ink text-[15px] font-medium mb-3">
+        FCC deltas (license longitude vs occupancy)
+      </h3>
+      {d.fccRows.length === 0 ? (
+        <p className="text-muted text-[15px]">No FCC SSAL row at this longitude (expected for many non-US administrations).</p>
+      ) : (
+        <>
+          <table className="w-full text-[15px] mb-4">
+            <thead>
+              <tr className="text-faint text-left">
+                <th className="py-2 font-medium">Call sign</th>
+                <th className="py-2 font-medium hidden sm:table-cell">Satellite</th>
+                <th className="py-2 font-medium">Licensee</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.fccRows.map((r) => (
+                <tr key={r.callSign ?? r.satelliteName ?? ""} className="border-t border-line">
+                  <td className="py-2.5 text-ink">{r.callSign ?? "—"}</td>
+                  <td className="py-2.5 text-muted hidden sm:table-cell">{r.satelliteName ?? "—"}</td>
+                  <td className="py-2.5 text-ink">{r.licensee ?? "—"}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {d.fccRows.map((r) => (
-                  <tr key={r.callSign ?? r.satelliteName ?? ""} className="border-t border-line">
-                    <td className="py-1.5 font-mono text-ink">{r.callSign ?? "—"}</td>
-                    <td className="py-1.5 text-muted hidden sm:table-cell">{r.satelliteName ?? "—"}</td>
-                    <td className="py-1.5 text-ink">{r.licensee ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {d.fccNotInOccupancy.length > 0 && (
-              <p className="text-muted text-sm leading-relaxed mb-1">
-                FCC names not in TLE-primary occupancy: {d.fccNotInOccupancy.join("; ")}. License longitude is not TLE station.
-              </p>
-            )}
-            {d.occupancyNotInFcc.length > 0 && (
-              <p className="text-muted text-sm leading-relaxed">
-                Occupancy names without a matching FCC row: {d.occupancyNotInFcc.join("; ")}.
-              </p>
-            )}
-          </>
-        )}
-        <p className="text-xs font-mono text-faint mt-3">
-          FCC as-of {d.fccAsOf ?? "—"} · TLE epoch {d.tleEpochMin && d.tleEpochMax ? (d.tleEpochMin === d.tleEpochMax ? d.tleEpochMax : `${d.tleEpochMin}–${d.tleEpochMax}`) : "n/a"} · UCS vintage {d.ucsFileVintage ?? "—"}
-        </p>
-      </div>
+              ))}
+            </tbody>
+          </table>
+          {d.fccNotInOccupancy.length > 0 && (
+            <p className="text-muted text-[15px] leading-relaxed mb-2">
+              FCC names not in TLE-primary occupancy: {d.fccNotInOccupancy.join("; ")}. License longitude is not TLE station.
+            </p>
+          )}
+          {d.occupancyNotInFcc.length > 0 && (
+            <p className="text-muted text-[15px] leading-relaxed">
+              Occupancy names without a matching FCC row: {d.occupancyNotInFcc.join("; ")}.
+            </p>
+          )}
+        </>
+      )}
+      <p className="text-xs font-mono text-faint mt-5">
+        FCC as-of {d.fccAsOf ?? "—"} · TLE epoch {d.tleEpochMin && d.tleEpochMax ? (d.tleEpochMin === d.tleEpochMax ? d.tleEpochMax : `${d.tleEpochMin}–${d.tleEpochMax}`) : "n/a"} · UCS vintage {d.ucsFileVintage ?? "—"}
+      </p>
     </section>
   );
 }
@@ -133,18 +133,18 @@ export default function GeoSlotIndexPage() {
   const edition = buildGeoSlotIndex();
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
-      <div className="lg:grid lg:grid-cols-[1fr_200px] lg:gap-16">
-        <div className="min-w-0 max-w-2xl">
-          <p className="text-muted text-sm mb-2">GEO Slot Index · Edition 1</p>
-          <h1 className="text-3xl sm:text-4xl font-semibold text-ink tracking-tight mb-4">GEO Slot Index #1</h1>
-          <p className="text-muted text-lg leading-relaxed mb-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20">
+      <div className="lg:grid lg:grid-cols-[minmax(0,40rem)_11rem] lg:gap-20">
+        <div className="min-w-0">
+          <p className="text-muted text-[14px] mb-3">GEO Slot Index · Edition 1</p>
+          <h1 className="text-4xl sm:text-5xl font-semibold text-ink tracking-tight mb-6 leading-[1.12]">GEO Slot Index #1</h1>
+          <p className="text-muted text-xl leading-relaxed mb-14">
             A method-note snapshot of five GEO longitudes from Clarke&apos;s public feeds. This edition counts occupancy enter/leave (TLE vs UCS), dispute flips, and FCC license-table mismatches. It does not say prices rose, and it is not a market.
           </p>
 
-          <section id="method" className="mb-12 scroll-mt-20">
-            <h2 className="text-ink font-semibold text-lg mb-3 pb-2 border-b border-line">Method</h2>
-            <ul className="text-muted text-sm leading-relaxed space-y-2 list-disc pl-5">
+          <section id="method" className="mb-16 scroll-mt-10">
+            <h2 className="text-ink font-semibold text-2xl tracking-tight mb-5">Method</h2>
+            <ul className="text-muted text-[16px] leading-relaxed space-y-3 list-disc pl-5">
               <li>
                 <strong className="text-ink">Occupancy window</strong> is ±0.4° on the TLE-primary longitude (Space-Track TLE when quality gates pass; UCS catalog otherwise). TLE longitude is a tracked-object location, never an FCC assignment or ITU filing.
               </li>
@@ -152,13 +152,13 @@ export default function GeoSlotIndexPage() {
                 <strong className="text-ink">Entered</strong> = in the TLE window, UCS catalog longitude outside it. <strong className="text-ink">Left</strong> = UCS still lists the bird at this slot, TLE occupancy is elsewhere (ghosts). This is a catalog-vs-ephemeris cut, not a dated tape of station-keeping burns.
               </li>
               <li>
-                <strong className="text-ink">Dispute flip</strong> = in-window satellite with circular |UCS−TLE| &gt; 2° (<span className="font-mono">positionDisputed</span>).
+                <strong className="text-ink">Dispute flip</strong> = in-window satellite with circular |UCS−TLE| &gt; 2° (<span className="font-mono text-[13px]">positionDisputed</span>).
               </li>
               <li>
                 <strong className="text-ink">FCC deltas</strong> = SSAL rows at the license longitude vs occupancy names. A DIRECTV call sign at 101°W is a license record; it is not proof the satellite is still on station.
               </li>
             </ul>
-            <p className="text-muted text-sm mt-4 leading-relaxed">
+            <p className="text-muted text-[15px] mt-6 leading-relaxed">
               Feeds this edition: UCS file vintage {edition.vintage.ucsFileVintage ?? "—"} · FCC SSAL as-of {edition.vintage.fccAsOf ?? "—"} · TLE epoch through {edition.vintage.tleEpochMax ?? "—"}. See{" "}
               <Link href="/docs" className="text-ink underline hover:text-muted">Docs</Link>
               {" · "}
@@ -170,9 +170,9 @@ export default function GeoSlotIndexPage() {
             </p>
           </section>
 
-          <section id="what-this-is-not" className="mb-12 scroll-mt-20">
-            <h2 className="text-ink font-semibold text-lg mb-3 pb-2 border-b border-line">What this is not</h2>
-            <p className="text-muted text-sm leading-relaxed">
+          <section id="what-this-is-not" className="mb-16 scroll-mt-10">
+            <h2 className="text-ink font-semibold text-2xl tracking-tight mb-5">What this is not</h2>
+            <p className="text-muted text-[16px] leading-relaxed">
               Not a price index, bid/ask, last trade, or appraisal. Implied fair value v0 lives on Slot Terminal as a labeled model. Curated dollar overlays are hand estimates. This page does not reprint them. ITU SNS is not ingested; BIU here is a Clarke hint.
             </p>
           </section>
@@ -181,9 +181,9 @@ export default function GeoSlotIndexPage() {
             <Dossier key={d.slug} d={d} headingId={`d-${d.slug}`} />
           ))}
 
-          <section id="caveats" className="mb-8 scroll-mt-20">
-            <h2 className="text-ink font-semibold text-lg mb-3 pb-2 border-b border-line">Caveats</h2>
-            <ul className="text-muted text-sm leading-relaxed space-y-2 list-disc pl-5">
+          <section id="caveats" className="mb-8 scroll-mt-10">
+            <h2 className="text-ink font-semibold text-2xl tracking-tight mb-5">Caveats</h2>
+            <ul className="text-muted text-[16px] leading-relaxed space-y-3 list-disc pl-5">
               <li>UCS snapshot vintage is years behind TLE. Ghosts are expected; they are the point of TLE-primary occupancy.</li>
               <li>One-shot Space-Track ingest produced thousands of relocation events vs the previous UCS clustering. Those events are not a weekly enter/leave time series and are not used as such here.</li>
               <li>FCC workbook as-of can be stale (banner on Terminal when &gt; 14 days). Name matching between SSAL and UCS is imperfect (AT&T T16 vs DIRECTV D16).</li>
@@ -192,7 +192,7 @@ export default function GeoSlotIndexPage() {
           </section>
         </div>
         <aside className="hidden lg:block">
-          <div className="sticky top-20">
+          <div className="sticky top-10">
             <TableOfContents items={toc} />
           </div>
         </aside>

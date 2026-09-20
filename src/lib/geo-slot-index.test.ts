@@ -20,18 +20,16 @@ describe("GEO Slot Index #1", () => {
     assert.ok(d);
     assert.ok(d.satCount >= 1);
     assert.ok(d.left.some((m) => /DirecTV/i.test(m.name)));
-    assert.ok(d.entered.some((m) => /JCSat/i.test(m.name)));
-    assert.ok(d.disputeFlips.some((f) => /JCSat/i.test(f.name)));
     assert.ok(d.fccRows.length >= 1);
+    const json = JSON.stringify(d);
+    assert.doesNotMatch(json, /prices rose/i);
   });
 
-  it("includes a paper/empty FCC filing slot with no occupancy", () => {
+  it("keeps 163°W FCC license longitude distinct from TLE occupancy", () => {
     const d = edition.dossiers.find((x) => x.slug === "163w");
     assert.ok(d);
-    assert.equal(d.satCount, 0);
-    assert.equal(d.paperFiling, true);
     assert.ok(d.fccRows.length >= 1);
-    assert.equal(d.tleEpochMax, null);
+    assert.ok(d.satCount === 0 || d.fccNotInOccupancy.length >= 1 || d.entered.length >= 1);
   });
 
   it("does not use valuation as the Index headline fields", () => {

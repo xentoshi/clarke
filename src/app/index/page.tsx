@@ -18,7 +18,7 @@ const toc = [
   { id: "d-19-2e", label: "19.2°E" },
   { id: "d-13e", label: "13°E" },
   { id: "d-72e", label: "72°E" },
-  { id: "d-163w", label: "163°W (paper FCC)" },
+  { id: "d-163w", label: "163°W" },
   { id: "caveats", label: "Caveats" },
 ];
 

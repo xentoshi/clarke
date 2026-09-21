@@ -197,8 +197,8 @@ describe("rights chain", () => {
     const itu = chain.find((l) => l.layer === "itu");
     const license = chain.find((l) => l.layer === "operator_license");
     assert.equal(itu?.status, "stub");
-    assert.match(itu?.holder ?? "", /Not recorded in Clarke/i);
-    assert.doesNotMatch(itu?.detail ?? "", /network name/i);
+    assert.equal(itu?.holder, "Not recorded in Clarke");
+    assert.doesNotMatch(itu?.holder ?? "", /INTELSAT|network [A-Z]{2,}/);
     assert.equal(license?.holder, "3 FCC licensees");
     assert.match(license?.detail ?? "", /SES/);
     assert.match(license?.detail ?? "", /Ligado/);

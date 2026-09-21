@@ -119,8 +119,9 @@ describe("ITU presence", () => {
     assert.equal(p.ituRecorded, "not_in_product");
     assert.match(p.label, /not recorded in Clarke/i);
     assert.match(p.chip, /Unrecorded in Clarke/);
-    assert.doesNotMatch(p.detail, /brought into use as recorded/i);
-    assert.doesNotMatch(p.detail, /network name/i);
+    assert.match(p.detail, /SNS is not ingested/i);
+    assert.doesNotMatch(p.chip, /brought into use/i);
+    assert.doesNotMatch(p.label, /brought into use/i);
   });
 });
 

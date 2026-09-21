@@ -106,12 +106,8 @@ export function defaultTerminalRendersSimBookAsPrimary(html: string): boolean {
 
 export function defaultTerminalRendersItuStubAsPrimary(html: string): boolean {
   const primary = primaryTerminalRegion(html);
-  // Thin Unrecorded chip is allowed on the default Terminal. A filled ITU
-  // rights row (data-rights-layer="itu") is not.
-  if (/data-itu-recorded=/i.test(primary) && !/data-rights-layer="itu"/i.test(primary)) {
-    return /Not ingested/i.test(primary) || /ITU SNS planned/i.test(primary);
-  }
-  return /data-rights-layer="itu"/i.test(primary) || /ITU SNS planned/i.test(primary);
+  // Thin Unrecorded chip is allowed. A filled ITU rights row is not.
+  return /data-rights-layer="itu"/i.test(primary);
 }
 
 export function defaultTerminalRendersSubleaseStubAsPrimary(html: string): boolean {

@@ -69,6 +69,7 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
                 </h2>
                 <div className="text-zinc-500 text-xs mt-0.5">
                   {row.country || "—"}{row.satellite ? ` · ${row.satellite}` : ""}
+                  {row.operatorRaw && row.operatorRaw !== row.operator ? ` · source ${row.operatorRaw}` : ""}
                 </div>
               </div>
               <button onClick={onClose} className="text-zinc-600 hover:text-zinc-300 transition-colors text-xl leading-none" aria-label="Close">×</button>

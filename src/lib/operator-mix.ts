@@ -1,24 +1,40 @@
 // Occupancy-window operator attribution. The registry row's operator (curated
 // or the UCS satellite that created the slug) is not always the majority
 // operator inside the ±0.4° co-location window.
+//
+// Mix grouping uses the curated alias map (class M). Raw UCS strings stay on
+// `operatorRaw`. Congestion *score* still counts raw source strings.
+
+import { resolveOperator } from "./operator-identity";
 
 export interface OperatorShare {
   operator: string;
   count: number;
   share: number;
+  /** Distinct source strings that rolled up into `operator`. */
+  operatorRaw: string[];
 }
 
 export function summarizeOperators(sats: { operator: string | null }[]): OperatorShare[] {
-  const counts = new Map<string, number>();
+  const groups = new Map<string, { count: number; raws: Map<string, number> }>();
   let attributed = 0;
   for (const s of sats) {
-    const op = (s.operator ?? "").trim();
-    if (!op) continue;
-    counts.set(op, (counts.get(op) ?? 0) + 1);
+    const raw = (s.operator ?? "").trim();
+    if (!raw) continue;
+    const display = resolveOperator(raw).display;
+    const g = groups.get(display) ?? { count: 0, raws: new Map() };
+    g.count++;
+    g.raws.set(raw, (g.raws.get(raw) ?? 0) + 1);
+    groups.set(display, g);
     attributed++;
   }
-  return [...counts.entries()]
-    .map(([operator, count]) => ({ operator, count, share: attributed > 0 ? count / attributed : 0 }))
+  return [...groups.entries()]
+    .map(([operator, g]) => ({
+      operator,
+      count: g.count,
+      share: attributed > 0 ? g.count / attributed : 0,
+      operatorRaw: [...g.raws.keys()].sort((a, b) => a.localeCompare(b)),
+    }))
     .sort((a, b) => b.count - a.count || a.operator.localeCompare(b.operator));
 }
 

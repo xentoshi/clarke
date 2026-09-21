@@ -37,7 +37,7 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
     const q = facets.search.trim().toLowerCase();
     const out = rows.filter((r) => {
       if (q) {
-        const hay = `${r.label} ${r.operator} ${r.country} ${r.satelliteNames.join(" ")}`.toLowerCase();
+        const hay = `${r.label} ${r.operator} ${r.operatorRaw} ${r.country} ${r.satelliteNames.join(" ")}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       if (facets.regions.length && !facets.regions.includes(r.region)) return false;

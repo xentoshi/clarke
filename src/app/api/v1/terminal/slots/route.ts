@@ -15,6 +15,8 @@ export async function GET(req: NextRequest) {
     label: slot.label,
     longitude: slot.longitude,
     operator: slot.operator,
+    operatorRaw: slot.operatorRaw ?? slot.operator,
+    ituRecorded: "not_in_product" as const,
     country: slot.country,
     status: slot.status,
     satCount,

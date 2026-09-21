@@ -15,6 +15,7 @@ const COLUMNS: Column[] = [
   { id: "label", header: "Slot", get: (r) => r.label, default: true },
   { id: "longitude", header: "Longitude", get: (r) => r.longitude, default: true },
   { id: "operator", header: "Operator", get: (r) => r.operator, default: true },
+  { id: "operatorRaw", header: "Operator source", get: (r) => r.operatorRaw, default: false },
   { id: "country", header: "Country", get: (r) => r.country, default: true },
   { id: "region", header: "Region", get: (r) => r.region, default: true },
   { id: "purpose", header: "Purpose", get: (r) => r.purpose ?? "", default: true },

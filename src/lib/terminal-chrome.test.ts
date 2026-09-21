@@ -9,6 +9,7 @@ import { SlotTerminalView } from "@/components/terminal/SlotTerminalView";
 import { TrustBar } from "@/components/terminal/TrustBar";
 import SlotTable from "@/app/orbital/SlotTable";
 import { isDataSurface } from "@/components/PageBackdrop";
+import { defaultTerminalRendersItuStubAsPrimary, primaryTerminalRegion } from "./terminal-default";
 import type { SlotTerminalModel } from "./slot-terminal";
 import type { Entitlements } from "./auth";
 import type { ExplorerRow } from "@/app/orbital/types";
@@ -38,7 +39,7 @@ const emptyCongestion: CongestionData = {
   score: 80,
   tier: "high",
   label: "Critical",
-  factors: { coLocated: 5, neighborhood: 8, distinctOperators: 3, dominantOperator: "SES", dominantShare: 0.4 },
+  factors: { coLocated: 5, neighborhood: 8, distinctOperators: 3, dominantOperator: "SES", dominantOperatorRaw: "SES S.A.", dominantShare: 0.4 },
 };
 
 const fccAuths = [
@@ -118,11 +119,13 @@ function fixtureModel(): SlotTerminalModel {
     region: "North America",
     slot: sample,
     operator: "SES",
-    occupancyMajority: "DirecTV, Inc.",
+    operatorRaw: "SES",
+    occupancyMajority: "DirecTV",
     operatorMix: [
-      { operator: "DirecTV, Inc.", count: 2, share: 0.4 },
-      { operator: "SES", count: 1, share: 0.2 },
+      { operator: "DirecTV", count: 2, share: 0.4, operatorRaw: ["DirecTV, Inc."] },
+      { operator: "SES", count: 1, share: 0.2, operatorRaw: ["SES S.A."] },
     ],
+    ituRecorded: "not_in_product",
     country: "USA",
     purpose: "Communications",
     status: "active",
@@ -161,6 +164,7 @@ describe("product chrome — Fair value, Trust bar, Terminal fold", () => {
       longitude: -101,
       label: "101°W",
       operator: "SES",
+      operatorRaw: "SES",
       country: "USA",
       purpose: "Communications",
       status: "active",
@@ -247,6 +251,12 @@ describe("product chrome — Fair value, Trust bar, Terminal fold", () => {
     assert.doesNotMatch(panel, /text-3xl/);
     assert.match(html, /data-trust-bar/);
     assert.match(html, /data-terminal-experimental="sim-book"/);
+    assert.match(html, /data-itu-recorded="not_in_product"/);
+    assert.match(html, /Unrecorded in Clarke/);
+    assert.equal(defaultTerminalRendersItuStubAsPrimary(html), false);
+    assert.doesNotMatch(primaryTerminalRegion(html), /data-rights-layer="itu"/);
+    assert.match(html, /data-terminal-experimental="rights-stubs"/);
+    assert.match(html, /data-rights-layer="itu"/);
   });
 
   it("treats registry, Terminal, and Docs routes as data surfaces (no Earth wallpaper)", () => {

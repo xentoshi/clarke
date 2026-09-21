@@ -1,10 +1,12 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { statusColors, statusLabels, bandColors } from "@/data/orbital-slots";
 import type { SlotTerminalModel } from "@/lib/slot-terminal";
 import type { Entitlements } from "@/lib/auth";
 import { formatAsOfDate } from "@/lib/provenance";
 import { parseUcsLaunchYear } from "@/lib/occupancy-quality";
 import { formatOperatorMix } from "@/lib/operator-mix";
+import { operatorDisplay } from "@/lib/operator-identity";
 import { formatLonFixed } from "@/lib/geo-angle";
 import { recordedRightsLayers, stubRightsLayers } from "@/lib/terminal-default";
 import { Metric } from "./Metric";
@@ -17,6 +19,8 @@ import { CompareTray } from "./CompareTray";
 import { ExperimentalDisclosure } from "./ExperimentalDisclosure";
 import { TrustMark } from "./TrustMark";
 import { TrustBar } from "./TrustBar";
+import { OperatorName } from "./OperatorName";
+import { ituPresence } from "@/lib/itu-presence";
 
 const congTone = (tier: string) =>
   tier === "critical" || tier === "high" ? "red" :
@@ -33,6 +37,7 @@ export function SlotTerminalView({
   const v = model.valuation;
   const recordedRights = recordedRightsLayers(model.rightsChain);
   const stubRights = stubRightsLayers(model.rightsChain);
+  const itu = ituPresence();
 
   return (
     <div className="max-w-[1440px] mx-auto px-3 sm:px-5 py-6">
@@ -57,12 +62,12 @@ export function SlotTerminalView({
         </p>
         <h1 className="text-3xl sm:text-4xl font-bold text-white font-mono tracking-tight">{model.label}</h1>
         <p className="text-zinc-400 text-sm mt-1">
-          {model.operator || "Unknown operator"}
+          <OperatorName display={model.operator || "Unknown operator"} raw={model.operatorRaw} />
           {model.country ? ` · ${model.country}` : ""}
           {model.purpose ? ` · ${model.purpose}` : ""}
         </p>
         {model.operatorMix.length > 1 && (
-          <p className="text-zinc-500 text-xs mt-1.5">
+          <p className="text-zinc-500 text-xs mt-1.5" title={model.operatorMix.map((m) => m.operatorRaw.join("; ")).join(" · ")}>
             Occupancy ±0.4°: {formatOperatorMix(model.operatorMix, model.satCount)}
             {model.occupancyMajority && model.occupancyMajority !== model.operator
               ? ` · window majority is not the registry operator`
@@ -72,6 +77,13 @@ export function SlotTerminalView({
         <div className="flex flex-wrap gap-1.5 mt-3">
           <span className={`text-[10px] px-2 py-0.5 rounded border font-mono ${statusColors[model.status]}`}>
             {statusLabels[model.status]}
+          </span>
+          <span
+            data-itu-recorded={model.ituRecorded}
+            title={itu.detail}
+            className="text-[10px] px-2 py-0.5 rounded border border-zinc-700 text-zinc-500 font-mono"
+          >
+            {itu.chip}
           </span>
           <span className="text-[10px] px-2 py-0.5 rounded border border-zinc-700 text-zinc-400 font-mono">
             {v.license.biuLabel}
@@ -149,7 +161,10 @@ export function SlotTerminalView({
           <section className="border border-white/[0.08] p-4">
             <h2 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3">Occupancy</h2>
             <dl className="space-y-1.5 text-xs">
-              <Row k="Registry operator" val={model.operator || "—"} />
+              <Row
+                k="Registry operator"
+                val={<OperatorName display={model.operator || "—"} raw={model.operatorRaw} />}
+              />
               {model.operatorMix.length > 1 && (
                 <Row k="Window majority" val={model.occupancyMajority || "—"} />
               )}
@@ -167,6 +182,16 @@ export function SlotTerminalView({
               <Row k="Remaining life" val={v.occupancyQuality.detail} />
               <Row k="Coverage proxy" val={v.coverage.detail} />
             </dl>
+            {model.operatorMix.some((m) => m.operatorRaw.some((r) => r !== m.operator)) && (
+              <details className="mt-3 text-[11px] text-zinc-500">
+                <summary className="cursor-pointer text-zinc-600 hover:text-zinc-400">Source operator strings (UCS)</summary>
+                <ul className="mt-1.5 space-y-0.5 font-mono text-[10px] text-zinc-600">
+                  {model.operatorMix.map((m) => (
+                    <li key={m.operator}>{m.operator}: {m.operatorRaw.join("; ")}</li>
+                  ))}
+                </ul>
+              </details>
+            )}
             <div className="text-[10px] font-mono text-zinc-700 mt-3">
               {model.provenance.occupancy.source} · {formatAsOfDate(model.provenance.occupancy.asOf)}
             </div>
@@ -200,7 +225,9 @@ export function SlotTerminalView({
                 {model.fccAuthorizations.map((auth) => (
                   <tr key={auth.id} className="border-b border-white/[0.04] last:border-0">
                     <td className="px-4 py-3 text-white text-xs font-mono">{auth.satelliteName ?? "—"}</td>
-                    <td className="px-4 py-3 hidden sm:table-cell text-zinc-400 text-xs">{auth.licensee ?? "—"}</td>
+                    <td className="px-4 py-3 hidden sm:table-cell text-zinc-400 text-xs">
+                      <OperatorName display={operatorDisplay(auth.licensee) || "—"} raw={auth.licensee} />
+                    </td>
                     <td className="px-4 py-3 hidden md:table-cell text-zinc-500 text-xs">{auth.service ?? "—"}</td>
                     <td className="px-4 py-3 text-right text-sky-400 text-xs font-mono">{auth.callSign ?? "—"}</td>
                   </tr>
@@ -248,7 +275,9 @@ export function SlotTerminalView({
                       {sat.positionSource === "tle" ? "TLE occupancy" : sat.positionSource === "ucs" ? "UCS fallback" : "no position"}
                     </div>
                   </td>
-                  <td className="px-4 py-3 hidden sm:table-cell text-zinc-400 text-xs">{sat.operator ?? "—"}</td>
+                  <td className="px-4 py-3 hidden sm:table-cell text-zinc-400 text-xs">
+                    <OperatorName display={operatorDisplay(sat.operator) || "—"} raw={sat.operator} />
+                  </td>
                   <td className="px-4 py-3 hidden md:table-cell text-zinc-500 text-xs">{sat.detailedPurpose ?? sat.purpose ?? "—"}</td>
                   <td className="px-4 py-3 hidden lg:table-cell text-right text-zinc-500 text-xs font-mono">
                     {sat.longitudeUcs != null ? formatLonFixed(sat.longitudeUcs, 1) : "—"}
@@ -351,7 +380,9 @@ export function SlotTerminalView({
                     <td className="px-4 py-2">
                       <Link href={`/orbital/${c.slug}`} className="text-white text-xs font-mono hover:text-zinc-300">{c.label}</Link>
                     </td>
-                    <td className="px-4 py-2 text-zinc-400 text-xs hidden sm:table-cell">{c.operator || "—"}</td>
+                    <td className="px-4 py-2 text-zinc-400 text-xs hidden sm:table-cell">
+                      <OperatorName display={c.operator || "—"} raw={undefined} />
+                    </td>
                     <td className="px-4 py-2 text-zinc-500 text-xs font-mono text-right">{c.deltaDeg.toFixed(1)}°</td>
                     <td className="px-4 py-2 text-zinc-500 text-xs font-mono text-right">{c.satCount}</td>
                     <td className="px-4 py-2 text-zinc-500 text-xs font-mono text-right">{c.congestionScore}</td>
@@ -380,7 +411,7 @@ export function SlotTerminalView({
           )}
         </ExperimentalDisclosure>
 
-        <ExperimentalDisclosure id="rights-stubs" title="Unrecorded layers (ITU filing + sub-lease stubs)">
+        <ExperimentalDisclosure id="rights-stubs" title="Unrecorded layers (ITU SNS not ingested; sub-lease stub)">
           <RightsChain links={stubRights} variant="stubs" />
         </ExperimentalDisclosure>
 
@@ -396,7 +427,8 @@ export function SlotTerminalView({
           {model.modelRunAsOf ? ` · snapshots seeded ${model.modelRunAsOf} (model path, not trades)` : " · history synthesized (run npm run seed:valuations to persist)"}
         </p>
         <p>
-          Default Terminal is occupancy + FCC + freshness + labeled model. Simulated book, ITU/sub-lease stubs, and seeded sparklines are Experimental. Not financial advice.
+          Default Terminal is occupancy + FCC + freshness + labeled model. ITU SNS is not ingested
+          ({itu.chip}). Simulated book, ITU/sub-lease stubs, and seeded sparklines are Experimental. Not financial advice.
         </p>
       </footer>
       <CompareTray pro={entitlements.pro} />
@@ -404,7 +436,7 @@ export function SlotTerminalView({
   );
 }
 
-function Row({ k, val }: { k: string; val: string }) {
+function Row({ k, val }: { k: string; val: ReactNode }) {
   return (
     <div className="flex justify-between gap-3">
       <dt className="text-zinc-600 shrink-0">{k}</dt>

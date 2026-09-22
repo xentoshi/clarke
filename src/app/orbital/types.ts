@@ -44,6 +44,8 @@ export interface Facets {
   congestionMin: number;
   congestionMax: number;
   fccOnly: boolean;
+  /** Registry rows with a UCS/TLE disagreement inside the occupancy window. */
+  disputesOnly: boolean;
 }
 
 export const EMPTY_FACETS: Facets = {
@@ -55,4 +57,5 @@ export const EMPTY_FACETS: Facets = {
   congestionMin: 0,
   congestionMax: 100,
   fccOnly: false,
+  disputesOnly: false,
 };

@@ -15,6 +15,7 @@ function activeCount(f: Facets): number {
   return (
     f.regions.length + f.operators.length + f.bands.length + f.statuses.length +
     (f.fccOnly ? 1 : 0) +
+    (f.disputesOnly ? 1 : 0) +
     (f.congestionMin > 0 || f.congestionMax < 100 ? 1 : 0)
   );
 }
@@ -39,7 +40,7 @@ export default function FacetPanel({
         <span className="text-zinc-400 font-medium">Filters{n > 0 ? ` (${n})` : ""}</span>
         {n > 0 && (
           <button
-            onClick={() => onChange({ ...facets, regions: [], operators: [], bands: [], statuses: [], congestionMin: 0, congestionMax: 100, fccOnly: false })}
+            onClick={() => onChange({ ...facets, regions: [], operators: [], bands: [], statuses: [], congestionMin: 0, congestionMax: 100, fccOnly: false, disputesOnly: false })}
             className="text-zinc-600 hover:text-zinc-300 transition-colors"
           >
             Clear
@@ -116,6 +117,10 @@ export default function FacetPanel({
         <button onClick={() => set({ fccOnly: !facets.fccOnly })}
           className="flex items-center gap-2 w-full text-left text-zinc-400 hover:text-zinc-200 transition-colors">
           <Check on={facets.fccOnly} /> FCC licensed only
+        </button>
+        <button onClick={() => set({ disputesOnly: !facets.disputesOnly })}
+          className="flex items-center gap-2 w-full text-left text-zinc-400 hover:text-zinc-200 transition-colors">
+          <Check on={facets.disputesOnly} /> Position disagreement
         </button>
       </div>
     </div>

@@ -53,7 +53,7 @@ export function createServer(): McpServer {
 
   server.tool(
     "clarke_get_terminal",
-    "Slot Terminal model for one GEO position: TLE-primary occupancy (UCS/TLE longs, Δ, disputed flag), recorded FCC layers, valuation v0 with drivers, and nearest comps. Simulated capacity book, ITU/sub-lease stubs, and seeded history are labeled experimental — not the default Terminal view.",
+    "Slot Terminal model for one GEO position: TLE-primary occupancy (UCS/TLE longs, Δ, disputed flag), recorded FCC layers, valuation v0 with drivers, and nearest comps. Operator names are canonicalized with a curated alias map (raw strings on operatorRaw). ITU SNS is not ingested (`ituRecorded=not_in_product`). Simulated capacity book, ITU/sub-lease stubs, and seeded history are labeled experimental, not the default Terminal view.",
     { slug: z.string().regex(SAFE_SLUG).describe("Slot slug, e.g. '101w'") },
     async ({ slug }) => {
       const { buildSlotTerminal } = await import("../lib/slot-terminal");

@@ -25,7 +25,7 @@ export function ExperimentalDisclosure({
       <div className="px-4 py-3 border-t border-amber-900/30">
         <p className="text-[11px] text-amber-200/70 leading-relaxed mb-3">
           This block is quarantined from the default Slot Terminal. It is a labeled stub or simulation,
-          not recorded public occupancy or FCC data, and it is not a market.
+          not recorded public occupancy or FCC data, and it is not a market. ITU SNS is not ingested.
         </p>
         {children}
       </div>

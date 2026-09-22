@@ -11,6 +11,7 @@ export interface ExplorerRow {
   longitude: number;
   label: string;
   operator: string;
+  operatorRaw: string;
   country: string;
   purpose: string | null;
   status: SlotStatus;

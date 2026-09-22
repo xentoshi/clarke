@@ -10,6 +10,7 @@ import {
   type PositionSource,
 } from "./position-authority";
 import type { OrbitalSlot } from "@/data/orbital-slots";
+import { resolveOperator } from "./operator-identity";
 
 export { lonToSlug, slugToLon, formatLon } from "./slot-utils";
 export { COLOCATION_WINDOW_DEG, NEIGHBORHOOD_WINDOW_DEG } from "./position-authority";
@@ -298,8 +299,12 @@ export type CongestionTier = "sparse" | "low" | "moderate" | "high" | "critical"
 export interface CongestionFactors {
   coLocated: number;          // satellites within ±0.4° (direct co-location)
   neighborhood: number;       // satellites within ±2° (arc density)
-  distinctOperators: number;  // distinct operators in the ±2° neighborhood
+  /** Distinct *source* operator strings. Used in the congestion score; do not alias. */
+  distinctOperators: number;
+  /** Canonical display name of the raw majority string. Class M. */
   dominantOperator: string | null;
+  /** UCS/FCC source string that won the neighborhood majority. Class V. */
+  dominantOperatorRaw: string | null;
   dominantShare: number;      // 0..1, share of the dominant operator in the neighborhood
 }
 
@@ -316,7 +321,14 @@ const EMPTY_CONGESTION: CongestionData = {
   score: 0,
   tier: "sparse",
   label: "Sparse",
-  factors: { coLocated: 0, neighborhood: 0, distinctOperators: 0, dominantOperator: null, dominantShare: 0 },
+  factors: {
+    coLocated: 0,
+    neighborhood: 0,
+    distinctOperators: 0,
+    dominantOperator: null,
+    dominantOperatorRaw: null,
+    dominantShare: 0,
+  },
 };
 
 function tierForScore(score: number): { tier: CongestionTier; label: string } {
@@ -358,19 +370,22 @@ export function getCongestion(lon: number): CongestionData {
   const neighborhood = rows.length;
   const coLocated = rows.filter((r) => withinLongitudeWindow(r.longitudeGeo!, lon, COLOCATION_TOLERANCE_DEG)).length;
 
+  // Count distinct *source* strings so aliasing cannot change the congestion
+  // score / valuation scarcity driver. Display name is canonicalized after.
   const opCounts = new Map<string, number>();
   for (const r of rows) {
     const op = (r.operator ?? "").trim();
     if (op) opCounts.set(op, (opCounts.get(op) ?? 0) + 1);
   }
   const distinctOperators = opCounts.size;
-  let dominantOperator: string | null = null;
+  let dominantOperatorRaw: string | null = null;
   let dominantCount = 0;
   for (const [op, n] of opCounts) {
-    if (n > dominantCount) { dominantCount = n; dominantOperator = op; }
+    if (n > dominantCount) { dominantCount = n; dominantOperatorRaw = op; }
   }
   const attributed = [...opCounts.values()].reduce((a, b) => a + b, 0);
   const dominantShare = attributed > 0 ? dominantCount / attributed : 0;
+  const dominantOperator = dominantOperatorRaw ? resolveOperator(dominantOperatorRaw).display : null;
 
   const densityScore = Math.min(neighborhood / 20, 1) * 50;
   const coLocationScore = Math.min(coLocated / 6, 1) * 30;
@@ -384,7 +399,14 @@ export function getCongestion(lon: number): CongestionData {
     score,
     tier,
     label,
-    factors: { coLocated, neighborhood, distinctOperators, dominantOperator, dominantShare },
+    factors: {
+      coLocated,
+      neighborhood,
+      distinctOperators,
+      dominantOperator,
+      dominantOperatorRaw,
+      dominantShare,
+    },
   };
 }
 
@@ -491,11 +513,13 @@ function ucsToSlot(sat: GeoSatellite, decayedNoradIds: Set<string>): OrbitalSlot
   const occ = sat.longitudeGeo ?? 0;
   const lon = slugToLon(lonToSlug(occ)) ?? occ;
   const launchYear = parseUcsLaunchYear(sat.launchDate) ?? undefined;
+  const op = resolveOperator(sat.operator);
   return {
     id: sat.noradId ? `ucs_${sat.noradId}` : sat.cosparId ? `ucs_${sat.cosparId.replace(/[^a-z0-9]/gi, "_")}` : `ucs_geo_${String(lon).replace(".", "_")}`,
     longitude: lon,
     label: formatLon(lon),
-    operator: sat.operator ?? "",
+    operator: op.display,
+    operatorRaw: sat.operator ?? "",
     country: sat.ownerCountry ?? "",
     bands: [],
     status: sat.noradId && decayedNoradIds.has(sat.noradId) ? "inactive" : "active",
@@ -528,8 +552,11 @@ export function mergeWithUcs(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
       (s) => s.longitudeGeo !== null && withinLongitudeWindow(s.longitudeGeo, slot.longitude, TOLERANCE)
     );
     const inferredPurpose = nearby[0]?.purpose ?? "Communications";
+    const op = resolveOperator(slot.operator);
     return {
       ...slot,
+      operator: op.display,
+      operatorRaw: slot.operatorRaw ?? slot.operator,
       source: "curated" as const,
       ucsCount: nearby.length,
       cosparIds: nearby.map((s) => s.cosparId).filter(Boolean) as string[],
@@ -576,11 +603,13 @@ function fccOnlySlots(coveredLons: number[], toleranceDeg: number): OrbitalSlot[
     if (coveredLons.some((c) => withinLongitudeWindow(c, lon, toleranceDeg))) continue;
     const primary = group[0];
     const callSigns = group.map((a) => a.callSign).filter(Boolean).join(", ");
+    const op = resolveOperator(primary.licensee);
     slots.push({
       id: `fcc_${lonToSlug(lon)}`,
       longitude: lon,
       label: formatLon(lon),
-      operator: primary.licensee ?? "",
+      operator: op.display,
+      operatorRaw: primary.licensee ?? "",
       country: primary.administration ?? "",
       bands: [],
       status: "filed",

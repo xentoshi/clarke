@@ -24,7 +24,7 @@ The default Slot Terminal screen is **occupancy + recorded FCC + ingest freshnes
 | Surface | Default Terminal | Why |
 |---|---|---|
 | Simulated capacity book | **Quarantined.** Behind explicit Experimental disclosure only. Not on free/default first screen. | Function of v0 midpoint + congestion. There is no public GEO bid/ask feed. Showing it as a live order book would overclaim. |
-| ITU filing layer | **Quarantined stub.** Collapsed under Experimental “Unrecorded layers.” | SNS is not ingested. A filled panel would look like a recorded deed. |
+| ITU filing layer | **Quarantined stub.** Collapsed under Experimental “Unrecorded layers.” Default Terminal shows a thin chip only: **Unrecorded in Clarke** (`ituRecorded: not_in_product`). | SNS is not ingested. A filled panel would look like a recorded deed. |
 | Sub-lease / capacity-lease layer | **Quarantined stub.** Same Experimental disclosure. | No public sub-lease registry. Must not look like a named lessee. |
 | Seeded valuation sparkline | **Quarantined.** Experimental “model backfill — not trades.” Hidden from default. | `terminal.db` is a deterministic v0 path, not observed trades. |
 | Curated `$NNN M+` overlay | **Visible, secondary.** Class **M** “hand estimate / curated opinion,” under the model range, not a competing headline. Valuation `basis` is always `model`. | Overlay can diverge ~2× from v0. V/M/S discipline. |
@@ -34,14 +34,14 @@ Pro API still returns `bidAsk` / full `rightsChain` / history so agents can insp
 
 GEO Slot Index #1 (`/index`) is distribution content from the same occupancy / FCC fields: enter/leave vs UCS, dispute flips, license-table mismatches. It does not publish prices.
 
-Tests: `src/lib/terminal-default.test.ts` asserts default primary markup does not contain the sim book or ITU stub.
+Tests: `src/lib/terminal-default.test.ts` asserts default primary markup does not contain a filled ITU filing panel (`data-rights-layer="itu"`). The thin Unrecorded chip is allowed. `src/lib/operator-identity.test.ts` covers alias resolution.
 
 ## Ranked issues
 
 | Rank | Severity | Issue | Status |
 |---|---|---|---|
 | 1 | **High** | Remaining-life factor said “no usable lifetime data” on every GEO row. UCS stores **590/590** launch dates as `M/D/YY` (`11/14/10`); the parser required year > 1950, so `expectedLifetimeYears` was ignored. Terminal also printed launch years as `10` / `95` / `6`. UCS-derived `slot.launched` was `13` for MUOS-2. | **Fixed.** Shared `parseUcsLaunchYear`; remaining-life now uses design-life remaining. Re-seed snapshots after the parser fix. |
-| 2 | **High** | Operator contradiction at 101°W: registry/API `slot.operator=SES`, Terminal header = DirecTV (majority of ±0.4° window), congestion dominant = DirecTV (±2°). Occupancy metric implied DirecTV holds all 7 sats. Rights chain named Ligado DIP as *the* licensee because FCC rows are ordered west-to-east. | **Fixed.** Header uses registry/curated operator; occupancy mix is explicit; rights chain lists all FCC licensees. |
+| 2 | **High** | Operator contradiction at 101°W: registry/API `slot.operator=SES`, Terminal header = DirecTV (majority of ±0.4° window), congestion dominant = DirecTV (±2°). Occupancy metric implied DirecTV holds all 7 sats. Rights chain named Ligado DIP as *the* licensee because FCC rows are ordered west-to-east. UCS/FCC strings also disagree (DirecTV vs AT&T, LightSquared vs Ligado, SES S.A. vs SES). | **Fixed.** Header uses registry/curated operator; occupancy mix is explicit; rights chain lists all FCC licensees. Alias map canonicalizes display/grouping; raw strings stay on tooltip/API. |
 | 3 | **High** | “Nearest comps” were other longitudes **inside the same occupancy window** (101.08°W, 100.81°W, …), each re-bundling the same satellites with near-identical model values. | **Fixed.** Comps exclude ±0.4°. |
 | 4 | **High** | Seeded valuation history shown as “persisted snapshot.” `terminal.db` only stores a deterministic v0 path. FCC provenance used the **latest any-source ingest**, so a 21-day-old SSAL looked like “Sep 15.” | **Fixed.** History labeled backfill; FCC/UCS `asOf` is per-source. |
 | 5 | **High** | Live Space-Track TLEs (epoch 2026-09-15) disagree with UCS GEO longitude by **>2° for 204/512** matched objects and **>10° for 168/512**. Ingest only rewrote `longitude_geo = 0` placeholders, so occupancy/congestion/v0 clustered on stale UCS longs (MUOS-2 at 100.1°W vs TLE **172.0°E**). | **Fixed.** Occupancy is TLE-primary (see Position authority). UCS catalog longitude is preserved and shown. |
@@ -122,22 +122,23 @@ Legend: **V** = verified from a named public source in this product · **M** = m
 | UCS longitude | V | UCS catalog. Stale vs TLE for 204/512 matched GEO objects. Shown next to TLE. |
 | TLE longitude / epoch | V | Space-Track TLE at ingest. Sub-satellite lon at TLE epoch (`tsince=0`). |
 | `positionDisputed` | M | Circular \|UCS−TLE\| > 2°. Trust bar chip when in-window sats disagree or UCS ghosts remain. |
-| Co-located satellite names, operators, purposes | V | UCS identity. Names checked well; operators can be stale (LightSquared, “DirecTV, Inc.”). |
+| Co-located satellite names, operators, purposes | V | UCS identity. Names checked well. Operator *display* is class M (alias map); hover/API keeps the UCS string. |
+| Operator display / grouping | M | Curated alias map (`src/data/operator-aliases.ts`) over UCS/FCC strings. Canonical name is shown on Registry rows, occupancy mix, congestion majority, FCC licensee, and agents `operator` / `operatorCanonical`. Raw source stays on tooltip, occupancy expand, and API `operatorRaw` / `aliases`. Not a corporate-ownership graph. Joint `A/B` UCS strings stay unmapped unless listed. Congestion *score* still counts distinct source strings so valuation is unchanged. |
 | Satellite count | M | Count of GEO rows whose **occupancy** lon is in ±0.4°, not a unique ITU network count. |
 | Launch year | V | UCS `M/D/YY` now parsed. Was **B**. |
 | Remaining life | M | UCS launch + **design** lifetime. Not remaining license term. Was **B** (always missing). |
-| Registry / curated operator | V/M | Hand-set for curated slots; else UCS. |
-| Occupancy-window majority | V | Mode of UCS operators in the TLE-primary ±0.4° window. Was shown as *the* operator (**B**, previous PR). |
-| Congestion score / tier | M | TLE-primary density ±2°, co-location ±0.4°, operator contention. Decayed Space-Track objects excluded; graveyard/inclined not classified. |
-| Congestion dominant operator | V | Majority in ±2° neighborhood — often a different company than the registry row (ISRO vs Intelsat at 72°E). |
+| Registry / curated operator | V/M | Hand-set for curated slots then passed through the alias map; else UCS canonicalized. Raw on `operatorRaw`. |
+| Occupancy-window majority | V/M | Mode of UCS operators in the TLE-primary ±0.4° window, grouped by canonical name. Was shown as *the* operator (**B**, previous PR). |
+| Congestion score / tier | M | TLE-primary density ±2°, co-location ±0.4°, operator contention on **raw** source strings. Decayed Space-Track objects excluded; graveyard/inclined not classified. |
+| Congestion dominant operator | V/M | Majority source string in ±2°, displayed under the alias map. Often a different company than the registry row (ISRO vs Intelsat at 72°E). |
 | Fair value point / CI | M | $30M × drivers. **Not a quote.** CI is a confidence spread, not a statistical interval. |
 | Curated `$NNN M+` overlay | M | Hand-checked opinion. Secondary to v0. Not the model, not a headline. Can diverge by 2×. |
 | Coverage GDP/pop | M | Longitude band heuristic (`coverage-proxy.ts`). Not a measured beam. |
 | Spectrum bands | V/M | Curated tags only. UCS-derived rows often empty. |
-| License / BIU | M | Heuristic: UCS sat + FCC row ≠ ITU brought-into-use. “Paper filing” can be a UCS lag (163°W). |
-| FCC table (call sign, licensee, service) | V | SSAL. Freshness is the FCC ingest, not “today.” Notes can mention later ICFS grants. Default Terminal primary. |
-| Rights: national admin / FCC licensees | V | FCC when present; else inferred country. Default Terminal primary. |
-| Rights: ITU filing | S | Not ingested. **Quarantined** — Experimental only; not a filled panel. |
+| License / BIU | M | Heuristic: UCS sat + FCC row ≠ ITU brought-into-use. Labeled as a Clarke hint. “Paper filing” can be a UCS lag (163°W). Do not read BIU from UCS+FCC without this label. |
+| FCC table (call sign, licensee, service) | V | SSAL. Licensee *display* is class M (alias map); raw licensee stays in the cell tooltip and API `licenseeRaw`. Freshness is the FCC ingest, not “today.” Notes can mention later ICFS grants. Default Terminal primary. |
+| Rights: national admin / FCC licensees | V/M | FCC when present; else inferred country. Licensee names canonicalized. Default Terminal primary. |
+| Rights: ITU filing | S | Not ingested. Default `ituRecorded: not_in_product`. Thin “Unrecorded in Clarke” chip on the default Terminal. **Quarantined** filled stub is Experimental only. No network names. Not a deed. |
 | Rights: sub-lease | S | No public feed. **Quarantined** — Experimental only. |
 | Simulated capacity book | S | Function of v0 midpoint + congestion. **Quarantined** from default Terminal; Experimental disclosure. |
 | Valuation chart / 30-day history | S | Seeded model path. **Quarantined** from default; labeled MODEL BACKFILL. Not trades. |
@@ -156,16 +157,19 @@ Legend: **V** = verified from a named public source in this product · **M** = m
 - “Congestion is a 0–100 coordination-risk index from TLE-primary occupancy positions, not an ITU filing count.”
 - “Identity of named satellites can be checked against Space-Track / CelesTrak; we do not treat UCS NORAD IDs as authoritative for every row.”
 - “UCS vs TLE longitude disagreement is shown (Δ and `positionDisputed`); TLE longitude is not an FCC or ITU assignment.”
+- “Clarke does not record ITU deeds. `ituRecorded` is `not_in_product` because SNS is not ingested.”
+- “Operator labels are a curated alias map over UCS and FCC strings; source strings remain inspectable.”
 
 **Do not claim**
 
 - Live transponder bids, last trade, or slot appraisal.
-- ITU deed / brought-into-use as recorded (BIU is a Clarke hint).
+- ITU deed / brought-into-use as recorded (BIU is a Clarke hint from UCS occupancy + FCC rows, not SNS).
 - That the curated overlay is the model, or that history is a price index.
 - That the default Terminal is a live exchange (simulated book is Experimental only).
 - That “operator” means exclusive holder of the longitude (it does not).
 - That UCS `last_run` today means 2026 ephemerides.
 - That a TLE sub-satellite longitude is the FCC-authorized or ITU-filed location.
+- That the operator alias map is a live ownership or sub-lease graph.
 
 ## Re-ingest
 

@@ -6,6 +6,8 @@ export interface OrbitalSlot {
   longitude: number; // negative = West, positive = East
   label: string; // e.g. "19.2°E"
   operator: string;
+  /** Raw UCS/FCC/curated string when `operator` is a canonical alias. */
+  operatorRaw?: string;
   country: string;
   bands: Band[];
   status: SlotStatus;

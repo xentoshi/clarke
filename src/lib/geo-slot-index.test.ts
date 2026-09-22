@@ -20,16 +20,25 @@ describe("GEO Slot Index #1", () => {
     assert.ok(d);
     assert.ok(d.satCount >= 1);
     assert.ok(d.left.some((m) => /DirecTV/i.test(m.name)));
+    assert.ok(d.left.length >= 1);
+    // Names of who entered move with each TLE refresh. The claim is the mechanism.
+    assert.ok(d.entered.length >= 1);
+    assert.ok(d.disputeFlips.length >= 1);
     assert.ok(d.fccRows.length >= 1);
     const json = JSON.stringify(d);
     assert.doesNotMatch(json, /prices rose/i);
   });
 
-  it("keeps 163°W FCC license longitude distinct from TLE occupancy", () => {
+  it("includes an FCC filing slot in the Index set (163°W)", () => {
     const d = edition.dossiers.find((x) => x.slug === "163w");
     assert.ok(d);
     assert.ok(d.fccRows.length >= 1);
-    assert.ok(d.satCount === 0 || d.fccNotInOccupancy.length >= 1 || d.entered.length >= 1);
+    if (d.satCount === 0) {
+      assert.equal(d.paperFiling, true);
+      assert.equal(d.tleEpochMax, null);
+    } else {
+      assert.equal(d.paperFiling, false);
+    }
   });
 
   it("does not use valuation as the Index headline fields", () => {

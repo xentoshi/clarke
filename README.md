@@ -12,7 +12,7 @@ Clarke normalizes public data across GEO, LEO, and MEO to build the orbital asse
 
 ## What it is
 
-- **Orbital registry** — a searchable, filterable, exportable explorer over every tracked GEO position, built from ITU, FCC, Space-Track, and UCS public data
+- **Orbital registry** - a searchable, filterable, exportable explorer over every tracked GEO position, built from FCC, Space-Track, and UCS public data. ITU SNS is not ingested.
 - **GEO Slot Index** — `/index` (alias `/research`): method-note occupancy enter/leave, dispute flips, FCC deltas. Not a price index.
 - **Intelligence layer** — valuation model v0 (range + confidence + driver breakdown + 30-day history), a normalized 0–100 congestion / coordination-risk score, and per-source data-freshness tracking
 - **Terminal seats** — free thin registry; Pro unlocks driver breakdown, compare (up to 4), export+, and the Terminal API
@@ -74,7 +74,7 @@ Each run records its timestamp, row count, and **source vintage** (UCS latest GE
 - **Frontend:** Next.js 16, Tailwind CSS 4, Manrope + IBM Plex Mono
 - **Database:** SQLite via `better-sqlite3`
 - **Agent interface:** versioned REST API + MCP server (`@modelcontextprotocol/sdk`)
-- **Data:** ITU SNS, FCC IBFS, Space-Track, UCS Satellite Database, SEC EDGAR
+- **Data:** FCC SSAL, Space-Track, UCS Satellite Database, SEC EDGAR. ITU SNS is not ingested.
 
 ---
 

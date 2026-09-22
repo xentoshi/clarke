@@ -9,8 +9,18 @@ import SlotDrawer from "./SlotDrawer";
 import CsvExportDialog from "./CsvExportDialog";
 import { EMPTY_FACETS, type ExplorerRow, type Facets, type SortKey, type SortDir } from "./types";
 import { CompareTray } from "@/components/terminal/CompareTray";
+import { GeoBeltMap } from "@/components/belt/GeoBeltMap";
+import type { BeltMark } from "@/lib/geo-belt";
 
-export default function OrbitalExplorer({ rows, updated, pro }: { rows: ExplorerRow[]; updated: string | null; pro: boolean }) {
+export default function OrbitalExplorer({
+  rows, updated, pro, beltMarks, beltEpoch,
+}: {
+  rows: ExplorerRow[];
+  updated: string | null;
+  pro: boolean;
+  beltMarks: BeltMark[];
+  beltEpoch: string;
+}) {
   const [facets, setFacets] = useState<Facets>(EMPTY_FACETS);
   const [sortKey, setSortKey] = useState<SortKey>("longitude");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -31,7 +41,7 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
     const q = facets.search.trim().toLowerCase();
     const out = rows.filter((r) => {
       if (q) {
-        const hay = `${r.label} ${r.operator} ${r.country} ${r.satelliteNames.join(" ")}`.toLowerCase();
+        const hay = `${r.label} ${r.operator} ${r.operatorRaw} ${r.country} ${r.satelliteNames.join(" ")}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       if (facets.regions.length && !facets.regions.includes(r.region)) return false;
@@ -40,6 +50,7 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
       if (facets.statuses.length && !facets.statuses.includes(r.status)) return false;
       if (r.congestionScore < facets.congestionMin || r.congestionScore > facets.congestionMax) return false;
       if (facets.fccOnly && !r.fccLicensed) return false;
+      if (facets.disputesOnly && r.positionDisputedCount <= 0) return false;
       return true;
     });
 
@@ -56,6 +67,13 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
     });
     return out;
   }, [rows, facets, sortKey, sortDir]);
+
+  const visibleMarks = useMemo(() => {
+    const slotIds = new Set(filtered.map((r) => r.id));
+    return beltMarks.filter((mark) => slotIds.has(mark.slotId) && (!facets.disputesOnly || mark.dispute === "disputed"));
+  }, [filtered, beltMarks, facets.disputesOnly]);
+
+  const mapHref = facets.disputesOnly ? "/orbital/map?disputes=1" : "/orbital/map";
 
   const onSort = (key: SortKey) => {
     if (key === sortKey) { setSortDir((d) => (d === "asc" ? "desc" : "asc")); return; }
@@ -98,6 +116,10 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
           className="shrink-0 text-[13px] text-muted hover:text-ink pb-2 transition-colors">
           Download CSV
         </button>
+      </div>
+
+      <div className="mb-8">
+        <GeoBeltMap marks={visibleMarks} variant="strip" epochFallback={beltEpoch} mapHref={mapHref} />
       </div>
 
       <FacetPanel facets={facets} onChange={setFacets} operatorOptions={operatorOptions} />

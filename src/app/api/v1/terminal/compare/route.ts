@@ -25,6 +25,8 @@ export async function GET(req: NextRequest) {
       missing: false as const,
       label: model.label,
       operator: model.operator,
+      operatorRaw: model.operatorRaw,
+      ituRecorded: model.ituRecorded,
       country: model.country,
       status: model.status,
       satCount: model.satCount,

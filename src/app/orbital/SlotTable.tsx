@@ -77,7 +77,10 @@ export default function SlotTable({
                           <span className="text-stale text-[12px]" title="TLE occupancy disagrees with UCS catalog">Dispute</span>
                         )}
                       </div>
-                      <div className="text-muted text-[13px] mt-0.5 truncate">
+                      <div
+                        className="text-muted text-[13px] mt-0.5 truncate"
+                        title={r.operatorRaw && r.operatorRaw !== r.operator ? `Source: ${r.operatorRaw}` : undefined}
+                      >
                         {r.operator || "Unknown operator"}
                         {r.country ? ` · ${r.country}` : ""}
                       </div>

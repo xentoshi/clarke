@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { statusLabels } from "@/data/orbital-slots";
 import type { SlotTerminalModel } from "@/lib/slot-terminal";
@@ -5,6 +6,8 @@ import type { Entitlements } from "@/lib/auth";
 import { formatAsOfDate } from "@/lib/provenance";
 import { parseUcsLaunchYear } from "@/lib/occupancy-quality";
 import { formatOperatorMix } from "@/lib/operator-mix";
+import { operatorDisplay } from "@/lib/operator-identity";
+import { ituPresence } from "@/lib/itu-presence";
 import { formatLonFixed } from "@/lib/geo-angle";
 import { recordedRightsLayers, stubRightsLayers } from "@/lib/terminal-default";
 import { ProGate } from "./ProGate";
@@ -16,6 +19,7 @@ import { CompareTray } from "./CompareTray";
 import { ExperimentalDisclosure } from "./ExperimentalDisclosure";
 import { TrustMark } from "./TrustMark";
 import { TrustBar } from "./TrustBar";
+import { OperatorName } from "./OperatorName";
 
 function identityCopy(model: SlotTerminalModel): string {
   const operator = model.operator
@@ -42,6 +46,7 @@ export function SlotTerminalView({
   const v = model.valuation;
   const recordedRights = recordedRightsLayers(model.rightsChain);
   const stubRights = stubRightsLayers(model.rightsChain);
+  const itu = ituPresence();
 
   return (
     <div className="max-w-[920px] mx-auto px-4 sm:px-6 py-14">
@@ -70,13 +75,30 @@ export function SlotTerminalView({
           {identityCopy(model)}
         </p>
         {model.operatorMix.length > 1 && (
-          <p className="text-muted text-[15px] mt-3 leading-relaxed max-w-2xl">
+          <p
+            className="text-muted text-[15px] mt-3 leading-relaxed max-w-2xl"
+            title={model.operatorMix.map((m) => m.operatorRaw.join("; ")).join(" · ")}
+          >
             Occupancy ±0.4°: {formatOperatorMix(model.operatorMix, model.satCount)}
             {model.occupancyMajority && model.occupancyMajority !== model.operator
               ? `. Window majority is not the registry operator.`
               : "."}
           </p>
         )}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-5 text-[13px]">
+          <span className="text-muted">{statusLabels[model.status]}</span>
+          <span
+            data-itu-recorded={model.ituRecorded}
+            title={itu.detail}
+            className="text-muted border border-line rounded-full px-2.5 py-0.5"
+          >
+            {itu.chip}
+          </span>
+          <span className="text-faint">{v.license.biuLabel}</span>
+          {model.fccAuthorizations.length > 0 && (
+            <span className="text-verified">FCC ×{model.fccAuthorizations.length}</span>
+          )}
+        </div>
       </header>
 
       <TrustBar vintage={model.sourceVintage} positionTrust={model.positionTrust} />
@@ -99,7 +121,10 @@ export function SlotTerminalView({
         </div>
 
         <dl className="grid sm:grid-cols-2 gap-x-10 gap-y-4 text-[15px] max-w-2xl">
-          <Row k="Registry operator" val={model.operator || "—"} />
+          <Row
+            k="Registry operator"
+            val={<OperatorName display={model.operator || "—"} raw={model.operatorRaw} />}
+          />
           {model.operatorMix.length > 1 && (
             <Row k="Window majority" val={model.occupancyMajority || "—"} />
           )}
@@ -119,6 +144,16 @@ export function SlotTerminalView({
             <Row k="Bands" val={model.bands.join(", ")} />
           )}
         </dl>
+        {model.operatorMix.some((m) => m.operatorRaw.some((r) => r !== m.operator)) && (
+          <details className="mt-6 text-[14px] text-muted max-w-2xl">
+            <summary className="cursor-pointer text-faint hover:text-ink">Source operator strings (UCS)</summary>
+            <ul className="mt-2 space-y-1 font-mono text-[12px] text-faint">
+              {model.operatorMix.map((m) => (
+                <li key={m.operator}>{m.operator}: {m.operatorRaw.join("; ")}</li>
+              ))}
+            </ul>
+          </details>
+        )}
 
         <h3 className="text-lg font-medium text-ink mt-12 mb-4">
           Co-located satellites ({model.satellites.length})
@@ -153,7 +188,9 @@ export function SlotTerminalView({
                       {sat.positionSource === "tle" ? "TLE occupancy" : sat.positionSource === "ucs" ? "UCS fallback" : "no position"}
                     </div>
                   </td>
-                  <td className="py-3.5 pr-4 hidden sm:table-cell text-muted text-[14px]">{sat.operator ?? "—"}</td>
+                  <td className="py-3.5 pr-4 hidden sm:table-cell text-muted text-[14px]">
+                    <OperatorName display={operatorDisplay(sat.operator) || "—"} raw={sat.operator} />
+                  </td>
                   <td className="py-3.5 pr-4 hidden md:table-cell text-muted text-[14px]">{sat.detailedPurpose ?? sat.purpose ?? "—"}</td>
                   <td className="py-3.5 pl-4 hidden lg:table-cell text-right text-muted text-[14px] font-mono">
                     {sat.longitudeUcs != null ? formatLonFixed(sat.longitudeUcs, 1) : "—"}
@@ -221,7 +258,9 @@ export function SlotTerminalView({
                   {model.fccAuthorizations.map((auth) => (
                     <tr key={auth.id} className="border-b border-line last:border-0">
                       <td className="py-3.5 pr-4 text-ink text-[15px]">{auth.satelliteName ?? "—"}</td>
-                      <td className="py-3.5 pr-4 hidden sm:table-cell text-muted text-[14px]">{auth.licensee ?? "—"}</td>
+                      <td className="py-3.5 pr-4 hidden sm:table-cell text-muted text-[14px]">
+                        <OperatorName display={operatorDisplay(auth.licensee) || "—"} raw={auth.licensee} />
+                      </td>
                       <td className="py-3.5 pr-4 hidden md:table-cell text-muted text-[14px]">{auth.service ?? "—"}</td>
                       <td className="py-3.5 pl-4 text-right text-ink text-[14px]">{auth.callSign ?? "—"}</td>
                     </tr>
@@ -346,7 +385,9 @@ export function SlotTerminalView({
                     <td className="py-2.5 pr-4">
                       <Link href={`/orbital/${c.slug}`} className="text-ink text-[14px] font-mono hover:text-muted">{c.label}</Link>
                     </td>
-                    <td className="py-2.5 pr-4 text-muted text-[14px] hidden sm:table-cell">{c.operator || "—"}</td>
+                    <td className="py-2.5 pr-4 text-muted text-[14px] hidden sm:table-cell">
+                      <OperatorName display={c.operator || "—"} />
+                    </td>
                     <td className="py-2.5 pl-4 text-muted text-[14px] tabular-nums text-right">{c.deltaDeg.toFixed(1)}°</td>
                     <td className="py-2.5 pl-4 text-muted text-[14px] tabular-nums text-right">{c.satCount}</td>
                     <td className="py-2.5 pl-4 text-muted text-[14px] tabular-nums text-right">{c.congestionScore}</td>
@@ -375,7 +416,7 @@ export function SlotTerminalView({
           )}
         </ExperimentalDisclosure>
 
-        <ExperimentalDisclosure id="rights-stubs" title="Unrecorded layers (ITU filing + sub-lease stubs)">
+        <ExperimentalDisclosure id="rights-stubs" title="Unrecorded layers (ITU SNS not ingested; sub-lease stub)">
           <RightsChain links={stubRights} variant="stubs" />
         </ExperimentalDisclosure>
 
@@ -391,7 +432,8 @@ export function SlotTerminalView({
           {model.modelRunAsOf ? ` · snapshots seeded ${model.modelRunAsOf} (model path, not trades)` : " · history synthesized (run npm run seed:valuations to persist)"}
         </p>
         <p>
-          Default Terminal is occupancy + FCC + freshness + labeled model. Simulated book, ITU/sub-lease stubs, and seeded sparklines are Experimental. Not financial advice.
+          Default Terminal is occupancy + FCC + freshness + labeled model. ITU SNS is not ingested
+          ({itu.chip}). Simulated book, ITU/sub-lease stubs, and seeded sparklines are Experimental. Not financial advice.
         </p>
       </footer>
       <CompareTray pro={entitlements.pro} />
@@ -399,7 +441,7 @@ export function SlotTerminalView({
   );
 }
 
-function Row({ k, val }: { k: string; val: string }) {
+function Row({ k, val }: { k: string; val: ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
       <dt className="text-faint text-[13px]">{k}</dt>

@@ -41,7 +41,7 @@ const emptyCongestion: CongestionData = {
   score: 40,
   tier: "moderate",
   label: "Moderate",
-  factors: { coLocated: 2, neighborhood: 4, distinctOperators: 2, dominantOperator: "SES", dominantShare: 0.5 },
+  factors: { coLocated: 2, neighborhood: 4, distinctOperators: 2, dominantOperator: "SES", dominantOperatorRaw: "SES", dominantShare: 0.5 },
 };
 
 const fccAuths = [
@@ -108,7 +108,7 @@ describe("default Terminal quarantine", () => {
     assert.match(html, /Hand estimate \/ curated opinion/);
     assert.match(html, /\$350M\+/);
     assert.doesNotMatch(primaryTerminalRegion(html), /Simulated capacity book/i);
-    assert.doesNotMatch(primaryTerminalRegion(html), /ITU filing/i);
+    assert.doesNotMatch(primaryTerminalRegion(html), /data-rights-layer="itu"/);
   });
 
   it("splits recorded FCC layers from ITU / sub-lease stubs", () => {
@@ -139,10 +139,10 @@ describe("default Terminal quarantine", () => {
     );
     assert.doesNotMatch(recordedHtml, /data-rights-layer="itu"/);
     assert.doesNotMatch(recordedHtml, /data-rights-layer="sublease"/);
-    assert.doesNotMatch(recordedHtml, /Not ingested — ITU SNS/);
+    assert.doesNotMatch(recordedHtml, /Not recorded in Clarke/);
     assert.doesNotMatch(recordedHtml, /No public sub-lease registry/);
     assert.match(recordedHtml, /FCC/);
-    assert.match(recordedHtml, /SES Americom/);
+    assert.match(recordedHtml, /SES/);
 
     const v = valuateSlot(sample, emptyCongestion, { satCount: 5, fccLicensed: true });
     const book = simulatedCapacityBook(v, emptyCongestion, "2026-09-15T00:00:00.000Z");

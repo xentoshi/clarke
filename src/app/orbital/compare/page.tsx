@@ -51,6 +51,7 @@ export default async function ComparePage({
 
   const rows: { key: string; label: string; get: (m: NonNullable<(typeof models)[number]>) => string }[] = [
     { key: "op", label: "Operator", get: (m) => m.operator || "—" },
+    { key: "itu", label: "ITU", get: (m) => (m.ituRecorded === "not_in_product" ? "not recorded in Clarke" : m.ituRecorded) },
     { key: "st", label: "Status", get: (m) => statusLabels[m.status] },
     { key: "sats", label: "Occupancy", get: (m) => String(m.satCount) },
     { key: "cong", label: "Congestion", get: (m) => `${m.congestion.score} · ${m.congestion.label}` },

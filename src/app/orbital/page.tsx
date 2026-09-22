@@ -2,6 +2,7 @@ import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
 import OrbitalExplorer from "./OrbitalExplorer";
 import { buildExplorerRows } from "@/lib/explorer";
+import { buildGeoBelt } from "@/lib/belt-data";
 import { getLatestIngest } from "@/lib/freshness";
 import { getEntitlements } from "@/lib/auth";
 
@@ -14,6 +15,7 @@ export const metadata = buildMeta({
 
 export default async function OrbitalPage() {
   const rows = buildExplorerRows();
+  const belt = buildGeoBelt();
   const latest = getLatestIngest();
   const { pro } = await getEntitlements();
   const updated = latest
@@ -32,6 +34,9 @@ export default async function OrbitalPage() {
           Open a row for the Slot Terminal. Fair value is a labeled model, hidden by default.
         </p>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-6 text-[14px]">
+          <Link href="/orbital/map" className="text-ink hover:text-muted transition-colors">
+            Belt
+          </Link>
           <Link href="/orbital/101w" className="text-ink hover:text-muted transition-colors">
             Sample Terminal
           </Link>
@@ -46,7 +51,7 @@ export default async function OrbitalPage() {
           </Link>
         </div>
       </div>
-      <OrbitalExplorer rows={rows} updated={updated} pro={pro} />
+      <OrbitalExplorer rows={rows} updated={updated} pro={pro} beltMarks={belt.marks} beltEpoch={belt.epochLabel} />
     </div>
   );
 }

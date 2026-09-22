@@ -17,6 +17,7 @@ function activeCount(f: Facets): number {
   return (
     f.regions.length + f.operators.length + f.bands.length + f.statuses.length +
     (f.fccOnly ? 1 : 0) +
+    (f.disputesOnly ? 1 : 0) +
     (f.congestionMin > 0 || f.congestionMax < 100 ? 1 : 0)
   );
 }
@@ -81,6 +82,9 @@ export default function FacetPanel({
         <Chip on={facets.fccOnly} onClick={() => set({ fccOnly: !facets.fccOnly })}>
           FCC licensed
         </Chip>
+        <Chip on={facets.disputesOnly} onClick={() => set({ disputesOnly: !facets.disputesOnly })}>
+          Position disagreement
+        </Chip>
         <button
           type="button"
           onClick={() => setMore((o) => !o)}
@@ -91,7 +95,7 @@ export default function FacetPanel({
         {n > 0 && (
           <button
             type="button"
-            onClick={() => onChange({ ...facets, regions: [], operators: [], bands: [], statuses: [], congestionMin: 0, congestionMax: 100, fccOnly: false })}
+            onClick={() => onChange({ ...facets, regions: [], operators: [], bands: [], statuses: [], congestionMin: 0, congestionMax: 100, fccOnly: false, disputesOnly: false })}
             className="text-faint hover:text-ink transition-colors"
           >
             Clear ({n})

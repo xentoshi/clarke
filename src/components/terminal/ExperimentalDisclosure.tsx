@@ -25,7 +25,7 @@ export function ExperimentalDisclosure({
       <div className="pb-5">
         <p className="text-[14px] text-stale leading-relaxed mb-3">
           This block is quarantined from the default Slot Terminal. It is a labeled stub or simulation,
-          not recorded public occupancy or FCC data, and it is not a market.
+          not recorded public occupancy or FCC data, and it is not a market. ITU SNS is not ingested.
         </p>
         {children}
       </div>

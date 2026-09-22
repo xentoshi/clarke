@@ -16,7 +16,7 @@ function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
         <thead>
           <tr>
             {headers.map((h) => (
-              <th key={h} className="text-left text-white/50 font-mono uppercase tracking-wider px-4 py-2 border border-zinc-800 bg-zinc-900/40">{h}</th>
+              <th key={h} className="text-left text-faint text-xs font-medium px-4 py-2 border border-line bg-canvas">{h}</th>
             ))}
           </tr>
         </thead>
@@ -24,7 +24,7 @@ function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
           {rows.map((row, i) => (
             <tr key={i}>
               {row.map((cell, j) => (
-                <td key={j} className="px-4 py-2 text-zinc-400 border border-zinc-800 leading-relaxed">{cell}</td>
+                <td key={j} className="px-4 py-2 text-muted border border-line leading-relaxed">{cell}</td>
               ))}
             </tr>
           ))}
@@ -210,7 +210,7 @@ export default function Post() {
       </p>
 
       <h2 id="sources">Sources</h2>
-      <ol className="text-zinc-600 text-xs space-y-1 font-mono">
+      <ol className="text-faint text-xs space-y-1 font-mono">
         <li>Intelsat S.A. Bankruptcy Filing, Eastern District of Virginia, Case No. 3:20-bk-32299 (May 14, 2020)</li>
         <li>Intelsat S.A. Form 8-K / EX-99.1, SEC EDGAR (February 2020)</li>
         <li>FCC Report and Order, C-Band Spectrum Reallocation, FCC-20-22 (March 2020)</li>

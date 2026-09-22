@@ -26,14 +26,7 @@ export default function OrbitalExplorer({
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [selected, setSelected] = useState<ExplorerRow | null>(null);
   const [csvOpen, setCsvOpen] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [showFairValue, setShowFairValue] = useState(false);
-
-  const filterCount =
-    facets.regions.length + facets.operators.length + facets.bands.length + facets.statuses.length +
-    (facets.fccOnly ? 1 : 0) +
-    (facets.disputesOnly ? 1 : 0) +
-    (facets.congestionMin > 0 || facets.congestionMax < 100 ? 1 : 0);
 
   const operatorOptions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -101,51 +94,44 @@ export default function OrbitalExplorer({
 
   return (
     <>
-      <div className="mb-4"><ExplorerStats rows={rows} updated={updated} /></div>
+      <div className="mb-8"><ExplorerStats rows={rows} updated={updated} /></div>
 
-      {/* Controls */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <input
-          value={facets.search}
-          onChange={(e) => setFacets({ ...facets, search: e.target.value })}
-          placeholder="Search slot, operator, country, satellite…"
-          className="flex-1 min-w-0 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
-        />
-        <button onClick={() => setFiltersOpen((o) => !o)}
-          className="lg:hidden shrink-0 border border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white rounded-lg px-3 py-2 text-xs font-medium transition-colors">
-          Filters{filterCount > 0 ? ` (${filterCount})` : ""}
-        </button>
+      <div className="flex flex-wrap items-end gap-3 mb-6 pb-5 border-b border-line">
+        <label className="flex-1 min-w-[16rem]">
+          <span className="sr-only">Search registry</span>
+          <input
+            value={facets.search}
+            onChange={(e) => setFacets({ ...facets, search: e.target.value })}
+            placeholder="Filter by slot, operator, country, satellite"
+            className="w-full bg-transparent border-0 border-b border-line px-0 py-2 text-[15px] text-ink placeholder:text-faint focus:outline-none focus:border-ink transition-colors"
+          />
+        </label>
         <button onClick={onToggleFairValue}
-          className={`shrink-0 border rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-            showFairValue
-              ? "border-zinc-600 text-white"
-              : "border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white"
+          className={`shrink-0 text-[13px] pb-2 transition-colors ${
+            showFairValue ? "text-ink" : "text-muted hover:text-ink"
           }`}>
           {showFairValue ? "Hide fair value" : "Show fair value"}
         </button>
         <button onClick={() => setCsvOpen(true)}
-          className="shrink-0 border border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white rounded-lg px-3 py-2 text-xs font-medium transition-colors">
+          className="shrink-0 text-[13px] text-muted hover:text-ink pb-2 transition-colors">
           Download CSV
         </button>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-8">
         <GeoBeltMap marks={visibleMarks} variant="strip" epochFallback={beltEpoch} mapHref={mapHref} />
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        <aside className={`lg:w-52 shrink-0 ${filtersOpen ? "block bg-zinc-950 border border-zinc-800 rounded-xl p-4" : "hidden"} lg:block lg:bg-transparent lg:border-0 lg:rounded-none lg:p-0`}>
-          <FacetPanel facets={facets} onChange={setFacets} operatorOptions={operatorOptions} />
-        </aside>
-        <div className="flex-1 min-w-0">
-          <div className="text-zinc-600 text-xs mb-2 font-mono">{filtered.length.toLocaleString()} of {rows.length.toLocaleString()} positions</div>
-          <SlotTable rows={filtered} sortKey={sortKey} sortDir={sortDir} onSort={onSort}
-            onSelect={(r) => setSelected((cur) => (cur?.slug === r.slug ? null : r))} selectedSlug={selected?.slug ?? null}
-            showFairValue={showFairValue} />
-          <div className="mt-4 flex items-center justify-end">
-            <Link href="/orbital/faq" className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors">Questions about the data? Read the FAQ →</Link>
-          </div>
-        </div>
+      <FacetPanel facets={facets} onChange={setFacets} operatorOptions={operatorOptions} />
+
+      <div className="text-faint text-[13px] mb-3 mt-2">
+        {filtered.length.toLocaleString()} of {rows.length.toLocaleString()} positions
+      </div>
+      <SlotTable rows={filtered} sortKey={sortKey} sortDir={sortDir} onSort={onSort}
+        onSelect={(r) => setSelected((cur) => (cur?.slug === r.slug ? null : r))} selectedSlug={selected?.slug ?? null}
+        showFairValue={showFairValue} />
+      <div className="mt-6 flex items-center justify-end">
+        <Link href="/orbital/faq" className="text-muted hover:text-ink text-[14px] transition-colors">Questions about the data? Read the FAQ</Link>
       </div>
 
       {selected && <SlotDrawer row={selected} onClose={() => setSelected(null)} />}

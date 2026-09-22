@@ -22,21 +22,21 @@ export function Metric({
   kpi?: string;
 }) {
   const valueClass =
-    tone === "emerald" ? "text-emerald-400" :
-    tone === "amber" ? "text-amber-400" :
-    tone === "red" ? "text-red-400" :
-    tone === "sky" ? "text-sky-400" :
-    "text-white";
+    tone === "emerald" ? "text-verified" :
+    tone === "amber" ? "text-stale" :
+    tone === "red" ? "text-danger" :
+    "text-ink";
+  const monoValue = kpi === "freshness";
 
   return (
-    <div className="bg-[#060608] px-4 py-4 min-w-0" data-kpi={kpi}>
+    <div className="min-w-0 py-1" data-kpi={kpi}>
       <div className="flex items-center gap-1.5 min-w-0">
-        <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest truncate">{label}</div>
+        <div className="text-[13px] text-faint truncate">{label}</div>
         {trust && <TrustMark cls={trust} />}
       </div>
-      <div className={`font-mono font-bold text-xl mt-1 tabular-nums leading-tight ${valueClass}`}>{value}</div>
-      {sub && <div className="text-[11px] text-zinc-500 mt-1 leading-snug">{sub}</div>}
-      <div className="text-[10px] font-mono text-zinc-700 mt-2 truncate" title={`${provenance.source} · ${provenance.asOf}`}>
+      <div className={`${monoValue ? "font-mono" : ""} font-medium text-xl mt-1 tabular-nums leading-tight tracking-tight ${valueClass}`}>{value}</div>
+      {sub && <div className="text-[15px] text-muted mt-1.5 leading-snug">{sub}</div>}
+      <div className="text-xs font-mono text-faint mt-2 truncate" title={`${provenance.source} · ${provenance.asOf}`}>
         {provenance.source} · {formatAsOfDate(provenance.asOf)}
       </div>
     </div>

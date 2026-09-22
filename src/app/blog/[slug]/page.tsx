@@ -49,25 +49,25 @@ export default async function BlogPostPage({ params }: { params: Promise<Params>
   const { Component: Content, toc } = entry;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20">
       <div className="mb-12">
-        <Link href="/blog" className="text-white/30 text-xs font-mono hover:text-white/60 transition-colors">
-          ← Blog
+        <Link href="/blog" className="text-muted text-[14px] hover:text-ink transition-colors">
+          Blog
         </Link>
       </div>
 
-      <div className="lg:grid lg:grid-cols-[1fr_200px] lg:gap-16 xl:gap-24">
+      <div className="lg:grid lg:grid-cols-[minmax(0,40rem)_11rem] lg:gap-20 xl:gap-28">
         <div className="min-w-0">
-          <header className="mb-12 max-w-2xl">
+          <header className="mb-14">
             <div className="flex items-center gap-3 mb-5">
-              <span className="text-[10px] font-mono text-white/25 tracking-widest uppercase">{post.tag}</span>
-              <span className="text-white/10 text-xs">·</span>
-              <span className="text-[10px] font-mono text-white/25">{formatDate(post.date)}</span>
-              <span className="text-white/10 text-xs">·</span>
-              <span className="text-[10px] font-mono text-white/25">{post.readingMinutes} min read</span>
+              <span className="text-[13px] text-faint">{post.tag}</span>
+              <span className="text-faint text-[13px]">·</span>
+              <span className="text-[13px] text-faint">{formatDate(post.date)}</span>
+              <span className="text-faint text-[13px]">·</span>
+              <span className="text-[13px] text-faint">{post.readingMinutes} min read</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight mb-4">{post.title}</h1>
-            <p className="text-zinc-400 text-lg leading-relaxed">{post.subtitle}</p>
+            <h1 className="text-4xl sm:text-5xl font-semibold text-ink leading-[1.12] tracking-tight mb-5">{post.title}</h1>
+            <p className="text-muted text-xl leading-relaxed">{post.subtitle}</p>
           </header>
 
           <article className="prose-clarke max-w-2xl">
@@ -77,7 +77,7 @@ export default async function BlogPostPage({ params }: { params: Promise<Params>
 
         {toc.length > 0 && (
           <aside className="hidden lg:block">
-            <div className="sticky top-20">
+            <div className="sticky top-10">
               <TableOfContents items={toc} />
             </div>
           </aside>

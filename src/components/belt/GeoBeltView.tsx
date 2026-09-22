@@ -51,14 +51,14 @@ export function GeoBeltView({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search satellite or catalog operator"
-          className="min-w-0 flex-1 border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none"
+          className="min-w-0 flex-1 border-0 border-b border-line bg-transparent px-0 py-2 text-[15px] text-ink placeholder:text-faint focus:border-ink focus:outline-none"
         />
         <button
           type="button"
           onClick={() => setDisputes((on) => !on)}
           aria-pressed={disputes}
-          className={`shrink-0 border px-3 py-2 text-xs transition-colors ${
-            disputes ? "border-zinc-600 text-white" : "border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white"
+          className={`shrink-0 border rounded-full px-2.5 py-1 text-[13px] transition-colors ${
+            disputes ? "border-ink/40 bg-ink text-canvas" : "border-line text-muted hover:border-line-strong hover:text-ink"
           }`}
         >
           UCS disagrees &gt;2°
@@ -86,7 +86,7 @@ export function GeoBeltView({
         initialMarkId={initialMarkId}
       />
 
-      <p className="mt-2 text-[11px] leading-relaxed text-zinc-600">
+      <p className="mt-3 text-[14px] leading-relaxed text-muted">
         {model.omittedUcs.toLocaleString()} UCS catalog positions have no usable TLE and are left off. Not interpolated.
         TLE longitude is not an FCC assignment.
       </p>
@@ -107,12 +107,12 @@ function OperatorChip({
       type="button"
       onClick={onClick}
       title={name}
-      className={`shrink-0 border px-2 py-1 font-mono text-[10px] transition-colors ${
-        on ? "border-zinc-600 text-white" : "border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-200"
+      className={`shrink-0 border rounded-full px-2.5 py-1 text-[13px] transition-colors ${
+        on ? "border-ink/40 bg-ink text-canvas" : "border-line text-muted hover:border-line-strong hover:text-ink"
       }`}
     >
       <span className="inline-block max-w-[9.5rem] truncate align-bottom">{name}</span>
-      <span className="ml-1.5 text-zinc-600">{count}</span>
+      <span className={`ml-1.5 tabular-nums ${on ? "text-canvas/70" : "text-faint"}`}>{count}</span>
     </button>
   );
 }

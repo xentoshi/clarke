@@ -15,30 +15,30 @@ function formatDate(iso: string) {
 
 export default function BlogPage() {
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-20">
       <div className="mb-16">
-        <div className="text-white/30 text-[11px] font-mono tracking-[0.3em] uppercase mb-4">Clarke Blog</div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-white">Thinking on space infrastructure.</h1>
+        <div className="text-muted text-[14px] mb-3">Blog</div>
+        <h1 className="text-4xl sm:text-5xl font-semibold text-ink tracking-tight leading-[1.12]">Thinking on space infrastructure.</h1>
       </div>
 
-      <div className="space-y-px bg-white/[0.04]">
+      <div className="divide-y divide-line border-y border-line">
         {posts.map((post) => (
           <Link
             key={post.slug}
             href={`/blog/${post.slug}`}
-            className="group block bg-zinc-950 px-6 py-7 hover:bg-zinc-900/60 transition-colors"
+            className="group block bg-transparent px-0 py-8 hover:bg-surface/80 transition-colors"
           >
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-[10px] font-mono text-white/25 tracking-widest uppercase">{post.tag}</span>
-              <span className="text-white/10 text-xs">·</span>
-              <span className="text-[10px] font-mono text-white/25">{formatDate(post.date)}</span>
-              <span className="text-white/10 text-xs">·</span>
-              <span className="text-[10px] font-mono text-white/25">{post.readingMinutes} min read</span>
+              <span className="text-xs text-faint">{post.tag}</span>
+              <span className="text-faint text-xs">·</span>
+              <span className="text-xs text-faint">{formatDate(post.date)}</span>
+              <span className="text-faint text-xs">·</span>
+              <span className="text-xs text-faint">{post.readingMinutes} min read</span>
             </div>
-            <h2 className="text-white font-bold text-lg mb-2 group-hover:text-white/80 transition-colors leading-snug">
+            <h2 className="text-ink font-semibold text-lg mb-2 group-hover:text-muted transition-colors leading-snug">
               {post.title}
             </h2>
-            <p className="text-zinc-500 text-sm leading-relaxed">{post.excerpt}</p>
+            <p className="text-muted text-sm leading-relaxed">{post.excerpt}</p>
           </Link>
         ))}
       </div>

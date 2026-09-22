@@ -24,16 +24,15 @@ import {
 } from "@/lib/geo-belt";
 
 /**
- * SVG paint, matched to the current registry chrome (#060608, white hairlines).
- * Kept in one place so a later palette pass can retoken them.
+ * SVG paint from the dark registry tokens in globals.css.
  */
 const PAINT = {
-  tick: "rgba(255,255,255,0.84)",
-  dispute: "rgba(255,255,255,0.55)",
-  axis: "rgba(255,255,255,0.2)",
-  grid: "rgba(255,255,255,0.05)",
-  label: "#71717a",
-  rule: "rgba(255,255,255,0.28)",
+  tick: "var(--foreground)",
+  dispute: "var(--stale)",
+  axis: "var(--line-strong)",
+  grid: "var(--line)",
+  label: "var(--faint)",
+  rule: "var(--muted)",
 };
 
 const PAD_X = 18;
@@ -168,14 +167,14 @@ export function GeoBeltMap({
   return (
     <div data-geo-belt={variant}>
       <div className="mb-1.5 flex items-baseline justify-between gap-3">
-        <p className="font-mono text-[10px] text-zinc-500">
+        <p className="font-mono text-[11px] text-faint">
           {marks.length.toLocaleString()} TLE {marks.length === 1 ? "position" : "positions"}
           {disputed > 0 ? ` · ${disputed.toLocaleString()} with UCS disagreement` : ""}
         </p>
         <div className="flex items-center gap-1.5">
           {variant === "full" && (
             <>
-              <span className="mr-1 hidden font-mono text-[10px] text-zinc-600 sm:inline">
+              <span className="mr-1 hidden font-mono text-[11px] text-faint sm:inline">
                 {formatBeltLongitude(view.min)} to {formatBeltLongitude(view.max)}
               </span>
               <BeltButton onClick={() => setView((v) => zoomLongitudeWindow(v, (v.min + v.max) / 2, 1.35))} label="Zoom out" text="-" />
@@ -184,7 +183,7 @@ export function GeoBeltMap({
             </>
           )}
           {variant === "strip" && mapHref && (
-            <Link href={mapHref} className="font-mono text-[10px] text-zinc-500 transition-colors hover:text-white">
+            <Link href={mapHref} className="font-mono text-[11px] text-muted transition-colors hover:text-ink">
               Full belt
             </Link>
           )}
@@ -196,7 +195,7 @@ export function GeoBeltMap({
         tabIndex={0}
         onKeyDown={onKeyDown}
         aria-label="GEO belt. Arrow keys move between marks. Enter opens the registry slot."
-        className="border border-white/[0.08] bg-[#060608] outline-none focus-visible:border-white/25"
+        className="border border-line bg-canvas outline-none focus-visible:border-line-strong"
       >
         <div
           className={variant === "strip" ? "overflow-x-auto" : "touch-none"}
@@ -341,7 +340,7 @@ export function GeoBeltMap({
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
         <Legend />
       </div>
-      <p className="mt-1.5 text-[11px] leading-relaxed text-zinc-500" data-belt-caption>
+      <p className="mt-2 text-[13px] leading-relaxed text-muted" data-belt-caption>
         <TrustMark cls="V" className="mr-1.5 align-middle" />
         {beltCaption(epoch)}
       </p>
@@ -399,7 +398,7 @@ function MarkGlyph({
       y={y - MARK_H}
       width={1.1}
       height={MARK_H}
-      fill={active ? "rgba(255,255,255,0.96)" : PAINT.tick}
+      fill={active ? "var(--foreground)" : PAINT.tick}
       opacity={opacity}
     />
   );
@@ -408,7 +407,7 @@ function MarkGlyph({
 function BeltReader({ mark }: { mark: BeltMark | null }) {
   if (!mark) {
     return (
-      <p className="font-mono text-[11px] text-zinc-600">
+      <p className="font-mono text-[12px] text-faint">
         Select a mark for longitude, catalog operator, and epoch.
       </p>
     );
@@ -416,26 +415,26 @@ function BeltReader({ mark }: { mark: BeltMark | null }) {
   const reader = beltReaderModel(mark);
   return (
     <>
-      <span className="font-mono text-[12px] text-white">{reader.longitude}</span>
-      <span className="text-[12px] text-zinc-200">{reader.name}</span>
-      {reader.operator && <span className="font-mono text-[11px] text-zinc-400">{reader.operator}</span>}
-      {reader.epoch && <span className="font-mono text-[11px] text-zinc-500">epoch {reader.epoch}</span>}
-      <Link href={reader.slotHref} className="font-mono text-[11px] text-zinc-300 transition-colors hover:text-white">
+      <span className="font-mono text-[13px] text-ink">{reader.longitude}</span>
+      <span className="text-[13px] text-ink">{reader.name}</span>
+      {reader.operator && <span className="font-mono text-[12px] text-muted">{reader.operator}</span>}
+      {reader.epoch && <span className="font-mono text-[12px] text-faint">epoch {reader.epoch}</span>}
+      <Link href={reader.slotHref} className="font-mono text-[12px] text-muted transition-colors hover:text-ink">
         slot {reader.slotLabel}
       </Link>
       {reader.dispute === "disputed" && (
-        <span className="rounded border border-amber-900/60 px-1 font-mono text-[9px] text-amber-400/80">
+        <span className="rounded-full border border-stale/40 px-2 py-0.5 font-mono text-[11px] text-stale">
           UCS disagrees
         </span>
       )}
-      {reader.disputeDetail && <span className="font-mono text-[11px] text-zinc-500">{reader.disputeDetail}</span>}
+      {reader.disputeDetail && <span className="font-mono text-[12px] text-faint">{reader.disputeDetail}</span>}
     </>
   );
 }
 
 function Legend() {
   return (
-    <div className="flex items-center gap-4 font-mono text-[10px] text-zinc-500">
+    <div className="flex items-center gap-4 font-mono text-[11px] text-faint">
       <span className="inline-flex items-center gap-1.5">
         <svg width="8" height="10" aria-hidden="true">
           <rect x="3.2" y="1" width="1.2" height="8" fill={PAINT.tick} />
@@ -458,7 +457,7 @@ function BeltButton({ onClick, label, text }: { onClick: () => void; label: stri
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="min-h-9 border border-white/[0.08] px-2 font-mono text-[10px] text-zinc-400 transition-colors hover:border-white/20 hover:text-white"
+      className="min-h-9 border border-line px-2 font-mono text-[11px] text-muted transition-colors hover:border-line-strong hover:text-ink"
     >
       {text}
     </button>

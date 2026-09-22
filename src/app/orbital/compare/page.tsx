@@ -26,13 +26,13 @@ export default async function ComparePage({
   if (!entitlements.features.compare) {
     return (
       <div className="max-w-xl mx-auto px-4 py-20 text-center">
-        <p className="text-zinc-600 text-xs font-mono mb-3">{"// COMPARE"}</p>
-        <h1 className="text-2xl font-bold text-white mb-3">Compare is a Pro Terminal feature</h1>
-        <p className="text-zinc-500 text-sm mb-6 leading-relaxed">
+        <p className="text-muted text-sm mb-2">Compare</p>
+        <h1 className="text-2xl font-semibold text-ink mb-3">Compare is a Pro Terminal feature</h1>
+        <p className="text-muted text-sm mb-6 leading-relaxed">
           Side-by-side fair value, congestion, occupancy, and license signals for up to four GEO slots.
-          {slugs.length > 0 && <span className="block mt-2 font-mono text-zinc-400">{slugs.join(" · ")}</span>}
+          {slugs.length > 0 && <span className="block mt-2 font-mono text-ink">{slugs.join(" · ")}</span>}
         </p>
-        <Link href="/pricing" className="inline-block bg-white text-black rounded-lg px-5 py-2.5 text-sm font-bold hover:bg-zinc-200">
+        <Link href="/pricing" className="inline-block bg-ink text-canvas rounded-sm px-5 py-2.5 text-sm font-semibold hover:bg-ink/85">
           Unlock Pro
         </Link>
       </div>
@@ -42,9 +42,9 @@ export default async function ComparePage({
   if (models.length === 0) {
     return (
       <div className="max-w-xl mx-auto px-4 py-20 text-center">
-        <h1 className="text-2xl font-bold text-white mb-3">Pick up to 4 slots</h1>
-        <p className="text-zinc-500 text-sm mb-6">Use the compare checkboxes on the registry, or open a Slot Terminal and add it.</p>
-        <Link href="/orbital" className="text-zinc-300 hover:text-white text-sm">← Registry</Link>
+        <h1 className="text-2xl font-semibold text-ink mb-3">Pick up to 4 slots</h1>
+        <p className="text-muted text-sm mb-6">Use the compare checkboxes on the registry, or open a Slot Terminal and add it.</p>
+        <Link href="/orbital" className="text-ink hover:text-muted text-sm">← Registry</Link>
       </div>
     );
   }
@@ -70,29 +70,29 @@ export default async function ComparePage({
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8">
       <div className="mb-6">
-        <Link href="/orbital" className="text-white/30 text-xs font-mono hover:text-white/60">← Registry</Link>
-        <h1 className="text-2xl font-bold text-white mt-3">Compare</h1>
-        <p className="text-zinc-500 text-sm mt-1">Terminal metrics, side by side. Valuation v0 is model-based, not a live print.</p>
+        <Link href="/orbital" className="text-muted text-sm hover:text-ink">← Registry</Link>
+        <h1 className="text-2xl font-semibold text-ink mt-3 tracking-tight">Compare</h1>
+        <p className="text-muted text-sm mt-1">Terminal metrics, side by side. Valuation v0 is model-based, not a live print.</p>
       </div>
-      <div className="overflow-x-auto border border-zinc-800 rounded-xl">
+      <div className="overflow-x-auto border border-line bg-surface">
         <table className="w-full min-w-[720px]">
           <thead>
-            <tr className="border-b border-zinc-800 bg-zinc-950">
-              <th className="text-left px-4 py-3 text-[10px] uppercase tracking-wider text-zinc-600 font-medium w-44">Metric</th>
+            <tr className="border-b border-line bg-canvas">
+              <th className="text-left px-4 py-3 text-xs text-faint font-medium w-44">Metric</th>
               {models.map((m) => (
                 <th key={m.slug} className="text-left px-4 py-3">
-                  <Link href={`/orbital/${m.slug}`} className="text-white font-mono text-sm hover:text-zinc-300">{m.label}</Link>
-                  <div className="text-zinc-600 text-[10px] font-mono mt-0.5">{m.slug}</div>
+                  <Link href={`/orbital/${m.slug}`} className="text-ink font-mono text-sm hover:text-muted">{m.label}</Link>
+                  <div className="text-faint text-xs font-mono mt-0.5">{m.slug}</div>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.key} className="border-b border-zinc-800/50 last:border-0">
-                <td className="px-4 py-2.5 text-zinc-500 text-xs">{r.label}</td>
+              <tr key={r.key} className="border-b border-line last:border-0">
+                <td className="px-4 py-2.5 text-muted text-sm">{r.label}</td>
                 {models.map((m) => (
-                  <td key={m.slug} className="px-4 py-2.5 text-zinc-200 text-xs font-mono">{r.get(m)}</td>
+                  <td key={m.slug} className="px-4 py-2.5 text-ink text-sm font-mono">{r.get(m)}</td>
                 ))}
               </tr>
             ))}

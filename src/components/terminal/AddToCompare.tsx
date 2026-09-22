@@ -11,12 +11,12 @@ export function AddToCompare({ slug, className = "" }: { slug: string; className
       type="button"
       disabled={full}
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(slug); }}
-      className={`text-xs font-mono px-2 py-1 rounded border transition-colors ${
+      className={`text-xs px-2 py-1 rounded-sm border transition-colors ${
         on
-          ? "border-emerald-700 text-emerald-400 bg-emerald-950/40"
+          ? "border-verified/40 text-verified bg-verified/8"
           : full
-            ? "border-zinc-800 text-zinc-700 cursor-not-allowed"
-            : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white"
+            ? "border-line text-faint cursor-not-allowed"
+            : "border-line text-muted hover:border-line-strong hover:text-ink"
       } ${className}`}
     >
       {on ? "In compare" : full ? "Compare full" : "Compare"}

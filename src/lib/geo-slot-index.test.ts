@@ -25,6 +25,8 @@ describe("GEO Slot Index #1", () => {
     assert.ok(d.entered.length >= 1);
     assert.ok(d.disputeFlips.length >= 1);
     assert.ok(d.fccRows.length >= 1);
+    const json = JSON.stringify(d);
+    assert.doesNotMatch(json, /prices rose/i);
   });
 
   it("includes an FCC filing slot in the Index set (163°W)", () => {

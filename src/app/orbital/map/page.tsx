@@ -32,22 +32,20 @@ export default async function GeoBeltPage({
   const knownOperator = operator && belt.marks.some((mark) => mark.operator === operator) ? operator : null;
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-10">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <p className="text-zinc-600 text-xs font-mono mb-3">{"// GEO_BELT"}</p>
-          <h1 className="text-2xl font-bold text-white mb-2">GEO belt</h1>
-          <p className="text-zinc-500 text-sm leading-relaxed max-w-2xl">
-            Flat longitude of TLE-primary occupancy. Each mark is one satellite at its TLE epoch.
-            Open a mark for the registry slot within 0.4°.
-          </p>
-        </div>
-        <div className="flex items-center gap-4 shrink-0 mt-1">
-          <Link href="/orbital" className="text-zinc-300 text-xs hover:text-white transition-colors">
-            Registry →
+    <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-14">
+      <div className="mb-12 max-w-2xl">
+        <p className="text-muted text-[14px] mb-3">Registry</p>
+        <h1 className="text-4xl sm:text-5xl font-semibold text-ink tracking-tight mb-5">GEO belt</h1>
+        <p className="text-muted text-lg leading-relaxed">
+          Flat longitude of TLE-primary occupancy. Each mark is one satellite at its TLE epoch.
+          Open a mark for the registry slot within 0.4°.
+        </p>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-6 text-[14px]">
+          <Link href="/orbital" className="text-ink hover:text-muted transition-colors">
+            Registry
           </Link>
-          <Link href="/orbital/101w" className="text-zinc-600 text-xs hover:text-zinc-300 transition-colors">
-            Sample Terminal →
+          <Link href="/orbital/101w" className="text-muted hover:text-ink transition-colors">
+            Sample Terminal
           </Link>
         </div>
       </div>

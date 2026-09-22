@@ -19,34 +19,32 @@ export function GET(req: NextRequest) {
           flexDirection: "column",
           justifyContent: "flex-end",
           padding: "60px",
-          background: "#060608",
+          background: "#0b0c0e",
           fontFamily: "sans-serif",
         }}
       >
         <div style={{ display: "flex", marginBottom: "auto", paddingTop: "60px" }}>
-          <span style={{ color: "#ffffff", fontSize: 28, fontWeight: 700, letterSpacing: 4 }}>
-            CLARKE
+          <span style={{ color: "#f3f1eb", fontSize: 28, fontWeight: 600 }}>
+            Clarke
           </span>
         </div>
         {tag && (
           <div
             style={{
-              color: "#52525b",
-              fontSize: 13,
+              color: "#6e6c66",
+              fontSize: 16,
               fontWeight: 500,
-              letterSpacing: 4,
-              textTransform: "uppercase",
-              marginBottom: 20,
+              marginBottom: 16,
             }}
           >
             {tag}
           </div>
         )}
-        <div style={{ color: "#ffffff", fontSize: 52, fontWeight: 700, lineHeight: 1.1, marginBottom: 20 }}>
+        <div style={{ color: "#f3f1eb", fontSize: 52, fontWeight: 600, lineHeight: 1.1, marginBottom: 20 }}>
           {title}
         </div>
         {sub && (
-          <div style={{ color: "#71717a", fontSize: 22, lineHeight: 1.5, maxWidth: 860 }}>
+          <div style={{ color: "#a8a59c", fontSize: 22, lineHeight: 1.5, maxWidth: 860 }}>
             {sub}
           </div>
         )}

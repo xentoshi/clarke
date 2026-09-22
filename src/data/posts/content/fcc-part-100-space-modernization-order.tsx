@@ -130,7 +130,7 @@ export default function Post() {
       </p>
 
       <h2 id="sources">Sources</h2>
-      <ol className="text-zinc-600 text-xs space-y-1 font-mono">
+      <ol className="text-faint text-xs space-y-1 font-mono">
         <li>FCC, Space Modernization for the 21st Century, Report and Order and Further Notice of Proposed Rulemaking, FCC 26-47, SB Docket No. 25-306 (July 22, 2026)</li>
         <li>FCC Press Release, &quot;FCC Adopts Groundbreaking Overhaul of Space Bureau&apos;s Licensing Process&quot; (July 22, 2026)</li>
         <li>Reps. Brian Babin and Zoe Lofgren, House Science Committee, letters to FCC Chairman Brendan Carr (February 2026; July 21, 2026)</li>

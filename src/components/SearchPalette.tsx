@@ -13,8 +13,8 @@ type Result = {
 };
 
 const typeColors: Record<Result["type"], string> = {
-  slot: "text-sky-400",
-  page: "text-zinc-500",
+  slot: "text-ink",
+  page: "text-faint",
 };
 
 const typeLabels: Record<Result["type"], string> = {
@@ -23,8 +23,8 @@ const typeLabels: Record<Result["type"], string> = {
 };
 
 const pages = [
-  { label: "GEO Slot Index #1", sub: "Occupancy enter/leave, dispute flips, FCC deltas — not prices", href: "/index" },
-  { label: "Slot Terminal · 101°W", sub: "Sample hot slot — occupancy, FCC, freshness, labeled model", href: "/orbital/101w" },
+  { label: "GEO Slot Index #1", sub: "Occupancy enter/leave, dispute flips, FCC deltas. Not prices.", href: "/index" },
+  { label: "Slot Terminal · 101°W", sub: "Sample hot slot. Occupancy, FCC, freshness, labeled model.", href: "/orbital/101w" },
   { label: "Docs", sub: "Occupancy, rights, freshness, and the labeled model", href: "/docs" },
   { label: "Data trust", sub: "Field trust matrix, TLE-primary occupancy, V/M/S legend", href: "/docs/data-trust" },
   { label: "Valuation v0", sub: "$30M baseline formula, drivers, confidence bands", href: "/docs/valuation" },
@@ -85,10 +85,10 @@ export default function SearchPalette({ slots, onClose }: { slots: OrbitalSlot[]
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4" onClick={close}>
-      <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm" />
-      <div className="relative w-full max-w-xl bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800">
-          <svg className="w-4 h-4 text-zinc-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="absolute inset-0 bg-black/55" />
+      <div className="relative w-full max-w-xl bg-surface border border-line shadow-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-line">
+          <svg className="w-4 h-4 text-faint shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
@@ -97,28 +97,28 @@ export default function SearchPalette({ slots, onClose }: { slots: OrbitalSlot[]
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search orbital slots..."
-            className="flex-1 bg-transparent text-white text-sm placeholder-zinc-600 focus:outline-none"
+            className="flex-1 bg-transparent text-ink text-sm placeholder-faint focus:outline-none"
           />
-          <kbd className="text-xs text-zinc-600 bg-zinc-800 px-1.5 py-0.5 rounded font-mono">ESC</kbd>
+          <kbd className="text-[10px] text-faint bg-canvas border border-line px-1.5 py-0.5 rounded font-mono">ESC</kbd>
         </div>
 
         {results.length > 0 && (
           <div className="py-2 max-h-80 overflow-y-auto">
             {results.map((result, i) => (
               <button key={`${result.type}-${i}`} onClick={() => navigate(result.href)} onMouseEnter={() => setSelected(i)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${i === selected ? "bg-zinc-800" : "hover:bg-zinc-800/50"}`}>
-                <span className={`text-xs font-mono shrink-0 w-16 ${typeColors[result.type]}`}>{typeLabels[result.type]}</span>
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${i === selected ? "bg-canvas" : "hover:bg-canvas/70"}`}>
+                <span className={`text-xs shrink-0 w-16 ${typeColors[result.type]}`}>{typeLabels[result.type]}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="text-white text-sm truncate">{result.label}</div>
-                  <div className="text-zinc-500 text-xs truncate">{result.sub}</div>
+                  <div className="text-ink text-sm truncate">{result.label}</div>
+                  <div className="text-muted text-xs truncate">{result.sub}</div>
                 </div>
               </button>
             ))}
           </div>
         )}
 
-        {query && results.length === 0 && <div className="py-10 text-center text-zinc-600 text-sm">No results for &quot;{query}&quot;</div>}
-        {!query && <div className="py-6 text-center text-zinc-700 text-xs">Search orbital slots and pages</div>}
+        {query && results.length === 0 && <div className="py-10 text-center text-muted text-sm">No results for &quot;{query}&quot;</div>}
+        {!query && <div className="py-6 text-center text-faint text-sm">Search orbital slots and pages</div>}
       </div>
     </div>
   );

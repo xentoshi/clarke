@@ -26,7 +26,7 @@ const spec = {
       get: {
         tags: ["Agents"],
         summary: "List orbital slots",
-        description: "All registry positions with congestion score and heuristic valuation. Occupancy/congestion use TLE-primary longitudes.",
+        description: "All registry positions with congestion score and heuristic valuation. Occupancy/congestion use TLE-primary longitudes. Operator display is a curated alias map (class M) over UCS/FCC strings; `operatorRaw` is the source. `ituRecorded` is `not_in_product` (SNS is not ingested).",
         responses: { "200": { description: "{ data, meta } envelope. meta.data_freshness includes last_run plus file_vintage / source_as_of / TLE epoch (not ingest clock alone)." } },
       },
     },
@@ -35,7 +35,7 @@ const spec = {
         tags: ["Agents"],
         summary: "Slot dossier",
         parameters: [{ name: "slug", in: "path", required: true, schema: { type: "string", example: "101w" } }],
-        responses: { "200": { description: "Slot + satellites + FCC + congestion + valuation + positionTrust + sourceVintage (UCS file vintage, FCC as-of, TLE epoch)" }, "404": { description: "Unknown slug" } },
+        responses: { "200": { description: "Slot + satellites + FCC + congestion + valuation + positionTrust + sourceVintage + ituRecorded (not_in_product; SNS not ingested). Satellites include operatorCanonical / operatorRaw; FCC rows include licenseeCanonical / licenseeRaw." }, "404": { description: "Unknown slug" } },
       },
     },
     "/agents/satellites": {
@@ -64,7 +64,7 @@ const spec = {
         summary: "Full Slot Terminal model",
         security: [{ ApiKey: [] }, { ClarkeKey: [] }],
         parameters: [{ name: "slug", in: "path", required: true, schema: { type: "string", example: "101w" } }],
-        responses: { "200": { description: "Occupancy, recorded FCC, valuation; experimental stubs (sim book, ITU) labeled" } },
+        responses: { "200": { description: "Occupancy, recorded FCC, valuation, operator mix (canonical + operatorRaw), ituRecorded chip; experimental stubs (sim book, ITU) labeled" } },
       },
     },
     "/terminal/valuations/{slug}": {

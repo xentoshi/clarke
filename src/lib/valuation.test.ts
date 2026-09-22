@@ -14,7 +14,14 @@ const emptyCongestion: CongestionData = {
   score: 40,
   tier: "moderate",
   label: "Moderate",
-  factors: { coLocated: 2, neighborhood: 4, distinctOperators: 2, dominantOperator: "SES", dominantShare: 0.5 },
+  factors: {
+    coLocated: 2,
+    neighborhood: 4,
+    distinctOperators: 2,
+    dominantOperator: "SES",
+    dominantOperatorRaw: "SES",
+    dominantShare: 0.5,
+  },
 };
 
 const sample: OrbitalSlot = {
@@ -157,7 +164,7 @@ describe("synthesizeHistory", () => {
 });
 
 describe("operator mix", () => {
-  it("does not treat occupancy-window majority as the only operator", () => {
+  it("groups occupancy-window strings by canonical operator", () => {
     const mix = summarizeOperators([
       { operator: "DirecTV, Inc." },
       { operator: "DirecTV, Inc." },
@@ -167,11 +174,11 @@ describe("operator mix", () => {
       { operator: "LightSquared" },
       { operator: "Mobile Satellite Ventures" },
     ]);
-    assert.equal(mix[0].operator, "DirecTV, Inc.");
+    assert.equal(mix[0].operator, "DirecTV");
     assert.equal(mix[0].count, 3);
-    assert.equal(mix.find((m) => m.operator === "SES S.A.")?.count, 2);
-    assert.match(formatOperatorMix(mix, 7), /DirecTV, Inc\. 3\/7/);
-    assert.match(formatOperatorMix(mix, 7), /SES S\.A\. 2\/7/);
+    assert.equal(mix.find((m) => m.operator === "SES")?.count, 2);
+    assert.match(formatOperatorMix(mix, 7), /DirecTV 3\/7/);
+    assert.match(formatOperatorMix(mix, 7), /SES 2\/7/);
   });
 });
 
@@ -190,10 +197,13 @@ describe("rights chain", () => {
     const itu = chain.find((l) => l.layer === "itu");
     const license = chain.find((l) => l.layer === "operator_license");
     assert.equal(itu?.status, "stub");
-    assert.match(itu?.holder ?? "", /Not ingested/i);
+    assert.equal(itu?.holder, "Not recorded in Clarke");
+    assert.doesNotMatch(itu?.holder ?? "", /INTELSAT|network [A-Z]{2,}/);
     assert.equal(license?.holder, "3 FCC licensees");
-    assert.match(license?.detail ?? "", /SES Americom/);
+    assert.match(license?.detail ?? "", /SES/);
     assert.match(license?.detail ?? "", /Ligado/);
+    assert.match(license?.detail ?? "", /DirecTV/);
+    assert.match(license?.detail ?? "", /Ligado Networks/);
     assert.doesNotMatch(license?.holder ?? "", /Ligado/);
   });
 });

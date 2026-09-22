@@ -80,7 +80,11 @@ export default function SlotTable({
                     )}
                   </div>
                 </td>
-                <td className="px-3 py-2.5 hidden sm:table-cell"><span className="text-zinc-400 text-xs">{r.operator || "—"}</span></td>
+                <td className="px-3 py-2.5 hidden sm:table-cell">
+                  <span className="text-zinc-400 text-xs" title={r.operatorRaw && r.operatorRaw !== r.operator ? `Source: ${r.operatorRaw}` : undefined}>
+                    {r.operator || "—"}
+                  </span>
+                </td>
                 <td className="px-3 py-2.5">
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: statusDot[r.status] }} />

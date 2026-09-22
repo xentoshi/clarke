@@ -39,7 +39,7 @@ function search(q: string, slots: OrbitalSlot[]): Result[] {
 
   return [
     ...slots
-      .filter((s) => s.label.toLowerCase().includes(lq) || s.operator.toLowerCase().includes(lq) || s.country.toLowerCase().includes(lq))
+      .filter((s) => s.label.toLowerCase().includes(lq) || s.operator.toLowerCase().includes(lq) || (s.operatorRaw ?? "").toLowerCase().includes(lq) || s.country.toLowerCase().includes(lq))
       .slice(0, 6)
       .map((s) => ({ type: "slot" as const, label: s.label, sub: s.valueEstimate ? `${s.operator} · hand estimate ${s.valueEstimate}` : s.operator, href: `/orbital/${lonToSlug(s.longitude)}` })),
 

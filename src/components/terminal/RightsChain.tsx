@@ -36,12 +36,12 @@ export function RightsChain({
       {variant === "recorded" ? (
         <p className="text-[11px] text-zinc-500 mb-3 leading-relaxed">
           Recorded public layers only. FCC SSAL when present; otherwise inferred administration/operator.
-          Unrecorded ITU SNS and sub-lease layers are not ingested and are not shown here.
+          ITU SNS is not ingested. The Unrecorded chip is not a filled filing row.
         </p>
       ) : (
         <p className="text-[11px] text-amber-200/70 mb-3 leading-relaxed">
-          Quarantined stubs — not Bloomberg-style filled panels. These rows exist so the rights-chain
-          shape is reserved; they are not live filings or named lessees.
+          Quarantined stubs. Not filled panels. ITU SNS is not ingested in this product.
+          These rows reserve the rights-chain shape; they are not live filings or named lessees.
         </p>
       )}
       <ol className="space-y-0">

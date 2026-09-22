@@ -48,6 +48,7 @@ export function buildExplorerRows(): ExplorerRow[] {
       longitude: slot.longitude,
       label: slot.label,
       operator: slot.operator,
+      operatorRaw: slot.operatorRaw ?? slot.operator,
       country: slot.country,
       purpose: slot.purpose ?? null,
       status: slot.status,

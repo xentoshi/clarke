@@ -23,6 +23,8 @@ import { ingestAsOf, type Provenance } from "./provenance";
 import { regionForLongitude } from "./regions";
 import { isSafeSlug } from "./slot-utils";
 import { summarizeOperators, type OperatorShare } from "./operator-mix";
+import { resolveOperator } from "./operator-identity";
+import { ituPresence, type ItuRecorded } from "./itu-presence";
 import { buildSlotPositionTrust, type SlotPositionTrust } from "./position-authority";
 import { circularAbsDiffDeg } from "./geo-angle";
 import { slotSourceVintage, type SlotSourceVintage } from "./source-vintage";
@@ -49,8 +51,10 @@ export interface SlotTerminalModel {
   region: string;
   slot: OrbitalSlot;
   operator: string;
+  operatorRaw: string;
   occupancyMajority: string;
   operatorMix: OperatorShare[];
+  ituRecorded: ItuRecorded;
   country: string;
   purpose: string | null;
   status: OrbitalSlot["status"];
@@ -82,7 +86,8 @@ function occupancyMajorityOf(sats: GeoSatellite[]): string {
 }
 
 function primaryUsers(sats: GeoSatellite[], operator: string): string | undefined {
-  return sats.find((s) => s.operator === operator && s.users)?.users ?? undefined;
+  const want = resolveOperator(operator).display;
+  return sats.find((s) => resolveOperator(s.operator).display === want && s.users)?.users ?? undefined;
 }
 
 function lookupSlot(slug: string, lon: number): OrbitalSlot | undefined {
@@ -107,8 +112,16 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
   const mix = summarizeOperators(sats);
   const occupancyMajority = occupancyMajorityOf(sats);
   // Headline operator is the registry/curated row, not the ±0.4° majority.
-  // 101°W is SES in the curated registry and DirecTV in the occupancy window.
-  const operator = curated?.operator || occupancyMajority || fccAuths[0]?.licensee || "";
+  // Canonical display is class M; raw UCS/FCC strings stay on operatorRaw.
+  const operatorResolved = resolveOperator(curated?.operator || occupancyMajority || fccAuths[0]?.licensee || "");
+  const operator = operatorResolved.display;
+  const operatorRaw =
+    curated?.operatorRaw ||
+    curated?.operator ||
+    mix[0]?.operatorRaw[0] ||
+    fccAuths[0]?.licensee ||
+    "";
+  const itu = ituPresence();
   const country = curated?.country || sats[0]?.ownerCountry || fccAuths[0]?.administration || "";
   const congestion = getCongestion(lon);
   const latest = getLatestIngest();
@@ -147,7 +160,7 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
     const nCurated = lookupSlot(n.slug, n.lon);
     const nCong = getCongestion(n.lon);
     const nMix = summarizeOperators(nSats);
-    const nOp = nCurated?.operator || nMix[0]?.operator || nFcc[0]?.licensee || "";
+    const nOp = resolveOperator(nCurated?.operator || nMix[0]?.operator || nFcc[0]?.licensee || "").display;
     const nSlot: OrbitalSlot = nCurated ?? {
       id: n.slug,
       longitude: n.lon,
@@ -203,8 +216,10 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
     region: regionForLongitude(lon),
     slot: valuationSlot,
     operator,
+    operatorRaw,
     occupancyMajority,
     operatorMix: mix,
+    ituRecorded: itu.ituRecorded,
     country,
     purpose: valuationSlot.purpose ?? sats[0]?.purpose ?? null,
     status: valuationSlot.status,
@@ -251,7 +266,7 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
       },
       license: { source: "FCC SSAL + UCS occupancy", asOf: fccAsOf },
       coverage: { source: "Clarke GDP/pop longitude-band heuristic", asOf: valuation.asOf },
-      rights: { source: "FCC SSAL + UCS; ITU stub", asOf: fccAsOf },
+      rights: { source: "FCC SSAL + UCS; ITU not recorded in Clarke", asOf: fccAsOf },
       bidAsk: { source: "Simulated (not a market)", asOf, note: "See strip disclaimer" },
     },
   };

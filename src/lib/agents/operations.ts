@@ -18,6 +18,8 @@ import type { FreshnessMeta } from "./envelope";
 import { isSafeSlug } from "../slot-utils";
 import { buildSlotPositionTrust, type SlotPositionTrust } from "../position-authority";
 import { slotSourceVintage, type SlotSourceVintage } from "../source-vintage";
+import { resolveOperator, operatorMatchesQuery } from "../operator-identity";
+import { ituPresence, ITU_RECORDED_DEFAULT, type ItuRecorded } from "../itu-presence";
 
 export { isSafeSlug };
 
@@ -36,6 +38,8 @@ export interface SlotListItem extends OrbitalSlot {
   slug: string;
   congestionScore: number;
   valuation: SlotValuation;
+  /** Product flag. SNS is not ingested. */
+  ituRecorded: ItuRecorded;
 }
 
 export function listSlots(): SlotListItem[] {
@@ -53,18 +57,20 @@ export function listSlots(): SlotListItem[] {
         fccLicensed: fccSet.has(slug),
         satCount: satellites.length || congestion.factors.coLocated,
       }),
+      ituRecorded: ITU_RECORDED_DEFAULT,
     };
   });
 }
 
 export interface SlotDossier {
   slot: OrbitalSlot;
-  satellites: GeoSatellite[];
-  fccAuthorizations: FccAuthorization[];
+  satellites: Array<GeoSatellite & { operatorCanonical: string; operatorRaw: string | null; aliases: string[] }>;
+  fccAuthorizations: Array<FccAuthorization & { licenseeCanonical: string | null; licenseeRaw: string | null }>;
   congestion: ReturnType<typeof getCongestion>;
   valuation: SlotValuation;
   positionTrust: SlotPositionTrust;
   sourceVintage: SlotSourceVintage;
+  ituRecorded: ItuRecorded;
 }
 
 export function getSlotDossier(slug: string): SlotDossier | null {
@@ -82,7 +88,23 @@ export function getSlotDossier(slug: string): SlotDossier | null {
   });
   const positionTrust = buildSlotPositionTrust(slot.longitude, satellites, getGeoSatellites(), COLOCATION_TOLERANCE_DEG);
   const sourceVintage = slotSourceVintage(satellites, getDataFreshness());
-  return { slot, satellites, fccAuthorizations, congestion, valuation, positionTrust, sourceVintage };
+  const itu = ituPresence();
+  return {
+    slot,
+    satellites: satellites.map((s) => {
+      const op = resolveOperator(s.operator);
+      return { ...s, operatorCanonical: op.display, operatorRaw: s.operator, aliases: op.aliases };
+    }),
+    fccAuthorizations: fccAuthorizations.map((a) => {
+      const op = resolveOperator(a.licensee);
+      return { ...a, licenseeCanonical: a.licensee ? op.display : null, licenseeRaw: a.licensee };
+    }),
+    congestion,
+    valuation,
+    positionTrust,
+    sourceVintage,
+    ituRecorded: itu.ituRecorded,
+  };
 }
 
 // Adapter: data freshness in the snake_case shape used by the API envelope meta.
@@ -112,15 +134,17 @@ export function listSatellites(q: SatellitesQuery = {}): GeoSatellite[] {
   const all = getGeoSatellites();
   let out = all;
   if (q.operator) {
-    const needle = q.operator.toLowerCase();
-    out = out.filter((s) => (s.operator ?? "").toLowerCase().includes(needle));
+    out = out.filter((s) => operatorMatchesQuery(s.operator, q.operator!));
   }
   if (q.ownerCountry) {
     const needle = q.ownerCountry.toLowerCase();
     out = out.filter((s) => (s.ownerCountry ?? "").toLowerCase().includes(needle));
   }
   if (q.limit && q.limit > 0) out = out.slice(0, Math.min(q.limit, 1000));
-  return out;
+  return out.map((s) => {
+    const op = resolveOperator(s.operator);
+    return { ...s, operatorCanonical: op.display, operatorRaw: s.operator, aliases: op.aliases };
+  });
 }
 
 export { lonToSlug, slugToLon };

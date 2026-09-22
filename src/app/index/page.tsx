@@ -3,6 +3,8 @@ import { buildMeta } from "@/lib/metadata";
 import { buildGeoSlotIndex, type GeoSlotIndexDossier, type OccupancyMove } from "@/lib/geo-slot-index";
 import { formatLonFixed } from "@/lib/geo-angle";
 import { TableOfContents } from "@/components/TableOfContents";
+import { OperatorName } from "@/components/terminal/OperatorName";
+import { operatorDisplay } from "@/lib/operator-identity";
 
 export const metadata = buildMeta({
   title: "GEO Slot Index #1",
@@ -104,7 +106,9 @@ function Dossier({ d, headingId }: { d: GeoSlotIndexDossier; headingId: string }
                   <tr key={r.callSign ?? r.satelliteName ?? ""} className="border-t border-zinc-800/60">
                     <td className="py-1.5 font-mono text-sky-400">{r.callSign ?? "—"}</td>
                     <td className="py-1.5 text-zinc-400 hidden sm:table-cell">{r.satelliteName ?? "—"}</td>
-                    <td className="py-1.5 text-zinc-300">{r.licensee ?? "—"}</td>
+                    <td className="py-1.5 text-zinc-300">
+                      <OperatorName display={operatorDisplay(r.licensee) || "—"} raw={r.licensee} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -173,7 +177,7 @@ export default function GeoSlotIndexPage() {
           <section id="what-this-is-not" className="mb-12 scroll-mt-20">
             <h2 className="text-white font-bold text-lg mb-3 pb-2 border-b border-zinc-800">What this is not</h2>
             <p className="text-zinc-400 text-sm leading-relaxed">
-              Not a price index, bid/ask, last trade, or appraisal. Implied fair value v0 lives on Slot Terminal as a labeled model. Curated dollar overlays are hand estimates. This page does not reprint them. ITU SNS is not ingested; BIU here is a Clarke hint.
+              Not a price index, bid/ask, last trade, or appraisal. Implied fair value v0 lives on Slot Terminal as a labeled model. Curated dollar overlays are hand estimates. This page does not reprint them. ITU SNS is not ingested; Clarke does not record ITU deeds. BIU here is a Clarke hint.
             </p>
           </section>
 

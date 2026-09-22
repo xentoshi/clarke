@@ -29,7 +29,7 @@ export function recordedRightsLayers(links: RightsLink[]): RightsLink[] {
   return links.filter((link) => !isRightsStub(link));
 }
 
-/** ITU filing + sub-lease stubs — Experimental only. */
+/** ITU filing + sub-lease stubs. Experimental only. Not a filled default panel. */
 export function stubRightsLayers(links: RightsLink[]): RightsLink[] {
   return links.filter((link) => isRightsStub(link));
 }
@@ -106,7 +106,8 @@ export function defaultTerminalRendersSimBookAsPrimary(html: string): boolean {
 
 export function defaultTerminalRendersItuStubAsPrimary(html: string): boolean {
   const primary = primaryTerminalRegion(html);
-  return /ITU filing/i.test(primary) || /ITU SNS/i.test(primary) || /data-rights-layer="itu"/i.test(primary);
+  // Thin Unrecorded chip is allowed. A filled ITU rights row is not.
+  return /data-rights-layer="itu"/i.test(primary);
 }
 
 export function defaultTerminalRendersSubleaseStubAsPrimary(html: string): boolean {

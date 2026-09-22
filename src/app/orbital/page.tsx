@@ -2,6 +2,7 @@ import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
 import OrbitalExplorer from "./OrbitalExplorer";
 import { buildExplorerRows } from "@/lib/explorer";
+import { buildGeoBelt } from "@/lib/belt-data";
 import { getLatestIngest } from "@/lib/freshness";
 import { getEntitlements } from "@/lib/auth";
 
@@ -14,6 +15,7 @@ export const metadata = buildMeta({
 
 export default async function OrbitalPage() {
   const rows = buildExplorerRows();
+  const belt = buildGeoBelt();
   const latest = getLatestIngest();
   const { pro } = await getEntitlements();
   const updated = latest
@@ -34,6 +36,9 @@ export default async function OrbitalPage() {
           </p>
         </div>
         <div className="flex items-center gap-4 shrink-0 mt-1">
+          <Link href="/orbital/map" className="text-zinc-300 text-xs hover:text-white transition-colors">
+            Belt →
+          </Link>
           <Link href="/orbital/101w" className="text-zinc-300 text-xs hover:text-white transition-colors">
             Sample Terminal →
           </Link>
@@ -48,7 +53,7 @@ export default async function OrbitalPage() {
           </Link>
         </div>
       </div>
-      <OrbitalExplorer rows={rows} updated={updated} pro={pro} />
+      <OrbitalExplorer rows={rows} updated={updated} pro={pro} beltMarks={belt.marks} beltEpoch={belt.epochLabel} />
     </div>
   );
 }

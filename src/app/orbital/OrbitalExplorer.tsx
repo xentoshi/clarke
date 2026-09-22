@@ -9,8 +9,18 @@ import SlotDrawer from "./SlotDrawer";
 import CsvExportDialog from "./CsvExportDialog";
 import { EMPTY_FACETS, type ExplorerRow, type Facets, type SortKey, type SortDir } from "./types";
 import { CompareTray } from "@/components/terminal/CompareTray";
+import { GeoBeltMap } from "@/components/belt/GeoBeltMap";
+import type { BeltMark } from "@/lib/geo-belt";
 
-export default function OrbitalExplorer({ rows, updated, pro }: { rows: ExplorerRow[]; updated: string | null; pro: boolean }) {
+export default function OrbitalExplorer({
+  rows, updated, pro, beltMarks, beltEpoch,
+}: {
+  rows: ExplorerRow[];
+  updated: string | null;
+  pro: boolean;
+  beltMarks: BeltMark[];
+  beltEpoch: string;
+}) {
   const [facets, setFacets] = useState<Facets>(EMPTY_FACETS);
   const [sortKey, setSortKey] = useState<SortKey>("longitude");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -22,6 +32,7 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
   const filterCount =
     facets.regions.length + facets.operators.length + facets.bands.length + facets.statuses.length +
     (facets.fccOnly ? 1 : 0) +
+    (facets.disputesOnly ? 1 : 0) +
     (facets.congestionMin > 0 || facets.congestionMax < 100 ? 1 : 0);
 
   const operatorOptions = useMemo(() => {
@@ -46,6 +57,7 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
       if (facets.statuses.length && !facets.statuses.includes(r.status)) return false;
       if (r.congestionScore < facets.congestionMin || r.congestionScore > facets.congestionMax) return false;
       if (facets.fccOnly && !r.fccLicensed) return false;
+      if (facets.disputesOnly && r.positionDisputedCount <= 0) return false;
       return true;
     });
 
@@ -62,6 +74,13 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
     });
     return out;
   }, [rows, facets, sortKey, sortDir]);
+
+  const visibleMarks = useMemo(() => {
+    const slotIds = new Set(filtered.map((r) => r.id));
+    return beltMarks.filter((mark) => slotIds.has(mark.slotId) && (!facets.disputesOnly || mark.dispute === "disputed"));
+  }, [filtered, beltMarks, facets.disputesOnly]);
+
+  const mapHref = facets.disputesOnly ? "/orbital/map?disputes=1" : "/orbital/map";
 
   const onSort = (key: SortKey) => {
     if (key === sortKey) { setSortDir((d) => (d === "asc" ? "desc" : "asc")); return; }
@@ -108,6 +127,10 @@ export default function OrbitalExplorer({ rows, updated, pro }: { rows: Explorer
           className="shrink-0 border border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white rounded-lg px-3 py-2 text-xs font-medium transition-colors">
           Download CSV
         </button>
+      </div>
+
+      <div className="mb-6">
+        <GeoBeltMap marks={visibleMarks} variant="strip" epochFallback={beltEpoch} mapHref={mapHref} />
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">

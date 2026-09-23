@@ -6,13 +6,12 @@ import type { Entitlements } from "@/lib/auth";
 import { formatAsOfDate } from "@/lib/provenance";
 import { parseUcsLaunchYear } from "@/lib/occupancy-quality";
 import { formatOperatorMix } from "@/lib/operator-mix";
-import { operatorDisplay } from "@/lib/operator-identity";
+import { isLaunchVehicleOperator, operatorDisplay } from "@/lib/operator-identity";
 import { ituPresence } from "@/lib/itu-presence";
 import { formatLonFixed } from "@/lib/geo-angle";
 import { recordedRightsLayers, stubRightsLayers } from "@/lib/terminal-default";
 import { ProGate } from "./ProGate";
 import { ValuationChart } from "./ValuationChart";
-import { BidAskStrip } from "./BidAskStrip";
 import { RightsChain } from "./RightsChain";
 import { AddToCompare } from "./AddToCompare";
 import { CompareTray } from "./CompareTray";
@@ -49,8 +48,8 @@ export function SlotTerminalView({
   const itu = ituPresence();
 
   return (
-    <div className="max-w-[920px] mx-auto px-4 sm:px-6 py-14">
-      <div className="flex items-center justify-between gap-3 mb-12 flex-wrap">
+    <div className="max-w-[920px] mx-auto px-4 sm:px-6 pt-6 pb-14">
+      <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
         <div className="flex items-center gap-2 text-[14px]">
           <Link href="/orbital" className="text-muted hover:text-ink">Registry</Link>
           <span className="text-faint">/</span>
@@ -70,8 +69,8 @@ export function SlotTerminalView({
           {model.region}
           {model.longitude >= 0 ? " · East" : " · West"}
         </p>
-        <h1 className="text-5xl sm:text-6xl font-semibold text-ink font-mono tracking-tight">{model.label}</h1>
-        <p className="text-ink text-xl mt-6 leading-relaxed max-w-2xl">
+        <h1 className="text-4xl sm:text-5xl font-semibold text-ink font-mono tracking-tight">{model.label}</h1>
+        <p className="text-ink text-lg mt-3 leading-relaxed max-w-2xl">
           {identityCopy(model)}
         </p>
         {model.operatorMix.length > 1 && (
@@ -85,7 +84,7 @@ export function SlotTerminalView({
               : "."}
           </p>
         )}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-5 text-[13px]">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-3 text-[13px]">
           <span className="text-muted">{statusLabels[model.status]}</span>
           <span
             data-itu-recorded={model.ituRecorded}
@@ -103,9 +102,9 @@ export function SlotTerminalView({
 
       <TrustBar vintage={model.sourceVintage} positionTrust={model.positionTrust} />
 
-      <section className="mt-16 pt-10 border-t border-line">
-        <h2 className="text-2xl font-semibold text-ink tracking-tight mb-8">Occupancy</h2>
-        <div data-kpi="occupancy" className="mb-8">
+      <section data-occupancy-section className="mt-5 pt-5 border-t border-line">
+        <h2 className="text-xl font-semibold text-ink tracking-tight mb-3">Occupancy</h2>
+        <div data-kpi="occupancy" className="mb-6">
           <div className="text-[13px] text-faint mb-1">On station</div>
           <div className="text-2xl font-medium text-ink tracking-tight tabular-nums">
             {model.satCount} satellite{model.satCount === 1 ? "" : "s"}
@@ -189,7 +188,15 @@ export function SlotTerminalView({
                     </div>
                   </td>
                   <td className="py-3.5 pr-4 hidden sm:table-cell text-muted text-[14px]">
-                    <OperatorName display={operatorDisplay(sat.operator) || "—"} raw={sat.operator} />
+                    <OperatorName
+                      display={satelliteOperator(sat.operator, sat.launchVehicle)}
+                      raw={sat.operator}
+                      notes={
+                        isLaunchVehicleOperator(sat.operator, sat.launchVehicle)
+                          ? "Source string matches the launch vehicle and is not the GEO operator."
+                          : undefined
+                      }
+                    />
                   </td>
                   <td className="py-3.5 pr-4 hidden md:table-cell text-muted text-[14px]">{sat.detailedPurpose ?? sat.purpose ?? "—"}</td>
                   <td className="py-3.5 pl-4 hidden lg:table-cell text-right text-muted text-[14px] font-mono">
@@ -219,8 +226,8 @@ export function SlotTerminalView({
         </div>
       </section>
 
-      <section className="mt-16 pt-10 border-t border-line">
-        <h2 className="text-2xl font-semibold text-ink tracking-tight mb-8">Rights</h2>
+      <section className="mt-10 pt-8 border-t border-line">
+        <h2 className="text-xl font-semibold text-ink tracking-tight mb-4">Rights</h2>
         <div data-kpi="rights" className="mb-8">
           <div className="text-[13px] text-faint mb-1">License / FCC</div>
           <div className={`text-2xl font-medium tracking-tight ${v.license.biuHint === "paper_filing" ? "text-stale" : v.license.biuHint === "brought_into_use" ? "text-verified" : "text-ink"}`}>
@@ -275,8 +282,8 @@ export function SlotTerminalView({
         )}
       </section>
 
-      <section className="mt-16 pt-10 border-t border-line">
-        <h2 className="text-2xl font-semibold text-ink tracking-tight mb-8">Freshness</h2>
+      <section className="mt-10 pt-8 border-t border-line">
+        <h2 className="text-xl font-semibold text-ink tracking-tight mb-4">Freshness</h2>
         <div data-kpi="freshness">
           <div className="text-[13px] text-faint mb-1">TLE epoch</div>
           <div className={`font-mono text-2xl font-medium tracking-tight ${model.sourceVintage.fccStale ? "text-ink" : "text-ink"}`}>
@@ -303,9 +310,18 @@ export function SlotTerminalView({
           {model.provenance.congestion.source} · {formatAsOfDate(model.provenance.congestion.asOf)}
         </div>
       </div>
+      </div>
 
-      <section className="mt-20 pt-10 border-t border-line opacity-90" data-fair-value-panel>
-        <p className="text-[13px] text-faint mb-2">Labeled model. Not a live market price.</p>
+      <details data-labeled-model className="mt-12 border-t border-line">
+        <summary className="cursor-pointer list-none py-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="text-[13px] text-faint">Labeled model</span>
+          <span className="text-ink text-[15px]">Implied value, comps, and model path</span>
+          <span className="text-[12px] text-faint sm:ml-auto">Not occupancy or rights</span>
+        </summary>
+        <p className="text-[14px] text-muted leading-relaxed mb-8 max-w-2xl">
+          Modeled dollars from valuation v0. Not a live market price, not a trade, and not an FCC or ITU record.
+        </p>
+      <section className="opacity-90" data-fair-value-panel>
         <h2 className="text-lg font-medium text-muted mb-6">Implied fair value</h2>
         <div data-kpi="fair-value">
           <div className="text-[13px] text-faint mb-1">Fair value (v0)</div>
@@ -364,7 +380,7 @@ export function SlotTerminalView({
       </section>
 
       {model.comps.length > 0 && (
-        <section className="mt-16 pt-10 border-t border-line">
+        <section className="mt-10 pt-8 border-t border-line">
           <h2 className="text-lg font-medium text-muted mb-2">Nearest comps</h2>
           <p className="text-[14px] text-faint mb-5">Positions outside this slot&apos;s ±0.4° occupancy window. Not transaction comps.</p>
           <div className="overflow-x-auto">
@@ -401,12 +417,11 @@ export function SlotTerminalView({
           </div>
         </section>
       )}
-      </div>
 
-      <div className="space-y-3 mt-16 mb-10">
-        <ExperimentalDisclosure id="model-backfill" title="Seeded v0 model path (not trades)">
-          <p className="text-xs text-stale mb-2">
-            Model backfill. Not observed trades, not a price index.
+        <div className="mt-10 pt-8 border-t border-line">
+          <h2 className="text-lg font-medium text-muted mb-2">Model path</h2>
+          <p className="text-[14px] text-faint mb-4">
+            Seeded v0 path. Not observed trades, not a price index.
           </p>
           <ValuationChart series={entitlements.features.history ? model.history : model.history.slice(-7)} source={model.historySource} />
           {!entitlements.features.history && (
@@ -414,14 +429,12 @@ export function SlotTerminalView({
               Free seats see a 7-day backfill. <Link href="/pricing" className="text-ink hover:text-muted underline">Pro unlocks 30-day persisted model path.</Link>
             </p>
           )}
-        </ExperimentalDisclosure>
+        </div>
+      </details>
 
+      <div className="mt-4 mb-10">
         <ExperimentalDisclosure id="rights-stubs" title="Unrecorded layers (ITU SNS not ingested; sub-lease stub)">
           <RightsChain links={stubRights} variant="stubs" />
-        </ExperimentalDisclosure>
-
-        <ExperimentalDisclosure id="sim-book" title="Simulated capacity book (not a market)">
-          <BidAskStrip book={model.bidAsk} />
         </ExperimentalDisclosure>
       </div>
 
@@ -432,13 +445,18 @@ export function SlotTerminalView({
           {model.modelRunAsOf ? ` · snapshots seeded ${model.modelRunAsOf} (model path, not trades)` : " · history synthesized (run npm run seed:valuations to persist)"}
         </p>
         <p>
-          Default Terminal is occupancy + FCC + freshness + labeled model. ITU SNS is not ingested
-          ({itu.chip}). Simulated book, ITU/sub-lease stubs, and seeded sparklines are Experimental. Not financial advice.
+          Default Terminal is occupancy, recorded FCC, and freshness. Implied value is behind Labeled model.
+          ITU SNS is not ingested ({itu.chip}). The simulated capacity book is not on this page. Not financial advice.
         </p>
       </footer>
       <CompareTray pro={entitlements.pro} />
     </div>
   );
+}
+
+function satelliteOperator(operator: string | null, launchVehicle: string | null): string {
+  if (isLaunchVehicleOperator(operator, launchVehicle)) return "Unknown";
+  return operatorDisplay(operator) || "Unknown";
 }
 
 function Row({ k, val }: { k: string; val: ReactNode }) {

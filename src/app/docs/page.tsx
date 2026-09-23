@@ -13,26 +13,22 @@ export const metadata = buildMeta({
 
 export default function DocsHubPage() {
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-20">
-      <p className="text-muted text-[14px] mb-3">Docs</p>
-      <h1 className="text-4xl sm:text-5xl font-semibold text-ink tracking-tight mb-6">Clarke Docs</h1>
-      <p className="text-ink text-xl leading-relaxed mb-5">
-        How to read occupancy, rights, freshness, and the labeled model.
-      </p>
-      <p className="text-muted text-lg leading-relaxed mb-10">
-        Clarke is the registry for orbital infrastructure. These notes are the public methodology:
-        what is verified from a named source, what is modeled, and what is quarantined behind
-        Experimental on Slot Terminal.
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-12 pb-16">
+      <p className="text-muted text-[13px] mb-2">Docs</p>
+      <h1 className="text-3xl font-semibold text-ink tracking-tight mb-3">Clarke Docs</h1>
+      <p className="text-muted text-[15px] leading-relaxed mb-4">
+        Method notes for occupancy, rights, freshness, and the labeled model.
+        Verified sources, modeled dollars, and what stays off the default Terminal.
       </p>
 
-      <TrustLegend className="mb-14" />
+      <TrustLegend className="mb-5" />
 
-      <div className="divide-y divide-line border-y border-line mb-14">
+      <div className="divide-y divide-line border-y border-line mb-10">
         {DOC_PAGES.map((doc) => (
           <Link
             key={doc.href}
             href={doc.href}
-            className="group block py-8"
+            className="group block py-4"
           >
             <h2 className="text-ink font-semibold text-xl tracking-tight mb-2 group-hover:text-muted transition-colors">
               {doc.title}

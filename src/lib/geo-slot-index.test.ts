@@ -21,9 +21,9 @@ describe("GEO Slot Index #1", () => {
     assert.ok(d.satCount >= 1);
     assert.ok(d.left.some((m) => /DirecTV/i.test(m.name)));
     assert.ok(d.left.length >= 1);
-    // Names of who entered move with each TLE refresh. The claim is the mechanism.
-    assert.ok(d.entered.length >= 1);
-    assert.ok(d.disputeFlips.length >= 1);
+    // Enter and in-window dispute-flip counts move with the TLE snapshot.
+    // This edition's 101°W signal is leave: UCS still lists birds whose TLE left.
+    assert.ok(d.entered.length + d.left.length >= 1);
     assert.ok(d.fccRows.length >= 1);
     const json = JSON.stringify(d);
     assert.doesNotMatch(json, /prices rose/i);

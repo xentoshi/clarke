@@ -173,6 +173,56 @@ export function panLongitudeWindow(
   return clampWindow(window.min + deltaDeg, span);
 }
 
+/** Consecutive TLE marks closer than this are one clickable cluster on the registry strip. */
+export const BELT_CLUSTER_GAP_DEG = 1;
+/** Empty-arc click snaps to this fixed longitude sector. Not a slot. */
+export const BELT_ARC_DEG = 30;
+
+/**
+ * Longitude window for the registry strip.
+ * A click near a mark selects the contiguous cluster (gaps ≤ 1°).
+ * A click in empty longitude selects the 30° arc that contains it.
+ * Neither window invents a slot; it only filters existing registry rows.
+ */
+export function beltFilterWindow(
+  longitudes: number[],
+  clickLon: number,
+): { min: number; max: number } {
+  const lon = Math.min(BELT_LON_MAX, Math.max(BELT_LON_MIN, clickLon));
+  const sorted = longitudes
+    .filter((value) => Number.isFinite(value))
+    .slice()
+    .sort((a, b) => a - b);
+  let nearest = -1;
+  let best = Infinity;
+  for (let i = 0; i < sorted.length; i += 1) {
+    const d = Math.abs(sorted[i] - lon);
+    if (d < best) {
+      best = d;
+      nearest = i;
+    }
+  }
+  if (nearest >= 0 && best <= BELT_CLUSTER_GAP_DEG) {
+    let lo = nearest;
+    let hi = nearest;
+    while (lo > 0 && sorted[lo] - sorted[lo - 1] <= BELT_CLUSTER_GAP_DEG) lo -= 1;
+    while (hi < sorted.length - 1 && sorted[hi + 1] - sorted[hi] <= BELT_CLUSTER_GAP_DEG) hi += 1;
+    const minLon = sorted[lo];
+    const maxLon = sorted[hi];
+    const span = Math.max(BELT_MIN_SPAN_DEG, maxLon - minLon + 0.8);
+    const center = (minLon + maxLon) / 2;
+    return clampWindow(center - span / 2, span);
+  }
+  let start = Math.floor(lon / BELT_ARC_DEG) * BELT_ARC_DEG;
+  if (start < BELT_LON_MIN) start = BELT_LON_MIN;
+  let end = start + BELT_ARC_DEG;
+  if (end > BELT_LON_MAX) {
+    end = BELT_LON_MAX;
+    start = end - BELT_ARC_DEG;
+  }
+  return { min: start, max: end };
+}
+
 export function windowAround(lon: number, span: number): { min: number; max: number } {
   const width = Math.min(BELT_LON_MAX - BELT_LON_MIN, Math.max(BELT_MIN_SPAN_DEG, span));
   return clampWindow(lon - width / 2, width);

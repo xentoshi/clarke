@@ -42,4 +42,4 @@ Curated `valueEstimate` strings (e.g. `$350M+`) are a **hand estimate / curated 
 - Not a live bid/ask or last trade
 - Not an ITU deed or FCC license valuation
 - Not advice to buy, lease, or file
-- Simulated capacity books are Experimental, labeled SIMULATED, derived from the same midpoint + congestion, and are not on the default Terminal first screen
+- Simulated capacity books are derived from the same midpoint + congestion. They are not rendered on Slot Terminal. This note is the product surface for that simulation. They are not a market.

@@ -7,6 +7,7 @@ import {
   operatorDisplay,
   operatorMatchesQuery,
   listedOperatorCanonicals,
+  isLaunchVehicleOperator,
 } from "./operator-identity";
 import { summarizeOperators, formatOperatorMix } from "./operator-mix";
 import { ituPresence, ITU_RECORDED_DEFAULT } from "./itu-presence";
@@ -84,6 +85,16 @@ describe("operator identity (curated alias map)", () => {
     assert.ok(listedOperatorCanonicals().includes("SES"));
     assert.ok(listedOperatorCanonicals().includes("Ligado"));
     assert.equal(operatorDisplay("SES S.A."), "SES");
+  });
+});
+
+describe("launch vehicle is not an operator", () => {
+  it("refuses a source string that equals the launch vehicle and leaves other strings alone", () => {
+    assert.equal(isLaunchVehicleOperator("Atlas 5", "Atlas 5"), true);
+    assert.equal(isLaunchVehicleOperator("atlas-5", "Atlas 5"), true);
+    assert.equal(isLaunchVehicleOperator("SES S.A.", "Ariane 5"), false);
+    assert.equal(isLaunchVehicleOperator("Atlas 5", null), false);
+    assert.equal(resolveOperator("Atlas 5").display, "Atlas 5");
   });
 });
 

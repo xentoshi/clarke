@@ -47,6 +47,9 @@ export interface Facets {
   fccOnly: boolean;
   /** Registry rows with a UCS/TLE disagreement inside the occupancy window. */
   disputesOnly: boolean;
+  /** Inclusive occupancy-longitude window from the registry belt strip. */
+  lonMin: number | null;
+  lonMax: number | null;
 }
 
 export const EMPTY_FACETS: Facets = {
@@ -59,4 +62,6 @@ export const EMPTY_FACETS: Facets = {
   congestionMax: 100,
   fccOnly: false,
   disputesOnly: false,
+  lonMin: null,
+  lonMax: null,
 };

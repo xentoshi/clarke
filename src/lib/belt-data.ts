@@ -1,5 +1,6 @@
 import { slots as curatedSlots } from "@/data/orbital-slots";
 import { COLOCATION_WINDOW_DEG } from "./position-authority";
+import { isLaunchVehicleOperator } from "./operator-identity";
 import { getGeoSatellites, lonToSlug, mergeWithUcs } from "./satellites";
 import { formatLon } from "./slot-utils";
 import {
@@ -56,7 +57,7 @@ export function buildGeoBelt(): GeoBeltModel {
       id: sat.noradId ? `norad-${sat.noradId}` : `sat-${sat.id}`,
       name: sat.name,
       longitude: sat.longitudeGeo,
-      operator: sat.operator?.trim() || null,
+      operator: isLaunchVehicleOperator(sat.operator, sat.launchVehicle) ? null : sat.operator?.trim() || null,
       dispute: beltDisputeClass(sat.positionDisputed),
       deltaDeg: sat.positionDeltaDeg,
       ucsLongitude: sat.longitudeUcs,

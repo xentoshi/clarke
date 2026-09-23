@@ -18,6 +18,7 @@ function activeCount(f: Facets): number {
     f.regions.length + f.operators.length + f.bands.length + f.statuses.length +
     (f.fccOnly ? 1 : 0) +
     (f.disputesOnly ? 1 : 0) +
+    (f.lonMin != null && f.lonMax != null ? 1 : 0) +
     (f.congestionMin > 0 || f.congestionMax < 100 ? 1 : 0)
   );
 }
@@ -95,7 +96,7 @@ export default function FacetPanel({
         {n > 0 && (
           <button
             type="button"
-            onClick={() => onChange({ ...facets, regions: [], operators: [], bands: [], statuses: [], congestionMin: 0, congestionMax: 100, fccOnly: false, disputesOnly: false })}
+            onClick={() => onChange({ ...facets, regions: [], operators: [], bands: [], statuses: [], congestionMin: 0, congestionMax: 100, fccOnly: false, disputesOnly: false, lonMin: null, lonMax: null })}
             className="text-faint hover:text-ink transition-colors"
           >
             Clear ({n})

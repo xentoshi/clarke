@@ -93,10 +93,13 @@ export function defaultTerminalPrimaryMarkup(signals: DefaultTerminalSignals): s
 }
 
 export function primaryTerminalRegion(html: string): string {
-  const match = html.match(/data-terminal-primary[\s\S]*?(?=<[^>]+data-terminal-experimental|$)/i);
+  const match = html.match(/data-terminal-primary[\s\S]*?(?=<[^>]*(?:data-terminal-experimental|data-labeled-model)|$)/i);
   if (match) return match[0];
-  const end = html.indexOf("data-terminal-experimental");
-  return end >= 0 ? html.slice(0, end) : html;
+  const experimental = html.indexOf("data-terminal-experimental");
+  const labeled = html.indexOf("data-labeled-model");
+  const ends = [experimental, labeled].filter((index) => index >= 0);
+  if (ends.length === 0) return html;
+  return html.slice(0, Math.min(...ends));
 }
 
 export function defaultTerminalRendersSimBookAsPrimary(html: string): boolean {

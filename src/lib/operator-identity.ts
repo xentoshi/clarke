@@ -98,6 +98,21 @@ export function operatorDisplay(raw: string | null | undefined): string {
   return resolveOperator(raw).display;
 }
 
+/**
+ * UCS sometimes stores the launch vehicle in the operator column (Atlas 5 on
+ * STPSat-6). That string is not a GEO operator. Equality with this row's
+ * launch vehicle is the whole test: no guessed owner is filled in.
+ */
+export function isLaunchVehicleOperator(
+  operator: string | null | undefined,
+  launchVehicle: string | null | undefined,
+): boolean {
+  const op = (operator ?? "").trim();
+  const vehicle = (launchVehicle ?? "").trim();
+  if (!op || !vehicle) return false;
+  return normalizeOperatorKey(op) === normalizeOperatorKey(vehicle);
+}
+
 export function operatorMatchesQuery(raw: string | null | undefined, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;

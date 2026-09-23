@@ -122,7 +122,17 @@ export function SlotTerminalView({
         <dl className="grid sm:grid-cols-2 gap-x-10 gap-y-4 text-[15px] max-w-2xl">
           <Row
             k="Registry operator"
-            val={<OperatorName display={model.operator || "—"} raw={model.operatorRaw} />}
+            val={
+              <OperatorName
+                display={model.operator || "Unknown"}
+                raw={model.operatorRaw}
+                notes={
+                  !model.operator && model.operatorRaw
+                    ? "Source string is not used as the GEO operator."
+                    : undefined
+                }
+              />
+            }
           />
           {model.operatorMix.length > 1 && (
             <Row k="Window majority" val={model.occupancyMajority || "—"} />

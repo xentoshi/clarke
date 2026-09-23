@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { slots as curatedSlots } from "@/data/orbital-slots";
 import { lonToSlug, mergeWithUcs } from "./satellites";
+import { buildSlotTerminal } from "./slot-terminal";
 import { collapseUcsClaimSlots, pickClaimOperator, type UcsClaimSatellite } from "./registry-claims";
 
 function sat(partial: Partial<UcsClaimSatellite> & Pick<UcsClaimSatellite, "name" | "longitudeGeo">): UcsClaimSatellite {
@@ -86,12 +87,15 @@ describe("live registry claims (clarke.db)", () => {
     assert.ok((hispamar?.ucsCount ?? 0) >= 3);
   });
 
-  it("does not list Atlas 5 as a GEO operator", () => {
+  it("does not list Atlas 5 as a GEO operator or borrow a neighbor", () => {
     assert.equal(rows.some((row) => row.operator === "Atlas 5"), false);
     const stp = rows.find((row) => row.noradIds?.includes("49817") || /STPSat-6/.test(row.satellite ?? ""));
-    if (stp) {
-      assert.notEqual(stp.operator, "Atlas 5");
-      assert.match(stp.operatorRaw, /Atlas 5/);
-    }
+    assert.ok(stp);
+    assert.equal(stp.operator, "");
+    assert.match(stp.operatorRaw, /Atlas 5/);
+    const model = buildSlotTerminal(lonToSlug(stp.longitude));
+    assert.ok(model);
+    assert.equal(model.operator, "");
+    assert.match(model.operatorRaw, /Atlas 5/);
   });
 });

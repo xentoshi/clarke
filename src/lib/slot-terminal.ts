@@ -115,9 +115,13 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
   }));
   const mix = summarizeOperators(attributed);
   const occupancyMajority = occupancyMajorityOf(attributed);
-  // Headline operator is the registry/curated row, not the ±0.4° majority.
-  // Canonical display is class M; raw UCS/FCC strings stay on operatorRaw.
-  const operatorResolved = resolveOperator(curated?.operator || occupancyMajority || fccAuths[0]?.licensee || "");
+  // Headline operator is the registry row, not the ±0.4° majority.
+  // A blank registry operator stays blank (launch vehicle refused, or unlisted).
+  // Do not fill it from a neighbor in the occupancy window.
+  const operatorSource = curated
+    ? curated.operator
+    : occupancyMajority || fccAuths[0]?.licensee || "";
+  const operatorResolved = resolveOperator(operatorSource);
   const operator = operatorResolved.display;
   const operatorRaw =
     curated?.operatorRaw ||

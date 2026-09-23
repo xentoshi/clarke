@@ -75,9 +75,17 @@ function singleId(sat: UcsClaimSatellite, lon: number): string {
   return `ucs_geo_${String(lon).replace(".", "_")}`;
 }
 
+function sentence(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return "";
+  return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+}
+
 function singleDescription(sat: UcsClaimSatellite): string {
   return [
-    sat.purpose && sat.detailedPurpose ? `${sat.purpose}: ${sat.detailedPurpose}.` : sat.purpose ?? "",
+    sat.purpose && sat.detailedPurpose
+      ? sentence(`${sat.purpose}: ${sat.detailedPurpose}`)
+      : sentence(sat.purpose ?? ""),
     sat.operator && !isLaunchVehicleOperator(sat.operator, sat.launchVehicle) ? `Operated by ${sat.operator}.` : "",
     isLaunchVehicleOperator(sat.operator, sat.launchVehicle)
       ? `UCS operator string "${(sat.operator ?? "").trim()}" matches the launch vehicle and is not used as the GEO operator.`

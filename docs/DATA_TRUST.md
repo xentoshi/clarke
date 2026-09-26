@@ -11,7 +11,7 @@ Registry and Slot Terminal are data surfaces. First screens answer who is on sta
 | Surface | Rule |
 |---|---|
 | Registry columns | Occupancy, status, congestion, FCC are the default spine. Fair value is off until **Show fair value**. |
-| Slot Terminal fold | Title + operator mix → one Trust bar (TLE/FCC/UCS dates + V/M/S + collapsed warnings) → KPIs occupancy / rights / freshness first, labeled model last. |
+| Slot Terminal fold | Title + trust line + occupancy facts share the first viewport. Rights and freshness follow. Implied value, nearest comps, Unlock Pro, and the model path sit behind one closed **Labeled model** disclosure. |
 | Trust bar | FCC stale and position disagreement share one compact line (`FCC SSAL stale · Position disagreement · Details`) with expand-in-place. Not stacked orange banners. |
 | Unlock Pro | Driver-panel gate only. Verified occupancy is never blurred or paywalled. |
 | Nav | Registry · Index · Docs. Terminal opens from a registry row (sample: `/orbital/101w`). |
@@ -23,7 +23,7 @@ The default Slot Terminal screen is **occupancy + recorded FCC + ingest freshnes
 
 | Surface | Default Terminal | Why |
 |---|---|---|
-| Simulated capacity book | **Quarantined.** Behind explicit Experimental disclosure only. Not on free/default first screen. | Function of v0 midpoint + congestion. There is no public GEO bid/ask feed. Showing it as a live order book would overclaim. |
+| Simulated capacity book | **Off the Terminal.** Not rendered on the slot page. Method note only (this page and Valuation v0). API may still return `bidAsk` for inspection. | Function of v0 midpoint + congestion. There is no public GEO bid/ask feed. |
 | ITU filing layer | **Quarantined stub.** Collapsed under Experimental “Unrecorded layers.” Default Terminal shows a thin chip only: **Unrecorded in Clarke** (`ituRecorded: not_in_product`). | SNS is not ingested. A filled panel would look like a recorded deed. |
 | Sub-lease / capacity-lease layer | **Quarantined stub.** Same Experimental disclosure. | No public sub-lease registry. Must not look like a named lessee. |
 | Seeded valuation sparkline | **Quarantined.** Experimental “model backfill — not trades.” Hidden from default. | `terminal.db` is a deterministic v0 path, not observed trades. |
@@ -49,8 +49,8 @@ Tests: `src/lib/terminal-default.test.ts` asserts default primary markup does no
 | 7 | **Medium** | Occupancy grouping 0.3° (agents dossier default) vs 0.4° (Terminal / congestion). | **Fixed.** Default co-location window is 0.4°. |
 | 8 | **Medium** | Agents list valuation omitted satellite lifetimes, so remaining life stayed 1.0 even after a parser fix. | **Fixed.** `listSlots` / explorer / seed pass the occupancy window. |
 | 9 | **Won’t invent** | Curated overlay ($350M+ at 101°W, $400M+ at 19.2°E) is far from v0. After remaining-life fix UCS occupancy was **$228M at 101°W**; after TLE-primary occupancy **$198M** (5 sats, congestion 80). | Overlay is class M, secondary to the model; `basis` is always `model`. No new prices invented. |
-| 10 | **Open** | UCS ingest `last_run` is today; the **file vintage is ~May 2023** (latest GEO launch in DB is 2023). Terminal now shows file vintage / TLE epoch / FCC workbook as-of separately from ingest clock. FCC SSAL workbook vintage can still lag (sheet “Updated 30 April 2026”). ITU SNS is not ingested. NORAD/COSPAR omitted from UI; API still returns them. Duplicate slugs for absorbed longitudes remain. | Vintage fields + compact Trust bar (FCC stale / position disagreement expand-in-place); weekly `ingest:fcc` re-parse documented. |
-| 11 | **High (UI)** | Simulated book, ITU/sub-lease stubs, and seeded sparkline still sat on the default Terminal as filled panels. | **Fixed.** Quarantined behind Experimental disclosure. See Default Terminal quarantine. |
+| 10 | **Open** | UCS ingest `last_run` is today; the **file vintage is ~May 2023** (latest GEO launch in DB is 2023). Terminal now shows file vintage / TLE epoch / FCC workbook as-of separately from ingest clock. FCC SSAL workbook vintage can still lag (sheet “Updated 30 April 2026”). ITU SNS is not ingested. NORAD/COSPAR omitted from UI; API still returns them. | Vintage fields + compact Trust bar (FCC stale / position disagreement expand-in-place); weekly `ingest:fcc` re-parse documented. Same-slug duplicate rows are collapsed (see Registry row identity). |
+| 11 | **High (UI)** | Simulated book, ITU/sub-lease stubs, and seeded sparkline still sat on the default Terminal as filled panels. | **Fixed.** Simulated book is docs-only. Implied value, comps, and the model path are behind one Labeled model disclosure. ITU/sub-lease stubs stay collapsed under Experimental. |
 
 ## Position authority (TLE-primary occupancy)
 
@@ -68,6 +68,10 @@ Dual-track. `satellites.longitude_geo` remains the **UCS catalog** longitude (wr
 5. Occupancy / congestion window remains **±0.4°** co-location and **±2°** neighborhood, using circular longitude difference.
 
 Ingest (`npm run ingest:spacetrack`, or `npm run apply:positions` against an existing TLE table) writes audit columns (`longitude_ucs`, `longitude_tle`, `longitude_occupancy`, `position_source`, `position_delta_deg`, `position_disputed`, `tle_epoch`, …) without replacing the UCS catalog field. Live clustering **recomputes** from the TLE table at query time so occupancy cannot drift from the audit trail.
+
+## Registry row identity
+
+UCS-derived registry rows are one page per `lonToSlug` (occupancy longitude rounded to 0.1°). Satellites that share that slug are one row, not one row per satellite. Different slugs stay separate even when they sit inside ±0.4°. The registry operator is the canonical name with the most satellites in the slug (tie: alphabetical canonical name). Source strings stay on `operatorRaw`. A UCS operator string that equals that satellite's launch vehicle is not treated as a GEO operator and is not replaced with a guessed owner.
 
 ### Before / after (Space-Track TLE epoch 2026-09-15, apply 2026-09-15)
 
@@ -140,7 +144,7 @@ Legend: **V** = verified from a named public source in this product · **M** = m
 | Rights: national admin / FCC licensees | V/M | FCC when present; else inferred country. Licensee names canonicalized. Default Terminal primary. |
 | Rights: ITU filing | S | Not ingested. Default `ituRecorded: not_in_product`. Thin “Unrecorded in Clarke” chip on the default Terminal. **Quarantined** filled stub is Experimental only. No network names. Not a deed. |
 | Rights: sub-lease | S | No public feed. **Quarantined** — Experimental only. |
-| Simulated capacity book | S | Function of v0 midpoint + congestion. **Quarantined** from default Terminal; Experimental disclosure. |
+| Simulated capacity book | S | Function of v0 midpoint + congestion. **Not rendered** on Slot Terminal. Documented here only. |
 | Valuation chart / 30-day history | S | Seeded model path. **Quarantined** from default; labeled MODEL BACKFILL. Not trades. |
 | Data freshness `age_days` | V | Ingest clock (`last_run`). Not file vintage. |
 | File vintage / source as-of | V | UCS: latest GEO launch in snapshot. FCC: SSAL sheet “Updated …”. TLE: epoch min/max. Shown on Terminal + agents `meta.data_freshness`. |

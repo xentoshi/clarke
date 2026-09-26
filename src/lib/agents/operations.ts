@@ -18,7 +18,7 @@ import type { FreshnessMeta } from "./envelope";
 import { isSafeSlug } from "../slot-utils";
 import { buildSlotPositionTrust, type SlotPositionTrust } from "../position-authority";
 import { slotSourceVintage, type SlotSourceVintage } from "../source-vintage";
-import { resolveOperator, operatorMatchesQuery } from "../operator-identity";
+import { isLaunchVehicleOperator, resolveOperator, operatorMatchesQuery } from "../operator-identity";
 import { ituPresence, ITU_RECORDED_DEFAULT, type ItuRecorded } from "../itu-presence";
 
 export { isSafeSlug };
@@ -92,6 +92,9 @@ export function getSlotDossier(slug: string): SlotDossier | null {
   return {
     slot,
     satellites: satellites.map((s) => {
+      if (isLaunchVehicleOperator(s.operator, s.launchVehicle)) {
+        return { ...s, operatorCanonical: "", operatorRaw: s.operator, aliases: [] as string[] };
+      }
       const op = resolveOperator(s.operator);
       return { ...s, operatorCanonical: op.display, operatorRaw: s.operator, aliases: op.aliases };
     }),
@@ -142,6 +145,9 @@ export function listSatellites(q: SatellitesQuery = {}): GeoSatellite[] {
   }
   if (q.limit && q.limit > 0) out = out.slice(0, Math.min(q.limit, 1000));
   return out.map((s) => {
+    if (isLaunchVehicleOperator(s.operator, s.launchVehicle)) {
+      return { ...s, operatorCanonical: "", operatorRaw: s.operator, aliases: [] as string[] };
+    }
     const op = resolveOperator(s.operator);
     return { ...s, operatorCanonical: op.display, operatorRaw: s.operator, aliases: op.aliases };
   });

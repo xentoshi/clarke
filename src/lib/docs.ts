@@ -25,7 +25,7 @@ export const DOC_PAGES: DocMeta[] = [
     description:
       "What a paying operator can trust on Slot Terminal: occupancy, FCC, freshness, and the labeled model.",
     summary: "Field trust matrix, TLE-primary occupancy, V/M/S legend, and what Clarke will not claim.",
-    tldr: "Occupancy clusters on Space-Track TLE longitude when quality gates pass, otherwise the UCS catalog. Operator display is a curated alias map over UCS/FCC strings; raw source strings stay inspectable. FCC rows come from the committed SSAL workbook. Implied value is a labeled v0 model. ITU SNS is not ingested (Unrecorded in Clarke). Simulated books, ITU stubs, and seeded history sit behind Experimental.",
+    tldr: "Occupancy clusters on Space-Track TLE longitude when quality gates pass, otherwise the UCS catalog. Operator display is a curated alias map over UCS/FCC strings; raw source strings stay inspectable. FCC rows come from the committed SSAL workbook. Implied value is a labeled v0 model behind one disclosure. ITU SNS is not ingested (Unrecorded in Clarke). The simulated capacity book is not on Slot Terminal.",
   },
   {
     slug: "valuation",

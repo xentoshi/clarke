@@ -3,7 +3,6 @@
 import Link from "next/link";
 import type { ExplorerRow, SortKey, SortDir } from "./types";
 import { statusLabels, type SlotStatus } from "@/data/orbital-slots";
-import { AddToCompare } from "@/components/terminal/AddToCompare";
 
 const statusTone: Record<SlotStatus, string> = {
   active: "text-verified",
@@ -13,7 +12,6 @@ const statusTone: Record<SlotStatus, string> = {
 };
 
 const BASE_COLUMNS: { key: SortKey | null; label: string; align: "left" | "right"; cls?: string }[] = [
-  { key: null, label: "", align: "left" },
   { key: "longitude", label: "Slot", align: "left" },
   { key: "status", label: "Status", align: "left" },
   { key: "satCount", label: "Occ.", align: "right" },
@@ -62,9 +60,6 @@ export default function SlotTable({
                 className={`border-b border-line/80 cursor-pointer transition-colors last:border-b-0 ${
                   selectedSlug === r.slug ? "bg-surface" : "hover:bg-surface/60"
                 }`}>
-                <td className="px-2 py-3.5 w-10" onClick={(e) => e.stopPropagation()}>
-                  <AddToCompare slug={r.slug} className="px-1.5 py-0.5 text-[11px]" />
-                </td>
                 <td className="px-3 py-3.5">
                   <div className="flex items-start gap-3 min-w-0">
                     <div className="min-w-0">
@@ -73,8 +68,8 @@ export default function SlotTable({
                           className="text-ink text-[15px] font-mono font-medium tracking-tight hover:text-muted">
                           {r.label}
                         </Link>
-                        {r.positionDisputedCount > 0 && (
-                          <span className="text-stale text-[12px]" title="TLE occupancy disagrees with UCS catalog">Dispute</span>
+                        {selectedSlug === r.slug && r.positionDisputedCount > 0 && (
+                          <span className="text-muted text-[12px]" title="TLE occupancy disagrees with the UCS catalog">UCS disagrees</span>
                         )}
                       </div>
                       <div

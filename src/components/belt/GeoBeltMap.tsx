@@ -13,6 +13,7 @@ import {
   formatBeltLongitude,
   formatTickLabel,
   selectTickLabels,
+  beltFilterWindow,
   panLongitudeWindow,
   placeBeltMarks,
   projectLongitude,
@@ -49,6 +50,8 @@ export function GeoBeltMap({
   mapHref,
   initialMarkId = null,
   initialWindow = null,
+  onSelectWindow,
+  selectedWindow = null,
 }: {
   marks: BeltMark[];
   variant: "strip" | "full";
@@ -57,10 +60,12 @@ export function GeoBeltMap({
   mapHref?: string;
   initialMarkId?: string | null;
   initialWindow?: { min: number; max: number } | null;
+  /** Registry strip: click a cluster or empty arc to filter rows. Absent on the full belt. */
+  onSelectWindow?: (window: { min: number; max: number } | null) => void;
+  selectedWindow?: { min: number; max: number } | null;
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const [frameWidth, setFrameWidth] = useState(960);
-  const pointerType = useRef("mouse");
   const drag = useRef<{ x: number; view: { min: number; max: number } } | null>(null);
 
   const seed = marks.find((m) => m.id === initialMarkId) ?? null;
@@ -85,9 +90,7 @@ export function GeoBeltMap({
     return () => observer.disconnect();
   }, []);
 
-  const plotWidth = variant === "strip" ? Math.max(frameWidth, 1040) : Math.max(frameWidth, 280);
-  const svgH = variant === "strip" ? 96 : 228;
-  const baseline = svgH - AXIS_H;
+  const plotWidth = Math.max(frameWidth, 280);
   const inner = Math.max(1, plotWidth - PAD_X * 2);
   const span = view.max - view.min;
 
@@ -95,6 +98,9 @@ export function GeoBeltMap({
     () => placeBeltMarks(marks, { width: inner, lonMin: view.min, lonMax: view.max, minGapPx: MIN_GAP, maxLanes: MAX_LANES }),
     [marks, inner, view.min, view.max],
   );
+  const laneCount = placed.reduce((max, p) => Math.max(max, p.lane + 1), 1);
+  const svgH = 14 + laneCount * LANE_PITCH + MARK_H + AXIS_H;
+  const baseline = svgH - AXIS_H;
   const placedById = useMemo(() => new Map(placed.map((p) => [p.id, p])), [placed]);
   const order = useMemo(() => placed.map((p) => p.id), [placed]);
 
@@ -154,14 +160,17 @@ export function GeoBeltMap({
     }
   };
 
-  const onMarkClick = (event: MouseEvent<HTMLAnchorElement>, mark: BeltMark) => {
-    if (pointerType.current !== "touch") return;
-    const zoomed = variant === "full" && span <= 16;
-    if (!zoomed && activeId !== mark.id) {
-      event.preventDefault();
-      setActiveId(mark.id);
-      if (variant === "full") setView(windowAround(mark.longitude, 12));
-    }
+  const onBeltClick = (event: MouseEvent<SVGSVGElement>) => {
+    if (!onSelectWindow) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left - PAD_X;
+    const lon = unprojectLongitude(x, inner, view.min, view.max);
+    const next = beltFilterWindow(marks.map((mark) => mark.longitude), lon);
+    const same =
+      selectedWindow != null &&
+      Math.abs(selectedWindow.min - next.min) < 0.05 &&
+      Math.abs(selectedWindow.max - next.max) < 0.05;
+    onSelectWindow(same ? null : next);
   };
 
   return (
@@ -194,13 +203,16 @@ export function GeoBeltMap({
         ref={frameRef}
         tabIndex={0}
         onKeyDown={onKeyDown}
-        aria-label="GEO belt. Arrow keys move between marks. Enter opens the registry slot."
+        aria-label={
+          onSelectWindow
+            ? "GEO belt filter. Click a cluster or an empty arc to filter the registry by longitude."
+            : "GEO belt. Arrow keys move between marks. Enter opens the registry slot."
+        }
         className="border border-line bg-canvas outline-none focus-visible:border-line-strong"
       >
         <div
-          className={variant === "strip" ? "overflow-x-auto" : "touch-none"}
+          className={variant === "full" ? "touch-none" : undefined}
           onPointerDown={(event) => {
-            pointerType.current = event.pointerType;
             if (variant !== "full") return;
             if ((event.target as Element).closest?.("[data-belt-mark]")) return;
             drag.current = { x: event.clientX, view };
@@ -225,8 +237,9 @@ export function GeoBeltMap({
             viewBox={`0 0 ${plotWidth} ${svgH}`}
             role="group"
             aria-label="Flat equatorial belt. West is left."
-            className="block select-none"
+            className={`block select-none ${onSelectWindow ? "cursor-pointer" : ""}`}
             onMouseLeave={() => setHoverId(null)}
+            onClick={onBeltClick}
           >
             <line x1={PAD_X} x2={plotWidth - PAD_X} y1={baseline} y2={baseline} stroke={PAINT.axis} strokeWidth={1} />
             {view.min < -170 && span > 200 && (
@@ -270,6 +283,21 @@ export function GeoBeltMap({
                 </g>
               );
             })}
+            {selectedWindow && (
+              <rect
+                data-belt-window="1"
+                x={PAD_X + projectLongitude(selectedWindow.min, inner, view.min, view.max)}
+                y={8}
+                width={Math.max(
+                  2,
+                  projectLongitude(selectedWindow.max, inner, view.min, view.max) -
+                    projectLongitude(selectedWindow.min, inner, view.min, view.max),
+                )}
+                height={Math.max(1, baseline - 8)}
+                fill="var(--foreground)"
+                opacity={0.07}
+              />
+            )}
             {activePlaced && (
               <line
                 x1={PAD_X + activePlaced.x}
@@ -285,7 +313,7 @@ export function GeoBeltMap({
               if (!mark) return null;
               const x = PAD_X + p.x;
               const y = baseline - 3 - p.lane * LANE_PITCH;
-              const dim = markOpacity(mark, hovered);
+              const dim = markOpacity(mark, hovered, selectedWindow);
               const hitW = span <= 16 ? 12 : 7;
               const labelY = y - MARK_H - 4;
               const isolated = labelMarks && labelY > 12 && placed.every((o) => o.id === p.id || Math.abs(o.x - p.x) >= 46);
@@ -297,15 +325,14 @@ export function GeoBeltMap({
                   data-dispute={mark.dispute}
                   data-longitude={mark.longitude}
                   aria-label={markAria(mark)}
-                  onPointerDown={(event) => {
-                    pointerType.current = event.pointerType;
-                  }}
                   onMouseEnter={() => {
                     setActiveId(mark.id);
                     setHoverId(mark.id);
                   }}
                   onFocus={() => setActiveId(mark.id)}
-                  onClick={(event) => onMarkClick(event, mark)}
+                  onClick={(event) => {
+                    if (onSelectWindow) event.preventDefault();
+                  }}
                 >
                   <rect x={x - hitW / 2} y={y - MARK_H - 2} width={hitW} height={MARK_H + 6} fill="transparent" />
                   <MarkGlyph x={x} y={y} dispute={mark.dispute === "disputed"} opacity={dim} active={mark.id === activeId} />
@@ -348,7 +375,14 @@ export function GeoBeltMap({
   );
 }
 
-function markOpacity(mark: BeltMark, active: BeltMark | null): number {
+function markOpacity(
+  mark: BeltMark,
+  active: BeltMark | null,
+  selectedWindow: { min: number; max: number } | null,
+): number {
+  if (selectedWindow && (mark.longitude < selectedWindow.min - 1e-6 || mark.longitude > selectedWindow.max + 1e-6)) {
+    return 0.22;
+  }
   if (!active?.operator) return 1;
   if (mark.operator && mark.operator === active.operator) return 1;
   return 0.32;

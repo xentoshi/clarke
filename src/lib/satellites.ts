@@ -1,6 +1,5 @@
 import { getDb } from "./db";
 import { lonToSlug, slugToLon, formatLon } from "./slot-utils";
-import { parseUcsLaunchYear } from "./occupancy-quality";
 import { subSatelliteLongitudeDeg, parseTleElements } from "./orbit";
 import { circularAbsDiffDeg, withinLongitudeWindow } from "./geo-angle";
 import {
@@ -10,7 +9,8 @@ import {
   type PositionSource,
 } from "./position-authority";
 import type { OrbitalSlot } from "@/data/orbital-slots";
-import { resolveOperator } from "./operator-identity";
+import { isLaunchVehicleOperator, resolveOperator } from "./operator-identity";
+import { collapseUcsClaimSlots } from "./registry-claims";
 
 export { lonToSlug, slugToLon, formatLon } from "./slot-utils";
 export { COLOCATION_WINDOW_DEG, NEIGHBORHOOD_WINDOW_DEG } from "./position-authority";
@@ -385,7 +385,17 @@ export function getCongestion(lon: number): CongestionData {
   }
   const attributed = [...opCounts.values()].reduce((a, b) => a + b, 0);
   const dominantShare = attributed > 0 ? dominantCount / attributed : 0;
-  const dominantOperator = dominantOperatorRaw ? resolveOperator(dominantOperatorRaw).display : null;
+  const dominantIsVehicle = dominantOperatorRaw
+    ? rows.some(
+        (r) =>
+          (r.operator ?? "").trim() === dominantOperatorRaw &&
+          isLaunchVehicleOperator(r.operator, r.launchVehicle),
+      )
+    : false;
+  // Display only. distinctOperators still counts raw source strings, so the
+  // congestion score does not change when a launch vehicle is refused as an operator.
+  const dominantOperator =
+    dominantOperatorRaw && !dominantIsVehicle ? resolveOperator(dominantOperatorRaw).display : null;
 
   const densityScore = Math.min(neighborhood / 20, 1) * 50;
   const coLocationScore = Math.min(coLocated / 6, 1) * 30;
@@ -509,38 +519,6 @@ function getDecayedNoradIds(): Set<string> {
   return new Set(rows.map((r) => r.norad_id));
 }
 
-function ucsToSlot(sat: GeoSatellite, decayedNoradIds: Set<string>): OrbitalSlot {
-  const occ = sat.longitudeGeo ?? 0;
-  const lon = slugToLon(lonToSlug(occ)) ?? occ;
-  const launchYear = parseUcsLaunchYear(sat.launchDate) ?? undefined;
-  const op = resolveOperator(sat.operator);
-  return {
-    id: sat.noradId ? `ucs_${sat.noradId}` : sat.cosparId ? `ucs_${sat.cosparId.replace(/[^a-z0-9]/gi, "_")}` : `ucs_geo_${String(lon).replace(".", "_")}`,
-    longitude: lon,
-    label: formatLon(lon),
-    operator: op.display,
-    operatorRaw: sat.operator ?? "",
-    country: sat.ownerCountry ?? "",
-    bands: [],
-    status: sat.noradId && decayedNoradIds.has(sat.noradId) ? "inactive" : "active",
-    satellite: sat.name,
-    coverage: [],
-    valueEstimate: "",
-    description: [
-      sat.purpose && sat.detailedPurpose ? `${sat.purpose}: ${sat.detailedPurpose}.` : sat.purpose ?? "",
-      sat.operator ? `Operated by ${sat.operator}.` : "",
-      sat.launchVehicle ? `Launched on ${sat.launchVehicle}.` : "",
-      sat.comments ?? "",
-    ].filter(Boolean).join(" "),
-    launched: launchYear,
-    source: "ucs",
-    purpose: sat.purpose ?? undefined,
-    cosparIds: sat.cosparId ? [sat.cosparId] : [],
-    noradIds: sat.noradId ? [sat.noradId] : [],
-    users: sat.users ?? undefined,
-  };
-}
-
 export function mergeWithUcs(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
   const ucs = getGeoSatellites();
   if (ucs.length === 0) return curatedSlots.map((s) => ({ ...s, source: "curated" as const }));
@@ -567,9 +545,12 @@ export function mergeWithUcs(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
 
   const curatedLons = curatedSlots.map((s) => s.longitude);
   const decayedNoradIds = getDecayedNoradIds();
-  const ucsDerived = ucs
-    .filter((s) => s.longitudeGeo !== null && !curatedLons.some((lon) => withinLongitudeWindow(lon, s.longitudeGeo!, TOLERANCE)))
-    .map((s) => ucsToSlot(s, decayedNoradIds));
+  const ucsDerived = collapseUcsClaimSlots(
+    ucs.filter(
+      (s) => s.longitudeGeo !== null && !curatedLons.some((lon) => withinLongitudeWindow(lon, s.longitudeGeo!, TOLERANCE)),
+    ),
+    decayedNoradIds,
+  );
 
   // FCC-authorized positions with no UCS satellite and no curated slot nearby
   // would otherwise have zero representation in the registry: no row, no

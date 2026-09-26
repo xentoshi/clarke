@@ -23,7 +23,7 @@ import { ingestAsOf, type Provenance } from "./provenance";
 import { regionForLongitude } from "./regions";
 import { isSafeSlug } from "./slot-utils";
 import { summarizeOperators, type OperatorShare } from "./operator-mix";
-import { resolveOperator } from "./operator-identity";
+import { isLaunchVehicleOperator, resolveOperator } from "./operator-identity";
 import { ituPresence, type ItuRecorded } from "./itu-presence";
 import { buildSlotPositionTrust, type SlotPositionTrust } from "./position-authority";
 import { circularAbsDiffDeg } from "./geo-angle";
@@ -109,11 +109,19 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
   if (sats.length === 0 && fccAuths.length === 0 && !curated) return null;
 
   const label = curated?.label ?? formatLon(lon);
-  const mix = summarizeOperators(sats);
-  const occupancyMajority = occupancyMajorityOf(sats);
-  // Headline operator is the registry/curated row, not the ±0.4° majority.
-  // Canonical display is class M; raw UCS/FCC strings stay on operatorRaw.
-  const operatorResolved = resolveOperator(curated?.operator || occupancyMajority || fccAuths[0]?.licensee || "");
+  const attributed = sats.map((s) => ({
+    ...s,
+    operator: isLaunchVehicleOperator(s.operator, s.launchVehicle) ? null : s.operator,
+  }));
+  const mix = summarizeOperators(attributed);
+  const occupancyMajority = occupancyMajorityOf(attributed);
+  // Headline operator is the registry row, not the ±0.4° majority.
+  // A blank registry operator stays blank (launch vehicle refused, or unlisted).
+  // Do not fill it from a neighbor in the occupancy window.
+  const operatorSource = curated
+    ? curated.operator
+    : occupancyMajority || fccAuths[0]?.licensee || "";
+  const operatorResolved = resolveOperator(operatorSource);
   const operator = operatorResolved.display;
   const operatorRaw =
     curated?.operatorRaw ||

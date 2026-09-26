@@ -18,6 +18,7 @@ import {
   projectLongitude,
   stepBeltSelection,
   unprojectLongitude,
+  beltFilterWindow,
   windowAround,
   zoomLongitudeWindow,
   type BeltMark,
@@ -192,6 +193,19 @@ describe("GEO belt layout and copy", () => {
     const reader = beltReaderModel(disputed);
     assert.equal(reader.slotHref, "/orbital/171-5e");
     assert.match(reader.disputeDetail ?? "", /88\.40°/);
+  });
+});
+
+describe("registry strip longitude window", () => {
+  it("selects a tight cluster around a clicked mark and a 30° arc in empty longitude", () => {
+    const cluster = beltFilterWindow([-103.2, -103.05, -102.4, -40], -103.1);
+    assert.ok(cluster.min <= -103.2);
+    assert.ok(cluster.max >= -102.4);
+    assert.ok(cluster.max - cluster.min < 8);
+
+    const arc = beltFilterWindow([-103, -40], 10);
+    assert.equal(arc.min, 0);
+    assert.equal(arc.max, 30);
   });
 });
 

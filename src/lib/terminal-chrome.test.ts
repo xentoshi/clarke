@@ -198,6 +198,36 @@ describe("product chrome — Fair value, Trust bar, Terminal fold", () => {
     assert.match(hidden, />FCC</);
     assert.doesNotMatch(hidden, /Fair value/);
     assert.doesNotMatch(hidden, /\$198M/);
+    assert.doesNotMatch(hidden, /Compare/);
+    assert.doesNotMatch(hidden, />Dispute</);
+
+    const disputed = renderToStaticMarkup(
+      createElement(SlotTable, {
+        rows: [{ ...row, positionDisputedCount: 4 }],
+        sortKey: "longitude",
+        sortDir: "asc",
+        onSort: () => {},
+        onSelect: () => {},
+        selectedSlug: null,
+        showFairValue: false,
+      }),
+    );
+    assert.doesNotMatch(disputed, />Dispute</);
+    assert.doesNotMatch(disputed, /UCS disagrees/);
+
+    const open = renderToStaticMarkup(
+      createElement(SlotTable, {
+        rows: [{ ...row, positionDisputedCount: 4 }],
+        sortKey: "longitude",
+        sortDir: "asc",
+        onSort: () => {},
+        onSelect: () => {},
+        selectedSlug: "101w",
+        showFairValue: false,
+      }),
+    );
+    assert.match(open, /UCS disagrees/);
+    assert.doesNotMatch(open, />Dispute</);
 
     const shown = renderToStaticMarkup(
       createElement(SlotTable, {
@@ -239,22 +269,30 @@ describe("product chrome — Fair value, Trust bar, Terminal fold", () => {
     assert.match(header, /101°W/);
     assert.doesNotMatch(header, /Unlock Pro/);
 
-    const occIdx = html.indexOf('data-kpi="occupancy"');
-    const blurIdx = html.indexOf("blur-[6px]");
-    const unlockIdx = html.indexOf("Unlock Pro");
+    const primary = primaryTerminalRegion(html);
+    const occIdx = primary.indexOf('data-kpi="occupancy"');
     assert.ok(occIdx >= 0);
-    assert.ok(blurIdx < 0 || occIdx < blurIdx);
-    assert.ok(unlockIdx > occIdx);
-    assert.match(html, /data-unlock-pro/);
+    assert.doesNotMatch(primary, /Unlock Pro/);
+    assert.doesNotMatch(primary, /Nearest comps/);
+    assert.doesNotMatch(primary, /blur-\[6px\]/);
+    assert.match(primary, /data-occupancy-section/);
+    assert.doesNotMatch(primary, /mt-16/);
+
+    const labeled = html.slice(html.indexOf("data-labeled-model"));
+    assert.match(labeled, /Unlock Pro/);
+    assert.match(labeled, /data-unlock-pro/);
+    assert.match(labeled, /data-kpi="fair-value"/);
+    assert.match(html, /Implied value, comps, and model path/);
 
     const panel = html.match(/data-fair-value-panel[\s\S]*?<\/section>/i)?.[0] ?? "";
     assert.doesNotMatch(panel, /text-3xl/);
     assert.match(html, /data-trust-bar/);
-    assert.match(html, /data-terminal-experimental="sim-book"/);
+    assert.doesNotMatch(html, /Simulated capacity book/);
+    assert.doesNotMatch(html, /data-terminal-experimental="sim-book"/);
     assert.match(html, /data-itu-recorded="not_in_product"/);
     assert.match(html, /Unrecorded in Clarke/);
     assert.equal(defaultTerminalRendersItuStubAsPrimary(html), false);
-    assert.doesNotMatch(primaryTerminalRegion(html), /data-rights-layer="itu"/);
+    assert.doesNotMatch(primary, /data-rights-layer="itu"/);
     assert.match(html, /data-terminal-experimental="rights-stubs"/);
     assert.match(html, /data-rights-layer="itu"/);
   });

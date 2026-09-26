@@ -8,9 +8,8 @@ import SlotTable from "./SlotTable";
 import SlotDrawer from "./SlotDrawer";
 import CsvExportDialog from "./CsvExportDialog";
 import { EMPTY_FACETS, type ExplorerRow, type Facets, type SortKey, type SortDir } from "./types";
-import { CompareTray } from "@/components/terminal/CompareTray";
 import { GeoBeltMap } from "@/components/belt/GeoBeltMap";
-import type { BeltMark } from "@/lib/geo-belt";
+import { formatTickLabel, type BeltMark } from "@/lib/geo-belt";
 
 export default function OrbitalExplorer({
   rows, updated, pro, beltMarks, beltEpoch,
@@ -37,9 +36,9 @@ export default function OrbitalExplorer({
       .slice(0, 12);
   }, [rows]);
 
-  const filtered = useMemo(() => {
+  const facetMatched = useMemo(() => {
     const q = facets.search.trim().toLowerCase();
-    const out = rows.filter((r) => {
+    return rows.filter((r) => {
       if (q) {
         const hay = `${r.label} ${r.operator} ${r.operatorRaw} ${r.country} ${r.satelliteNames.join(" ")}`.toLowerCase();
         if (!hay.includes(q)) return false;
@@ -52,6 +51,13 @@ export default function OrbitalExplorer({
       if (facets.fccOnly && !r.fccLicensed) return false;
       if (facets.disputesOnly && r.positionDisputedCount <= 0) return false;
       return true;
+    });
+  }, [rows, facets]);
+
+  const filtered = useMemo(() => {
+    const out = facetMatched.filter((r) => {
+      if (facets.lonMin == null || facets.lonMax == null) return true;
+      return r.longitude >= facets.lonMin && r.longitude <= facets.lonMax;
     });
 
     const dir = sortDir === "asc" ? 1 : -1;
@@ -66,12 +72,16 @@ export default function OrbitalExplorer({
       }
     });
     return out;
-  }, [rows, facets, sortKey, sortDir]);
+  }, [facetMatched, facets.lonMin, facets.lonMax, sortKey, sortDir]);
 
-  const visibleMarks = useMemo(() => {
-    const slotIds = new Set(filtered.map((r) => r.id));
+  const stripMarks = useMemo(() => {
+    const slotIds = new Set(facetMatched.map((r) => r.id));
     return beltMarks.filter((mark) => slotIds.has(mark.slotId) && (!facets.disputesOnly || mark.dispute === "disputed"));
-  }, [filtered, beltMarks, facets.disputesOnly]);
+  }, [facetMatched, beltMarks, facets.disputesOnly]);
+
+  const lonWindow = facets.lonMin != null && facets.lonMax != null
+    ? { min: facets.lonMin, max: facets.lonMax }
+    : null;
 
   const mapHref = facets.disputesOnly ? "/orbital/map?disputes=1" : "/orbital/map";
 
@@ -118,8 +128,33 @@ export default function OrbitalExplorer({
         </button>
       </div>
 
-      <div className="mb-8">
-        <GeoBeltMap marks={visibleMarks} variant="strip" epochFallback={beltEpoch} mapHref={mapHref} />
+      <div className="mb-4">
+        <GeoBeltMap
+          marks={stripMarks}
+          variant="strip"
+          epochFallback={beltEpoch}
+          mapHref={mapHref}
+          onSelectWindow={(window) => setFacets((current) => ({
+            ...current,
+            lonMin: window?.min ?? null,
+            lonMax: window?.max ?? null,
+          }))}
+          selectedWindow={lonWindow}
+        />
+        {lonWindow && (
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-[13px]">
+            <span className="text-ink">
+              Longitude {formatTickLabel(lonWindow.min)} to {formatTickLabel(lonWindow.max)}
+            </span>
+            <button
+              type="button"
+              onClick={() => setFacets((current) => ({ ...current, lonMin: null, lonMax: null }))}
+              className="text-muted hover:text-ink"
+            >
+              Clear longitude
+            </button>
+          </div>
+        )}
       </div>
 
       <FacetPanel facets={facets} onChange={setFacets} operatorOptions={operatorOptions} />
@@ -136,7 +171,6 @@ export default function OrbitalExplorer({
 
       {selected && <SlotDrawer row={selected} onClose={() => setSelected(null)} />}
       {csvOpen && <CsvExportDialog rows={filtered} onClose={() => setCsvOpen(false)} pro={pro} />}
-      <CompareTray pro={pro} />
     </>
   );
 }

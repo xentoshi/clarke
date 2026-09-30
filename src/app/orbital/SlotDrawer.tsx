@@ -9,9 +9,8 @@ import { parseUcsLaunchYear } from "@/lib/occupancy-quality";
 interface DossierSat { id: number; name: string; operator: string | null; launchDate: string | null }
 interface DossierFcc { id: number; satelliteName: string | null; licensee: string | null; service: string | null; callSign: string | null }
 interface Dossier {
-  satellites: DossierSat[];
+  occupancy: DossierSat[];
   fccAuthorizations: DossierFcc[];
-  congestion: { score: number; factors: { coLocated: number; neighborhood: number; distinctOperators: number; dominantOperator: string | null; dominantShare: number } };
 }
 
 function launchYear(date: string | null): string {
@@ -97,13 +96,11 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
             )}
 
             <div className="text-faint text-xs mt-5 mb-2">Congestion · {row.congestionScore} / 100</div>
-            {dossier ? (
-              <div className="space-y-0.5">
-                <FactorLine label="Co-located (±0.4°)" value={String(dossier.congestion.factors.coLocated)} />
-                <FactorLine label="Neighborhood (±2°)" value={String(dossier.congestion.factors.neighborhood)} />
-                <FactorLine label="Operators / dominant" value={`${dossier.congestion.factors.distinctOperators}${dossier.congestion.factors.dominantOperator ? ` · ${dossier.congestion.factors.dominantOperator} ${Math.round(dossier.congestion.factors.dominantShare * 100)}%` : ""}`} />
-              </div>
-            ) : loading ? <div className="text-faint text-sm">Loading…</div> : null}
+            <div className="space-y-0.5">
+              <FactorLine label="Co-located (±0.4°)" value={String(row.congestionFactors.coLocated)} />
+              <FactorLine label="Neighborhood (±2°)" value={String(row.congestionFactors.neighborhood)} />
+              <FactorLine label="Operators / dominant" value={`${row.congestionFactors.distinctOperators}${row.congestionFactors.dominantOperator ? ` · ${row.congestionFactors.dominantOperator} ${Math.round(row.congestionFactors.dominantShare * 100)}%` : ""}`} />
+            </div>
 
             {(row.bands.length > 0 || row.coverage.length > 0) && (
               <>
@@ -115,11 +112,13 @@ export default function SlotDrawer({ row, onClose }: { row: ExplorerRow | null; 
               </>
             )}
 
-            {dossier && dossier.satellites.length > 0 && (
+            {loading && !dossier ? <div className="text-faint text-sm mt-5">Loading…</div> : null}
+
+            {dossier && dossier.occupancy.length > 0 && (
               <>
-                <div className="text-faint text-xs mt-5 mb-2">Co-located satellites ({dossier.satellites.length})</div>
+                <div className="text-faint text-xs mt-5 mb-2">Co-located satellites ({dossier.occupancy.length})</div>
                 <div className="space-y-0.5">
-                  {dossier.satellites.slice(0, 8).map((s) => <FactorLine key={s.id} label={s.name} value={launchYear(s.launchDate)} />)}
+                  {dossier.occupancy.slice(0, 8).map((s) => <FactorLine key={s.id} label={s.name} value={launchYear(s.launchDate)} />)}
                 </div>
               </>
             )}

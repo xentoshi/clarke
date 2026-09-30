@@ -8,7 +8,7 @@ const spec = {
     title: "Clarke API",
     version: "1.2.0",
     description:
-      "Read-only GEO registry (public agents API) plus Pro Slot Terminal endpoints. Occupancy is TLE-primary (Space-Track) with UCS fallback; TLE longitude is not an FCC or ITU assignment. Valuation v0 is a model, not a live market price. Simulated bid/ask and ITU stubs are experimental, not the default Terminal view.",
+      "Read-only GEO registry. The public agents API returns occupancy, operator identity, FCC rows, disputes, and source vintage. Pro Slot Terminal endpoints add the labeled model used on the human Terminal. Occupancy is TLE-primary (Space-Track) with UCS fallback. TLE longitude is not an FCC or ITU assignment. ITU SNS is not ingested. Simulated bid/ask and ITU stubs are experimental, not the default Terminal view.",
   },
   servers: [{ url: "/api/v1" }],
   tags: [
@@ -26,7 +26,7 @@ const spec = {
       get: {
         tags: ["Agents"],
         summary: "List orbital slots",
-        description: "All registry positions with congestion score and heuristic valuation. Occupancy/congestion use TLE-primary longitudes. Operator display is a curated alias map (class M) over UCS/FCC strings; `operatorRaw` is the source. `ituRecorded` is `not_in_product` (SNS is not ingested).",
+        description: "All registry positions. Each row includes operatorIdentity (split, single, or none) and operatorMix (canonical name plus raw source strings). Occupancy observations, FCC authorizations, dispute records, ituRecorded, and source vintage follow. `ituRecorded` is `not_in_product` (SNS is not ingested). Occupancy is TLE-primary.",
         responses: { "200": { description: "{ data, meta } envelope. meta.data_freshness includes last_run plus file_vintage / source_as_of / TLE epoch (not ingest clock alone)." } },
       },
     },
@@ -35,7 +35,7 @@ const spec = {
         tags: ["Agents"],
         summary: "Slot dossier",
         parameters: [{ name: "slug", in: "path", required: true, schema: { type: "string", example: "101w" } }],
-        responses: { "200": { description: "Slot + satellites + FCC + congestion + valuation + positionTrust + sourceVintage + ituRecorded (not_in_product; SNS not ingested). Satellites include operatorCanonical / operatorRaw; FCC rows include licenseeCanonical / licenseeRaw." }, "404": { description: "Unknown slug" } },
+        responses: { "200": { description: "operatorIdentity plus operatorMix (raw source strings per operator), occupancy observations (TLE longitude and epoch, UCS longitude, delta, disputed, occupancy authority), FCC rows (licenseeCanonical / licenseeRaw), dispute records, source vintage, and provenance for occupancy, UCS, FCC, license, and rights. ituRecorded is not_in_product (SNS is not ingested). A split mix has no single holder name." }, "404": { description: "Unknown slug" } },
       },
     },
     "/agents/satellites": {

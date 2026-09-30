@@ -178,7 +178,11 @@ export interface SlotPositionTrust {
   unknownCount: number;
   disputedCount: number;
   disputedSatellites: DisputedOccupant[];
-  /** UCS still lists these inside the window; occupancy longitude is elsewhere. */
+  /**
+   * UCS catalog longitude is inside this slot window, occupancy longitude is not,
+   * and the two longitudes disagree by more than disputeThresholdDeg.
+   * A track that agrees with UCS and only falls outside the co-location cut is not a ghost.
+   */
   ucsGhosts: DisputedOccupant[];
 }
 
@@ -196,7 +200,7 @@ export function buildSlotPositionTrust(
     .map(toDisputed);
 
   const ucsGhosts = allSats
-    .filter((s) => inWindow(s.longitudeUcs) && !inWindow(s.longitudeGeo))
+    .filter((s) => isUcsGhost(s, inWindow))
     .map(toDisputed);
 
   return {
@@ -210,6 +214,17 @@ export function buildSlotPositionTrust(
     disputedSatellites,
     ucsGhosts,
   };
+}
+
+function isUcsGhost(
+  sat: PositionTagged,
+  inWindow: (lon: number | null) => boolean,
+): boolean {
+  if (!inWindow(sat.longitudeUcs) || inWindow(sat.longitudeGeo)) return false;
+  // Sources agree. The occupancy longitude is outside this slot's co-location
+  // window, which is not a stale catalog listing.
+  if (sat.positionDeltaDeg != null && sat.positionDeltaDeg <= POSITION_DISPUTE_DEG) return false;
+  return true;
 }
 
 function toDisputed(s: PositionTagged): DisputedOccupant {

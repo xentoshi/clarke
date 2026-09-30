@@ -241,8 +241,8 @@ export default function AboutPage() {
             <h3 className="text-ink text-sm font-semibold mb-3">HTTP endpoints</h3>
             <div className="space-y-2 mb-6">
               {[
-                { path: "GET /api/v1/agents/slots", desc: "All orbital slots (curated + UCS-derived), merged and sorted by longitude, each with a congestion score and heuristic valuation." },
-                { path: "GET /api/v1/agents/slots/{slug}", desc: "Full dossier for one slot: record, satellites at that longitude, FCC authorizations, congestion breakdown, and heuristic valuation." },
+                { path: "GET /api/v1/agents/slots", desc: "All orbital slots (curated + UCS-derived), merged and sorted by longitude. Each row includes operatorIdentity and operatorMix (raw source strings per operator), occupancy, FCC authorizations, disputes, ituRecorded, and source vintage." },
+                { path: "GET /api/v1/agents/slots/{slug}", desc: "One slot: operatorMix for who is in the occupancy window (split, single, or none), occupancy observations (TLE and UCS longitudes), FCC authorizations, dispute records, ituRecorded, and source vintage." },
                 { path: "GET /api/v1/agents/satellites", desc: "GEO satellites from the UCS database. Optional filters: operator, ownerCountry, limit (max 1000)." },
                 { path: "GET /api/v1/openapi", desc: "OpenAPI 3.1 document covering agents and Pro Terminal routes." },
                 { path: "GET /api/v1/terminal/slots/{slug}", desc: "Pro: Slot Terminal model — TLE-primary occupancy, recorded FCC layers, valuation v0. Simulated book / ITU stubs are labeled experimental, not the default view." },

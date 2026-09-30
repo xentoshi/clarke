@@ -58,6 +58,7 @@ export function buildExplorerRows(): ExplorerRow[] {
       ucsGhostCount: trust.ucsGhosts.length,
       congestionScore: congestion.score,
       congestionTier: congestion.tier,
+      congestionFactors: congestion.factors,
       region: regionForLongitude(slot.longitude),
       fccLicensed,
       bands: slot.bands,

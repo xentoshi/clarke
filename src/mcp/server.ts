@@ -6,6 +6,18 @@ import {
   listSatellites,
 } from "../lib/agents/operations";
 
+export const CLARKE_LIST_SLOTS_DESCRIPTION =
+  "List GEO slots in the Clarke registry (curated positions merged with UCS-derived positions). Each entry includes slug, label, longitude, region, operatorIdentity (split, single, or none) and operatorMix (canonical name, count, share, and raw source strings per operator), country, status, ituRecorded, satellite count, FCC authorizations, occupancy observations (TLE longitude and epoch, UCS longitude, delta, disputed flag, and which source supplied occupancy), dispute records (TLE vs UCS disagreement above 2 degrees, and UCS ghosts), and source vintage. operatorMix is who is in the occupancy window. A split window has no single holder name. Provenance is included for occupancy, the UCS catalog, FCC rows, license, and rights. ITU SNS is not ingested (ituRecorded is not_in_product). TLE longitude is a tracked position, not an FCC or ITU assignment.";
+
+export const CLARKE_GET_SLOT_DESCRIPTION =
+  "Agent slot record for one GEO position by slug (e.g. '19-2e' for 19.2E, '101w' for 101W). Operator identity is operatorMix, with raw source strings on each share. operatorIdentity is split when more than one canonical operator is in the occupancy window, single when one is, none when the window has no attributed operator. Also returns occupancy observations, FCC authorizations, dispute records, ituRecorded, and source vintage, with provenance on occupancy, UCS, FCC, license, and rights. ITU SNS is not ingested (ituRecorded is not_in_product). TLE longitude is a tracked position, not an FCC or ITU assignment.";
+
+export const CLARKE_GET_TERMINAL_DESCRIPTION =
+  "Agent slot record for one GEO position. Same payload as clarke_get_slot: operatorMix as the occupancy identity, FCC rows, disputes, ituRecorded, and source vintage. operatorIdentity split means the window is shared. ITU SNS is not ingested (ituRecorded is not_in_product). TLE longitude is a tracked position, not an FCC or ITU assignment.";
+
+export const CLARKE_LIST_SATELLITES_DESCRIPTION =
+  "List GEO satellites from the UCS Satellite Database, optionally filtered by operator or owner country. Returns up to `limit` rows (default unlimited; max 1000).";
+
 const SAFE_SLUG = /^[a-z0-9-]+$/;
 const SAFE_STRING = /^[A-Za-z0-9 .\-_&]{1,80}$/;
 
@@ -35,14 +47,14 @@ export function createServer(): McpServer {
 
   server.tool(
     "clarke_list_slots",
-    "List all orbital slots in the Clarke registry: curated GEO positions with operator/value details merged with the broader set derived from the UCS satellite database. Each entry includes a normalized congestion score (0-100), FCC filing status, and a heuristic valuation (estimated value range, point estimate, confidence, and factor breakdown). Curated entries additionally include an authoritative valuation override.",
+    CLARKE_LIST_SLOTS_DESCRIPTION,
     {},
     async () => textResult(listSlots()),
   );
 
   server.tool(
     "clarke_get_slot",
-    "Get a full dossier for a single orbital slot identified by its slug (e.g. '19-2e' for 19.2°E, '101w' for 101°W). Returns the slot record plus all UCS satellites at that longitude, FCC authorizations, the normalized congestion score with its factor breakdown, and a heuristic valuation (range, confidence, and per-factor multipliers).",
+    CLARKE_GET_SLOT_DESCRIPTION,
     { slug: z.string().regex(SAFE_SLUG).describe("Slot slug, e.g. '19-2e'") },
     async ({ slug }) => {
       const dossier = getSlotDossier(slug);
@@ -53,19 +65,18 @@ export function createServer(): McpServer {
 
   server.tool(
     "clarke_get_terminal",
-    "Slot Terminal model for one GEO position: TLE-primary occupancy (UCS/TLE longs, Δ, disputed flag), recorded FCC layers, valuation v0 with drivers, and nearest comps. Operator names are canonicalized with a curated alias map (raw strings on operatorRaw). ITU SNS is not ingested (`ituRecorded=not_in_product`). Simulated capacity book, ITU/sub-lease stubs, and seeded history are labeled experimental, not the default Terminal view.",
+    CLARKE_GET_TERMINAL_DESCRIPTION,
     { slug: z.string().regex(SAFE_SLUG).describe("Slot slug, e.g. '101w'") },
     async ({ slug }) => {
-      const { buildSlotTerminal } = await import("../lib/slot-terminal");
-      const model = buildSlotTerminal(slug);
-      if (!model) return errorResult(`No slot at slug '${slug}'`);
-      return textResult(model);
+      const dossier = getSlotDossier(slug);
+      if (!dossier) return errorResult(`No slot at slug '${slug}'`);
+      return textResult(dossier);
     },
   );
 
   server.tool(
     "clarke_list_satellites",
-    "List GEO satellites from the UCS Satellite Database, optionally filtered by operator or owner country. Returns up to `limit` rows (default unlimited; max 1000).",
+    CLARKE_LIST_SATELLITES_DESCRIPTION,
     {
       operator: z.string().regex(SAFE_STRING).optional(),
       ownerCountry: z.string().regex(SAFE_STRING).optional(),

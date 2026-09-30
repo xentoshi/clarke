@@ -1,6 +1,7 @@
 import { buildMeta } from "@/lib/metadata";
 import Link from "next/link";
-import { getSatelliteStats, getFccCount, getGeoPositionCount } from "@/lib/satellites";
+import { slots as curatedSlots } from "@/data/orbital-slots";
+import { getSatelliteStats, getFccCount, mergeWithUcs } from "@/lib/satellites";
 import { getDataFreshness } from "@/lib/freshness";
 
 export const metadata = buildMeta({
@@ -35,8 +36,8 @@ const sources: { name: string; abbr: string; url: string; cadence: string; what:
     url: "https://www.ucsusa.org/resources/satellite-database",
     cadence: "Bi-annual",
     status: "live",
-    what: "A normalized database of all active satellites with operator, country, purpose, orbital regime, launch date, and expected lifetime. Clarke currently ingests 590 GEO satellites from the May 2023 snapshot, covering 407 distinct orbital positions (the Orbital Registry lists more rows than that — co-located satellites outside Clarke's curated position set are currently listed individually rather than grouped by position, which is on the list to fix).",
-    why: "The most accessible normalized dataset of active satellites available publicly. Powers Clarke's orbital registry, operator attribution, and congestion scoring. Satellite names and orbital positions are reliable; individual satellite identifiers (NORAD/COSPAR) have known accuracy issues in the UCS source and are not displayed.",
+    what: "A normalized database of active satellites with operator, country, purpose, orbital regime, launch date, and expected lifetime. Clarke ingests that GEO catalog as identity. Occupancy longitude is TLE-primary, with this catalog as fallback. The registry table is one row per slug: satellites that share an occupancy longitude rounded to 0.1° are a single row, and a satellite inside a curated slot's 0.4° window is occupancy on that row.",
+    why: "The most accessible normalized dataset of active satellites available publicly. It supplies catalog identity and the occupancy fallback. Satellite names are the catalog identity. Catalog longitudes are the UCS snapshot, not the occupancy authority. Individual satellite identifiers (NORAD/COSPAR) have known accuracy issues in the UCS source and are not displayed.",
   },
   {
     name: "FCC Approved Space Station List",
@@ -72,7 +73,7 @@ const sources: { name: string; abbr: string; url: string; cadence: string; what:
     cadence: "Daily",
     status: "live",
     what: "Two-line element sets (TLEs) and satcat identity for GEO-like objects. Clarke uses the TLE, evaluated at its own epoch, as the occupancy longitude when age and quality gates pass. UCS catalog longitude is kept beside it. TLE longitude is a tracked-object location, not an FCC assignment or ITU filing.",
-    why: "UCS GEO longitudes are a 2023-vintage snapshot. Of 512 GEO objects with both a UCS lon and a Clarke TLE (epoch 2026-09-15), 204 differ by more than 2° and 168 by more than 10° (MUOS-2: UCS 100.1°W vs TLE 172.0°E). Occupancy, congestion, and valuation v0 now cluster on TLE-primary longitude so those mismatches are visible instead of silently wrong.",
+    why: "UCS GEO longitudes are an older catalog snapshot. Occupancy, congestion v0, and valuation v0 cluster on TLE-primary longitude, with the UCS catalog as fallback, so a stale catalog longitude is visible instead of silently used. MUOS-2 is the standing example: the UCS catalog still says 100.1°W while occupancy follows the TLE near 172°E. TLE longitude is not an FCC assignment or an ITU filing.",
   },
   {
     name: "Celestrak",
@@ -118,10 +119,10 @@ function ageLabel(ageDays: number): string {
 
 export default function AboutPage() {
   const dbStats = getSatelliteStats();
-  const geoCount = dbStats.geoCount > 0 ? dbStats.geoCount : 590;
-  const totalSats = dbStats.total > 0 ? dbStats.total : 7560;
-  const fccCount = getFccCount() || 174;
-  const positionCount = getGeoPositionCount() || 407;
+  const geoCount = dbStats.geoCount;
+  const totalSats = dbStats.total;
+  const fccCount = getFccCount();
+  const registryRows = mergeWithUcs(curatedSlots).length;
   const freshness = getDataFreshness();
 
   return (
@@ -151,8 +152,8 @@ export default function AboutPage() {
       <div className="grid sm:grid-cols-3 gap-4 mb-10 max-w-3xl">
         {[
           { title: "Registry", body: "What's at a position and who holds it, from satellite and FCC licensing data." },
-          { title: "Congestion", body: "How contested an arc is, scored 0-100 from live density and operator overlap." },
-          { title: "Valuation", body: "What a position implies in dollar terms, modeled from disclosed M&A and analyst comps." },
+          { title: "Congestion", body: "How contested an arc is. A labeled 0-100 model from TLE-primary occupancy on the Slot Terminal." },
+          { title: "Valuation", body: "Implied fair value v0, a labeled model from public drivers on the Slot Terminal." },
         ].map((p) => (
           <div key={p.title} className="border border-line rounded-xl p-5 bg-surface">
             <div className="text-ink text-sm font-semibold mb-2">{p.title}</div>
@@ -165,7 +166,7 @@ export default function AboutPage() {
       <div className="grid grid-cols-3 gap-px bg-line rounded-xl overflow-hidden mb-10 max-w-3xl">
         {[
           { value: `${geoCount}`, label: "GEO satellites tracked (registry)" },
-          { value: `${positionCount}`, label: "Positions tracked" },
+          { value: `${registryRows}`, label: "Registry rows" },
           { value: `${fccCount}`, label: "FCC authorizations" },
         ].map((s) => (
           <div key={s.label} className="bg-surface px-5 py-5 text-center">
@@ -428,7 +429,7 @@ export default function AboutPage() {
           <Section id="data-quality" title="Data Quality">
             <div className="space-y-4">
               {[
-                { title: "UCS vs TLE longitude", body: "Occupancy clustering prefers a Space-Track TLE sub-satellite longitude when the TLE was fresh at ingest and passes GEO-payload quality gates (active payload, eccentricity, mean motion). UCS longitude remains the catalog value and is shown next to the TLE with a Δ and a disputed flag when they differ by more than 2°. TLE longitude is not an FCC license location or ITU filing. Of 512 GEO objects with both sources (TLE epoch 2026-09-15), 204 disagree by more than 2°." },
+                { title: "UCS vs TLE longitude", body: "Occupancy clustering prefers a Space-Track TLE sub-satellite longitude when the TLE was fresh at ingest and passes GEO-payload quality gates (active payload, eccentricity, mean motion). UCS longitude remains the catalog value and is shown next to the TLE with a delta and a disputed flag when they differ by more than 2°. TLE longitude is not an FCC license location or ITU filing. The count of disagreements moves with each TLE ingest and is not a fixed registry total." },
                 { title: "Satellite identifiers", body: "The UCS database includes NORAD catalog numbers and COSPAR international designators for each satellite. These identifiers are stored in Clarke's database but are not displayed to users. A spot-check of nine satellites against independent Celestrak records found that five had incorrect NORAD IDs, with some pointing to entirely different satellites at different orbital positions and one pointing to decayed re-entry debris. The satellite names, operator names, and orbital positions were generally accurate in the same check. Identifiers will be surfaced once they have been validated against an authoritative source." },
                 { title: "FCC coverage scope", body: `The ${fccCount} FCC authorizations in Clarke cover US-licensed operators and foreign operators with FCC-granted US market access. Satellites licensed entirely under non-US administrations, including most European, Russian, Chinese, and Asian operators, do not appear in FCC records and will show no authorization data on their position pages. This is a reflection of jurisdiction, not a gap in data collection.` },
                 { title: "Status labels", body: "Position status labels in the registry (On station, Paper filing, On station unlicensed, Inactive) are derived from the UCS classification, which marks satellites as active based on reported operational status at the time of the snapshot. The UCS does not independently verify operational status in real time, and updates follow its twice-yearly cadence, so decommissions and new launches typically take up to six months to show up after they are publicly announced." },
@@ -448,7 +449,7 @@ export default function AboutPage() {
                 { title: "Satellite and ownership layer", body: `The registry's satellite layer comes from the UCS Satellite Database (see Data Sources above). Clarke ingests all ${totalSats.toLocaleString()} satellites from the current snapshot across GEO, LEO, and MEO (${geoCount} are GEO), each queryable by operator and purpose. The GEO subset anchors the priced registry and congestion model; LEO and MEO appear as descriptive constellation presence on operator pages, not as priced positions.` },
                 { title: "Authorization layer", body: `FCC authorization records from the Approved Space Station List are ingested as a second layer on top of the UCS satellite data. For each GEO position, Clarke queries the FCC table for any authorization within 0.6 degrees of the nominal longitude. Where a match exists, the detail page for that position shows the FCC call sign, licensee name, authorized frequency bands, administration, and in-orbit date. Where no match exists, the position has no US FCC authorization, which is expected for satellites licensed under non-US administrations.` },
                 { title: "Co-location grouping", body: "Multiple satellites operating at the same nominal longitude are grouped together using a tolerance of 0.4 degrees on the occupancy longitude (Space-Track TLE when usable, otherwise UCS). This matches ITU co-location practice. The grouping is physical occupancy, not an FCC or ITU assignment: SES-1 stays at 101°W because its TLE agrees with UCS; MUOS-2, whose UCS row still says 100.1°W, occupies at its TLE near 172°E." },
-                { title: "Congestion scoring", body: "The congestion score is a normalized 0 to 100 index blending three signals at a position: arc density (GEO satellites whose occupancy longitude is within 2 degrees), direct co-location (within 0.4 degrees), and contention (distinct operators). Occupancy longitude is TLE-primary. Density contributes up to 50 points, co-location up to 30, and operator contention up to 20. A position packed by a single operator scores lower on contention than an equally dense arc contested by many operators, because multi-operator arcs carry a heavier interference-coordination burden. The tiers are Sparse for 0 to 14, Low for 15 to 34, Moderate for 35 to 54, High for 55 to 74, and Critical for 75 to 100. Scores reflect tracked hardware, not filed ITU positions, so they understate coordination pressure in arcs with heavy filing or squatting activity." },
+                { title: "Congestion scoring", body: "Congestion v0 is a labeled model on the Slot Terminal, not a recorded fact and not a registry column. It is a normalized 0 to 100 index blending three signals at a position: arc density (GEO satellites whose occupancy longitude is within 2 degrees), direct co-location (within 0.4 degrees), and contention (distinct operators). Occupancy longitude is TLE-primary, with the UCS catalog as fallback. Density contributes up to 50 points, co-location up to 30, and operator contention up to 20. A position packed by a single operator scores lower on contention than an equally dense arc contested by many operators, because multi-operator arcs carry a heavier interference-coordination burden. The tiers are Sparse for 0 to 14, Low for 15 to 34, Moderate for 35 to 54, High for 55 to 74, and Critical for 75 to 100. Scores reflect tracked hardware, not filed ITU positions, so they understate coordination pressure in arcs with heavy filing or squatting activity." },
                 { title: "Valuation model v0", body: "Each position carries a heuristic implied valuation, expressed as a range rather than a point figure because it is derived from public data, not transaction records. A $30M baseline is multiplied by arc desirability, a GDP/population coverage proxy by longitude band, occupancy (co-located satellites), remaining-life quality from UCS lifetime fields, operator tier, spectrum (when known), scarcity (congestion score), and FCC/license plus paper-vs-brought-into-use signals. Every factor and its multiplier is shown on the Slot Terminal (Pro) so the estimate can be inspected. Confidence is high for curated positions, medium for active positions with a known operator, and low for sparsely-attributed UCS-derived entries; the range widens as confidence falls. History is a seeded 30-day model path in data/terminal.db, not observed trades. This is an analytical model, not an appraisal, a quote, or investment advice." },
               ].map((item) => (
                 <div key={item.title} className="border border-line rounded-xl p-5 bg-surface">

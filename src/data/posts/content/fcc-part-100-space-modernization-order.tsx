@@ -93,9 +93,8 @@ export default function Post() {
         exists to examine.
       </p>
       <p>
-        Clarke currently tracks 522 GEO positions, 517 active, of which 143 carry an FCC filing flag,
-        meaning more than a quarter of the geostationary arc in the registry runs through the licensing
-        machinery this order just rebuilt. Three concrete effects to watch:
+        GEO positions in the Clarke registry include rows with an FCC filing flag, so part of the arc
+        the registry shows runs through the licensing machinery this order rebuilt. Three concrete effects to watch:
       </p>
       <p>
         <strong>Filing velocity becomes a signal.</strong> Under Part 25, the gap between filing and grant
@@ -107,12 +106,13 @@ export default function Post() {
         <strong>The transparency asymmetry inverts.</strong> GEO operators have historically been the
         opaque end of the market: long-lived assets, quiet bilateral deals, information living in PDFs
         and phone calls. A mandatory common SSA feed means position data for every FCC-licensed GEO asset
-        becomes systematically available in one place for the first time. Clarke&apos;s congestion model
-        today is built from the UCS Satellite Database, a twice-yearly snapshot currently dated May 2023,
-        cross-referenced against FCC authorization records; Space-Track TLE data is ingested separately
-        for position validation, not as the congestion engine&apos;s primary input. A designated,
-        mandatory SSA provider regime would be a real, structural upgrade to what&apos;s knowable about
-        the arc.
+        becomes systematically available in one place for the first time. Clarke&apos;s congestion score
+        is a labeled model on TLE-primary occupancy: a Space-Track TLE sub-satellite longitude when age
+        and quality gates pass, otherwise the UCS catalog longitude. The UCS file is still the identity
+        catalog, and its vintage is the latest GEO launch in that snapshot, not the ingest clock. FCC
+        rows are the license layer. Congestion is not a recorded fact, and a TLE longitude is not an FCC
+        assignment or an ITU filing. A designated, mandatory SSA provider regime would be a real,
+        structural upgrade to what&apos;s knowable about the arc.
       </p>
       <p>
         <strong>Regulatory risk becomes an attribute of the slot.</strong> If Part 100 is narrowed by

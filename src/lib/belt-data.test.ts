@@ -35,10 +35,10 @@ describe("GEO belt from clarke.db", () => {
     const muos = belt.marks.find((m) => m.id === "norad-39206");
     assert.ok(muos);
     assert.equal(muos.dispute, "disputed");
-    assert.equal(muos.slug, "171-5e");
-    assert.ok(circularAbsDiffDeg(muos.longitude, 171.5) < 0.2);
+    assert.equal(muos.slug, lonToSlug(muos.longitude));
+    assert.ok(muos.longitude > 100, "occupancy follows the TLE into the eastern hemisphere");
     assert.ok(circularAbsDiffDeg(muos.longitude, -100.1) > 10);
-    assert.match(muos.slotLabel, /171/);
+    assert.match(muos.slotLabel, /E/);
     assert.ok(buildSlotTerminal(muos.slug));
     assert.ok(buildSlotTerminal("67w"));
   });

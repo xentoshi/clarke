@@ -73,7 +73,16 @@ describe("public docs load the repo markdown", () => {
     assert.match(doc.html, /TLE-primary/);
     assert.match(doc.html, /docs-mark-v/);
     assert.match(doc.html, /positionDisputed/);
+    assert.match(doc.html, /not_in_product/);
+    assert.match(doc.html, /Unrecorded in Clarke/);
+    assert.match(doc.html, /not a network name/);
+    assert.match(doc.html, /one row per slug/);
+    assert.match(doc.html, /labeled model/i);
     assert.doesNotMatch(doc.html, /docs\/DATA_TRUST\.md/);
+    assert.doesNotMatch(doc.html, /default spine/);
+    assert.doesNotMatch(doc.html, /absorbed longitudes are not separate pages/);
+    assert.doesNotMatch(doc.html, /522 GEO/);
+    assert.doesNotMatch(doc.html, /UCS-primary/);
     assert.ok(doc.toc.some((t) => /field trust matrix/i.test(t.label)));
   });
 
@@ -83,6 +92,9 @@ describe("public docs load the repo markdown", () => {
     assert.match(doc.html, /<table>/);
     assert.match(doc.html, /±22%/);
     assert.match(doc.html, /Arc desirability/);
+    assert.match(doc.html, /Labeled model/);
+    assert.match(doc.html, /TLE-primary/);
+    assert.doesNotMatch(doc.html, /Experimental disclosure/);
     assert.doesNotMatch(doc.html, /docs\/VALUATION\.md/);
   });
 

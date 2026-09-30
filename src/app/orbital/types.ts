@@ -1,5 +1,5 @@
 import type { Band, SlotStatus } from "@/data/orbital-slots";
-import type { CongestionTier } from "@/lib/satellites";
+import type { CongestionFactors, CongestionTier } from "@/lib/satellites";
 import type { SlotValuation } from "@/lib/valuation";
 
 // One row per orbital position, built server-side by buildExplorerRows() and
@@ -21,6 +21,7 @@ export interface ExplorerRow {
   ucsGhostCount: number;
   congestionScore: number;
   congestionTier: CongestionTier;
+  congestionFactors: CongestionFactors;
   region: string;
   fccLicensed: boolean;
   bands: Band[];

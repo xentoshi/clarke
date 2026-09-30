@@ -112,7 +112,7 @@ Compared Clarke UCS + Space-Track satcat to CelesTrak SATCAT (`/satcat/records.p
 | AT&T T16 | 44333 | 2019-034A | AT&T T-16 / 2019-06-20 | −101 | **−100.87** (within 0.4°) |
 | MUOS-2 | 39206 | 2013-036A | MUOS-2 / 2013-07-19 | −100.1 | **172.04°E** (UCS stale; occupancy is TLE) |
 
-These five NORAD IDs did **not** reproduce the historical UCS mis-ID problem called out on About. Terminal now shows UCS lon, TLE lon, Δ, source, and epoch; the agents API returns the same fields plus `positionTrust` on the slot dossier. Treat API NORAD/COSPAR as **UCS-attributed, Space-Track-joinable, not independently verified for every row**.
+These five NORAD IDs did **not** reproduce the historical UCS mis-ID problem called out on About. Terminal now shows UCS lon, TLE lon, Δ, source, and epoch. The agents slot payload returns those occupancy fields, FCC rows, dispute records, and source vintage. Treat NORAD on that payload as **UCS-attributed, Space-Track-joinable, not independently verified for every row**.
 
 Fleet-wide, matching UCS GEO rows to Clarke TLEs: **204/512 differ by >2°, 168/512 by >10°**. Occupancy is TLE-primary (513 / 73 UCS fallback / 4 unknown). Disagreements are flagged, not hidden.
 
@@ -187,6 +187,12 @@ npm run seed:valuations    # backfill model path (not trades) after occupancy/mo
 ```
 
 Space-Track credentials are required only for a live TLE refresh (`npm run ingest:spacetrack`), not for `apply:positions` or `ingest:fcc`.
+
+## Agent slot payload (2026-09-30)
+
+Public agents HTTP routes and the MCP slot tools (`clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`) return one registry record: slug, label, longitude, region, operator and operatorRaw, operator mix, country, status, `ituRecorded` (`not_in_product`), satellite count, FCC authorizations, occupancy observations, dispute records, and source vintage. Provenance is the same occupancy, UCS catalog, FCC, license, and rights objects the Terminal already attaches. `occupancyAuthority` on the slot is `tle-primary`. Each observation's `occupancyAuthority` is the source that supplied that object's longitude (`tle`, `ucs`, or `none`). Disputes are TLE vs UCS position disagreement plus UCS ghosts. `sourceVintage.fccStale` is true when the FCC workbook as-of is older than 14 days.
+
+The human Slot Terminal and the Pro Terminal API still carry the labeled model, congestion, simulated book, and comps. Those fields are not on the agent payload.
 
 ## Not yet shipped
 

@@ -98,6 +98,62 @@ function lookupSlot(slug: string, lon: number): OrbitalSlot | undefined {
   );
 }
 
+/** Provenance the product already attaches to recorded sources (occupancy, UCS, FCC, license, rights). */
+export interface RecordedProvenance {
+  occupancy: Provenance;
+  ucsCatalog: Provenance;
+  fcc: Provenance;
+  license: Provenance;
+  rights: Provenance;
+}
+
+export function buildRecordedProvenance(input: {
+  satCount: number;
+  tlePrimaryCount: number;
+  sourceVintage: SlotSourceVintage;
+  freshness: Array<{
+    source: string;
+    fileVintage: string | null;
+    lastRun: string;
+    tleEpochMax: string | null;
+  }>;
+  asOf: string;
+}): RecordedProvenance {
+  const { satCount, tlePrimaryCount, sourceVintage, freshness, asOf } = input;
+  const ucs = freshness.find((f) => f.source === "UCS");
+  const fcc = freshness.find((f) => f.source === "FCC-SSAL");
+  const tle = freshness.find((f) => f.source === "Space-Track TLE");
+  const vintageIso = (fileVintage: string | null | undefined, ingestRun: string | null | undefined) => {
+    if (fileVintage && /^\d{4}-\d{2}-\d{2}/.test(fileVintage)) {
+      return fileVintage.length === 10 ? `${fileVintage}T00:00:00.000Z` : ingestAsOf(fileVintage);
+    }
+    return ingestAsOf(ingestRun ?? null, new Date(asOf));
+  };
+  const ucsAsOf = vintageIso(ucs?.fileVintage, ucs?.lastRun);
+  const fccAsOf = vintageIso(fcc?.fileVintage, fcc?.lastRun);
+  const tleAsOf = vintageIso(tle?.fileVintage ?? tle?.tleEpochMax, tle?.lastRun);
+  const tlePrimaryShare = satCount === 0 ? 0 : tlePrimaryCount / satCount;
+  return {
+    occupancy: {
+      source: "Space-Track TLE (primary) + UCS Satellite Database (fallback)",
+      asOf: tleAsOf,
+      note: `±${COLOCATION_TOLERANCE_DEG}° window · ${tlePrimaryCount}/${satCount} TLE-primary (${Math.round(tlePrimaryShare * 100)}%) · TLE epoch ${sourceVintage.tleEpochMax ?? "unknown"} · TLE lon is not an FCC/ITU assignment`,
+    },
+    ucsCatalog: {
+      source: "UCS Satellite Database",
+      asOf: ucsAsOf,
+      note: `File vintage (latest GEO launch in snapshot) ${sourceVintage.ucsFileVintage ?? "unknown"} · ingest clock is not catalog epoch`,
+    },
+    fcc: {
+      source: "FCC Approved Space Station List",
+      asOf: fccAsOf,
+      note: `Workbook as-of ${sourceVintage.fccAsOf ?? "unknown"} · ingest ${sourceVintage.fccIngestAt ?? "unknown"}`,
+    },
+    license: { source: "FCC SSAL + UCS occupancy", asOf: fccAsOf },
+    rights: { source: "FCC SSAL + UCS; ITU not recorded in Clarke", asOf: fccAsOf },
+  };
+}
+
 export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
   if (!isSafeSlug(slug)) return null;
   const lon = slugToLon(slug);
@@ -200,22 +256,16 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
     };
   });
 
-  const ucs = freshness.find((f) => f.source === "UCS");
-  const fcc = freshness.find((f) => f.source === "FCC-SSAL");
-  const tle = freshness.find((f) => f.source === "Space-Track TLE");
-  const vintageIso = (fileVintage: string | null | undefined, ingestRun: string | null | undefined) => {
-    if (fileVintage && /^\d{4}-\d{2}-\d{2}/.test(fileVintage)) {
-      return fileVintage.length === 10 ? `${fileVintage}T00:00:00.000Z` : ingestAsOf(fileVintage);
-    }
-    return ingestAsOf(ingestRun ?? null, new Date(asOf));
-  };
-  const ucsAsOf = vintageIso(ucs?.fileVintage, ucs?.lastRun);
-  const fccAsOf = vintageIso(fcc?.fileVintage, fcc?.lastRun);
-  const tleAsOf = vintageIso(tle?.fileVintage ?? tle?.tleEpochMax, tle?.lastRun);
   const modelRun = latestModelRun();
   const positionTrust = buildSlotPositionTrust(lon, sats, getGeoSatellites(), COLOCATION_TOLERANCE_DEG);
-  const tlePrimaryShare = sats.length === 0 ? 0 : positionTrust.tlePrimaryCount / sats.length;
   const sourceVintage = slotSourceVintage(sats, freshness);
+  const recorded = buildRecordedProvenance({
+    satCount: sats.length,
+    tlePrimaryCount: positionTrust.tlePrimaryCount,
+    sourceVintage,
+    freshness,
+    asOf,
+  });
 
   return {
     slug,
@@ -240,7 +290,7 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
     valuation,
     history,
     historySource: history[0]?.source === "persisted" ? "persisted" : "backfill",
-    rightsChain: buildRightsChain({ operator, country, fccAuths, asOf: fccAsOf }),
+    rightsChain: buildRightsChain({ operator, country, fccAuths, asOf: recorded.fcc.asOf }),
     bidAsk: simulatedCapacityBook(valuation, congestion, asOf),
     comps,
     positionTrust,
@@ -253,28 +303,16 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
         asOf: valuation.asOf,
         note: valuation.disclaimer,
       },
-      occupancy: {
-        source: "Space-Track TLE (primary) + UCS Satellite Database (fallback)",
-        asOf: tleAsOf,
-        note: `±${COLOCATION_TOLERANCE_DEG}° window · ${positionTrust.tlePrimaryCount}/${sats.length} TLE-primary (${Math.round(tlePrimaryShare * 100)}%) · TLE epoch ${sourceVintage.tleEpochMax ?? "unknown"} · TLE lon is not an FCC/ITU assignment`,
-      },
-      ucsCatalog: {
-        source: "UCS Satellite Database",
-        asOf: ucsAsOf,
-        note: `File vintage (latest GEO launch in snapshot) ${sourceVintage.ucsFileVintage ?? "unknown"} · ingest clock is not catalog epoch`,
-      },
+      occupancy: recorded.occupancy,
+      ucsCatalog: recorded.ucsCatalog,
       congestion: {
         source: "Clarke congestion v0 ← TLE-primary occupancy longitudes",
-        asOf: tleAsOf,
+        asOf: recorded.occupancy.asOf,
       },
-      fcc: {
-        source: "FCC Approved Space Station List",
-        asOf: fccAsOf,
-        note: `Workbook as-of ${sourceVintage.fccAsOf ?? "unknown"} · ingest ${sourceVintage.fccIngestAt ?? "unknown"}`,
-      },
-      license: { source: "FCC SSAL + UCS occupancy", asOf: fccAsOf },
+      fcc: recorded.fcc,
+      license: recorded.license,
       coverage: { source: "Clarke GDP/pop longitude-band heuristic", asOf: valuation.asOf },
-      rights: { source: "FCC SSAL + UCS; ITU not recorded in Clarke", asOf: fccAsOf },
+      rights: recorded.rights,
       bidAsk: { source: "Simulated (not a market)", asOf, note: "See strip disclaimer" },
     },
   };

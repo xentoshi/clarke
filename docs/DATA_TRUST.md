@@ -65,7 +65,8 @@ Dual-track. `satellites.longitude_geo` remains the **UCS catalog** longitude (wr
 2. Else fall back to UCS longitude **unless** that value is the `0°` placeholder (classified/undisclosed pile-up). No TLE and UCS `0` → occupancy `null` (do not invent a Prime-Meridian station).
 3. Never interpolate UCS and TLE. Never present TLE longitude as an FCC assignment or ITU filing location. FCC matching stays on the authorization’s own longitude (±0.6°).
 4. Flag `positionDisputed` when both longs exist and circular \|UCS−TLE\| > **2°** (tunable `POSITION_DISPUTE_DEG`).
-5. Occupancy / congestion window remains **±0.4°** co-location and **±2°** neighborhood, using circular longitude difference.
+5. A UCS ghost is a catalog longitude inside the slot window whose occupancy longitude is outside that window and whose \|UCS−TLE\| exceeds 2°. Agreement within 2°, with the track just outside the ±0.4° co-location cut, is the same station-keeping neighborhood, not a stale catalog hit.
+6. Occupancy / congestion window remains **±0.4°** co-location and **±2°** neighborhood, using circular longitude difference.
 
 Ingest (`npm run ingest:spacetrack`, or `npm run apply:positions` against an existing TLE table) writes audit columns (`longitude_ucs`, `longitude_tle`, `longitude_occupancy`, `position_source`, `position_delta_deg`, `position_disputed`, `tle_epoch`, …) without replacing the UCS catalog field. Live clustering **recomputes** from the TLE table at query time so occupancy cannot drift from the audit trail.
 
@@ -190,7 +191,7 @@ Space-Track credentials are required only for a live TLE refresh (`npm run inges
 
 ## Agent slot payload (2026-09-30)
 
-Public agents HTTP routes and the MCP slot tools (`clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`) return one registry record: slug, label, longitude, region, operator and operatorRaw, operator mix, country, status, `ituRecorded` (`not_in_product`), satellite count, FCC authorizations, occupancy observations, dispute records, and source vintage. Provenance is the same occupancy, UCS catalog, FCC, license, and rights objects the Terminal already attaches. `occupancyAuthority` on the slot is `tle-primary`. Each observation's `occupancyAuthority` is the source that supplied that object's longitude (`tle`, `ucs`, or `none`). Disputes are TLE vs UCS position disagreement plus UCS ghosts. `sourceVintage.fccStale` is true when the FCC workbook as-of is older than 14 days.
+Public agents HTTP routes and the MCP slot tools (`clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`) return one registry record: slug, label, longitude, region, `operatorIdentity` (`split`, `single`, or `none`) and `operatorMix` (canonical name, count, share, and raw source strings), country, status, `ituRecorded` (`not_in_product`), satellite count, FCC authorizations, occupancy observations, dispute records, and source vintage. Provenance is the same occupancy, UCS catalog, FCC, license, and rights objects the Terminal already attaches. `occupancyAuthority` on the slot is `tle-primary`. Each observation's `occupancyAuthority` is the source that supplied that object's longitude (`tle`, `ucs`, or `none`). The mix is who is in the occupancy window. A split window has no single holder name; the human Terminal can still show its registry label. Disputes are in-window TLE vs UCS disagreement plus UCS ghosts (catalog inside the window, occupancy outside, \|UCS−TLE\| > 2°). `sourceVintage.fccStale` is true when the FCC workbook as-of is older than 14 days.
 
 The human Slot Terminal and the Pro Terminal API still carry the labeled model, congestion, simulated book, and comps. Those fields are not on the agent payload.
 

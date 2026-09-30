@@ -66,13 +66,27 @@ export interface AgentDispute {
   positionSource: PositionSource;
 }
 
+/** Who is in the occupancy window. Not a slot holder. */
+export type OperatorIdentity = "split" | "single" | "none";
+
+export function operatorIdentityOf(mix: OperatorShare[]): OperatorIdentity {
+  if (mix.length > 1) return "split";
+  if (mix.length === 1) return "single";
+  return "none";
+}
+
 export interface AgentSlotPayload {
   slug: string;
   label: string;
   longitude: number;
   region: string;
-  operator: string;
-  operatorRaw: string;
+  /**
+   * split: more than one canonical operator in the window.
+   * single: one operator in the window.
+   * none: no attributed occupancy operator.
+   * The names live on operatorMix, with raw source strings on each share.
+   */
+  operatorIdentity: OperatorIdentity;
   operatorMix: OperatorShare[];
   country: string;
   status: SlotStatus;
@@ -193,17 +207,6 @@ function assemble(input: {
     operator: isLaunchVehicleOperator(s.operator, s.launchVehicle) ? null : s.operator,
   }));
   const mix = summarizeOperators(attributed);
-  const occupancyMajority = mix[0]?.operator ?? "";
-  const operatorSource = curated
-    ? curated.operator
-    : occupancyMajority || fccAuths[0]?.licensee || "";
-  const operator = resolveOperator(operatorSource).display;
-  const operatorRaw =
-    curated?.operatorRaw ||
-    curated?.operator ||
-    mix[0]?.operatorRaw[0] ||
-    fccAuths[0]?.licensee ||
-    "";
   const itu = ituPresence();
   const country = curated?.country || sats[0]?.ownerCountry || fccAuths[0]?.administration || "";
   const status: SlotStatus = curated?.status ?? (sats.length > 0 ? "active" : "filed");
@@ -222,8 +225,7 @@ function assemble(input: {
     label: curated?.label ?? formatLon(lon),
     longitude: lon,
     region: regionForLongitude(lon),
-    operator,
-    operatorRaw,
+    operatorIdentity: operatorIdentityOf(mix),
     operatorMix: mix,
     country,
     status,

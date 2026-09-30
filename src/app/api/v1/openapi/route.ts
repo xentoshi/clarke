@@ -26,7 +26,7 @@ const spec = {
       get: {
         tags: ["Agents"],
         summary: "List orbital slots",
-        description: "All registry positions. Each row includes operator identity, occupancy observations, FCC authorizations, dispute records, ituRecorded, and source vintage. Operator display is a curated alias map (class M) over UCS/FCC strings; `operatorRaw` is the source. `ituRecorded` is `not_in_product` (SNS is not ingested). Occupancy is TLE-primary.",
+        description: "All registry positions. Each row includes operatorIdentity (split, single, or none) and operatorMix (canonical name plus raw source strings). Occupancy observations, FCC authorizations, dispute records, ituRecorded, and source vintage follow. `ituRecorded` is `not_in_product` (SNS is not ingested). Occupancy is TLE-primary.",
         responses: { "200": { description: "{ data, meta } envelope. meta.data_freshness includes last_run plus file_vintage / source_as_of / TLE epoch (not ingest clock alone)." } },
       },
     },
@@ -35,7 +35,7 @@ const spec = {
         tags: ["Agents"],
         summary: "Slot dossier",
         parameters: [{ name: "slug", in: "path", required: true, schema: { type: "string", example: "101w" } }],
-        responses: { "200": { description: "Occupancy observations (TLE longitude and epoch, UCS longitude, delta, disputed, occupancy authority), FCC rows (licenseeCanonical / licenseeRaw), dispute records, source vintage, and provenance for occupancy, UCS, FCC, license, and rights. ituRecorded is not_in_product (SNS is not ingested)." }, "404": { description: "Unknown slug" } },
+        responses: { "200": { description: "operatorIdentity plus operatorMix (raw source strings per operator), occupancy observations (TLE longitude and epoch, UCS longitude, delta, disputed, occupancy authority), FCC rows (licenseeCanonical / licenseeRaw), dispute records, source vintage, and provenance for occupancy, UCS, FCC, license, and rights. ituRecorded is not_in_product (SNS is not ingested). A split mix has no single holder name." }, "404": { description: "Unknown slug" } },
       },
     },
     "/agents/satellites": {

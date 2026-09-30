@@ -31,9 +31,15 @@ describe("agent slot payload", () => {
     assert.equal(agent.label, terminal.label);
     assert.equal(agent.longitude, terminal.longitude);
     assert.equal(agent.region, terminal.region);
-    assert.equal(agent.operator, terminal.operator);
-    assert.equal(agent.operatorRaw, terminal.operatorRaw);
+    assert.equal(terminal.operator, "SES");
+    assert.equal("operator" in agent, false);
+    assert.equal("operatorRaw" in agent, false);
+    assert.equal(agent.operatorIdentity, "split");
     assert.deepEqual(agent.operatorMix, terminal.operatorMix);
+    assert.ok(agent.operatorMix.length > 1);
+    assert.ok(agent.operatorMix.every((share) => share.operatorRaw.length > 0));
+    const names = agent.operatorMix.map((share) => share.operator).sort();
+    assert.deepEqual(names, ["DirecTV", "Ligado", "NASA", "SES"]);
     assert.equal(agent.country, terminal.country);
     assert.equal(agent.status, terminal.status);
     assert.equal(agent.ituRecorded, "not_in_product");
@@ -71,6 +77,14 @@ describe("agent slot payload", () => {
       agent.disputes.filter((row) => row.kind === "ucs_ghost").length,
       terminal.positionTrust.ucsGhosts.length,
     );
+    const skyterra = agent.disputes.find((row) => row.noradId === "37218");
+    assert.equal(skyterra, undefined);
+    const ghosts = agent.disputes.filter((row) => row.kind === "ucs_ghost");
+    assert.ok(ghosts.length > 0);
+    for (const ghost of ghosts) {
+      assert.ok(ghost.deltaDeg == null || ghost.deltaDeg > 2, `${ghost.name} delta ${ghost.deltaDeg}`);
+    }
+    assert.ok(ghosts.some((ghost) => (ghost.deltaDeg ?? 0) > 10));
 
     assert.ok(terminal.valuation);
     assert.ok(terminal.congestion);
@@ -95,6 +109,15 @@ describe("agent slot payload", () => {
     assert.ok(detail);
     assert.ok(listed);
     assert.deepEqual(listed, detail);
+    assert.ok(slots.some((slot) => slot.operatorIdentity === "single" && slot.operatorMix.length === 1));
+    assert.ok(slots.some((slot) => slot.operatorIdentity === "none" && slot.operatorMix.length === 0));
+    for (const slot of slots) {
+      assert.equal("operator" in slot, false, slot.slug);
+      assert.equal("operatorRaw" in slot, false, slot.slug);
+      if (slot.operatorIdentity === "split") assert.ok(slot.operatorMix.length > 1, slot.slug);
+      if (slot.operatorIdentity === "single") assert.equal(slot.operatorMix.length, 1, slot.slug);
+      if (slot.operatorIdentity === "none") assert.equal(slot.operatorMix.length, 0, slot.slug);
+    }
 
     const violations = slots.flatMap((slot) => agentPayloadViolations(slot).map((item) => `${slot.slug}: ${item}`));
     assert.deepEqual(violations, []);
@@ -158,6 +181,9 @@ describe("agent slot payload", () => {
     }
     assert.match(CLARKE_GET_SLOT_DESCRIPTION, /ituRecorded is not_in_product/);
     assert.match(CLARKE_LIST_SLOTS_DESCRIPTION, /occupancy observations/i);
+    assert.match(CLARKE_LIST_SLOTS_DESCRIPTION, /operatorIdentity/);
+    assert.match(CLARKE_GET_SLOT_DESCRIPTION, /operatorMix/);
+    assert.doesNotMatch(CLARKE_GET_SLOT_DESCRIPTION, /operator and operatorRaw/);
     assert.match(CLARKE_GET_TERMINAL_DESCRIPTION, /same payload as clarke_get_slot/i);
   });
 });

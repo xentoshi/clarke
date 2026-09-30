@@ -151,11 +151,22 @@ describe("buildSlotPositionTrust", () => {
       positionDeltaDeg: 87.8,
       positionDisputed: true,
     };
-    const trust101 = buildSlotPositionTrust(-101, [ses1], [ses1, ghost, muos]);
+    const nearMatch = {
+      name: "SkyTerra 1",
+      noradId: "37218",
+      longitudeUcs: -101.3,
+      longitudeTle: -101.45,
+      longitudeGeo: -101.45,
+      positionSource: "tle" as const,
+      positionDeltaDeg: 0.15,
+      positionDisputed: false,
+    };
+    const trust101 = buildSlotPositionTrust(-101, [ses1], [ses1, ghost, muos, nearMatch]);
     assert.equal(trust101.tlePrimaryCount, 1);
     assert.equal(trust101.disputedCount, 0);
     assert.equal(trust101.ucsGhosts.length, 1);
     assert.equal(trust101.ucsGhosts[0].noradId, "99999");
+    assert.equal(trust101.ucsGhosts.some((row) => row.noradId === "37218"), false);
 
     const trust172 = buildSlotPositionTrust(172.1, [muos], [ses1, ghost, muos]);
     assert.equal(trust172.disputedCount, 1);

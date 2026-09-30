@@ -31,8 +31,8 @@ Clarke exposes its registry as machine-readable data for LLM agents and tools.
 
 | Endpoint | Returns |
 |---|---|
-| `GET /api/v1/agents/slots` | All orbital positions: operator identity, occupancy, FCC rows, disputes, source vintage |
-| `GET /api/v1/agents/slots/{slug}` | One slot: occupancy observations, FCC authorizations, dispute records, source vintage |
+| `GET /api/v1/agents/slots` | All orbital positions: operator mix, occupancy, FCC rows, disputes, source vintage |
+| `GET /api/v1/agents/slots/{slug}` | One slot: operator mix, occupancy observations, FCC authorizations, dispute records, source vintage |
 | `GET /api/v1/agents/satellites` | GEO satellites (filter by `operator`, `ownerCountry`, `limit`) |
 | `GET /api/v1/openapi` | OpenAPI 3.1 spec for agents + Terminal routes |
 | `GET /api/v1/terminal/slots` | **Pro** — Terminal summaries |

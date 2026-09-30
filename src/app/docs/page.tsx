@@ -17,8 +17,8 @@ export default function DocsHubPage() {
       <p className="text-muted text-[13px] mb-2">Docs</p>
       <h1 className="text-3xl font-semibold text-ink tracking-tight mb-3">Clarke Docs</h1>
       <p className="text-muted text-[15px] leading-relaxed mb-4">
-        Method notes for occupancy, rights, freshness, and the labeled model.
-        Verified sources, modeled dollars, and what stays off the default Terminal.
+        Method notes for occupancy, rights, freshness, and the labeled models.
+        Congestion and fair value are models on the Slot Terminal. Verified sources are occupancy, FCC, and freshness.
       </p>
 
       <TrustLegend className="mb-5" />

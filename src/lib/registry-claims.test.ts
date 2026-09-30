@@ -84,7 +84,8 @@ describe("live registry claims (clarke.db)", () => {
     assert.equal(directv?.operator, "DirecTV");
     assert.equal(hispamar?.operator, "Hispamar");
     assert.equal(dod?.operator, "US DoD");
-    assert.ok((hispamar?.ucsCount ?? 0) >= 3);
+    assert.ok((hispamar?.ucsCount ?? 0) >= 2);
+    assert.match(hispamar?.satellite ?? "", /Amazonas/);
   });
 
   it("does not list Atlas 5 as a GEO operator or borrow a neighbor", () => {

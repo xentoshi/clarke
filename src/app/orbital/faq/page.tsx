@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
+import { slots as curatedSlots } from "@/data/orbital-slots";
+import { getSatelliteStats, mergeWithUcs } from "@/lib/satellites";
 import FaqList from "./FaqList";
 
 export const metadata = buildMeta({
@@ -9,7 +11,8 @@ export const metadata = buildMeta({
   tag: "FAQ",
 });
 
-const faq = [
+function faqItems(geoCount: number, registryRows: number) {
+  return [
   {
     q: "Where does this data come from?",
     a: "Satellite names, operators, and UCS catalog longitudes come from the UCS Satellite Database. Occupancy clustering (who is counted at a slot) uses a Space-Track TLE sub-satellite longitude when that TLE passes published age and quality gates, otherwise the UCS longitude. FCC authorization records come from the FCC Approved Space Station List. TLE longitude is not an FCC assignment or ITU filing. Congestion scores use TLE-primary occupancy, not ITU filing records.",
@@ -24,7 +27,7 @@ const faq = [
   },
   {
     q: "How many total orbital positions exist versus what Clarke currently tracks?",
-    a: "The ITU has registered approximately 1,800 GEO coordination filings across all member states, representing every position that has been filed, coordinated, or historically registered since the space age began. Clarke currently tracks 590 active satellites from the UCS database across 407 distinct occupied positions. The difference between 1,800 total filings and 407 occupied positions reflects squatted slots with no operational satellite, historically registered positions no longer in active use, filed positions where the satellite has never launched, and coordination filings from operators who have since surrendered their rights. The Orbital Registry table itself lists more than 407 rows: co-located satellites outside Clarke's curated position set are currently listed individually rather than grouped by position, so a handful of positions with multiple satellites appear as multiple rows. That grouping is on the roadmap.",
+    a: `The ITU has registered approximately 1,800 GEO coordination filings across all member states, representing every position that has been filed, coordinated, or historically registered since the space age began. Clarke's registry table currently lists ${registryRows.toLocaleString()} rows, one per slug, built from ${geoCount.toLocaleString()} GEO satellites in the UCS snapshot plus FCC-only rows where a license has no nearby occupancy. Satellites that share an occupancy longitude rounded to 0.1° are one row. A satellite inside a curated slot's 0.4° window is occupancy on that curated row, not a second table row. ITU SNS is not ingested, so Clarke does not record those filings. The gap between filed networks and occupied rows includes squatted slots, historically registered positions no longer in use, and filings whose satellite never launched.`,
   },
   {
     q: "What is Ku-band versus Ka-band?",
@@ -32,15 +35,20 @@ const faq = [
   },
   {
     q: "What does 'squatted' mean?",
-    a: "A squatted slot has an ITU filing on record but no operational satellite currently using the position. The ITU found that 45% of investigated satellite networks showed no verifiable proof of being brought into use. Governments and operators file positions preemptively to block competitors from occupying strategically valuable arcs, to preserve optionality for future satellite programs, or to create tradeable coordination rights, a practice sometimes called paper satellites.",
+    a: "Clarke's status label is On station, unlicensed. It is a curated registry label, not an ITU SNS record. ITU SNS is not ingested, so the label is not a network name, not brought-into-use evidence, and not a filled filing row. In the industry, squatting means a filing with no operational satellite on station. Clarke does not store that filing.",
   },
   {
     q: "What does the congestion number mean?",
-    a: "The congestion score is a normalized 0 to 100 index that blends three signals at a position: how many active GEO satellites occupy the surrounding arc (within 2 degrees on either side), how many sit directly co-located at the same nominal longitude (within 0.4 degrees), and how many distinct operators share the arc. A score near 0 means an empty stretch of orbit; a score near 100 means a dense, multi-operator arc where interference coordination requirements are highest. An arc dominated by a single operator scores lower than an equally packed arc contested by several operators, because shared arcs are harder to coordinate. The tiers are Sparse (0 to 14), Low (15 to 34), Moderate (35 to 54), High (55 to 74), and Critical (75 to 100). The densest arc currently tracked is the European Ku-band corridor between 13°E and 28°E.",
+    a: "Congestion v0 is a labeled model on the Slot Terminal, not a recorded fact. It is a normalized 0 to 100 index on TLE-primary occupancy (UCS catalog longitude only as fallback). It blends three signals at a position: how many GEO satellites occupy the surrounding arc (within 2 degrees on either side), how many sit directly co-located at the same nominal longitude (within 0.4 degrees), and how many distinct operators share the arc. A score near 0 means an empty stretch of orbit; a score near 100 means a dense, multi-operator arc where interference coordination requirements are highest. An arc dominated by a single operator scores lower than an equally packed arc contested by several operators, because shared arcs are harder to coordinate. The tiers are Sparse (0 to 14), Low (15 to 34), Moderate (35 to 54), High (55 to 74), and Critical (75 to 100).",
   },
-];
+  ];
+}
 
 export default function OrbitalFaqPage() {
+  const geoCount = getSatelliteStats().geoCount;
+  const registryRows = mergeWithUcs(curatedSlots).length;
+  const faq = faqItems(geoCount, registryRows);
+
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
       <div className="mb-10 flex items-start justify-between gap-4">

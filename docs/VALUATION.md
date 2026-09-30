@@ -1,6 +1,6 @@
 # Valuation v0
 
-Clarke’s Slot Terminal fair-value figure is a labeled **model**: a documented heuristic so operators and investors can inspect an implied range and its drivers. It is not a live exchange price, an appraisal, or an offer to transact.
+Clarke’s Slot Terminal fair-value figure is a labeled **model**: a documented heuristic so operators and investors can inspect an implied range and its drivers. It is not a live exchange price, an appraisal, an offer to transact, or a recorded fact. Congestion, the scarcity driver, is the same kind of labeled model (congestion v0) on that human Terminal. Occupancy feeding both models is TLE-primary, with the UCS catalog as fallback.
 
 ## Formula
 
@@ -35,7 +35,7 @@ Curated `valueEstimate` strings (e.g. `$350M+`) are a **hand estimate / curated 
 
 ## History
 
-`npm run seed:valuations` writes 30 daily snapshots per slot into `data/terminal.db`. Until a real daily job exists, those points are a **deterministic model path** (smooth drift from the current v0 point), labeled `backfill` even when read back from SQLite — not observed trades. Re-run the seed after ingest or model changes. The sparkline is **not on the default Terminal**; it sits behind Experimental disclosure as “MODEL BACKFILL — not trades.”
+`npm run seed:valuations` writes 30 daily snapshots per slot into `data/terminal.db`. Until a real daily job exists, those points are a **deterministic model path** (smooth drift from the current v0 point), labeled `backfill` even when read back from SQLite. They are not observed trades. Re-run the seed after ingest or model changes. The sparkline is **not on the default Terminal**. It sits inside the closed **Labeled model** disclosure, under Model path, and is labeled model backfill, not trades.
 
 ## What v0 is not
 

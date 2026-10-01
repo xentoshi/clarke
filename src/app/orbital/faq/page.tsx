@@ -7,7 +7,7 @@ import FaqList from "./FaqList";
 export const metadata = buildMeta({
   title: "Orbital Registry — FAQ",
   description:
-    "How Clarke sources orbital data, what congestion scores mean, and why some positions lack FCC records.",
+    "How Clarke sources orbital data, what the public agent API returns, what congestion scores mean, and why some positions lack FCC records.",
   tag: "FAQ",
 });
 
@@ -16,6 +16,10 @@ function faqItems(geoCount: number, registryRows: number) {
   {
     q: "Where does this data come from?",
     a: "Satellite names, operators, and UCS catalog longitudes come from the UCS Satellite Database. Occupancy clustering (who is counted at a slot) uses a Space-Track TLE sub-satellite longitude when that TLE passes published age and quality gates, otherwise the UCS longitude. FCC authorization records come from the FCC Approved Space Station List. TLE longitude is not an FCC assignment or ITU filing. Congestion scores use TLE-primary occupancy, not ITU filing records.",
+  },
+  {
+    q: "What does the public agent API return?",
+    a: "GET /api/v1/agents/slots and GET /api/v1/agents/slots/{slug}, and the MCP tools clarke_list_slots, clarke_get_slot, and clarke_get_terminal, return one registry record: occupancy (TLE-primary, UCS fallback), operatorIdentity (split, single, or none) and operatorMix, per-satellite operators, FCC rows, disputes, source vintage, and ituRecorded. clarke_get_terminal is the same JSON as clarke_get_slot. There is no headline operator. ituRecorded is not_in_product on every slot because ITU SNS is not ingested. fccStale is true when the FCC workbook as-of parses and is older than 14 days. Valuation, congestion, bid/ask, comps, and dollar strings are not in that payload. Congestion v0 and implied fair value live only as labeled models on the human Slot Terminal and must not be treated as facts. Field list: /docs/agent-api.",
   },
   {
     q: "Why do some positions have FCC authorization data and others don't?",
@@ -39,7 +43,7 @@ function faqItems(geoCount: number, registryRows: number) {
   },
   {
     q: "What does the congestion number mean?",
-    a: "Congestion v0 is a labeled model on the Slot Terminal, not a recorded fact. It is a normalized 0 to 100 index on TLE-primary occupancy (UCS catalog longitude only as fallback). It blends three signals at a position: how many GEO satellites occupy the surrounding arc (within 2 degrees on either side), how many sit directly co-located at the same nominal longitude (within 0.4 degrees), and how many distinct operators share the arc. A score near 0 means an empty stretch of orbit; a score near 100 means a dense, multi-operator arc where interference coordination requirements are highest. An arc dominated by a single operator scores lower than an equally packed arc contested by several operators, because shared arcs are harder to coordinate. The tiers are Sparse (0 to 14), Low (15 to 34), Moderate (35 to 54), High (55 to 74), and Critical (75 to 100).",
+    a: "Congestion v0 is a labeled model on the human Slot Terminal, not a recorded fact, and it is not in the public agent payload. It is a normalized 0 to 100 index on TLE-primary occupancy (UCS catalog longitude only as fallback). It blends three signals at a position: how many GEO satellites occupy the surrounding arc (within 2 degrees on either side), how many sit directly co-located at the same nominal longitude (within 0.4 degrees), and how many distinct operators share the arc. A score near 0 means an empty stretch of orbit; a score near 100 means a dense, multi-operator arc where interference coordination requirements are highest. An arc dominated by a single operator scores lower than an equally packed arc contested by several operators, because shared arcs are harder to coordinate. The tiers are Sparse (0 to 14), Low (15 to 34), Moderate (35 to 54), High (55 to 74), and Critical (75 to 100). Agents must not treat the score as a fact. Field list: /docs/agent-api.",
   },
   ];
 }
@@ -56,7 +60,9 @@ export default function OrbitalFaqPage() {
           <p className="text-muted text-sm mb-2">Registry FAQ</p>
           <h1 className="text-3xl font-semibold text-ink tracking-tight mb-2">Frequently asked questions</h1>
           <p className="text-muted text-base leading-relaxed">
-            Data sources, congestion scores, and how position status is determined.
+            Data sources, the public agent record, congestion scores, and how position status is determined.{" "}
+            <Link href="/docs/agent-api" className="text-ink underline">Agent API</Link>
+            {" "}returns occupancy and FCC rows. Valuation and congestion are not in that payload.
           </p>
         </div>
         <Link

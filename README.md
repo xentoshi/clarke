@@ -31,8 +31,8 @@ Clarke exposes its registry as machine-readable data for LLM agents and tools.
 
 | Endpoint | Returns |
 |---|---|
-| `GET /api/v1/agents/slots` | All orbital positions: operator mix, occupancy, FCC rows, disputes, source vintage |
-| `GET /api/v1/agents/slots/{slug}` | One slot: operator mix, occupancy observations, FCC authorizations, dispute records, source vintage |
+| `GET /api/v1/agents/slots` | All registry rows: operatorIdentity and operatorMix, occupancy, FCC rows, disputes, source vintage. No valuation or congestion. |
+| `GET /api/v1/agents/slots/{slug}` | One slot, same record as the list. `clarke_get_terminal` returns this same JSON. |
 | `GET /api/v1/agents/satellites` | GEO satellites (filter by `operator`, `ownerCountry`, `limit`) |
 | `GET /api/v1/openapi` | OpenAPI 3.1 spec for agents + Terminal routes |
 | `GET /api/v1/terminal/slots` | **Pro** — Terminal summaries |
@@ -49,7 +49,7 @@ Pro Terminal routes accept a session cookie or `Authorization: Bearer ck_live_�
 npm run mcp
 ```
 
-Tools: `clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`, `clarke_list_satellites`. See the header of `scripts/clarke-mcp.ts` for a sample client config.
+Tools: `clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`, `clarke_list_satellites`. `clarke_get_terminal` is the same JSON as `clarke_get_slot`. Slot tools do not return valuation, congestion, bid/ask, comps, or a headline operator. Field list: [`docs/AGENT_API.md`](./docs/AGENT_API.md) (public page [`/docs/agent-api`](https://clarkebelt.finance/docs/agent-api)). See the header of `scripts/clarke-mcp.ts` for a sample client config.
 
 ---
 
@@ -88,7 +88,7 @@ npm run dev
 
 Open `/orbital` for the registry, `/orbital/101w` (or `/slot/101w`) for Slot Terminal, `/login` for a free or **Demo Pro** seat, `/pricing` for the gate.
 
-Public methodology: [`/docs`](https://clarkebelt.finance/docs) — data trust, valuation v0, FCC SSAL refresh. Repo copies: [`docs/DATA_TRUST.md`](./docs/DATA_TRUST.md), [`docs/VALUATION.md`](./docs/VALUATION.md), [`docs/FCC_REFRESH.md`](./docs/FCC_REFRESH.md).
+Public methodology: [`/docs`](https://clarkebelt.finance/docs). Data trust, agent API, valuation v0, FCC SSAL refresh. Repo copies: [`docs/DATA_TRUST.md`](./docs/DATA_TRUST.md), [`docs/AGENT_API.md`](./docs/AGENT_API.md), [`docs/VALUATION.md`](./docs/VALUATION.md), [`docs/FCC_REFRESH.md`](./docs/FCC_REFRESH.md).
 
 ```bash
 npm test                  # valuation v0 + TLE occupancy authority tests

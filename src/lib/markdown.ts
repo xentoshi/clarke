@@ -2,6 +2,7 @@
 
 const DOC_HREF: Record<string, string> = {
   "DATA_TRUST.md": "/docs/data-trust",
+  "AGENT_API.md": "/docs/agent-api",
   "VALUATION.md": "/docs/valuation",
   "FCC_REFRESH.md": "/docs/fcc-refresh",
 };

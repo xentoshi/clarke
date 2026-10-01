@@ -25,8 +25,9 @@ const typeLabels: Record<Result["type"], string> = {
 const pages = [
   { label: "GEO Slot Index #1", sub: "Occupancy enter/leave, dispute flips, FCC deltas. Not prices.", href: "/index" },
   { label: "Slot Terminal · 101°W", sub: "Sample hot slot. Occupancy, FCC, freshness, labeled model.", href: "/orbital/101w" },
-  { label: "Docs", sub: "Occupancy, rights, freshness, and the labeled model", href: "/docs" },
+  { label: "Docs", sub: "Occupancy, the agent record, freshness, and the labeled model", href: "/docs" },
   { label: "Data trust", sub: "Field trust matrix, TLE-primary occupancy, V/M/S legend", href: "/docs/data-trust" },
+  { label: "Agent API", sub: "HTTP and MCP slot record. No valuation or congestion.", href: "/docs/agent-api" },
   { label: "Valuation v0", sub: "$30M baseline formula, drivers, confidence bands", href: "/docs/valuation" },
   { label: "FCC SSAL refresh", sub: "Workbook vintage and the replace-xlsx runbook", href: "/docs/fcc-refresh" },
   { label: "Pricing", sub: "Free registry vs Pro driver breakdown, compare, export+", href: "/pricing" },

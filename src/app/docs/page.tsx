@@ -6,7 +6,7 @@ import { TrustLegend } from "@/components/docs/TrustLegend";
 export const metadata = buildMeta({
   title: "Docs",
   description:
-    "Clarke Docs: how to read occupancy, rights, freshness, and the labeled model on Slot Terminal.",
+    "Clarke Docs: occupancy, the public agent record, FCC freshness, and the labeled models on Slot Terminal.",
   tag: "Docs",
   path: "/docs",
 });
@@ -17,8 +17,9 @@ export default function DocsHubPage() {
       <p className="text-muted text-[13px] mb-2">Docs</p>
       <h1 className="text-3xl font-semibold text-ink tracking-tight mb-3">Clarke Docs</h1>
       <p className="text-muted text-[15px] leading-relaxed mb-4">
-        Method notes for occupancy, rights, freshness, and the labeled models.
-        Congestion and fair value are models on the Slot Terminal. Verified sources are occupancy, FCC, and freshness.
+        Method notes for occupancy, rights, freshness, the public agent record, and the labeled models.
+        The agent API returns occupancy, operator identity, FCC rows, disputes, and freshness.
+        Congestion and fair value are models on the human Slot Terminal. They are not in the agent payload.
       </p>
 
       <TrustLegend className="mb-5" />

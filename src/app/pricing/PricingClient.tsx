@@ -56,7 +56,7 @@ export default function PricingClient({
             <li>Public GEO registry</li>
             <li>Limited Slot Terminal (occupancy, FCC, freshness, labeled model)</li>
             <li>CSV without driver columns</li>
-            <li>Public agents API (rate-limited)</li>
+            <li>Public agents API, rate-limited, no valuation or congestion. <Link href="/docs/agent-api" className="text-ink underline">Field list</Link></li>
           </ul>
           <Link href="/orbital" className="text-sm text-ink hover:text-muted">Open registry →</Link>
         </div>

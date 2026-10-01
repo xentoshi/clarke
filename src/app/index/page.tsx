@@ -168,6 +168,8 @@ export default function GeoSlotIndexPage() {
               {" · "}
               <Link href="/docs/data-trust" className="text-ink underline hover:text-muted">data trust</Link>
               {" · "}
+              <Link href="/docs/agent-api" className="text-ink underline hover:text-muted">agent API</Link>
+              {" · "}
               <Link href="/docs/valuation" className="text-ink underline hover:text-muted">valuation v0</Link>
               {" · "}
               <Link href="/docs/fcc-refresh" className="text-ink underline hover:text-muted">FCC refresh</Link>.

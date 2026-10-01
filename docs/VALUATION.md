@@ -43,3 +43,4 @@ Curated `valueEstimate` strings (e.g. `$350M+`) are a **hand estimate / curated 
 - Not an ITU deed or FCC license valuation
 - Not advice to buy, lease, or file
 - Simulated capacity books are derived from the same midpoint + congestion. They are not rendered on Slot Terminal. This note is the product surface for that simulation. They are not a market.
+- Not a field on the public agent API or the MCP slot tools. See [Agent API](./AGENT_API.md). Congestion v0 and implied fair value stay labeled models on the human Slot Terminal. Agents must not treat them as facts.

@@ -45,6 +45,7 @@ export default function AppShell({ children, slots }: { children: React.ReactNod
                       { label: "About", href: "/about" },
                       { label: "Registry FAQ", href: "/orbital/faq" },
                       { label: "Data trust", href: "/docs/data-trust" },
+                      { label: "Agent API", href: "/docs/agent-api" },
                       { label: "Valuation v0", href: "/docs/valuation" },
                       { label: "FCC refresh", href: "/docs/fcc-refresh" },
                     ].map((l) => (

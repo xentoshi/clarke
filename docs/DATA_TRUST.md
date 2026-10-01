@@ -136,7 +136,7 @@ Legend: **V** = verified from a named public source in this product · **M** = m
 | TLE longitude / epoch | V | Space-Track TLE at ingest. Sub-satellite lon at TLE epoch (`tsince=0`). |
 | `positionDisputed` | M | Circular \|UCS−TLE\| > 2°. Trust bar chip when in-window sats disagree or UCS ghosts remain. |
 | Co-located satellite names, operators, purposes | V | UCS identity. Names checked well. Operator *display* is class M (alias map); hover/API keeps the UCS string. |
-| Operator display / grouping | M | Curated alias map (`src/data/operator-aliases.ts`) over UCS/FCC strings. Canonical name is shown on Registry rows, occupancy mix, congestion majority, FCC licensee, and agents `operator` / `operatorCanonical`. Raw source stays on tooltip, occupancy expand, and API `operatorRaw` / `aliases`. Not a corporate-ownership graph. Joint `A/B` UCS strings stay unmapped unless listed. Congestion *score* still counts distinct source strings so valuation is unchanged. |
+| Operator display / grouping | M | Curated alias map (`src/data/operator-aliases.ts`) over UCS/FCC strings. Canonical name is shown on Registry rows, occupancy mix, congestion majority, and FCC licensee. The agent slot record has no headline `operator`. Canonical names are `operatorMix.operator` and per-satellite `operator`, with raw strings on `operatorRaw`. The satellite list still returns `operatorCanonical`, `operatorRaw`, and `aliases`. Not a corporate-ownership graph. Joint `A/B` UCS strings stay unmapped unless listed. Congestion *score* still counts distinct source strings so valuation is unchanged. |
 | Satellite count | M | Count of GEO rows whose **occupancy** lon is in ±0.4°, not a unique ITU network count. |
 | Launch year | V | UCS `M/D/YY` now parsed. Was **B**. |
 | Remaining life | M | UCS launch + **design** lifetime. Not remaining license term. Was **B** (always missing). |
@@ -174,6 +174,7 @@ Legend: **V** = verified from a named public source in this product · **M** = m
 - “The registry table is one row per slug.”
 - “Congestion v0 and implied fair value are labeled models on the Slot Terminal.”
 - “Operator labels are a curated alias map over UCS and FCC strings; source strings remain inspectable.”
+- “The public agent record has no headline operator, no valuation, and no congestion score. `ituRecorded` is `not_in_product`.”
 
 **Do not claim**
 
@@ -186,6 +187,7 @@ Legend: **V** = verified from a named public source in this product · **M** = m
 - That a TLE sub-satellite longitude is the FCC-authorized or ITU-filed location.
 - That the operator alias map is a live ownership or sub-lease graph.
 - That congestion v0 or fair value is a recorded occupancy or license fact.
+- That the agent payload includes a single operator, a valuation, or a congestion score.
 - That the Unrecorded chip names an ITU network, proves brought-into-use, or fills a filing row.
 
 ## Re-ingest
@@ -201,11 +203,13 @@ npm run seed:valuations    # backfill model path (not trades) after occupancy/mo
 
 Space-Track credentials are required only for a live TLE refresh (`npm run ingest:spacetrack`), not for `apply:positions` or `ingest:fcc`.
 
-## Agent slot payload (2026-09-30)
+## Agent slot payload
 
-Public agents HTTP routes and the MCP slot tools (`clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`) return one registry record: slug, label, longitude, region, `operatorIdentity` (`split`, `single`, or `none`) and `operatorMix` (canonical name, count, share, and raw source strings), country, status, `ituRecorded` (`not_in_product`), satellite count, FCC authorizations, occupancy observations, dispute records, and source vintage. Provenance is the same occupancy, UCS catalog, FCC, license, and rights objects the Terminal already attaches. `occupancyAuthority` on the slot is `tle-primary`. Each observation's `occupancyAuthority` is the source that supplied that object's longitude (`tle`, `ucs`, or `none`). The mix is who is in the occupancy window. A split window has no single holder name; the human Terminal can still show its registry label. Disputes are in-window TLE vs UCS disagreement plus UCS ghosts (catalog inside the window, occupancy outside, \|UCS−TLE\| > 2°). `sourceVintage.fccStale` is true when the FCC workbook as-of is older than 14 days.
+The field list is [Agent API](./AGENT_API.md). HTTP `GET /api/v1/agents/slots` and `GET /api/v1/agents/slots/{slug}`, and the MCP tools `clarke_list_slots`, `clarke_get_slot`, and `clarke_get_terminal`, return that record. `clarke_get_terminal` is the same JSON as `clarke_get_slot`.
 
-The human Slot Terminal and the Pro Terminal API still carry the labeled model, congestion, simulated book, and comps. Those fields are not on the agent payload.
+The record includes occupancy (TLE-primary, UCS fallback), `operatorIdentity` (`split`, `single`, or `none`) and `operatorMix` (canonical name, count, share, raw source strings), per-satellite operators on occupancy rows, FCC rows, disputes, source vintage, and provenance. `occupancyAuthority` on the slot is `tle-primary`. Each observation's `occupancyAuthority` is `tle`, `ucs`, or `none`. There is no slot-level `operator` or `operatorRaw`. A split window has no single holder name. The human Terminal can still show its curated registry label. That label is not the agent record. Disputes are in-window TLE vs UCS disagreement plus UCS ghosts (catalog inside the window, occupancy outside, absolute UCS-TLE difference greater than 2 degrees, or no measured delta). `ituRecorded` is `not_in_product` on every slot. `sourceVintage.fccStale` is true when the FCC workbook as-of parses and is older than 14 days. A missing as-of is not marked stale.
+
+Valuation, congestion, bid/ask, comps, and dollar strings are not in the agent payload. Congestion v0 and implied fair value live only as labeled models on the human Slot Terminal. Agents must not treat them as facts. The Pro Terminal API can still return those labeled models. It is not the agent record.
 
 ## Not yet shipped
 

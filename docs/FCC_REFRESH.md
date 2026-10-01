@@ -46,6 +46,8 @@ npm run vintages          # backfill UCS / TLE vintages without re-downloading t
 
 Occupancy stays TLE-primary and does not wait on FCC.
 
+The same 14-day comparison is `sourceVintage.fccStale` on the public agent record (`fccStaleAfterDays` is 14). A missing or unparsed workbook as-of is not marked stale. See [Agent API](./AGENT_API.md). Valuation and congestion are not on that record.
+
 ## Credentials
 
 None. No FCC API key. Space-Track credentials are unrelated (`ingest:spacetrack` only).

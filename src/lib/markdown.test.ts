@@ -43,6 +43,7 @@ describe("markdown GFM subset", () => {
   it("rewrites repo markdown links to public docs routes", () => {
     assert.equal(rewriteDocHref("./FCC_REFRESH.md"), "/docs/fcc-refresh");
     assert.equal(rewriteDocHref("docs/VALUATION.md"), "/docs/valuation");
+    assert.equal(rewriteDocHref("./AGENT_API.md"), "/docs/agent-api");
     const html = markdownToHtml("See [FCC refresh](./FCC_REFRESH.md).");
     assert.match(html, /href="\/docs\/fcc-refresh"/);
     assert.doesNotMatch(html, /FCC_REFRESH\.md/);
@@ -96,6 +97,39 @@ describe("public docs load the repo markdown", () => {
     assert.match(doc.html, /TLE-primary/);
     assert.doesNotMatch(doc.html, /Experimental disclosure/);
     assert.doesNotMatch(doc.html, /docs\/VALUATION\.md/);
+  });
+
+  it("agent-api documents the live slot record and keeps valuation out", () => {
+    const raw = readFileSync(join(process.cwd(), "docs", "AGENT_API.md"), "utf8");
+    assert.equal(raw.includes("\u2014"), false);
+    assert.equal(raw.includes("\u2013"), false);
+    const doc = loadDoc("agent-api");
+    assert.match(doc.html, /GET \/api\/v1\/agents\/slots/);
+    assert.match(doc.html, /clarke_list_slots/);
+    assert.match(doc.html, /clarke_get_slot/);
+    assert.match(doc.html, /clarke_get_terminal/);
+    assert.match(doc.html, /same JSON as/);
+    assert.match(doc.html, /operatorIdentity/);
+    assert.match(doc.html, /operatorMix/);
+    assert.match(doc.html, /not_in_product/);
+    assert.match(doc.html, /fccStale/);
+    assert.match(doc.html, /fccStaleAfterDays/);
+    assert.match(doc.html, /tle-primary/);
+    assert.match(doc.html, /ucs_ghost/);
+    assert.match(doc.html, /not in the agent payload/i);
+    assert.match(doc.html, /human Slot Terminal/);
+    assert.match(doc.html, /must not treat them as facts/);
+    assert.match(doc.html, /no slot-level/);
+    assert.match(doc.html, /docs-mark-v/);
+    assert.match(doc.html, /docs-mark-s/);
+    assert.match(doc.html, /href="\/docs\/data-trust"/);
+    assert.match(doc.html, /href="\/docs\/fcc-refresh"/);
+    assert.match(doc.html, /href="\/docs\/valuation"/);
+    assert.match(doc.html, /ITU SNS is not ingested/);
+    assert.match(doc.html, /Do not claim ITU filings are in the product/);
+    assert.doesNotMatch(doc.html, /Bloomberg|CoStar|\bCME\b/);
+    assert.ok(doc.toc.some((t) => /operator identity/i.test(t.label)));
+    assert.ok(doc.toc.some((t) => /fcc freshness/i.test(t.label)));
   });
 
   it("fcc-refresh includes the runbook commands and workbook vintage", () => {

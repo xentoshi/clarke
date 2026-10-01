@@ -236,14 +236,14 @@ export default function AboutPage() {
 
           <Section id="agents" title="Agents API">
             <p className="text-muted text-sm leading-relaxed mb-6">
-              Clarke exposes a read-only HTTP API and a Model Context Protocol server so autonomous agents and LLM-based assistants can query the registry without scraping HTML. The same operations layer backs both transports, so HTTP responses and MCP tool results stay in sync. The public agents API requires no authentication. Slot Terminal routes require a Pro seat or API key.
+              Clarke exposes a read-only HTTP API and a Model Context Protocol server so autonomous agents can query the registry without scraping HTML. The same operations layer backs both transports, so the HTTP <span className="font-mono">data</span> object and the MCP slot tools return the same slot record. The public agents API requires no authentication. The field list is <Link href="/docs/agent-api" className="text-ink underline">Agent API</Link>. Valuation, congestion, bid/ask, comps, and dollar strings are not in that record. They live only as labeled models on the human Slot Terminal and must not be treated as facts. Pro Terminal routes are a separate authenticated surface.
             </p>
 
             <h3 className="text-ink text-sm font-semibold mb-3">HTTP endpoints</h3>
             <div className="space-y-2 mb-6">
               {[
-                { path: "GET /api/v1/agents/slots", desc: "All orbital slots (curated + UCS-derived), merged and sorted by longitude. Each row includes operatorIdentity and operatorMix (raw source strings per operator), occupancy, FCC authorizations, disputes, ituRecorded, and source vintage." },
-                { path: "GET /api/v1/agents/slots/{slug}", desc: "One slot: operatorMix for who is in the occupancy window (split, single, or none), occupancy observations (TLE and UCS longitudes), FCC authorizations, dispute records, ituRecorded, and source vintage." },
+                { path: "GET /api/v1/agents/slots", desc: "All registry rows, one per slug, sorted by longitude. Each row is the agent slot record: operatorIdentity and operatorMix, occupancy, FCC authorizations, disputes, ituRecorded (not_in_product), and source vintage. No headline operator. No valuation or congestion." },
+                { path: "GET /api/v1/agents/slots/{slug}", desc: "One slot, same record as the list. operatorIdentity is split, single, or none. ituRecorded is not_in_product. fccStale is on sourceVintage. No valuation or congestion." },
                 { path: "GET /api/v1/agents/satellites", desc: "GEO satellites from the UCS database. Optional filters: operator, ownerCountry, limit (max 1000)." },
                 { path: "GET /api/v1/openapi", desc: "OpenAPI 3.1 document covering agents and Pro Terminal routes." },
                 { path: "GET /api/v1/terminal/slots/{slug}", desc: "Pro: Slot Terminal model — TLE-primary occupancy, recorded FCC layers, valuation v0. Simulated book / ITU stubs are labeled experimental, not the default view." },
@@ -259,16 +259,20 @@ export default function AboutPage() {
             <h3 className="text-ink text-sm font-semibold mb-3">Response shape</h3>
             <div className="border border-line rounded-xl p-5 bg-surface mb-6">
               <p className="text-muted text-xs leading-relaxed mb-3">
-                Every successful response is a JSON envelope with a versioned <span className="font-mono text-ink">data</span> field and a <span className="font-mono text-ink">meta</span> object containing the API version, generation timestamp, and (for list endpoints) the row count. Responses carry <span className="font-mono text-ink">ETag</span> and <span className="font-mono text-ink">Cache-Control: public, s-maxage=300, stale-while-revalidate=60</span> headers; agents are expected to send <span className="font-mono text-ink">If-None-Match</span> for conditional requests.
+                Every successful response is a JSON envelope with a versioned <span className="font-mono text-ink">data</span> field and a <span className="font-mono text-ink">meta</span> object: API version, <span className="font-mono text-ink">generated_at</span>, and on list routes a <span className="font-mono text-ink">count</span> equal to the number of rows in <span className="font-mono text-ink">data</span>. Slot routes also include <span className="font-mono text-ink">meta.data_freshness</span>. Responses set <span className="font-mono text-ink">ETag</span> and <span className="font-mono text-ink">Cache-Control: public, s-maxage=300, stale-while-revalidate=60</span>. The handler does not return 304 when <span className="font-mono text-ink">If-None-Match</span> is sent.
               </p>
               <pre className="text-muted text-xs font-mono bg-canvas border border-line rounded p-3 overflow-x-auto">{`{
-  "data": { ... },
+  "data": [],
   "meta": {
     "version": "1.0",
-    "generated_at": "2026-05-23T14:22:40Z",
-    "count": 590
+    "generated_at": "2026-09-30T12:00:00.000Z",
+    "count": 0,
+    "data_freshness": []
   }
 }`}</pre>
+              <p className="text-muted text-xs leading-relaxed mt-3">
+                <span className="font-mono text-ink">count</span> is <span className="font-mono text-ink">data.length</span> on list routes. The zeros above are the envelope shape, not the live registry size. Slot detail omits <span className="font-mono text-ink">count</span> and includes <span className="font-mono text-ink">data_freshness</span>.
+              </p>
             </div>
 
             <h3 className="text-ink text-sm font-semibold mb-3">Rate limits and validation</h3>
@@ -301,7 +305,7 @@ export default function AboutPage() {
   }
 }`}</pre>
               <p className="text-muted text-xs leading-relaxed mt-3">
-                Available tools: <span className="font-mono">clarke_list_slots</span>, <span className="font-mono">clarke_get_slot</span>, <span className="font-mono">clarke_get_terminal</span>, <span className="font-mono">clarke_list_satellites</span>.
+                Available tools: <span className="font-mono">clarke_list_slots</span>, <span className="font-mono">clarke_get_slot</span>, <span className="font-mono">clarke_get_terminal</span>, <span className="font-mono">clarke_list_satellites</span>. <span className="font-mono">clarke_get_terminal</span> returns the same JSON as <span className="font-mono">clarke_get_slot</span>. It is not the human Slot Terminal model. Valuation and congestion are not in those slot tools.
               </p>
             </div>
 
@@ -463,6 +467,8 @@ export default function AboutPage() {
               <Link href="/docs" className="text-ink underline hover:text-ink">Docs</Link>
               {" · "}
               <Link href="/docs/data-trust" className="text-ink underline hover:text-ink">data trust</Link>
+              {" · "}
+              <Link href="/docs/agent-api" className="text-ink underline hover:text-ink">agent API</Link>
               {" · "}
               <Link href="/docs/valuation" className="text-ink underline hover:text-ink">valuation v0</Link>
               {" · "}

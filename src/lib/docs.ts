@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { extractToc, markdownToHtml, stripFirstH1, type TocItem } from "./markdown";
 
-export type DocSlug = "data-trust" | "valuation" | "fcc-refresh";
+export type DocSlug = "data-trust" | "agent-api" | "valuation" | "fcc-refresh";
 
 export type DocMeta = {
   slug: DocSlug;
@@ -26,6 +26,18 @@ export const DOC_PAGES: DocMeta[] = [
       "What a paying operator can trust on Slot Terminal: occupancy, FCC, freshness, and the labeled model.",
     summary: "Field trust matrix, TLE-primary occupancy, one registry row per slug, and what Clarke will not claim.",
     tldr: "Occupancy clusters on Space-Track TLE longitude when quality gates pass, otherwise the UCS catalog. The registry table is one row per slug. Operator display is a curated alias map over UCS/FCC strings; raw source strings stay inspectable. FCC rows come from the committed SSAL workbook. Congestion v0 and implied fair value are labeled models on the Slot Terminal, not recorded facts. Fair value stays behind one disclosure and off the registry until Show fair value. ITU SNS is not ingested. The flag is not_in_product (Unrecorded in Clarke): not a network name, not brought-into-use evidence, and not a filled filing row. The simulated capacity book is not on Slot Terminal.",
+  },
+  {
+    slug: "agent-api",
+    href: "/docs/agent-api",
+    file: "AGENT_API.md",
+    kicker: "AGENT_API",
+    title: "Agent API",
+    description:
+      "Public HTTP routes and MCP tools for the Clarke slot record: occupancy, operator identity, FCC rows, disputes, and freshness. Valuation and congestion are not included.",
+    summary:
+      "HTTP and MCP slot record: operatorIdentity, occupancy, FCC freshness, disputes, and ituRecorded. Valuation and congestion are not in the payload.",
+    tldr: "Public agents read one registry record over HTTP and MCP: occupancy (TLE-primary, UCS fallback), operatorIdentity and operatorMix, FCC rows, disputes, source vintage, and provenance. ituRecorded is not_in_product on every slot. There is no headline operator. Valuation, congestion, bid/ask, comps, and dollar strings are not in this payload. Congestion v0 and implied fair value live only as labeled models on the human Slot Terminal and must not be treated as facts.",
   },
   {
     slug: "valuation",

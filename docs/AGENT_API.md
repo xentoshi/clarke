@@ -71,7 +71,7 @@ Rate limit, CORS, and the envelope also apply to `GET /api/v1/agents/satellites`
 
 Tool results are pretty-printed JSON text. They are not wrapped in `{ data, meta }`. Remote MCP and local stdio call the same builders. Neither calls the HTTP routes.
 
-#### Remote Streamable HTTP
+### Remote Streamable HTTP
 
 `POST https://www.clarkebelt.finance/api/v1/mcp`
 
@@ -89,7 +89,7 @@ Send one JSON-RPC message per POST. `Content-Type` is `application/json`. `Accep
 }
 ```
 
-#### Local stdio
+### Local stdio
 
 `npm run mcp` reads the committed SQLite database in a checkout of this repo. Sample client config is in the header of `scripts/clarke-mcp.ts`.
 

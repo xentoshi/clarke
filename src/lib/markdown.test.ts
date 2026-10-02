@@ -131,6 +131,7 @@ describe("public docs load the repo markdown", () => {
     assert.match(doc.html, /href="\/docs\/valuation"/);
     assert.match(doc.html, /ITU SNS is not ingested/);
     assert.match(doc.html, /Do not claim ITU filings are in the product/);
+    assert.match(doc.html, /href="https:\/\/www\.clarkebelt\.finance\/llms\.txt"/);
     assert.doesNotMatch(doc.html, /Bloomberg|CoStar|\bCME\b/);
     assert.ok(doc.toc.some((t) => /operator identity/i.test(t.label)));
     assert.ok(doc.toc.some((t) => /fcc freshness/i.test(t.label)));

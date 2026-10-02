@@ -1,0 +1,55 @@
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+
+const root = process.cwd();
+
+describe("llms.txt agent discovery", () => {
+  const text = readFileSync(join(root, "public", "llms.txt"), "utf8");
+
+  it("follows the llms.txt section order and stays free of vendor taglines", () => {
+    assert.match(text, /^# Clarke\n\n> /);
+    assert.equal(text.includes("\u2014"), false);
+    assert.equal(text.includes("\u2013"), false);
+    assert.doesNotMatch(text, /Bloomberg|CoStar|\bCME\b/);
+    assert.equal(existsSync(join(root, "public", "llms-full.txt")), false);
+  });
+
+  it("points at the live agent routes with absolute www URLs", () => {
+    const urls = [
+      "https://www.clarkebelt.finance/api/v1/agents/slots",
+      "https://www.clarkebelt.finance/api/v1/agents/slots/101w",
+      "https://www.clarkebelt.finance/api/v1/agents/deltas",
+      "https://www.clarkebelt.finance/api/v1/openapi",
+      "https://www.clarkebelt.finance/docs/agent-api",
+      "https://www.clarkebelt.finance/api/v1/agents/satellites",
+    ];
+    for (const url of urls) assert.ok(text.includes(url), url);
+    assert.match(text, /clarke_list_slots/);
+    assert.match(text, /clarke_get_slot/);
+    assert.match(text, /clarke_get_terminal/);
+    assert.match(text, /clarke_list_deltas/);
+    assert.match(text, /same object as `clarke_get_slot`/);
+    assert.match(text, /has no public URL/);
+    assert.doesNotMatch(text, /https?:\/\/[^)\s]*\/mcp/);
+  });
+
+  it("states the payload exclusions, ITU hole, FCC as-of, and bootstrap caveat", () => {
+    assert.match(text, /excludes valuation, congestion, bid\/ask, comps, valuation history, and dollar strings/);
+    assert.match(text, /must not treat them as facts/);
+    assert.match(text, /ITU SNS is not ingested/);
+    assert.match(text, /`ituRecorded` is `not_in_product`/);
+    assert.match(text, /workbook as-of is 2026-09-27/);
+    assert.match(text, /`coverage` is `bootstrap` until a second registry snapshot is stored/);
+    assert.match(text, /empty occupancy list is not a claim that nothing moved/);
+    assert.match(text, /There is no slot-level `operator` field/);
+  });
+
+  it("is linked from the docs hub and the agent API page source", () => {
+    const hub = readFileSync(join(root, "src/app/docs/page.tsx"), "utf8");
+    assert.match(hub, /href="\/llms\.txt"/);
+    const agent = readFileSync(join(root, "docs/AGENT_API.md"), "utf8");
+    assert.match(agent, /https:\/\/www\.clarkebelt\.finance\/llms\.txt/);
+  });
+});

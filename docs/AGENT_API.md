@@ -65,7 +65,7 @@ Slugs from the list are the supported keys. Examples: `101w` (101 degrees west),
 
 Rate limit, CORS, and the envelope also apply to `GET /api/v1/agents/satellites` (UCS GEO rows, not this slot record). Filters: `operator`, `ownerCountry`, `limit` (1 to 1000). That route's `meta` has `count` and no `data_freshness`.
 
-`GET /api/v1/openapi` is a short OpenAPI 3.1 index. This page is the field list.
+`GET /api/v1/openapi` is a short OpenAPI 3.1 index. This page is the field list. [llms.txt](https://www.clarkebelt.finance/llms.txt) is the site root index for these routes.
 
 ### MCP
 

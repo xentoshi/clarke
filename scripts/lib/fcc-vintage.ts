@@ -3,7 +3,7 @@ const MONTHS: Record<string, number> = {
   july: 7, august: 8, september: 9, october: 10, november: 11, december: 12,
 };
 
-/** Parse FCC SSAL workbook sheet name "Updated 30 April 2026" → YYYY-MM-DD. */
+/** Parse FCC SSAL workbook sheet name "Updated 27 September 2026" → YYYY-MM-DD. */
 export function parseFccSheetVintage(sheetName: string | null | undefined): string | null {
   if (!sheetName) return null;
   const m = sheetName.trim().match(/updated\s+(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/i);

@@ -25,6 +25,8 @@ function tableExists(name: string): boolean {
 // Returns an empty array if the table doesn't exist yet (DB predates change
 // tracking) or if nothing has changed since tracking started — there is no
 // backfill, so a quiet feed on a freshly-migrated DB is expected, not a bug.
+// satellite_relocated is a TLE-to-TLE threshold log. The agent delta feed does
+// not treat those rows as occupancy enter or leave. See src/lib/delta-feed.ts.
 export function getRecentSlotEvents(limit = 100): SlotEvent[] {
   const db = getDb();
   if (!db || !tableExists("slot_events")) return [];

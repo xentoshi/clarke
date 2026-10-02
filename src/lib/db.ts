@@ -11,3 +11,10 @@ export function getDb(): Database.Database | null {
   _db = new Database(dbPath, { readonly: true });
   return _db;
 }
+
+/** Release the cached read connection so a writer in this process can lock the file. */
+export function closeDb(): void {
+  if (!_db) return;
+  _db.close();
+  _db = null;
+}

@@ -19,7 +19,8 @@ export default function DocsHubPage() {
       <p className="text-muted text-[15px] leading-relaxed mb-4">
         Method notes for occupancy, rights, freshness, the public agent record, and the labeled models.
         The agent API returns occupancy, operator identity, FCC rows, disputes, and freshness.
-        Congestion and fair value are models on the human Slot Terminal. They are not in the agent payload.
+        GET /api/v1/agents/deltas is the on-ingest change feed for those fields.
+        Congestion and fair value are models on the human Slot Terminal. They are not in the agent payload or the delta feed.
       </p>
 
       <TrustLegend className="mb-5" />

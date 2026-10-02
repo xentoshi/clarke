@@ -15,6 +15,7 @@
     "ingest:all": "npm run ingest && npm run ingest:fcc && npm run ingest:spacetrack && npm run ingest:sec",
     "seed:valuations": "tsx scripts/seed-valuations.ts",
     "apply:positions": "tsx scripts/apply-position-authority.ts",
+    "snapshot:registry": "tsx scripts/record-registry-snapshot.ts",
     "test": "tsx --test src/lib/*.test.ts",
     "mcp": "tsx scripts/clarke-mcp.ts"
   },

@@ -163,7 +163,9 @@ export default function GeoSlotIndexPage() {
               </li>
             </ul>
             <p className="text-muted text-[15px] mt-6 leading-relaxed">
-              Feeds this edition: UCS file vintage {edition.vintage.ucsFileVintage ?? "—"} · FCC SSAL as-of {edition.vintage.fccAsOf ?? "—"} · TLE epoch through {edition.vintage.tleEpochMax ?? "—"}. See{" "}
+              Feeds this edition: UCS file vintage {edition.vintage.ucsFileVintage ?? "—"} · FCC SSAL as-of {edition.vintage.fccAsOf ?? "—"} · TLE epoch through {edition.vintage.tleEpochMax ?? "—"}. Machine-readable changes are{" "}
+              <Link href="/docs/agent-api" className="text-ink underline hover:text-muted">GET /api/v1/agents/deltas</Link>
+              . That route is the Slot Index delta feed, not this method note. See{" "}
               <Link href="/docs" className="text-ink underline hover:text-muted">Docs</Link>
               {" · "}
               <Link href="/docs/data-trust" className="text-ink underline hover:text-muted">data trust</Link>
@@ -191,7 +193,7 @@ export default function GeoSlotIndexPage() {
             <h2 className="text-ink font-semibold text-2xl tracking-tight mb-5">Caveats</h2>
             <ul className="text-muted text-[16px] leading-relaxed space-y-3 list-disc pl-5">
               <li>UCS snapshot vintage is years behind TLE. Ghosts are expected; they are the point of TLE-primary occupancy.</li>
-              <li>One-shot Space-Track ingest produced thousands of relocation events vs the previous UCS clustering. Those events are not a weekly enter/leave time series and are not used as such here.</li>
+              <li>One-shot Space-Track ingest produced thousands of relocation events vs the previous UCS clustering. Those events are not a weekly enter/leave time series and are not used as such here or in the agent delta feed.</li>
               <li>FCC workbook as-of can be stale (banner on Terminal when &gt; 14 days). Name matching between SSAL and UCS is imperfect (AT&T T16 vs DIRECTV D16).</li>
               <li>Paper filings (163°W) can mean no UCS/TLE occupancy, a UCS lag, or a satellite that never showed in this snapshot.</li>
             </ul>

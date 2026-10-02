@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import https from "https";
 import { recordIngest } from "./lib/ingest-meta";
+import { captureRegistrySnapshot } from "./lib/capture-snapshot";
 
 const DB_PATH = path.join(process.cwd(), "data", "clarke.db");
 const UCS_URL = "https://www.ucs.org/media/11493";
@@ -211,6 +212,7 @@ async function main() {
   });
   db.exec("VACUUM");
   db.close();
+  captureRegistrySnapshot("ucs");
 
   console.log(`Inserted ${total} satellites (${geoCount} GEO, ${skipped} skipped, ${duplicateNorad} duplicate NORAD IDs dropped)`);
   console.log(`Database written to ${DB_PATH}`);

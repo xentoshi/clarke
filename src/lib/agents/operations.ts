@@ -9,6 +9,8 @@ import type { FreshnessMeta } from "./envelope";
 import { isSafeSlug } from "../slot-utils";
 import { isLaunchVehicleOperator, resolveOperator, operatorMatchesQuery } from "../operator-identity";
 import { buildAgentSlot, listAgentSlots, type AgentSlotPayload } from "../agent-slot";
+import { selectDeltaChanges, type DeltaFeed, type DeltaFeedQuery } from "../delta-feed";
+import { buildDeltaFeedFromDb } from "../registry-snapshot";
 
 export { isSafeSlug };
 
@@ -27,6 +29,10 @@ export function listSlots(): AgentSlotPayload[] {
 
 export function getSlotDossier(slug: string): AgentSlotPayload | null {
   return buildAgentSlot(slug);
+}
+
+export function listDeltas(query: DeltaFeedQuery = {}): DeltaFeed {
+  return selectDeltaChanges(buildDeltaFeedFromDb(), query);
 }
 
 // Adapter: data freshness in the snake_case shape used by the API envelope meta.

@@ -6,7 +6,7 @@ const spec = {
   openapi: "3.1.0",
   info: {
     title: "Clarke API",
-    version: "1.2.0",
+    version: "1.3.0",
     description:
       "Read-only GEO registry. The public agents API returns occupancy, operator identity, FCC rows, disputes, and source vintage. Pro Slot Terminal endpoints add the labeled model used on the human Terminal. Occupancy is TLE-primary (Space-Track) with UCS fallback. TLE longitude is not an FCC or ITU assignment. ITU SNS is not ingested. Simulated bid/ask and ITU stubs are experimental, not the default Terminal view.",
   },
@@ -36,6 +36,23 @@ const spec = {
         summary: "Slot dossier",
         parameters: [{ name: "slug", in: "path", required: true, schema: { type: "string", example: "101w" } }],
         responses: { "200": { description: "Same slot record as the list: operatorIdentity plus operatorMix (raw source strings per operator), occupancy observations (TLE longitude and epoch, UCS longitude, delta, disputed, occupancy authority), FCC rows (licenseeCanonical / licenseeRaw), dispute records, source vintage (including fccStale), and provenance for occupancy, UCS, FCC, license, and rights. ituRecorded is not_in_product (SNS is not ingested). A split mix has no single holder name. Valuation, congestion, bid/ask, comps, and dollar strings are not included." }, "404": { description: "Unknown slug" } },
+      },
+    },
+    "/agents/deltas": {
+      get: {
+        tags: ["Agents"],
+        summary: "Occupancy, FCC, and dispute change feed",
+        description:
+          "Slot Index delta feed (edition 2). On-ingest diffs of registry snapshots. coverage is bootstrap until a second snapshot exists: FCC call-sign events already in slot_events are included, and occupancy or dispute changes are not invented. satellite_relocated rows are not occupancy changes. ITU SNS is not ingested. Valuation, congestion, bid/ask, comps, and dollar strings are not included.",
+        parameters: [
+          { name: "slug", in: "query", schema: { type: "string", example: "101w" } },
+          { name: "domain", in: "query", schema: { type: "string", enum: ["occupancy", "fcc", "dispute"] } },
+          { name: "since", in: "query", schema: { type: "string" }, description: "Exclusive cursor. ISO-8601 UTC." },
+        ],
+        responses: {
+          "200": { description: "{ data, meta } envelope. data.changes is the feed. meta.count is data.changes.length. meta.data_freshness matches the slot list." },
+          "400": { description: "Invalid slug, domain, or since" },
+        },
       },
     },
     "/agents/satellites": {

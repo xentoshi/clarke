@@ -6,6 +6,7 @@ import * as XLSX from "xlsx";
 import { recordIngest } from "./lib/ingest-meta";
 import { ensureEventTables, recordSlotEvent } from "./lib/events";
 import { parseFccSheetVintage } from "./lib/fcc-vintage";
+import { captureRegistrySnapshot } from "./lib/capture-snapshot";
 
 const XLSX_PATH = path.join(process.cwd(), "data", "ssal.xlsx");
 const DB_PATH = path.join(process.cwd(), "data", "clarke.db");
@@ -231,6 +232,7 @@ function main() {
 
   db.exec("VACUUM");
   db.close();
+  captureRegistrySnapshot("fcc");
 
   console.log(`Inserted: ${inserted} GEO authorizations | Skipped (no GEO location): ${skipped}`);
   const sample = records.slice(0, 2);

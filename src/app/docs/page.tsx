@@ -21,6 +21,7 @@ export default function DocsHubPage() {
         The agent API returns occupancy, operator identity, FCC rows, disputes, and freshness.
         GET /api/v1/agents/deltas is the on-ingest change feed for those fields.
         Congestion and fair value are models on the human Slot Terminal. They are not in the agent payload or the delta feed.
+        Machine index: <Link href="/llms.txt" className="text-ink underline">llms.txt</Link>.
       </p>
 
       <TrustLegend className="mb-5" />

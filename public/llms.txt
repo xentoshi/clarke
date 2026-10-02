@@ -12,14 +12,15 @@ FCC rows are the committed SSAL workbook, not a live fcc.gov scrape. Cite `sourc
 
 `GET /api/v1/agents/deltas` is the on-ingest change feed (edition 2). `coverage` is `bootstrap` until a second registry snapshot is stored, then `ingest_deltas`. During bootstrap, FCC call-sign events already in `slot_events` are included, and occupancy and dispute changes are empty. An empty occupancy list is not a claim that nothing moved. The feed excludes valuation, congestion, and ITU filings.
 
-HTTP success bodies are `{ data, meta }`. Routes are read-only and unauthenticated, at 60 requests per minute per IP on each server instance. MCP is local stdio (`npm run mcp`) against the repo database and has no public URL. `clarke_list_slots`, `clarke_get_slot`, and `clarke_get_terminal` return the same slot JSON as HTTP `data`. `clarke_get_terminal` is the same object as `clarke_get_slot`. `clarke_list_deltas` returns the deltas `data` object, without the envelope.
+HTTP success bodies are `{ data, meta }`. Routes are read-only and unauthenticated, at 60 requests per minute per IP on each server instance. Remote MCP is that same read-only surface: stateless Streamable HTTP at https://www.clarkebelt.finance/api/v1/mcp. No API key. POST JSON-RPC. The rate limit is shared with these routes. GET returns 405 because the host does not keep a server-push SSE stream. Local stdio (`npm run mcp`) remains for a repo checkout. `clarke_list_slots`, `clarke_get_slot`, and `clarke_get_terminal` return the same slot JSON as HTTP `data`. `clarke_get_terminal` is the same object as `clarke_get_slot`. `clarke_list_deltas` returns the deltas `data` object, without the envelope.
 
 ## Agent routes
 
 - [Slot list](https://www.clarkebelt.finance/api/v1/agents/slots): Every registry slug. One slot record each, sorted by longitude from west to east.
 - [Slot record](https://www.clarkebelt.finance/api/v1/agents/slots/101w): One slot. `101w` is a list slug. Other slugs match `^[a-z0-9-]+$`.
 - [Delta feed](https://www.clarkebelt.finance/api/v1/agents/deltas): Occupancy, FCC, and dispute changes. Query `slug`, `domain` (`occupancy`, `fcc`, or `dispute`), and exclusive `since`.
-- [OpenAPI](https://www.clarkebelt.finance/api/v1/openapi): OpenAPI 3.1 index of the public agent routes and the Pro Terminal routes.
+- [Remote MCP](https://www.clarkebelt.finance/api/v1/mcp): Stateless Streamable HTTP. POST JSON-RPC. No API key. GET returns 405 (no server-push SSE). Same tools and JSON as local stdio: `clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`, `clarke_list_deltas`.
+- [OpenAPI](https://www.clarkebelt.finance/api/v1/openapi): OpenAPI 3.1 index of the public agent routes, remote MCP, and the Pro Terminal routes.
 - [Field list](https://www.clarkebelt.finance/docs/agent-api): HTTP and MCP fields, the envelope, exclusions, and the bootstrap caveat.
 
 ## Optional

@@ -292,10 +292,18 @@ export default function AboutPage() {
 
             <h3 className="text-ink text-sm font-semibold mb-3">Model Context Protocol (MCP) server</h3>
             <p className="text-muted text-sm leading-relaxed mb-4">
-              The same operations are exposed as MCP tools so Claude Code, Cursor, and any other MCP-compatible client can query Clarke in plain English. The server runs locally over stdio and reads directly from the SQLite database; no network round-trip to Clarke is involved beyond what the host process does on its own.
+              The same operations are exposed as MCP tools so Claude Code, Cursor, and any other MCP-compatible client can query Clarke in plain English. Remote clients use stateless Streamable HTTP at <span className="font-mono">https://www.clarkebelt.finance/api/v1/mcp</span>. That endpoint is read-only and has no API key. It uses the same 60 requests per minute per IP limit as the public agents API. It does not keep a session. GET returns 405 because this host does not keep a server-push SSE stream open. Local stdio (<span className="font-mono">npm run mcp</span>) remains for a checkout of this repo and reads the SQLite database directly.
             </p>
             <div className="border border-line rounded-xl p-5 bg-surface mb-6">
-              <div className="text-xs text-faint mb-3">MCP config</div>
+              <div className="text-xs text-faint mb-3">Remote MCP</div>
+              <pre className="text-muted text-xs font-mono bg-canvas border border-line rounded p-3 overflow-x-auto">{`{
+  "mcpServers": {
+    "clarke": {
+      "url": "https://www.clarkebelt.finance/api/v1/mcp"
+    }
+  }
+}`}</pre>
+              <div className="text-xs text-faint mb-3 mt-4">Local stdio</div>
               <pre className="text-muted text-xs font-mono bg-canvas border border-line rounded p-3 overflow-x-auto">{`{
   "mcpServers": {
     "clarke": {
@@ -306,7 +314,7 @@ export default function AboutPage() {
   }
 }`}</pre>
               <p className="text-muted text-xs leading-relaxed mt-3">
-                Available tools: <span className="font-mono">clarke_list_slots</span>, <span className="font-mono">clarke_get_slot</span>, <span className="font-mono">clarke_get_terminal</span>, <span className="font-mono">clarke_list_satellites</span>. <span className="font-mono">clarke_get_terminal</span> returns the same JSON as <span className="font-mono">clarke_get_slot</span>. It is not the human Slot Terminal model. Valuation and congestion are not in those slot tools.
+                Available tools: <span className="font-mono">clarke_list_slots</span>, <span className="font-mono">clarke_get_slot</span>, <span className="font-mono">clarke_get_terminal</span>, <span className="font-mono">clarke_list_deltas</span>, <span className="font-mono">clarke_list_satellites</span>. <span className="font-mono">clarke_get_terminal</span> returns the same JSON as <span className="font-mono">clarke_get_slot</span>. It is not the human Slot Terminal model. Valuation and congestion are not in those slot tools.
               </p>
             </div>
 

@@ -44,7 +44,11 @@ Clarke exposes its registry as machine-readable data for LLM agents and tools.
 
 Pro Terminal routes accept a session cookie or `Authorization: Bearer ck_live_…` / `X-Clarke-Key`. Mint a key from `/account` while signed in as Pro. Public agents API stays unauthenticated (60 req/min/IP); Pro keys get 300 req/min.
 
-**MCP server** — the same registry as tools for Claude Code, Cursor, and other MCP clients:
+**MCP server.** The same registry as tools for Claude Code, Cursor, and other MCP clients.
+
+Public remote endpoint (stateless Streamable HTTP, no API key): `https://www.clarkebelt.finance/api/v1/mcp`
+
+Local stdio:
 
 ```bash
 npm run mcp

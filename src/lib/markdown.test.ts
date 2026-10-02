@@ -109,6 +109,10 @@ describe("public docs load the repo markdown", () => {
     assert.match(doc.html, /clarke_list_deltas/);
     assert.match(doc.html, /<code>coverage<\/code> is <code>bootstrap<\/code>/);
     assert.match(doc.html, /satellite_relocated/);
+    assert.match(doc.html, /https:\/\/www\.clarkebelt\.finance\/api\/v1\/mcp/);
+    assert.match(doc.html, /Streamable HTTP/);
+    assert.match(doc.html, /No API key/);
+    assert.match(doc.html, /405/);
     assert.match(doc.html, /clarke_list_slots/);
     assert.match(doc.html, /clarke_get_slot/);
     assert.match(doc.html, /clarke_get_terminal/);

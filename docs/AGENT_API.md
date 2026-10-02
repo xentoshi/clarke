@@ -18,7 +18,7 @@ The human Slot Terminal may still show a curated operator label. That label is i
 
 ## Transports
 
-Both transports are read-only and unauthenticated. They share one builder, so a slug in the list and `GET /api/v1/agents/slots/{slug}` are the same object.
+The HTTP routes, remote MCP, and local stdio are read-only and unauthenticated. They share one builder, so a slug in the list, `GET /api/v1/agents/slots/{slug}`, and `clarke_get_slot` are the same object.
 
 ### HTTP
 
@@ -69,7 +69,29 @@ Rate limit, CORS, and the envelope also apply to `GET /api/v1/agents/satellites`
 
 ### MCP
 
-Local stdio server, `npm run mcp`. It reads the committed SQLite database in the repo. It does not call the HTTP API. Tool results are pretty-printed JSON text. They are not wrapped in `{ data, meta }`.
+Tool results are pretty-printed JSON text. They are not wrapped in `{ data, meta }`. Remote MCP and local stdio call the same builders. Neither calls the HTTP routes.
+
+#### Remote Streamable HTTP
+
+`POST https://www.clarkebelt.finance/api/v1/mcp`
+
+Stateless Streamable HTTP. No API key. No `Mcp-Session-Id`. The same 60 requests per minute per IP limit as the public agent routes, on this server instance, and shared with those routes. A 429 body is `{ "error": "Too many requests" }` with `Retry-After`, the same shape as the HTTP routes. CORS allows any origin.
+
+Send one JSON-RPC message per POST. `Content-Type` is `application/json`. `Accept` must include both `application/json` and `text/event-stream`. A successful call returns `Content-Type: application/json` and one JSON-RPC object, not an SSE body. `notifications/initialized` returns 202. `GET` returns 405 with `Allow: POST, DELETE, OPTIONS` because this host does not keep a server-push SSE stream open. Streamable HTTP clients treat that 405 as "no server messages" and continue with POST. `DELETE` returns 200 and does not end a session, because there is none. The older split transport (`GET /sse` plus `POST /messages`) is not mounted.
+
+```json
+{
+  "mcpServers": {
+    "clarke": {
+      "url": "https://www.clarkebelt.finance/api/v1/mcp"
+    }
+  }
+}
+```
+
+#### Local stdio
+
+`npm run mcp` reads the committed SQLite database in a checkout of this repo. Sample client config is in the header of `scripts/clarke-mcp.ts`.
 
 | Tool | Arguments | Result |
 |---|---|---|
@@ -81,8 +103,6 @@ Local stdio server, `npm run mcp`. It reads the committed SQLite database in the
 Unknown slug: error result whose text is `{ "error": "No slot at slug '<slug>'" }`. The tool schema rejects a slug that fails the pattern before that lookup.
 
 `clarke_list_satellites` is a separate UCS catalog tool (`operator`, `ownerCountry`, `limit`). It is not the slot record and it does not carry valuation or congestion.
-
-Sample client config is in the header of `scripts/clarke-mcp.ts`.
 
 ## Slot record
 

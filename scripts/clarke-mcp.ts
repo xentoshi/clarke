@@ -1,5 +1,8 @@
 /**
- * Clarke MCP server entry point.
+ * Clarke MCP server entry point (local stdio).
+ *
+ * Remote agents use stateless Streamable HTTP instead of this process:
+ *   https://www.clarkebelt.finance/api/v1/mcp
  *
  * Run locally with:
  *   npm run mcp

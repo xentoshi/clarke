@@ -59,7 +59,7 @@ export const DOC_PAGES: DocMeta[] = [
     description:
       "Operator runbook: how Clarke refreshes FCC license rows from the committed SSAL workbook. Not a live fcc.gov scrape.",
     summary: "Workbook vintage, weekly re-parse, and the human replace-xlsx steps when the FCC publishes a new list.",
-    tldr: "Clarke does not scrape fcc.gov. Product as-of is the workbook sheet date (for example Updated 30 April 2026), not the ingest clock. Replace data/ssal.xlsx, run npm run ingest:fcc, commit the workbook and data/clarke.db.",
+    tldr: "Clarke does not scrape fcc.gov. Product as-of is the workbook sheet date (for example Updated 27 September 2026), not the ingest clock. Replace data/ssal.xlsx, run npm run ingest:fcc, commit the workbook and data/clarke.db.",
   },
 ];
 

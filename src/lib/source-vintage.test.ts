@@ -12,6 +12,7 @@ import {
 describe("FCC / UCS / TLE source vintage", () => {
   it("parses the SSAL workbook sheet name into an as-of date", () => {
     assert.equal(parseFccSheetVintage("Updated 30 April 2026"), "2026-04-30");
+    assert.equal(parseFccSheetVintage("Updated 27 September 2026"), "2026-09-27");
     assert.equal(parseFccSheetVintage("Sheet1"), null);
   });
 
@@ -21,6 +22,9 @@ describe("FCC / UCS / TLE source vintage", () => {
     assert.equal(fccIsStale("2026-04-30", now), true);
     assert.equal(fccIsStale("2026-09-10", now), false);
     assert.equal(ageDaysFrom("2026-04-30", now), 138);
+    const refreshDay = new Date("2026-10-02T00:00:00Z");
+    assert.equal(ageDaysFrom("2026-09-27", refreshDay), 5);
+    assert.equal(fccIsStale("2026-09-27", refreshDay), false);
   });
 
   it("approximates UCS file vintage from latest GEO launch in the snapshot", () => {

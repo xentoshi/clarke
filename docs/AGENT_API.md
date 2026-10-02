@@ -223,7 +223,7 @@ An authorization object is the SSAL row plus two alias fields:
 |---|---|
 | `ucsFileVintage` | Latest GEO launch date in the UCS snapshot, when recorded. Not the ingest clock. |
 | `ucsIngestAt` | When Clarke parsed UCS. |
-| `fccAsOf` | FCC workbook as-of (`file_vintage`, else `source_as_of`). Example shape: `2026-04-30` from a sheet named `Updated 30 April 2026`. |
+| `fccAsOf` | FCC workbook as-of (`file_vintage`, else `source_as_of`). Example shape: `2026-09-27` from a sheet named `Updated 27 September 2026`. |
 | `fccIngestAt` | When Clarke parsed the committed workbook. Not the product as-of. |
 | `fccStale` | `true` only when `fccAsOf` parses and is older than `fccStaleAfterDays`. |
 | `fccStaleAfterDays` | `14`. |

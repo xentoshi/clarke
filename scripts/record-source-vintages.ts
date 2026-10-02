@@ -5,6 +5,7 @@ import crypto from "crypto";
 import * as XLSX from "xlsx";
 import { ensureIngestMeta, recordSourceVintage } from "./lib/ingest-meta";
 import { parseFccSheetVintage } from "./lib/fcc-vintage";
+import { captureRegistrySnapshot } from "./lib/capture-snapshot";
 
 const DB_PATH = path.join(process.cwd(), "data", "clarke.db");
 const XLSX_PATH = path.join(process.cwd(), "data", "ssal.xlsx");
@@ -59,6 +60,7 @@ function main() {
   console.log(`Space-Track TLE epoch range: ${tle?.min ?? "—"} … ${tle?.max ?? "—"}`);
 
   db.close();
+  captureRegistrySnapshot("vintages");
 }
 
 main();

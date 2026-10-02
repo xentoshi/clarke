@@ -34,6 +34,8 @@ Pro API still returns `bidAsk` / full `rightsChain` / history so agents can insp
 
 GEO Slot Index #1 (`/index`) is distribution content from the same occupancy / FCC fields: enter/leave vs UCS, dispute flips, license-table mismatches. It does not publish prices.
 
+The machine-readable Slot Index delta feed is `GET /api/v1/agents/deltas` (see [Agent API](./AGENT_API.md)). It diffs stored registry snapshots. It does not turn the Index method note, or `satellite_relocated` events, into a weekly tape.
+
 Tests: `src/lib/terminal-default.test.ts` asserts default primary markup does not contain a filled ITU filing panel (`data-rights-layer="itu"`). The thin Unrecorded chip is allowed. `src/lib/operator-identity.test.ts` covers alias resolution.
 
 ## Ranked issues

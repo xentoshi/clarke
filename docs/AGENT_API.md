@@ -2,13 +2,15 @@
 
 Public agents read one GEO slot record. HTTP `GET /api/v1/agents/slots` and `GET /api/v1/agents/slots/{slug}` return it inside a `{ data, meta }` envelope. The MCP tools `clarke_list_slots`, `clarke_get_slot`, and `clarke_get_terminal` return the same JSON. `clarke_get_terminal` is not a second schema. It is the same object as `clarke_get_slot`.
 
+`GET /api/v1/agents/deltas` is the on-ingest change feed for that record (Slot Index delta feed, edition 2). The MCP tool `clarke_list_deltas` returns the same JSON object. It is not a second copy of the slot record and it is not the human method note at `/index`.
+
 The record is occupancy, operator identity, FCC rows, disputes, source vintage, and provenance. It is not the human Slot Terminal.
 
 ## Not in this payload
 
 Valuation, congestion, bid/ask, comps, valuation history, and dollar strings are not in the agent payload. There is no slot-level `operator` or `operatorRaw`. A mixed window used to be mis-labeled by a single headline name. That field is gone.
 
-Congestion v0 and implied fair value live only as labeled models on the human Slot Terminal. They are not recorded facts. Agents must not treat them as facts, including when a person can still see them on the Terminal page. The Pro Terminal API (`/api/v1/terminal/...`) is a different, authenticated surface. It can return those labeled models. It is not this record.
+Congestion v0 and implied fair value live only as labeled models on the human Slot Terminal. They are not recorded facts. Agents must not treat them as facts, including when a person can still see them on the Terminal page. The Pro Terminal API (`/api/v1/terminal/...`) is a different, authenticated surface. It can return those labeled models. It is not this record. The delta feed follows the same exclusion.
 
 The human Slot Terminal may still show a curated operator label. That label is intentional and separate. It is not a field on the agent record.
 
@@ -24,6 +26,7 @@ Both transports are read-only and unauthenticated. They share one builder, so a 
 |---|---|
 | `GET /api/v1/agents/slots` | Array of slot records, one per registry slug, sorted by longitude (west, negative, through east). |
 | `GET /api/v1/agents/slots/{slug}` | One slot record. |
+| `GET /api/v1/agents/deltas` | Change feed. Query: `slug`, `domain` (`occupancy`, `fcc`, or `dispute`), `since` (exclusive). |
 
 Successful JSON:
 
@@ -45,8 +48,8 @@ The fence is the key shape. `count` and the empty freshness array are not a live
 |---|---|---|
 | `version` | Every 200 | `"1.0"`. |
 | `generated_at` | Every 200 | ISO-8601 UTC time the envelope was built. |
-| `count` | List routes only | `data.length`. Registry rows, not the UCS satellite total. |
-| `data_freshness` | Slot list and slot detail | Ingest rows. See freshness below. The satellites route does not send this array. |
+| `count` | List routes, including the delta feed | `data.length` for slot and satellite lists. For the delta feed, `data.changes.length`. |
+| `data_freshness` | Slot list, slot detail, and the delta feed | Ingest rows. See freshness below. The satellites route does not send this array. |
 
 Headers on 200: `Content-Type: application/json`, `ETag`, `Cache-Control: public, s-maxage=300, stale-while-revalidate=60`, `Access-Control-Allow-Origin: *`. The handler sets `ETag`. It does not return 304 when `If-None-Match` is sent.
 
@@ -73,6 +76,7 @@ Local stdio server, `npm run mcp`. It reads the committed SQLite database in the
 | `clarke_list_slots` | none | JSON array of slot records. |
 | `clarke_get_slot` | `slug` matching `^[a-z0-9-]+$` | One slot record. |
 | `clarke_get_terminal` | `slug` matching `^[a-z0-9-]+$` | The same JSON as `clarke_get_slot`. |
+| `clarke_list_deltas` | optional `slug`, `domain`, `since` | The same object as `GET /api/v1/agents/deltas` `data`. Not wrapped in `{ data, meta }`. |
 
 Unknown slug: error result whose text is `{ "error": "No slot at slug '<slug>'" }`. The tool schema rejects a slug that fails the pattern before that lookup.
 
@@ -257,6 +261,60 @@ Slot `sourceVintage.fccStale` is the field to trust for "is this slot's FCC work
 | `rights` | FCC SSAL plus UCS; ITU not recorded in Clarke | No filing body. |
 
 Each object has `asOf` (ISO-8601 UTC). These notes describe sources. They do not add valuation or congestion.
+
+## Delta feed
+
+`GET /api/v1/agents/deltas` and `clarke_list_deltas` return one object. HTTP wraps it in `{ data, meta }`. `meta.count` is `data.changes.length`. `meta.data_freshness` is the same ingest table as the slot list. MCP returns the object itself.
+
+The feed is written when ingest captures a `registry_snapshots` row (FCC, UCS, Space-Track, position apply, or `npm run vintages`). A re-ingest that does not change occupancy membership, dispute records, FCC call-sign rows, or source file vintages does not append a row. `npm run snapshot:registry` records the current state once.
+
+`coverage` is `bootstrap` when fewer than two snapshots are stored. `coverage` is `ingest_deltas` once a later snapshot exists. `coverageNote` and `limitations` say what that means. Do not read an empty occupancy list during bootstrap as "nothing entered this week."
+
+| Field | Meaning |
+|---|---|
+| `edition` | `2`. Slot Index delta feed. The human page `/index` is edition 1, a method note, not this object. |
+| `cadence` | `on_ingest`. Not a synthesized weekly calendar. |
+| `occupancyAuthority` | `tle-primary`. The slot rule. Not a claim that every row used a TLE. |
+| `coverage` | `bootstrap` or `ingest_deltas`. |
+| `vintage` | File vintages from the latest snapshot (`ucsFileVintage`, `fccAsOf`, `tleEpochMin`, `tleEpochMax`) plus live ingest clocks (`ucsIngestAt`, `fccIngestAt`, `tleIngestAt`) as ISO-8601 UTC. |
+| `baseline` | Latest snapshot id, `capturedAt`, kind, and counts. Null when no snapshot has been stored. Counts are not filtered by `slug` or `domain`. `occupancyCount` is window memberships, so one satellite in two windows counts twice. |
+| `appliedFilter` | The slug, domain, and exclusive `since` that were applied to `changes`. Null fields mean that filter was not set. |
+| `changes` | The deltas below. |
+
+Each change:
+
+| Field | Meaning |
+|---|---|
+| `id` | Stable id. Snapshot diffs use the snapshot id. Pre-snapshot FCC rows use `fcc:slot_event:<id>`. |
+| `domain` | `occupancy`, `fcc`, or `dispute`. |
+| `kind` | Occupancy: `enter`, `leave`, `authority_flip`. FCC: `new`, `lapsed`, `licensee`, `status`, `as_of`. Dispute: `appear`, `clear`, `kind`. |
+| `slug` | Occupancy and dispute: registry slug of that window. FCC row: `lonToSlug` of the authorization longitude. `as_of`: null. A slug filter drops `as_of`. |
+| `longitude` | Slot longitude, or the authorization longitude. Null for `as_of`. |
+| `detectedAt` | ISO-8601 UTC. Snapshot diffs use the later snapshot time. FCC slot_events use the ingest detection time. |
+| `vintage` | File vintages of the observation (the later snapshot, or the first snapshot for pre-snapshot FCC events). |
+| `subject` | `noradId` and `name`, or `callSign` and `satelliteName`, or `field` = `fccAsOf`. |
+| `before`, `after` | The membership or row that entered or left. Null on the side that did not exist. |
+| `provenance` | `sources`, `store` (`registry_snapshots` or `slot_events`), `rule`, `eventId`, `fromSnapshotId`, `toSnapshotId`, `note`. |
+
+`enter` and `leave` are membership in the ±0.4 degree TLE-primary window. A satellite that changes slug is a leave on the old slug and an enter on the new slug. `authority_flip` is the same slug and identity whose occupancy source changed between `tle`, `ucs`, and `none`. TLE longitude is not an FCC assignment or an ITU filing.
+
+`appear` and `clear` are dispute records on a slug. `kind` is the same slug and identity whose dispute kind changed. `tle_ucs_disagreement` is an in-window pair with absolute UCS-TLE difference above 2 degrees. `ucs_ghost` is a UCS catalog longitude inside the window whose occupancy longitude is outside it and does not agree within 2 degrees.
+
+FCC `new`, `lapsed`, `licensee`, and `status` follow real call signs. Call sign `N/A` is not a key. `as_of` is one row with no slug when `fccAsOf` differs between snapshots.
+
+What is not in the feed:
+
+- Valuation, congestion, bid/ask, comps, and dollar amounts.
+- ITU filings. SNS is not ingested. There is no `ituRecorded` field on this object.
+- `satellite_relocated` rows from `slot_events`. Those are a TLE-to-TLE threshold log, including the one-shot Space-Track compare. They are not occupancy enter or leave.
+- A weekly history from before the first snapshot. That history was not stored. The feed does not reconstruct it.
+- An `as_of` row for the workbook refresh that overwrote `ingest_meta` before the first snapshot. Current `vintage.fccAsOf` is the date to cite. The prior workbook date is not in the database.
+
+While `coverage` is `bootstrap`, FCC `new`, `lapsed`, `licensee`, and `status` rows are `slot_events` already recorded at FCC ingest, dated at or before the first snapshot. Occupancy and dispute `changes` are empty. `baseline` is the state computed after the latest ingest, so an agent can cite snapshot id and vintages without calling the empty list a week of moves.
+
+`slug` that matches no change returns 200 and `changes: []`. It is not a 404. `domain` must be `occupancy`, `fcc`, or `dispute`. `since` accepts ISO-8601 UTC or `YYYY-MM-DD HH:MM:SS` and is exclusive. Invalid `slug`, `domain`, or `since` is 400. The same rate limit as the slot list applies.
+
+Filters do not change `baseline`. Pass `since` from the last `detectedAt` you stored. Changes that share that timestamp are omitted together.
 
 ## Related pages
 

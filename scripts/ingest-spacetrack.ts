@@ -6,6 +6,7 @@ import { recordIngest } from "./lib/ingest-meta";
 import { ensureEventTables, recordSlotEvent } from "./lib/events";
 import { subSatelliteLongitudeDeg, circularDiffDeg } from "./lib/orbit";
 import { applyPositionAuthority, formatPositionApplyStats } from "./lib/apply-position-authority";
+import { captureRegistrySnapshot } from "./lib/capture-snapshot";
 
 const DB_PATH = path.join(process.cwd(), "data", "clarke.db");
 
@@ -302,6 +303,7 @@ async function main() {
   });
 
   db.close();
+  captureRegistrySnapshot("spacetrack");
   console.log("Done.");
 }
 

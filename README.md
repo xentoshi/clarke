@@ -34,6 +34,7 @@ Clarke exposes its registry as machine-readable data for LLM agents and tools.
 | `GET /api/v1/agents/slots` | All registry rows: operatorIdentity and operatorMix, occupancy, FCC rows, disputes, source vintage. No valuation or congestion. |
 | `GET /api/v1/agents/slots/{slug}` | One slot, same record as the list. `clarke_get_terminal` returns this same JSON. |
 | `GET /api/v1/agents/satellites` | GEO satellites (filter by `operator`, `ownerCountry`, `limit`) |
+| `GET /api/v1/agents/deltas` | On-ingest occupancy, FCC, and dispute changes. `coverage=bootstrap` until a second registry snapshot exists. No valuation or congestion. |
 | `GET /api/v1/openapi` | OpenAPI 3.1 spec for agents + Terminal routes |
 | `GET /api/v1/terminal/slots` | **Pro** — Terminal summaries |
 | `GET /api/v1/terminal/slots/{slug}` | **Pro** — full Terminal model (occupancy, FCC, valuation; experimental stubs included but labeled) |
@@ -49,7 +50,7 @@ Pro Terminal routes accept a session cookie or `Authorization: Bearer ck_live_�
 npm run mcp
 ```
 
-Tools: `clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`, `clarke_list_satellites`. `clarke_get_terminal` is the same JSON as `clarke_get_slot`. Slot tools do not return valuation, congestion, bid/ask, comps, or a headline operator. Field list: [`docs/AGENT_API.md`](./docs/AGENT_API.md) (public page [`/docs/agent-api`](https://clarkebelt.finance/docs/agent-api)). See the header of `scripts/clarke-mcp.ts` for a sample client config.
+Tools: `clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`, `clarke_list_deltas`, `clarke_list_satellites`. `clarke_get_terminal` is the same JSON as `clarke_get_slot`. `clarke_list_deltas` is the same JSON as `GET /api/v1/agents/deltas`. Slot tools and the delta feed do not return valuation, congestion, bid/ask, comps, or a headline operator. Field list: [`docs/AGENT_API.md`](./docs/AGENT_API.md) (public page [`/docs/agent-api`](https://clarkebelt.finance/docs/agent-api)). See the header of `scripts/clarke-mcp.ts` for a sample client config.
 
 ---
 
@@ -65,7 +66,7 @@ npm run ingest:spacetrack # Space-Track satcat + TLEs (requires credentials)
 npm run ingest:all        # all of the above
 ```
 
-Each run records its timestamp, row count, and **source vintage** (UCS latest GEO launch, FCC workbook as-of, TLE epoch range) in `ingest_meta`, surfaced on Slot Terminal, `/about`, and the API's `meta.data_freshness`. Ingest `last_run` is not file vintage. Space-Track ingest stores satcat + TLEs and applies **TLE-primary occupancy authority**: UCS `longitude_geo` is preserved (wrap-normalized only); occupancy, congestion, and valuation v0 cluster on the TLE sub-satellite longitude when age/quality gates pass, otherwise UCS, with Δ / `positionDisputed` written as an audit trail. Against a DB that already has TLEs: `npm run apply:positions` then `npm run seed:valuations` (history is a labeled backfill, not trades).
+Each run records its timestamp, row count, and **source vintage** (UCS latest GEO launch, FCC workbook as-of, TLE epoch range) in `ingest_meta`, surfaced on Slot Terminal, `/about`, and the API's `meta.data_freshness`. Ingest `last_run` is not file vintage. FCC, UCS, and Space-Track ingests also append a `registry_snapshots` row when occupancy membership, dispute records, FCC call signs, or those file vintages change. `GET /api/v1/agents/deltas` diffs those rows. `npm run snapshot:registry` records the current state when you need the baseline without a full ingest. Space-Track ingest stores satcat + TLEs and applies **TLE-primary occupancy authority**: UCS `longitude_geo` is preserved (wrap-normalized only); occupancy, congestion, and valuation v0 cluster on the TLE sub-satellite longitude when age/quality gates pass, otherwise UCS, with Δ / `positionDisputed` written as an audit trail. Against a DB that already has TLEs: `npm run apply:positions` then `npm run seed:valuations` (history is a labeled backfill, not trades).
 
 ---
 

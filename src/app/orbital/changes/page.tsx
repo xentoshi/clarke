@@ -84,7 +84,11 @@ export default function ChangesPage() {
             <Link href="/about#data-sources" className="text-ink hover:text-muted underline">
               data freshness
             </Link>{" "}
-            for how recently each source was last checked.
+            for how recently each source was last checked. Agents should read{" "}
+            <Link href="/docs/agent-api" className="text-ink hover:text-muted underline">
+              GET /api/v1/agents/deltas
+            </Link>
+            . That feed does not treat satellite relocations as occupancy enter or leave.
           </p>
         </div>
         <Link href="/orbital" className="text-muted text-sm hover:text-ink transition-colors shrink-0 mt-1">

@@ -105,6 +105,10 @@ describe("public docs load the repo markdown", () => {
     assert.equal(raw.includes("\u2013"), false);
     const doc = loadDoc("agent-api");
     assert.match(doc.html, /GET \/api\/v1\/agents\/slots/);
+    assert.match(doc.html, /GET \/api\/v1\/agents\/deltas/);
+    assert.match(doc.html, /clarke_list_deltas/);
+    assert.match(doc.html, /<code>coverage<\/code> is <code>bootstrap<\/code>/);
+    assert.match(doc.html, /satellite_relocated/);
     assert.match(doc.html, /clarke_list_slots/);
     assert.match(doc.html, /clarke_get_slot/);
     assert.match(doc.html, /clarke_get_terminal/);
@@ -130,6 +134,7 @@ describe("public docs load the repo markdown", () => {
     assert.doesNotMatch(doc.html, /Bloomberg|CoStar|\bCME\b/);
     assert.ok(doc.toc.some((t) => /operator identity/i.test(t.label)));
     assert.ok(doc.toc.some((t) => /fcc freshness/i.test(t.label)));
+    assert.ok(doc.toc.some((t) => /delta feed/i.test(t.label)));
   });
 
   it("fcc-refresh includes the runbook commands and workbook vintage", () => {

@@ -31,10 +31,10 @@ Clarke exposes its registry as machine-readable data for LLM agents and tools.
 
 | Endpoint | Returns |
 |---|---|
-| `GET /api/v1/agents/slots` | All registry rows: operatorIdentity and operatorMix, occupancy, FCC rows, disputes, source vintage. No valuation or congestion. |
+| `GET /api/v1/agents/slots` | All registry rows: operatorIdentity and operatorMix, occupancy, FCC rows, disputes, source vintage. Valuation and congestion live on the human Slot Terminal. |
 | `GET /api/v1/agents/slots/{slug}` | One slot, same record as the list. `clarke_get_terminal` returns this same JSON. |
 | `GET /api/v1/agents/satellites` | GEO satellites (filter by `operator`, `ownerCountry`, `limit`) |
-| `GET /api/v1/agents/deltas` | On-ingest occupancy, FCC, and dispute changes. `coverage=bootstrap` until a second registry snapshot exists. No valuation or congestion. |
+| `GET /api/v1/agents/deltas` | On-ingest occupancy, FCC, and dispute changes. `coverage=bootstrap` until a second registry snapshot exists. Valuation and congestion live on the human Slot Terminal. |
 | `GET /api/v1/openapi` | OpenAPI 3.1 spec for agents + Terminal routes |
 | `GET /api/v1/terminal/slots` | **Pro** — Terminal summaries |
 | `GET /api/v1/terminal/slots/{slug}` | **Pro** — full Terminal model (occupancy, FCC, valuation; experimental stubs included but labeled) |
@@ -44,13 +44,17 @@ Clarke exposes its registry as machine-readable data for LLM agents and tools.
 
 Pro Terminal routes accept a session cookie or `Authorization: Bearer ck_live_…` / `X-Clarke-Key`. Mint a key from `/account` while signed in as Pro. Public agents API stays unauthenticated (60 req/min/IP); Pro keys get 300 req/min.
 
-**MCP server** — the same registry as tools for Claude Code, Cursor, and other MCP clients:
+**MCP server.** The same registry as tools for Claude Code, Cursor, and other MCP clients.
+
+Public remote endpoint (stateless Streamable HTTP, reads are open): `https://www.clarkebelt.finance/api/v1/mcp`
+
+Local stdio:
 
 ```bash
 npm run mcp
 ```
 
-Tools: `clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`, `clarke_list_deltas`, `clarke_list_satellites`. `clarke_get_terminal` is the same JSON as `clarke_get_slot`. `clarke_list_deltas` is the same JSON as `GET /api/v1/agents/deltas`. Slot tools and the delta feed do not return valuation, congestion, bid/ask, comps, or a headline operator. Field list: [`docs/AGENT_API.md`](./docs/AGENT_API.md) (public page [`/docs/agent-api`](https://clarkebelt.finance/docs/agent-api)). See the header of `scripts/clarke-mcp.ts` for a sample client config.
+Tools: `clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`, `clarke_list_deltas`, `clarke_list_satellites`. `clarke_get_terminal` is the same JSON as `clarke_get_slot`. `clarke_list_deltas` is the same JSON as `GET /api/v1/agents/deltas`. The slot record uses operatorIdentity and operatorMix, not a single headline operator. Valuation and congestion live only as labeled models on the human Slot Terminal. Field list: [`docs/AGENT_API.md`](./docs/AGENT_API.md) (public page [`/docs/agent-api`](https://clarkebelt.finance/docs/agent-api)). See the header of `scripts/clarke-mcp.ts` for a sample client config.
 
 ---
 

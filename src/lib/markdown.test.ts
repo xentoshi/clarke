@@ -109,6 +109,14 @@ describe("public docs load the repo markdown", () => {
     assert.match(doc.html, /clarke_list_deltas/);
     assert.match(doc.html, /<code>coverage<\/code> is <code>bootstrap<\/code>/);
     assert.match(doc.html, /satellite_relocated/);
+    assert.match(doc.html, /https:\/\/www\.clarkebelt\.finance\/api\/v1\/mcp/);
+    assert.match(doc.html, /id="remote-streamable-http"/);
+    assert.match(doc.html, /id="local-stdio"/);
+    assert.doesNotMatch(doc.html, /####/);
+    assert.match(doc.html, /Streamable HTTP/);
+    assert.match(doc.html, /Reads are open/);
+    assert.doesNotMatch(doc.html, /No API key/i);
+    assert.match(doc.html, /405/);
     assert.match(doc.html, /clarke_list_slots/);
     assert.match(doc.html, /clarke_get_slot/);
     assert.match(doc.html, /clarke_get_terminal/);
@@ -120,10 +128,10 @@ describe("public docs load the repo markdown", () => {
     assert.match(doc.html, /fccStaleAfterDays/);
     assert.match(doc.html, /tle-primary/);
     assert.match(doc.html, /ucs_ghost/);
-    assert.match(doc.html, /not in the agent payload/i);
+    assert.match(doc.html, /not in the public agent or MCP payload/i);
     assert.match(doc.html, /human Slot Terminal/);
     assert.match(doc.html, /must not treat them as facts/);
-    assert.match(doc.html, /no slot-level/);
+    assert.match(doc.html, /not a single headline operator/);
     assert.match(doc.html, /docs-mark-v/);
     assert.match(doc.html, /docs-mark-s/);
     assert.match(doc.html, /href="\/docs\/data-trust"/);

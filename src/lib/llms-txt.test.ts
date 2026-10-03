@@ -21,6 +21,7 @@ describe("llms.txt agent discovery", () => {
       "https://www.clarkebelt.finance/api/v1/agents/slots",
       "https://www.clarkebelt.finance/api/v1/agents/slots/101w",
       "https://www.clarkebelt.finance/api/v1/agents/deltas",
+      "https://www.clarkebelt.finance/api/v1/mcp",
       "https://www.clarkebelt.finance/api/v1/openapi",
       "https://www.clarkebelt.finance/docs/agent-api",
       "https://www.clarkebelt.finance/api/v1/agents/satellites",
@@ -31,19 +32,23 @@ describe("llms.txt agent discovery", () => {
     assert.match(text, /clarke_get_terminal/);
     assert.match(text, /clarke_list_deltas/);
     assert.match(text, /same object as `clarke_get_slot`/);
-    assert.match(text, /has no public URL/);
-    assert.doesNotMatch(text, /https?:\/\/[^)\s]*\/mcp/);
+    assert.match(text, /stateless Streamable HTTP/);
+    assert.match(text, /Reads are open/);
+    assert.match(text, /GET returns 405/);
+    assert.doesNotMatch(text, /No API key/i);
+    assert.doesNotMatch(text, /has no public URL/);
   });
 
   it("states the payload exclusions, ITU hole, FCC as-of, and bootstrap caveat", () => {
-    assert.match(text, /excludes valuation, congestion, bid\/ask, comps, valuation history, and dollar strings/);
+    assert.match(text, /Valuation and congestion are not in the public agent or MCP payload/);
+    assert.match(text, /live only as labeled models on the human Slot Terminal/);
     assert.match(text, /must not treat them as facts/);
     assert.match(text, /ITU SNS is not ingested/);
     assert.match(text, /`ituRecorded` is `not_in_product`/);
     assert.match(text, /workbook as-of is 2026-09-27/);
     assert.match(text, /`coverage` is `bootstrap` until a second registry snapshot is stored/);
     assert.match(text, /empty occupancy list is not a claim that nothing moved/);
-    assert.match(text, /There is no slot-level `operator` field/);
+    assert.match(text, /uses `operatorIdentity` and `operatorMix`, not a single headline operator/);
   });
 
   it("is linked from the docs hub and the agent API page source", () => {

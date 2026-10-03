@@ -2,24 +2,25 @@
 
 > Public GEO slot registry. Agents read one slot record over HTTP. The human pages are not the data source.
 
-The slot record is occupancy (TLE-primary, UCS catalog longitude as fallback), `operatorIdentity` (`split`, `single`, or `none`), `operatorMix`, FCC authorizations, disputes, source vintage, and provenance. There is no slot-level `operator` field. Read `operatorMix`.
+The slot record is occupancy (TLE-primary, UCS catalog longitude as fallback), `operatorIdentity` (`split`, `single`, or `none`), `operatorMix`, FCC authorizations, disputes, source vintage, and provenance. The slot record uses `operatorIdentity` and `operatorMix`, not a single headline operator.
 
-The record excludes valuation, congestion, bid/ask, comps, valuation history, and dollar strings. Congestion v0 and implied fair value are labeled models on the human Slot Terminal. Agents must not treat them as facts. The Pro Terminal API (`/api/v1/terminal/...`) is a separate authenticated surface and can return those models.
+Valuation and congestion are not in the public agent or MCP payload. They live only as labeled models on the human Slot Terminal. Bid/ask, comps, valuation history, and dollar strings live on that Terminal surface. Agents must not treat them as facts. The Pro Terminal API (`/api/v1/terminal/...`) is a separate authenticated surface and can return those models.
 
 ITU SNS is not ingested. `ituRecorded` is `not_in_product` on every slot. The flag is not a network name, not brought-into-use evidence, and not a filled filing row.
 
 FCC rows are the committed SSAL workbook, not a live fcc.gov scrape. Cite `sourceVintage.fccAsOf`. The workbook as-of is 2026-09-27. `fccStale` is true only when that date parses and is older than 14 days.
 
-`GET /api/v1/agents/deltas` is the on-ingest change feed (edition 2). `coverage` is `bootstrap` until a second registry snapshot is stored, then `ingest_deltas`. During bootstrap, FCC call-sign events already in `slot_events` are included, and occupancy and dispute changes are empty. An empty occupancy list is not a claim that nothing moved. The feed excludes valuation, congestion, and ITU filings.
+`GET /api/v1/agents/deltas` is the on-ingest change feed (edition 2). `coverage` is `bootstrap` until a second registry snapshot is stored, then `ingest_deltas`. During bootstrap, FCC call-sign events already in `slot_events` are included, and occupancy and dispute changes are empty. An empty occupancy list is not a claim that nothing moved. The feed is occupancy, FCC rows, and disputes. Valuation and congestion live on the human Slot Terminal. ITU SNS is not ingested.
 
-HTTP success bodies are `{ data, meta }`. Routes are read-only and unauthenticated, at 60 requests per minute per IP on each server instance. MCP is local stdio (`npm run mcp`) against the repo database and has no public URL. `clarke_list_slots`, `clarke_get_slot`, and `clarke_get_terminal` return the same slot JSON as HTTP `data`. `clarke_get_terminal` is the same object as `clarke_get_slot`. `clarke_list_deltas` returns the deltas `data` object, without the envelope.
+HTTP success bodies are `{ data, meta }`. Routes are read-only and unauthenticated, at 60 requests per minute per IP on each server instance. Remote MCP is that same read-only surface: stateless Streamable HTTP at https://www.clarkebelt.finance/api/v1/mcp. Reads are open. POST JSON-RPC. The rate limit is shared with these routes. GET returns 405 because this host does not keep a server-push SSE stream. Clients continue with POST. Local stdio (`npm run mcp`) remains for a repo checkout. `clarke_list_slots`, `clarke_get_slot`, and `clarke_get_terminal` return the same slot JSON as HTTP `data`. `clarke_get_terminal` is the same object as `clarke_get_slot`. `clarke_list_deltas` returns the deltas `data` object. HTTP wraps that object in `{ data, meta }`.
 
 ## Agent routes
 
 - [Slot list](https://www.clarkebelt.finance/api/v1/agents/slots): Every registry slug. One slot record each, sorted by longitude from west to east.
 - [Slot record](https://www.clarkebelt.finance/api/v1/agents/slots/101w): One slot. `101w` is a list slug. Other slugs match `^[a-z0-9-]+$`.
 - [Delta feed](https://www.clarkebelt.finance/api/v1/agents/deltas): Occupancy, FCC, and dispute changes. Query `slug`, `domain` (`occupancy`, `fcc`, or `dispute`), and exclusive `since`.
-- [OpenAPI](https://www.clarkebelt.finance/api/v1/openapi): OpenAPI 3.1 index of the public agent routes and the Pro Terminal routes.
+- [Remote MCP](https://www.clarkebelt.finance/api/v1/mcp): Stateless Streamable HTTP. POST JSON-RPC. Reads are open. GET returns 405 because this host does not keep a server-push SSE stream. Clients continue with POST. Same tools and JSON as local stdio: `clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`, `clarke_list_deltas`.
+- [OpenAPI](https://www.clarkebelt.finance/api/v1/openapi): OpenAPI 3.1 index of the public agent routes, remote MCP, and the Pro Terminal routes.
 - [Field list](https://www.clarkebelt.finance/docs/agent-api): HTTP and MCP fields, the envelope, exclusions, and the bootstrap caveat.
 
 ## Optional

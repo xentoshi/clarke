@@ -236,16 +236,16 @@ export default function AboutPage() {
 
           <Section id="agents" title="Agents API">
             <p className="text-muted text-sm leading-relaxed mb-6">
-              Clarke exposes a read-only HTTP API and a Model Context Protocol server so autonomous agents can query the registry without scraping HTML. The same operations layer backs both transports, so the HTTP <span className="font-mono">data</span> object and the MCP slot tools return the same slot record. The public agents API requires no authentication. The field list is <Link href="/docs/agent-api" className="text-ink underline">Agent API</Link>. Valuation, congestion, bid/ask, comps, and dollar strings are not in that record. They live only as labeled models on the human Slot Terminal and must not be treated as facts. Pro Terminal routes are a separate authenticated surface.
+              Clarke exposes a read-only HTTP API and a Model Context Protocol server so autonomous agents can query the registry without scraping HTML. The same operations layer backs both transports, so the HTTP <span className="font-mono">data</span> object and the MCP slot tools return the same slot record. The public agents API is unauthenticated. The field list is <Link href="/docs/agent-api" className="text-ink underline">Agent API</Link>. Valuation and congestion are not in the public agent or MCP payload. They live only as labeled models on the human Slot Terminal and must not be treated as facts. Bid/ask, comps, and dollar strings live on that Terminal surface. Pro Terminal routes are a separate authenticated surface.
             </p>
 
             <h3 className="text-ink text-sm font-semibold mb-3">HTTP endpoints</h3>
             <div className="space-y-2 mb-6">
               {[
-                { path: "GET /api/v1/agents/slots", desc: "All registry rows, one per slug, sorted by longitude. Each row is the agent slot record: operatorIdentity and operatorMix, occupancy, FCC authorizations, disputes, ituRecorded (not_in_product), and source vintage. No headline operator. No valuation or congestion." },
-                { path: "GET /api/v1/agents/slots/{slug}", desc: "One slot, same record as the list. operatorIdentity is split, single, or none. ituRecorded is not_in_product. fccStale is on sourceVintage. No valuation or congestion." },
+                { path: "GET /api/v1/agents/slots", desc: "All registry rows, one per slug, sorted by longitude. Each row is the agent slot record: operatorIdentity and operatorMix, occupancy, FCC authorizations, disputes, ituRecorded (not_in_product), and source vintage. The slot record uses operatorIdentity and operatorMix, not a single headline operator. Valuation and congestion live only as labeled models on the human Slot Terminal." },
+                { path: "GET /api/v1/agents/slots/{slug}", desc: "One slot, same record as the list. operatorIdentity is split, single, or none. ituRecorded is not_in_product. fccStale is on sourceVintage. Valuation and congestion live only as labeled models on the human Slot Terminal." },
                 { path: "GET /api/v1/agents/satellites", desc: "GEO satellites from the UCS database. Optional filters: operator, ownerCountry, limit (max 1000)." },
-                { path: "GET /api/v1/agents/deltas", desc: "On-ingest occupancy, FCC, and dispute changes. coverage is bootstrap until a second registry snapshot exists, so empty occupancy changes are not a claim that nothing moved. No valuation or congestion. Field list: /docs/agent-api." },
+                { path: "GET /api/v1/agents/deltas", desc: "On-ingest occupancy, FCC, and dispute changes. coverage is bootstrap until a second registry snapshot exists, so empty occupancy changes are not a claim that nothing moved. Valuation and congestion live only as labeled models on the human Slot Terminal. Field list: /docs/agent-api." },
                 { path: "GET /api/v1/openapi", desc: "OpenAPI 3.1 document covering agents and Pro Terminal routes." },
                 { path: "GET /api/v1/terminal/slots/{slug}", desc: "Pro: Slot Terminal model — TLE-primary occupancy, recorded FCC layers, valuation v0. Simulated book / ITU stubs are labeled experimental, not the default view." },
                 { path: "GET /api/v1/terminal/valuations/{slug}/history", desc: "Pro: daily valuation snapshots (persisted or model backfill). Not trade prints." },
@@ -292,7 +292,7 @@ export default function AboutPage() {
 
             <h3 className="text-ink text-sm font-semibold mb-3">Model Context Protocol (MCP) server</h3>
             <p className="text-muted text-sm leading-relaxed mb-4">
-              The same operations are exposed as MCP tools so Claude Code, Cursor, and any other MCP-compatible client can query Clarke in plain English. Remote clients use stateless Streamable HTTP at <span className="font-mono">https://www.clarkebelt.finance/api/v1/mcp</span>. That endpoint is read-only and has no API key. It uses the same 60 requests per minute per IP limit as the public agents API. It does not keep a session. GET returns 405 because this host does not keep a server-push SSE stream open. Local stdio (<span className="font-mono">npm run mcp</span>) remains for a checkout of this repo and reads the SQLite database directly.
+              The same operations are exposed as MCP tools so Claude Code, Cursor, and any other MCP-compatible client can query Clarke in plain English. Remote clients use stateless Streamable HTTP at <span className="font-mono">https://www.clarkebelt.finance/api/v1/mcp</span>. Reads are open, with the same 60 requests per minute per IP limit as the public agents API. GET returns 405 because this host does not keep a server-push SSE stream. Clients continue with POST. Local stdio (<span className="font-mono">npm run mcp</span>) remains for a checkout of this repo and reads the SQLite database directly.
             </p>
             <div className="border border-line rounded-xl p-5 bg-surface mb-6">
               <div className="text-xs text-faint mb-3">Remote MCP</div>
@@ -314,7 +314,7 @@ export default function AboutPage() {
   }
 }`}</pre>
               <p className="text-muted text-xs leading-relaxed mt-3">
-                Available tools: <span className="font-mono">clarke_list_slots</span>, <span className="font-mono">clarke_get_slot</span>, <span className="font-mono">clarke_get_terminal</span>, <span className="font-mono">clarke_list_deltas</span>, <span className="font-mono">clarke_list_satellites</span>. <span className="font-mono">clarke_get_terminal</span> returns the same JSON as <span className="font-mono">clarke_get_slot</span>. It is not the human Slot Terminal model. Valuation and congestion are not in those slot tools.
+                Available tools: <span className="font-mono">clarke_list_slots</span>, <span className="font-mono">clarke_get_slot</span>, <span className="font-mono">clarke_get_terminal</span>, <span className="font-mono">clarke_list_deltas</span>, <span className="font-mono">clarke_list_satellites</span>. <span className="font-mono">clarke_get_terminal</span> returns the same JSON as <span className="font-mono">clarke_get_slot</span>. That JSON is the agent slot record. Valuation and congestion live only as labeled models on the human Slot Terminal.
               </p>
             </div>
 

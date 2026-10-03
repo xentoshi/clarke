@@ -34,10 +34,10 @@ export const DOC_PAGES: DocMeta[] = [
     kicker: "AGENT_API",
     title: "Agent API",
     description:
-      "Public HTTP routes and MCP tools for the Clarke slot record and the on-ingest delta feed. Valuation and congestion are not included.",
+      "Public HTTP routes and MCP tools for the Clarke slot record and the on-ingest delta feed. Valuation and congestion live only as labeled models on the human Slot Terminal.",
     summary:
-      "HTTP and MCP slot record, plus GET /api/v1/agents/deltas. Remote MCP is stateless Streamable HTTP. Valuation and congestion are not in the payload.",
-    tldr: "Public agents read one registry record over HTTP and MCP: occupancy (TLE-primary, UCS fallback), operatorIdentity and operatorMix, FCC rows, disputes, source vintage, and provenance. ituRecorded is not_in_product on every slot. There is no headline operator. Valuation, congestion, bid/ask, comps, and dollar strings are not in this payload. Congestion v0 and implied fair value live only as labeled models on the human Slot Terminal and must not be treated as facts. GET /api/v1/agents/deltas is the on-ingest change feed. With one stored snapshot, coverage is bootstrap: FCC call-sign events already in slot_events are included, and occupancy or dispute changes are not invented. Remote MCP is stateless Streamable HTTP at https://www.clarkebelt.finance/api/v1/mcp, read-only, with no API key.",
+      "HTTP and MCP slot record, plus GET /api/v1/agents/deltas. Remote MCP is stateless Streamable HTTP. Valuation and congestion live only as labeled models on the human Slot Terminal.",
+    tldr: "Public agents read one registry record over HTTP and MCP: occupancy (TLE-primary, UCS fallback), operatorIdentity and operatorMix, FCC rows, disputes, source vintage, and provenance. ituRecorded is not_in_product on every slot. The slot record uses operatorIdentity and operatorMix, not a single headline operator. Valuation and congestion are not in the public agent or MCP payload. They live only as labeled models on the human Slot Terminal and must not be treated as facts. Bid/ask, comps, and dollar strings live on that Terminal surface. GET /api/v1/agents/deltas is the on-ingest change feed. With one stored snapshot, coverage is bootstrap: FCC call-sign events already in slot_events are included, and occupancy or dispute changes are not invented. Remote MCP is stateless Streamable HTTP at https://www.clarkebelt.finance/api/v1/mcp. Reads are open.",
   },
   {
     slug: "valuation",

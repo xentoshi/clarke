@@ -9,12 +9,12 @@ import { checkRateLimit, getClientIp } from "./agents/rate-limit";
  *
  * Transport: stateless Streamable HTTP (MCP 2025-03-26 and later). Each POST
  * builds a fresh server and answers with one JSON-RPC `application/json`
- * body. There is no session id and no long-lived server-push SSE stream.
- * GET returns 405, which Streamable HTTP clients treat as "no server
- * messages" and then keep using POST.
+ * body. The endpoint is stateless. GET returns 405 because this host does
+ * not keep a server-push SSE stream. Clients continue with POST.
  *
- * Auth: none. The same in-memory 60 requests per minute per IP bucket as the
- * other public agent routes. Tool JSON is the stdio server's text result.
+ * Auth: unauthenticated reads. The same in-memory 60 requests per minute per
+ * IP bucket as the other public agent routes. Tool JSON is the stdio
+ * server's text result.
  */
 export const MCP_PUBLIC_PATH = "/api/v1/mcp";
 export const MCP_PUBLIC_URL = "https://www.clarkebelt.finance/api/v1/mcp";
@@ -73,7 +73,7 @@ export async function handleMcpHttp(req: Request): Promise<Response> {
       jsonRpcError(
         405,
         -32000,
-        "Method Not Allowed. This endpoint is stateless Streamable HTTP. POST JSON-RPC messages here. A server-push SSE stream is not offered.",
+        "Method Not Allowed. This endpoint is stateless Streamable HTTP. POST JSON-RPC messages here. GET returns 405 because this host does not keep a server-push SSE stream. Clients continue with POST.",
         { Allow: "POST, DELETE, OPTIONS" },
       ),
     );

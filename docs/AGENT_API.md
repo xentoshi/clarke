@@ -8,7 +8,7 @@ The record is occupancy, operator identity, FCC rows, disputes, source vintage, 
 
 ## Not in this payload
 
-Valuation, congestion, bid/ask, comps, valuation history, and dollar strings are not in the agent payload. There is no slot-level `operator` or `operatorRaw`. A mixed window used to be mis-labeled by a single headline name. That field is gone.
+Valuation and congestion are not in the public agent or MCP payload. They live only as labeled models on the human Slot Terminal. Bid/ask, comps, valuation history, and dollar strings live on that Terminal surface. The slot record uses `operatorIdentity` and `operatorMix`, not a single headline operator. A mixed window used to be mis-labeled by a single headline name. That field is gone.
 
 Congestion v0 and implied fair value live only as labeled models on the human Slot Terminal. They are not recorded facts. Agents must not treat them as facts, including when a person can still see them on the Terminal page. The Pro Terminal API (`/api/v1/terminal/...`) is a different, authenticated surface. It can return those labeled models. It is not this record. The delta feed follows the same exclusion.
 
@@ -75,9 +75,9 @@ Tool results are pretty-printed JSON text. They are not wrapped in `{ data, meta
 
 `POST https://www.clarkebelt.finance/api/v1/mcp`
 
-Stateless Streamable HTTP. No API key. No `Mcp-Session-Id`. The same 60 requests per minute per IP limit as the public agent routes, on this server instance, and shared with those routes. A 429 body is `{ "error": "Too many requests" }` with `Retry-After`, the same shape as the HTTP routes. CORS allows any origin.
+Stateless Streamable HTTP. Reads are open. The same 60 requests per minute per IP limit as the public agent routes, on this server instance, and shared with those routes. A 429 body is `{ "error": "Too many requests" }` with `Retry-After`, the same shape as the HTTP routes. CORS allows any origin.
 
-Send one JSON-RPC message per POST. `Content-Type` is `application/json`. `Accept` must include both `application/json` and `text/event-stream`. A successful call returns `Content-Type: application/json` and one JSON-RPC object, not an SSE body. `notifications/initialized` returns 202. `GET` returns 405 with `Allow: POST, DELETE, OPTIONS` because this host does not keep a server-push SSE stream open. Streamable HTTP clients treat that 405 as "no server messages" and continue with POST. `DELETE` returns 200 and does not end a session, because there is none. The older split transport (`GET /sse` plus `POST /messages`) is not mounted.
+Send one JSON-RPC message per POST. `Content-Type` is `application/json`. `Accept` must include both `application/json` and `text/event-stream`. A successful call returns `Content-Type: application/json` and one JSON-RPC object. `notifications/initialized` returns 202. `GET` returns 405 with `Allow: POST, DELETE, OPTIONS` because this host does not keep a server-push SSE stream. Clients continue with POST. `DELETE` returns 200 on this stateless endpoint. The older split transport (`GET /sse` plus `POST /messages`) is not mounted.
 
 ```json
 {
@@ -102,7 +102,7 @@ Send one JSON-RPC message per POST. `Content-Type` is `application/json`. `Accep
 
 Unknown slug: error result whose text is `{ "error": "No slot at slug '<slug>'" }`. The tool schema rejects a slug that fails the pattern before that lookup.
 
-`clarke_list_satellites` is a separate UCS catalog tool (`operator`, `ownerCountry`, `limit`). It is not the slot record and it does not carry valuation or congestion.
+`clarke_list_satellites` is a separate UCS catalog tool (`operator`, `ownerCountry`, `limit`). It is the catalog, not the slot record. Valuation and congestion live only as labeled models on the human Slot Terminal.
 
 ## Slot record
 

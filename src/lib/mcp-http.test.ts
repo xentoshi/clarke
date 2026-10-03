@@ -51,7 +51,7 @@ function toolText(result: { content?: Array<{ type?: string; text?: string }> })
 }
 
 describe("public MCP Streamable HTTP", () => {
-  it("answers CORS preflight without a session or an API key", async () => {
+  it("answers CORS preflight for an open read", async () => {
     const res = await OPTIONS(mcpRequest("OPTIONS", undefined, "203.0.113.11"));
     assert.equal(res.status, 204);
     assert.equal(res.headers.get("access-control-allow-origin"), "*");
@@ -73,7 +73,7 @@ describe("public MCP Streamable HTTP", () => {
     assert.equal(res.headers.get("mcp-session-id"), null);
   });
 
-  it("initializes over POST JSON and lists the same tools, with no API key and no session", async () => {
+  it("initializes over POST JSON and lists the same tools on an unauthenticated stateless endpoint", async () => {
     const init = await POST(mcpRequest("POST", initializeBody(), "203.0.113.13"));
     assert.equal(init.status, 200);
     assert.match(init.headers.get("content-type") ?? "", /application\/json/);
@@ -178,7 +178,7 @@ describe("public MCP Streamable HTTP", () => {
     }
   });
 
-  it("accepts DELETE without a session and does not require Authorization", async () => {
+  it("accepts DELETE on the stateless endpoint", async () => {
     const res = await DELETE(mcpRequest("DELETE", undefined, "203.0.113.21"));
     assert.equal(res.status, 200);
     assert.equal(res.headers.get("www-authenticate"), null);
@@ -203,9 +203,13 @@ describe("MCP discovery copy", () => {
       assert.doesNotMatch(text, /Bloomberg|CoStar|\bCME\b/);
     }
     assert.match(agent, /read-only and unauthenticated/);
+    assert.match(agent, /Reads are open/);
     assert.match(agent, /405/);
-    assert.match(llms, /No API key/);
-    assert.match(openapi, /No API key/);
+    assert.match(llms, /Reads are open/);
+    assert.match(openapi, /Reads are open/);
+    assert.doesNotMatch(agent, /No API key/i);
+    assert.doesNotMatch(llms, /No API key/i);
+    assert.doesNotMatch(openapi, /No API key/i);
     assert.equal(MCP_PUBLIC_PATH, "/api/v1/mcp");
     assert.doesNotMatch(llms, /has no public URL/);
   });

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { agentPayloadViolations, buildAgentSlot, listAgentSlots } from "./agent-slot";
+import { occupancyTleIsStale } from "./source-vintage";
 import { buildSlotTerminal } from "./slot-terminal";
 import SlotDrawer from "@/app/orbital/SlotDrawer";
 import type { ExplorerRow } from "@/app/orbital/types";
@@ -60,12 +61,23 @@ describe("agent slot payload", () => {
     assert.deepEqual(agent.sourceVintage, terminal.sourceVintage);
     assert.equal(typeof agent.sourceVintage.fccStale, "boolean");
     assert.equal(agent.sourceVintage.fccStaleAfterDays, 14);
+    assert.equal(typeof agent.sourceVintage.tleStale, "boolean");
+    assert.equal(agent.sourceVintage.tleStaleAfterDays, 14);
+    const usedEpochs = agent.occupancy
+      .filter((row) => row.occupancyAuthority === "tle" && row.tleEpoch)
+      .map((row) => row.tleEpoch as string)
+      .sort();
+    assert.equal(agent.sourceVintage.tleEpochMin, usedEpochs[0] ?? null);
+    assert.equal(agent.sourceVintage.tleEpochMax, usedEpochs[usedEpochs.length - 1] ?? null);
+    assert.equal(agent.sourceVintage.tleStale, agent.occupancy.some((row) => row.tleStale));
 
     const sat = terminal.satellites[0];
     const obs = agent.occupancy.find((row) => row.id === sat.id);
     assert.ok(obs);
     assert.equal(obs.tleLongitude, sat.longitudeTle);
     assert.equal(obs.tleEpoch, sat.tleEpoch);
+    assert.equal(typeof obs.tleStale, "boolean");
+    assert.equal(obs.tleStale, occupancyTleIsStale(obs.occupancyAuthority, obs.tleEpoch));
     assert.equal(obs.ucsLongitude, sat.longitudeUcs);
     assert.equal(obs.deltaDeg, sat.positionDeltaDeg);
     assert.equal(obs.disputed, sat.positionDisputed);
@@ -115,6 +127,15 @@ describe("agent slot payload", () => {
     assert.ok(slots.some((slot) => slot.operatorIdentity === "single" && slot.operatorMix.length === 1));
     assert.ok(slots.some((slot) => slot.operatorIdentity === "none" && slot.operatorMix.length === 0));
     for (const slot of slots) {
+      assert.equal(slot.sourceVintage.tleStaleAfterDays, 14, slot.slug);
+      assert.equal(slot.sourceVintage.tleStale, slot.occupancy.some((row) => row.tleStale), slot.slug);
+      for (const row of slot.occupancy) {
+        if (row.occupancyAuthority !== "tle") {
+          assert.equal(row.tleStale, false, `${slot.slug} ${row.name}`);
+        } else {
+          assert.equal(row.tleStale, occupancyTleIsStale("tle", row.tleEpoch), `${slot.slug} ${row.name}`);
+        }
+      }
       assert.equal("operator" in slot, false, slot.slug);
       assert.equal("operatorRaw" in slot, false, slot.slug);
       if (slot.operatorIdentity === "split") assert.ok(slot.operatorMix.length > 1, slot.slug);
@@ -183,6 +204,10 @@ describe("agent slot payload", () => {
       assert.doesNotMatch(text, /bid\/ask|bidAsk/i);
     }
     assert.match(CLARKE_GET_SLOT_DESCRIPTION, /ituRecorded is not_in_product/);
+    assert.match(CLARKE_GET_SLOT_DESCRIPTION, /tleStale/);
+    assert.match(CLARKE_GET_SLOT_DESCRIPTION, /14/);
+    assert.match(CLARKE_LIST_SLOTS_DESCRIPTION, /tleStale/);
+    assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /tle_epoch/);
     assert.match(CLARKE_LIST_SLOTS_DESCRIPTION, /occupancy observations/i);
     assert.match(CLARKE_LIST_SLOTS_DESCRIPTION, /operatorIdentity/);
     assert.match(CLARKE_GET_SLOT_DESCRIPTION, /operatorMix/);

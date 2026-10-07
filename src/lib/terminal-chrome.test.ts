@@ -68,6 +68,8 @@ const vintage: SlotSourceVintage = {
   fccStaleAfterDays: 14,
   tleEpochMin: "2026-09-14",
   tleEpochMax: "2026-09-15",
+  tleStale: true,
+  tleStaleAfterDays: 14,
   tleIngestAt: "2026-09-15",
 };
 
@@ -249,6 +251,9 @@ describe("product chrome — Fair value, Trust bar, Terminal fold", () => {
       createElement(TrustBar, { vintage, positionTrust }),
     );
     assert.match(html, /data-trust-bar/);
+    assert.match(html, /TLE epoch/);
+    assert.match(html, /2026-09-15/);
+    assert.match(html, /stale/);
     assert.match(html, /FCC SSAL stale/);
     assert.match(html, /Position disagreement/);
     assert.match(html, />Details</);

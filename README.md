@@ -31,7 +31,7 @@ Clarke exposes its registry as machine-readable data for LLM agents and tools.
 
 | Endpoint | Returns |
 |---|---|
-| `GET /api/v1/agents/slots` | All registry rows: operatorIdentity and operatorMix, occupancy, FCC rows, disputes, source vintage. Valuation and congestion live on the human Slot Terminal. |
+| `GET /api/v1/agents/slots` | All registry rows: operatorIdentity and operatorMix, occupancy, FCC rows, disputes, source vintage (`fccStale`, `tleStale`, 14 days). Valuation and congestion live on the human Slot Terminal. |
 | `GET /api/v1/agents/slots/{slug}` | One slot, same record as the list. `clarke_get_terminal` returns this same JSON. |
 | `GET /api/v1/agents/satellites` | GEO satellites (filter by `operator`, `ownerCountry`, `limit`) |
 | `GET /api/v1/agents/deltas` | On-ingest occupancy, FCC, and dispute changes. `coverage=bootstrap` until a second registry snapshot exists. Valuation and congestion live on the human Slot Terminal. |

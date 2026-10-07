@@ -46,7 +46,11 @@ describe("llms.txt agent discovery", () => {
     assert.match(text, /ITU SNS is not ingested/);
     assert.match(text, /`ituRecorded` is `not_in_product`/);
     assert.match(text, /workbook as-of is 2026-09-27/);
+    assert.match(text, /`sourceVintage\.tleStale` is true when a TLE that supplied occupancy is older than 14 days/);
+    assert.match(text, /tleStaleAfterDays/);
+    assert.match(text, /UCS fallback row does not use a catalog date as a TLE epoch/);
     assert.match(text, /`coverage` is `bootstrap` until a second registry snapshot is stored/);
+    assert.match(text, /including `tle_epoch`/);
     assert.match(text, /empty occupancy list is not a claim that nothing moved/);
     assert.match(text, /uses `operatorIdentity` and `operatorMix`, not a single headline operator/);
   });

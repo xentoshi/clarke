@@ -25,7 +25,7 @@ import {
   type DisputedOccupant,
   type PositionSource,
 } from "./position-authority";
-import { slotSourceVintage, type SlotSourceVintage } from "./source-vintage";
+import { occupancyTleIsStale, slotSourceVintage, type SlotSourceVintage } from "./source-vintage";
 import { getDataFreshness, getLatestIngest } from "./freshness";
 import { ingestAsOf } from "./provenance";
 import { regionForLongitude } from "./regions";
@@ -40,7 +40,10 @@ export interface AgentOccupancyObservation {
   operatorRaw: string | null;
   launchDate: string | null;
   tleLongitude: number | null;
+  /** Epoch of a stored element set, or null. Cite it with occupancyAuthority. A UCS fallback row may still carry an unused epoch. */
   tleEpoch: string | null;
+  /** True only when this row's occupancy longitude came from a TLE older than tleStaleAfterDays. */
+  tleStale: boolean;
   ucsLongitude: number | null;
   deltaDeg: number | null;
   disputed: boolean;
@@ -150,7 +153,7 @@ function lookupSlot(slug: string, lon: number): OrbitalSlot | undefined {
   );
 }
 
-function toObservation(sat: GeoSatellite): AgentOccupancyObservation {
+function toObservation(sat: GeoSatellite, now: Date): AgentOccupancyObservation {
   const refused = isLaunchVehicleOperator(sat.operator, sat.launchVehicle);
   const raw = sat.operator;
   return {
@@ -162,6 +165,7 @@ function toObservation(sat: GeoSatellite): AgentOccupancyObservation {
     launchDate: sat.launchDate,
     tleLongitude: sat.longitudeTle,
     tleEpoch: sat.tleEpoch,
+    tleStale: occupancyTleIsStale(sat.positionSource, sat.tleEpoch, now),
     ucsLongitude: sat.longitudeUcs,
     deltaDeg: sat.positionDeltaDeg,
     disputed: sat.positionDisputed,
@@ -200,8 +204,9 @@ function assemble(input: {
   allSats: GeoSatellite[];
   freshness: ReturnType<typeof getDataFreshness>;
   asOf: string;
+  now: Date;
 }): AgentSlotPayload {
-  const { slug, lon, curated, sats, fccAuths, allSats, freshness, asOf } = input;
+  const { slug, lon, curated, sats, fccAuths, allSats, freshness, asOf, now } = input;
   const attributed = sats.map((s) => ({
     ...s,
     operator: isLaunchVehicleOperator(s.operator, s.launchVehicle) ? null : s.operator,
@@ -211,7 +216,11 @@ function assemble(input: {
   const country = curated?.country || sats[0]?.ownerCountry || fccAuths[0]?.administration || "";
   const status: SlotStatus = curated?.status ?? (sats.length > 0 ? "active" : "filed");
   const positionTrust = buildSlotPositionTrust(lon, sats, allSats, COLOCATION_TOLERANCE_DEG);
-  const sourceVintage = slotSourceVintage(sats, freshness);
+  const sourceVintage = slotSourceVintage(
+    sats.map((s) => ({ tleEpoch: s.tleEpoch, occupancyAuthority: s.positionSource })),
+    freshness,
+    now,
+  );
   const provenance: RecordedProvenance = buildRecordedProvenance({
     satCount: sats.length,
     tlePrimaryCount: positionTrust.tlePrimaryCount,
@@ -234,7 +243,7 @@ function assemble(input: {
     satCount: sats.length,
     occupancyAuthority: positionTrust.occupancyAuthority,
     fccAuthorizations: fccAuths.map(toFcc),
-    occupancy: sats.map(toObservation),
+    occupancy: sats.map((sat) => toObservation(sat, now)),
     disputes: [
       ...positionTrust.disputedSatellites.map((row) => toDispute("tle_ucs_disagreement", row)),
       ...positionTrust.ucsGhosts.map((row) => toDispute("ucs_ghost", row)),
@@ -254,6 +263,7 @@ export function buildAgentSlot(slug: string): AgentSlotPayload | null {
   const curated = lookupSlot(slug, lon);
   if (sats.length === 0 && fccAuths.length === 0 && !curated) return null;
 
+  const now = new Date();
   const latest = getLatestIngest();
   const asOf = ingestAsOf(latest?.lastRun ?? null);
   return assemble({
@@ -263,15 +273,17 @@ export function buildAgentSlot(slug: string): AgentSlotPayload | null {
     sats,
     fccAuths,
     allSats: getGeoSatellites(),
-    freshness: getDataFreshness(),
+    freshness: getDataFreshness(now),
     asOf,
+    now,
   });
 }
 
 export function listAgentSlots(): AgentSlotPayload[] {
   const merged = mergeWithUcs(curatedSlots);
+  const now = new Date();
   const allSats = getGeoSatellites();
-  const freshness = getDataFreshness();
+  const freshness = getDataFreshness(now);
   const asOf = ingestAsOf(getLatestIngest()?.lastRun ?? null);
   return merged.map((slot) => {
     const slug = lonToSlug(slot.longitude);
@@ -284,6 +296,7 @@ export function listAgentSlots(): AgentSlotPayload[] {
       allSats,
       freshness,
       asOf,
+      now,
     });
   });
 }

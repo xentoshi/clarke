@@ -137,7 +137,7 @@ export function buildRecordedProvenance(input: {
     occupancy: {
       source: "Space-Track TLE (primary) + UCS Satellite Database (fallback)",
       asOf: tleAsOf,
-      note: `±${COLOCATION_TOLERANCE_DEG}° window · ${tlePrimaryCount}/${satCount} TLE-primary (${Math.round(tlePrimaryShare * 100)}%) · TLE epoch ${sourceVintage.tleEpochMax ?? "unknown"} · TLE lon is not an FCC/ITU assignment`,
+      note: `±${COLOCATION_TOLERANCE_DEG}° window · ${tlePrimaryCount}/${satCount} TLE-primary (${Math.round(tlePrimaryShare * 100)}%) · TLE epoch ${sourceVintage.tleEpochMax ?? "none"} · tleStale ${sourceVintage.tleStale} after ${sourceVintage.tleStaleAfterDays} days · TLE lon is not an FCC/ITU assignment`,
     },
     ucsCatalog: {
       source: "UCS Satellite Database",
@@ -258,7 +258,10 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
 
   const modelRun = latestModelRun();
   const positionTrust = buildSlotPositionTrust(lon, sats, getGeoSatellites(), COLOCATION_TOLERANCE_DEG);
-  const sourceVintage = slotSourceVintage(sats, freshness);
+  const sourceVintage = slotSourceVintage(
+    sats.map((s) => ({ tleEpoch: s.tleEpoch, occupancyAuthority: s.positionSource })),
+    freshness,
+  );
   const recorded = buildRecordedProvenance({
     satCount: sats.length,
     tlePrimaryCount: positionTrust.tlePrimaryCount,

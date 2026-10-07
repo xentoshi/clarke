@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TLE_STALE_AFTER_DAYS } from "@/lib/source-vintage";
 import { buildMeta } from "@/lib/metadata";
 import { buildGeoSlotIndex, type GeoSlotIndexDossier, type OccupancyMove } from "@/lib/geo-slot-index";
 import { formatLonFixed } from "@/lib/geo-angle";
@@ -127,7 +128,7 @@ function Dossier({ d, headingId }: { d: GeoSlotIndexDossier; headingId: string }
         </>
       )}
       <p className="text-xs font-mono text-faint mt-5">
-        FCC as-of {d.fccAsOf ?? "—"} · TLE epoch {d.tleEpochMin && d.tleEpochMax ? (d.tleEpochMin === d.tleEpochMax ? d.tleEpochMax : `${d.tleEpochMin}–${d.tleEpochMax}`) : "n/a"} · UCS vintage {d.ucsFileVintage ?? "—"}
+        FCC as-of {d.fccAsOf ?? "n/a"} · TLE epoch {d.tleEpochMin && d.tleEpochMax ? (d.tleEpochMin === d.tleEpochMax ? d.tleEpochMax : `${d.tleEpochMin} to ${d.tleEpochMax}`) : "n/a"}{d.tleEpochMax ? (d.tleStale ? ` · older than ${TLE_STALE_AFTER_DAYS} days` : ` · within ${TLE_STALE_AFTER_DAYS} days`) : ""} · UCS vintage {d.ucsFileVintage ?? "n/a"}
       </p>
     </section>
   );

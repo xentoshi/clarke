@@ -4,6 +4,14 @@ import { parseUcsLaunchYear } from "./occupancy-quality";
 /** FCC SSAL is treated stale when the workbook as-of is older than this. */
 export const FCC_STALE_AFTER_DAYS = 14;
 
+/**
+ * A TLE that supplied occupancy is stale when its epoch is older than this.
+ * Same comparison style as FCC_STALE_AFTER_DAYS: age must be greater than the
+ * threshold. A missing or unparsed epoch is not stale. This is a read-time
+ * flag. It is not the 30-day ingest gate that refuses a TLE and falls back to UCS.
+ */
+export const TLE_STALE_AFTER_DAYS = 14;
+
 const MONTHS: Record<string, number> = {
   january: 1, february: 2, march: 3, april: 4, may: 5, june: 6,
   july: 7, august: 8, september: 9, october: 10, november: 11, december: 12,
@@ -45,6 +53,21 @@ export function fccIsStale(fileVintage: string | null | undefined, now: Date = n
   return age > FCC_STALE_AFTER_DAYS;
 }
 
+export function tleIsStale(epoch: string | null | undefined, now: Date = new Date()): boolean {
+  const age = ageDaysFrom(epoch, now);
+  return age > TLE_STALE_AFTER_DAYS;
+}
+
+/** True only when this TLE supplied the occupancy longitude and its epoch is past the threshold. */
+export function occupancyTleIsStale(
+  occupancyAuthority: "tle" | "ucs" | "none" | null | undefined,
+  tleEpoch: string | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  if (occupancyAuthority !== "tle") return false;
+  return tleIsStale(tleEpoch, now);
+}
+
 export interface FreshnessLike {
   source: string;
   lastRun: string;
@@ -61,8 +84,12 @@ export interface SlotSourceVintage {
   fccIngestAt: string | null;
   fccStale: boolean;
   fccStaleAfterDays: number;
+  /** Epochs of TLEs that supplied occupancy in this window. UCS fallback rows do not contribute. */
   tleEpochMin: string | null;
   tleEpochMax: string | null;
+  /** True when at least one TLE used for occupancy in this window is older than tleStaleAfterDays. */
+  tleStale: boolean;
+  tleStaleAfterDays: number;
   tleIngestAt: string | null;
 }
 
@@ -71,14 +98,18 @@ function sourceRow(freshness: FreshnessLike[], name: string): FreshnessLike | un
 }
 
 export function slotSourceVintage(
-  satellites: { tleEpoch: string | null }[],
+  satellites: { tleEpoch: string | null; occupancyAuthority?: "tle" | "ucs" | "none" }[],
   freshness: FreshnessLike[],
   now: Date = new Date(),
 ): SlotSourceVintage {
   const ucs = sourceRow(freshness, "UCS");
   const fcc = sourceRow(freshness, "FCC-SSAL");
   const tle = sourceRow(freshness, "Space-Track TLE");
-  const epochs = satellites.map((s) => s.tleEpoch).filter((e): e is string => Boolean(e)).sort();
+  // Omitted authority keeps older callers: an epoch on the row is a used TLE.
+  // An explicit ucs or none authority does not donate that epoch, even if a
+  // rejected element set is still stored on the satellite.
+  const used = satellites.filter((s) => s.occupancyAuthority === undefined || s.occupancyAuthority === "tle");
+  const epochs = used.map((s) => s.tleEpoch).filter((e): e is string => Boolean(e)).sort();
   const fccAsOf = fcc?.fileVintage ?? fcc?.sourceAsOf ?? null;
   return {
     ucsFileVintage: ucs?.fileVintage ?? ucs?.sourceAsOf ?? null,
@@ -89,6 +120,8 @@ export function slotSourceVintage(
     fccStaleAfterDays: FCC_STALE_AFTER_DAYS,
     tleEpochMin: epochs[0] ?? null,
     tleEpochMax: epochs[epochs.length - 1] ?? null,
+    tleStale: used.some((s) => occupancyTleIsStale(s.occupancyAuthority ?? "tle", s.tleEpoch, now)),
+    tleStaleAfterDays: TLE_STALE_AFTER_DAYS,
     tleIngestAt: tle?.lastRun ?? null,
   };
 }

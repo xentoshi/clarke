@@ -151,6 +151,53 @@ describe("registry state diff", () => {
     assert.equal(movedEnter.slug, "172e");
     assert.equal(movedEnter.after?.occupancyAuthority, "ucs");
     assert.equal(changes.some((row) => row.subject.name === "Stayed"), false);
+    assert.equal(changes.some((row) => row.kind === "tle_epoch"), false);
+  });
+
+  it("emits tle_epoch when a used TLE epoch or its 14 day stale flag changes", () => {
+    const epochShift = diffRegistryStates(
+      state({ occupancy: [occ({ tleEpoch: "2026-09-01T00:00:00.000Z" })] }),
+      state({ occupancy: [occ({ tleEpoch: "2026-09-18T00:00:00.000Z" })] }),
+      { fromSnapshotId: 1, toSnapshotId: 2, detectedAt: "2026-09-20T00:00:00.000Z", fromCapturedAt: "2026-09-10T00:00:00.000Z" },
+    );
+    const shifted = epochShift.find((row) => row.kind === "tle_epoch");
+    assert.ok(shifted);
+    assert.equal(shifted.domain, "occupancy");
+    assert.equal(shifted.before?.tleEpoch, "2026-09-01T00:00:00.000Z");
+    assert.equal(shifted.before?.tleStale, false);
+    assert.equal(shifted.after?.tleEpoch, "2026-09-18T00:00:00.000Z");
+    assert.equal(shifted.after?.tleStale, false);
+    assert.match(shifted.provenance.note, /14 days/);
+    assert.equal(epochShift.some((row) => row.kind === "authority_flip"), false);
+
+    const aged = diffRegistryStates(
+      state({ occupancy: [occ({ tleEpoch: "2026-09-01T00:00:00.000Z" })] }),
+      state({ occupancy: [occ({ tleEpoch: "2026-09-01T00:00:00.000Z" })] }),
+      { fromSnapshotId: 1, toSnapshotId: 2, detectedAt: "2026-09-20T00:00:00.000Z", fromCapturedAt: "2026-09-10T00:00:00.000Z" },
+    );
+    assert.equal(aged.length, 1);
+    assert.equal(aged[0].kind, "tle_epoch");
+    assert.equal(aged[0].before?.tleEpoch, aged[0].after?.tleEpoch);
+    assert.equal(aged[0].before?.tleStale, false);
+    assert.equal(aged[0].after?.tleStale, true);
+  });
+
+  it("does not invent a TLE epoch change for UCS fallback or during bootstrap", () => {
+    const ucs = diffRegistryStates(
+      state({ occupancy: [occ({ occupancyAuthority: "ucs", tleEpoch: "2020-01-01T00:00:00.000Z" })] }),
+      state({ occupancy: [occ({ occupancyAuthority: "ucs", tleEpoch: "2021-06-01T00:00:00.000Z" })] }),
+      { fromSnapshotId: 1, toSnapshotId: 2, detectedAt: "2026-09-20T00:00:00.000Z", fromCapturedAt: "2026-09-10T00:00:00.000Z" },
+    );
+    assert.deepEqual(ucs, []);
+
+    const feed = assembleDeltaFeed({
+      snapshots: [snap(1, "2026-09-20T00:00:00.000Z", state({ occupancy: [occ({ tleEpoch: "2026-08-01T00:00:00.000Z" })] }))],
+      fccEvents: [],
+      observed: { vintage: V1, ucsIngestAt: null, fccIngestAt: null, tleIngestAt: null },
+    });
+    assert.equal(feed.coverage, "bootstrap");
+    assert.equal(feed.changes.some((row) => row.domain === "occupancy"), false);
+    assert.equal(feed.changes.some((row) => row.kind === "tle_epoch"), false);
   });
 
   it("emits dispute appear, clear, and kind", () => {
@@ -341,9 +388,9 @@ describe("live delta feed", () => {
   const fresh = buildCurrentRegistryState();
   const feed = buildDeltaFeedFromDb();
 
-  it("bootstraps from the committed snapshot and the FCC workbook diff", () => {
-    assert.equal(feed.coverage, "bootstrap");
-    assert.equal(feed.baseline?.kind, "bootstrap");
+  it("diffs the committed snapshots and keeps the earlier FCC workbook events", () => {
+    assert.equal(feed.coverage, "ingest_deltas");
+    assert.equal(feed.baseline?.kind, "ingest");
     assert.equal(feed.vintage.fccAsOf, "2026-09-27");
     assert.equal(feed.baseline?.fccRowCount, fresh.fcc.length);
     assert.equal(feed.baseline?.occupancyCount, fresh.occupancy.length);
@@ -351,8 +398,7 @@ describe("live delta feed", () => {
     assert.equal(feed.baseline?.registrySlotCount, fresh.registrySlotCount);
     assert.ok((feed.baseline?.occupancyCount ?? 0) > 0);
     assert.ok((feed.baseline?.fccRowCount ?? 0) > 0);
-    assert.equal(feed.changes.some((row) => row.domain === "occupancy"), false);
-    assert.equal(feed.changes.some((row) => row.domain === "dispute"), false);
+    assert.ok(feed.changes.some((row) => row.domain === "occupancy"));
     assert.equal(feed.changes.some((row) => row.kind === "as_of"), false);
     assert.ok(feed.changes.some((row) => row.kind === "new" && row.subject.callSign === "KA279"));
     const lapsed = feed.changes.find((row) => row.kind === "lapsed" && row.subject.callSign === "S2669");
@@ -361,13 +407,26 @@ describe("live delta feed", () => {
     assert.equal(lapsed.slug, "101-2w");
     assert.equal(lapsed.provenance.eventId != null, true);
     assert.match(lapsed.id, /^fcc:slot_event:\d+$/);
+    const epochs = feed.changes.filter((row) => row.kind === "tle_epoch");
+    assert.ok(epochs.length > 0);
+    for (const row of epochs) {
+      assert.equal(row.domain, "occupancy");
+      assert.ok(row.before);
+      assert.ok(row.after);
+      assert.equal(typeof row.before.tleStale, "boolean");
+      assert.equal(typeof row.after.tleStale, "boolean");
+      assert.ok(row.before.occupancyAuthority === "tle" || row.after.occupancyAuthority === "tle");
+      const epochMoved = row.before.tleEpoch !== row.after.tleEpoch;
+      const staleMoved = row.before.tleStale !== row.after.tleStale;
+      assert.equal(epochMoved || staleMoved, true);
+    }
     for (const change of feed.changes) {
-      assert.equal(change.domain, "fcc");
       assert.ok(change.detectedAt.endsWith("Z"));
       assert.equal(change.vintage.fccAsOf, "2026-09-27");
       if (change.longitude != null) assert.equal(change.slug, lonToSlug(change.longitude));
-      assert.equal(change.provenance.sources.includes("FCC-SSAL"), true);
+      if (change.domain === "fcc") assert.equal(change.provenance.sources.includes("FCC-SSAL"), true);
     }
+    assert.match(feed.limitations.join("\n"), /tle_epoch/);
     assert.equal(JSON.stringify(feed).includes("satellite_relocated"), true);
     assert.equal(feed.changes.some((row) => /relocated/i.test(row.id)), false);
     assert.equal("ituRecorded" in feed, false);
@@ -387,6 +446,8 @@ describe("live delta feed", () => {
     assert.equal(CLARKE_LIST_DELTAS_DESCRIPTION.includes("\u2014"), false);
     assert.equal(CLARKE_LIST_DELTAS_DESCRIPTION.includes("\u2013"), false);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /coverage is bootstrap/);
+    assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /tle_epoch/);
+    assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /14 day/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /ITU SNS is not ingested/);
     assert.doesNotMatch(CLARKE_LIST_DELTAS_DESCRIPTION, /congestion|valuation|bid\/ask|\$\s*\d/i);
   });

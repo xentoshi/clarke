@@ -2,10 +2,13 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   FCC_STALE_AFTER_DAYS,
+  TLE_STALE_AFTER_DAYS,
   ageDaysFrom,
   fccIsStale,
+  occupancyTleIsStale,
   parseFccSheetVintage,
   slotSourceVintage,
+  tleIsStale,
   ucsVintageFromLaunchDates,
 } from "./source-vintage";
 
@@ -46,6 +49,8 @@ describe("FCC / UCS / TLE source vintage", () => {
     assert.equal(v.fccStale, true);
     assert.equal(v.tleEpochMin, "2026-09-14");
     assert.equal(v.tleEpochMax, "2026-09-15");
+    assert.equal(v.tleStale, false);
+    assert.equal(v.tleStaleAfterDays, 14);
   });
 
   it("does not copy fleet-wide TLE epochs onto an empty occupancy window", () => {
@@ -58,5 +63,76 @@ describe("FCC / UCS / TLE source vintage", () => {
     );
     assert.equal(v.tleEpochMin, null);
     assert.equal(v.tleEpochMax, null);
+    assert.equal(v.tleStale, false);
+  });
+
+  it("marks a used TLE stale after 14 days and leaves a fresh epoch unmarked", () => {
+    const now = new Date("2026-09-15T00:00:00Z");
+    assert.equal(TLE_STALE_AFTER_DAYS, 14);
+    assert.equal(ageDaysFrom("2026-09-01", now), 14);
+    assert.equal(tleIsStale("2026-09-01", now), false);
+    assert.equal(tleIsStale("2026-08-31", now), true);
+    assert.equal(tleIsStale("2026-09-10", now), false);
+    assert.equal(tleIsStale(null, now), false);
+    assert.equal(occupancyTleIsStale("ucs", "2020-01-01", now), false);
+    assert.equal(occupancyTleIsStale("none", "2020-01-01", now), false);
+    assert.equal(occupancyTleIsStale("tle", "2026-08-01", now), true);
+    assert.equal(occupancyTleIsStale("tle", "2026-09-10", now), false);
+
+    const fresh = slotSourceVintage(
+      [{ tleEpoch: "2026-09-10", occupancyAuthority: "tle" }],
+      [],
+      now,
+    );
+    assert.equal(fresh.tleStale, false);
+    assert.equal(fresh.tleEpochMin, "2026-09-10");
+    assert.equal(fresh.tleEpochMax, "2026-09-10");
+
+    const stale = slotSourceVintage(
+      [{ tleEpoch: "2026-08-01", occupancyAuthority: "tle" }],
+      [],
+      now,
+    );
+    assert.equal(stale.tleStale, true);
+    assert.equal(stale.tleEpochMax, "2026-08-01");
+    assert.equal(stale.tleStaleAfterDays, 14);
+  });
+
+  it("does not treat a UCS fallback epoch as the TLE used for occupancy", () => {
+    const now = new Date("2026-09-15T12:00:00Z");
+    const v = slotSourceVintage(
+      [
+        { tleEpoch: "2026-09-14", occupancyAuthority: "tle" },
+        { tleEpoch: "2020-01-01", occupancyAuthority: "ucs" },
+        { tleEpoch: "2019-06-01", occupancyAuthority: "none" },
+      ],
+      [],
+      now,
+    );
+    assert.equal(v.tleEpochMin, "2026-09-14");
+    assert.equal(v.tleEpochMax, "2026-09-14");
+    assert.equal(v.tleStale, false);
+
+    const onlyUcs = slotSourceVintage(
+      [{ tleEpoch: "2020-01-01", occupancyAuthority: "ucs" }],
+      [],
+      now,
+    );
+    assert.equal(onlyUcs.tleEpochMin, null);
+    assert.equal(onlyUcs.tleEpochMax, null);
+    assert.equal(onlyUcs.tleStale, false);
+
+    const mixedStale = slotSourceVintage(
+      [
+        { tleEpoch: "2026-09-14", occupancyAuthority: "tle" },
+        { tleEpoch: "2026-08-01", occupancyAuthority: "tle" },
+        { tleEpoch: "2018-01-01", occupancyAuthority: "ucs" },
+      ],
+      [],
+      now,
+    );
+    assert.equal(mixedStale.tleEpochMin, "2026-08-01");
+    assert.equal(mixedStale.tleEpochMax, "2026-09-14");
+    assert.equal(mixedStale.tleStale, true);
   });
 });

@@ -205,7 +205,8 @@ The window is ±0.4 degrees on that occupancy longitude. FCC matching is separat
 | `operator`, `operatorRaw` | V/M | See operator identity. |
 | `launchDate` | V | UCS launch date string. |
 | `tleLongitude` | V | TLE sub-satellite longitude at epoch, or `null`. |
-| `tleEpoch` | V | TLE epoch, or `null`. |
+| `tleEpoch` | V | Epoch of a stored element set, or `null`. When `occupancyAuthority` is `tle`, this is the epoch that supplied the occupancy longitude. When authority is `ucs` or `none`, a value here is an unused element set, not a catalog date standing in for a TLE. |
+| `tleStale` | V | `true` only when `occupancyAuthority` is `tle` and `tleEpoch` parses and is older than `sourceVintage.tleStaleAfterDays`. `ucs` and `none` are `false`. A missing epoch is not stale. |
 | `ucsLongitude` | V | UCS catalog longitude, or `null`. |
 | `deltaDeg` | M | Circular absolute difference between UCS and TLE longitudes, or `null` when either longitude is missing. |
 | `disputed` | M | `true` when `deltaDeg` is greater than 2. |
@@ -251,10 +252,22 @@ An authorization object is the SSAL row plus two alias fields:
 | `fccIngestAt` | When Clarke parsed the committed workbook. Not the product as-of. |
 | `fccStale` | `true` only when `fccAsOf` parses and is older than `fccStaleAfterDays`. |
 | `fccStaleAfterDays` | `14`. |
-| `tleEpochMin`, `tleEpochMax` | TLE epochs on satellites in this occupancy window, sorted. Null when the window has no epochs. |
-| `tleIngestAt` | When Clarke ingested Space-Track TLEs. |
+| `tleEpochMin`, `tleEpochMax` | Epochs of TLEs that supplied occupancy in this window, sorted. Rows whose `occupancyAuthority` is `ucs` or `none` do not contribute. Null when the window used no TLE. |
+| `tleStale` | `true` when at least one TLE-primary occupancy row has an epoch older than `tleStaleAfterDays`. `false` when the window used no TLE, every used epoch is inside the threshold, or a used epoch does not parse. |
+| `tleStaleAfterDays` | `14`. |
+| `tleIngestAt` | When Clarke ingested Space-Track TLEs. Not the epoch. |
 
 `fccStale` is a comparison of the workbook date to 14 days. It is not "the FCC feed failed" and it is not a reason to drop occupancy. Occupancy stays TLE-primary and does not wait on FCC. A missing or unparsed `fccAsOf` is not marked stale (`fccStale` stays `false`). The human Trust bar uses this same flag. Workbook replace steps are in [FCC SSAL refresh](./FCC_REFRESH.md).
+
+## TLE freshness
+
+`tleStale` describes the element set that supplied the occupancy longitude. It does not switch that row to UCS. The 30 day ingest gate is separate: a TLE older than 30 days at ingest is not used, and the row falls back to UCS. A TLE that passed that gate can still be older than 14 days when you read it. That read is `tleStale`.
+
+`sourceVintage.tleEpochMin` and `tleEpochMax` are the epochs of those used TLEs. `tleStaleAfterDays` is `14`. Age must be greater than 14 days. An epoch that is exactly 14 days old is not stale. A missing or unparsed epoch is not stale.
+
+On each occupancy row, `tleStale` is `true` only when `occupancyAuthority` is `tle` and that row's `tleEpoch` is past the threshold. A UCS fallback row keeps `tleStale` false. Clarke does not copy a UCS launch date into `tleEpoch`. An unused element set may still sit on `tleEpoch` for audit. Do not cite that value as the epoch that placed the satellite.
+
+The human Trust bar and the Slot Terminal freshness block use the same slot fields. `meta.data_freshness` does not include `tleStale`. Slot `sourceVintage.tleStale` is the field to trust for "is a TLE used at this slot old."
 
 HTTP `meta.data_freshness` is a different object, snake_case, one row per `ingest_meta` source (names in the database include `UCS`, `FCC-SSAL`, `Space-Track TLE`, and any other ingest that has been recorded, such as `Space-Track satcat` or `SEC EDGAR`):
 
@@ -274,7 +287,7 @@ Slot `sourceVintage.fccStale` is the field to trust for "is this slot's FCC work
 
 | Key | `source` | `note` |
 |---|---|---|
-| `occupancy` | Space-Track TLE (primary) plus UCS Satellite Database (fallback) | Window, how many rows are TLE-primary, TLE epoch, and a reminder that TLE longitude is not an FCC or ITU assignment. |
+| `occupancy` | Space-Track TLE (primary) plus UCS Satellite Database (fallback) | Window, how many rows are TLE-primary, the TLE epoch used for occupancy, `tleStale` after 14 days, and a reminder that TLE longitude is not an FCC or ITU assignment. |
 | `ucsCatalog` | UCS Satellite Database | File vintage. The ingest clock is not the catalog epoch. |
 | `fcc` | FCC Approved Space Station List | Workbook as-of and ingest time. |
 | `license` | FCC SSAL plus UCS occupancy | No `note`. `source` and `asOf` only. |
@@ -307,7 +320,7 @@ Each change:
 |---|---|
 | `id` | Stable id. Snapshot diffs use the snapshot id. Pre-snapshot FCC rows use `fcc:slot_event:<id>`. |
 | `domain` | `occupancy`, `fcc`, or `dispute`. |
-| `kind` | Occupancy: `enter`, `leave`, `authority_flip`. FCC: `new`, `lapsed`, `licensee`, `status`, `as_of`. Dispute: `appear`, `clear`, `kind`. |
+| `kind` | Occupancy: `enter`, `leave`, `authority_flip`, `tle_epoch`. FCC: `new`, `lapsed`, `licensee`, `status`, `as_of`. Dispute: `appear`, `clear`, `kind`. |
 | `slug` | Occupancy and dispute: registry slug of that window. FCC row: `lonToSlug` of the authorization longitude. `as_of`: null. A slug filter drops `as_of`. |
 | `longitude` | Slot longitude, or the authorization longitude. Null for `as_of`. |
 | `detectedAt` | ISO-8601 UTC. Snapshot diffs use the later snapshot time. FCC slot_events use the ingest detection time. |
@@ -316,7 +329,7 @@ Each change:
 | `before`, `after` | The membership or row that entered or left. Null on the side that did not exist. |
 | `provenance` | `sources`, `store` (`registry_snapshots` or `slot_events`), `rule`, `eventId`, `fromSnapshotId`, `toSnapshotId`, `note`. |
 
-`enter` and `leave` are membership in the ±0.4 degree TLE-primary window. A satellite that changes slug is a leave on the old slug and an enter on the new slug. `authority_flip` is the same slug and identity whose occupancy source changed between `tle`, `ucs`, and `none`. TLE longitude is not an FCC assignment or an ITU filing.
+`enter` and `leave` are membership in the ±0.4 degree TLE-primary window. A satellite that changes slug is a leave on the old slug and an enter on the new slug. `authority_flip` is the same slug and identity whose occupancy source changed between `tle`, `ucs`, and `none`. `tle_epoch` is that same member when the source stays `tle` and `tleEpoch` changes, or when `tleStale` changes between the two snapshot times. `before` and `after` include `tleEpoch` and `tleStale`. `tleStale` is computed at each snapshot time from the stored epoch. A UCS fallback row does not emit `tle_epoch`, even if an unused element set on the row changes. Bootstrap does not invent these rows. TLE longitude is not an FCC assignment or an ITU filing.
 
 `appear` and `clear` are dispute records on a slug. `kind` is the same slug and identity whose dispute kind changed. `tle_ucs_disagreement` is an in-window pair with absolute UCS-TLE difference above 2 degrees. `ucs_ghost` is a UCS catalog longitude inside the window whose occupancy longitude is outside it and does not agree within 2 degrees.
 
@@ -330,7 +343,7 @@ What is not in the feed:
 - A weekly history from before the first snapshot. That history was not stored. The feed does not reconstruct it.
 - An `as_of` row for the workbook refresh that overwrote `ingest_meta` before the first snapshot. Current `vintage.fccAsOf` is the date to cite. The prior workbook date is not in the database.
 
-While `coverage` is `bootstrap`, FCC `new`, `lapsed`, `licensee`, and `status` rows are `slot_events` already recorded at FCC ingest, dated at or before the first snapshot. Occupancy and dispute `changes` are empty. `baseline` is the state computed after the latest ingest, so an agent can cite snapshot id and vintages without calling the empty list a week of moves.
+While `coverage` is `bootstrap`, FCC `new`, `lapsed`, `licensee`, and `status` rows are `slot_events` already recorded at FCC ingest, dated at or before the first snapshot. Occupancy and dispute `changes` are empty, including `tle_epoch`. The feed does not invent a TLE epoch history from the single snapshot. `baseline` is the state computed after the latest ingest, so an agent can cite snapshot id and vintages without calling the empty list a week of moves.
 
 `slug` that matches no change returns 200 and `changes: []`. It is not a 404. `domain` must be `occupancy`, `fcc`, or `dispute`. `since` accepts ISO-8601 UTC or `YYYY-MM-DD HH:MM:SS` and is exclusive. Invalid `slug`, `domain`, or `since` is 400. The same rate limit as the slot list applies.
 

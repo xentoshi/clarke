@@ -4,6 +4,7 @@ import { statusLabels } from "@/data/orbital-slots";
 import type { SlotTerminalModel } from "@/lib/slot-terminal";
 import type { Entitlements } from "@/lib/auth";
 import { formatAsOfDate } from "@/lib/provenance";
+import { occupancyTleIsStale } from "@/lib/source-vintage";
 import { parseUcsLaunchYear } from "@/lib/occupancy-quality";
 import { formatOperatorMix } from "@/lib/operator-mix";
 import { isLaunchVehicleOperator, operatorDisplay } from "@/lib/operator-identity";
@@ -226,6 +227,7 @@ export function SlotTerminalView({
                   </td>
                   <td className="py-3.5 pl-4 hidden xl:table-cell text-right text-muted text-[14px] font-mono">
                     {sat.tleEpoch ?? "—"}
+                    {occupancyTleIsStale(sat.positionSource, sat.tleEpoch) ? " stale" : ""}
                     {sat.tleAgeDays != null ? ` (${sat.tleAgeDays}d)` : ""}
                   </td>
                   <td className="py-3.5 pl-4 text-right text-muted text-[14px] tabular-nums">{parseUcsLaunchYear(sat.launchDate) ?? "—"}</td>
@@ -296,13 +298,18 @@ export function SlotTerminalView({
         <h2 className="text-xl font-semibold text-ink tracking-tight mb-4">Freshness</h2>
         <div data-kpi="freshness">
           <div className="text-[13px] text-faint mb-1">TLE epoch</div>
-          <div className={`font-mono text-2xl font-medium tracking-tight ${model.sourceVintage.fccStale ? "text-ink" : "text-ink"}`}>
-            {model.sourceVintage.tleEpochMax ?? "—"}
+          <div className={`font-mono text-2xl font-medium tracking-tight ${model.sourceVintage.tleStale ? "text-stale" : "text-ink"}`}>
+            {model.sourceVintage.tleEpochMax ?? "n/a"}
           </div>
           <p className="text-[15px] text-muted mt-2 leading-relaxed max-w-xl">
+            {model.sourceVintage.tleEpochMax
+              ? model.sourceVintage.tleStale
+                ? `TLE epoch is older than ${model.sourceVintage.tleStaleAfterDays} days. `
+                : `TLE epoch is within ${model.sourceVintage.tleStaleAfterDays} days. `
+              : "This occupancy did not use a TLE epoch. "}
             {model.sourceVintage.fccStale
-              ? `FCC SSAL ${model.sourceVintage.fccAsOf ?? "—"} is stale. UCS vintage ${model.sourceVintage.ucsFileVintage ?? "—"}.`
-              : `FCC ${model.sourceVintage.fccAsOf ?? "—"} · UCS ${model.sourceVintage.ucsFileVintage ?? "—"}.`}
+              ? `FCC SSAL ${model.sourceVintage.fccAsOf ?? "n/a"} is stale. UCS vintage ${model.sourceVintage.ucsFileVintage ?? "n/a"}.`
+              : `FCC ${model.sourceVintage.fccAsOf ?? "n/a"} · UCS ${model.sourceVintage.ucsFileVintage ?? "n/a"}.`}
           </p>
           <div className="text-xs font-mono text-faint mt-3">
             {model.provenance.fcc.source} · {formatAsOfDate(model.provenance.fcc.asOf)}

@@ -74,6 +74,8 @@ describe("public docs load the repo markdown", () => {
     assert.match(doc.html, /TLE-primary/);
     assert.match(doc.html, /docs-mark-v/);
     assert.match(doc.html, /positionDisputed/);
+    assert.match(doc.html, /tleStale/);
+    assert.match(doc.html, /14 days/);
     assert.match(doc.html, /not_in_product/);
     assert.match(doc.html, /Unrecorded in Clarke/);
     assert.match(doc.html, /not a network name/);
@@ -126,6 +128,10 @@ describe("public docs load the repo markdown", () => {
     assert.match(doc.html, /not_in_product/);
     assert.match(doc.html, /fccStale/);
     assert.match(doc.html, /fccStaleAfterDays/);
+    assert.match(doc.html, /tleStale/);
+    assert.match(doc.html, /tleStaleAfterDays/);
+    assert.match(doc.html, /tle_epoch/);
+    assert.ok(doc.toc.some((t) => /tle freshness/i.test(t.label)));
     assert.match(doc.html, /tle-primary/);
     assert.match(doc.html, /ucs_ghost/);
     assert.match(doc.html, /not in the public agent or MCP payload/i);

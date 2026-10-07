@@ -8,7 +8,7 @@
 // changes are not invented.
 
 import { lonToSlug } from "./slot-utils";
-import { parseIsoDate } from "./source-vintage";
+import { occupancyTleIsStale, parseIsoDate } from "./source-vintage";
 import type { PositionSource } from "./position-authority";
 import type { AgentDisputeKind } from "./agent-slot";
 
@@ -17,11 +17,11 @@ export const DELTA_DOMAINS = ["occupancy", "fcc", "dispute"] as const;
 
 export type DeltaDomain = (typeof DELTA_DOMAINS)[number];
 export type DeltaCoverage = "bootstrap" | "ingest_deltas";
-export type OccupancyChangeKind = "enter" | "leave" | "authority_flip";
+export type OccupancyChangeKind = "enter" | "leave" | "authority_flip" | "tle_epoch";
 export type FccChangeKind = "new" | "lapsed" | "licensee" | "status" | "as_of";
 export type DisputeChangeKind = "appear" | "clear" | "kind";
 export type DeltaKind = OccupancyChangeKind | FccChangeKind | DisputeChangeKind;
-export type DeltaScalar = string | number | null;
+export type DeltaScalar = string | number | boolean | null;
 export type DeltaSide = Record<string, DeltaScalar>;
 
 export interface DeltaVintage {
@@ -170,6 +170,9 @@ const FCC_SOURCES = ["FCC-SSAL"];
 const OCCUPANCY_NOTE =
   "Diff of TLE-primary occupancy membership between registry snapshots. The window is ±0.4 degrees. UCS longitude is the fallback when the TLE fails published gates. TLE longitude is not an FCC assignment or an ITU filing.";
 
+const TLE_EPOCH_NOTE =
+  "Same occupancy member between registry snapshots. tleEpoch changed, or tleStale changed, for a TLE that supplied the occupancy longitude. tleStale is true when that epoch is older than 14 days at the snapshot time. A UCS fallback row does not emit this change. Bootstrap does not invent it.";
+
 const DISPUTE_NOTE =
   "Diff of dispute records between registry snapshots. tle_ucs_disagreement is an in-window pair whose absolute UCS-TLE difference is above 2 degrees. ucs_ghost is a UCS catalog longitude inside the slot window whose occupancy longitude is outside it and does not agree within 2 degrees.";
 
@@ -218,10 +221,11 @@ export function canonicalStateJson(state: RegistryState): string {
 export function diffRegistryStates(
   before: RegistryState,
   after: RegistryState,
-  meta: { fromSnapshotId: number; toSnapshotId: number; detectedAt: string },
+  meta: { fromSnapshotId: number; toSnapshotId: number; detectedAt: string; fromCapturedAt?: string },
 ): DeltaChange[] {
   const changes: DeltaChange[] = [];
   const detectedAt = toIsoUtc(meta.detectedAt) ?? meta.detectedAt;
+  const beforeAt = toIsoUtc(meta.fromCapturedAt) ?? detectedAt;
   const vintage = after.vintage;
 
   const prevOcc = indexBy(before.occupancy, occupancyKey);
@@ -229,16 +233,18 @@ export function diffRegistryStates(
   for (const [key, row] of nextOcc) {
     const prev = prevOcc.get(key);
     if (!prev) {
-      changes.push(occupancyChange("enter", row, null, row, key, meta, detectedAt, vintage));
+      changes.push(occupancyChange("enter", row, null, row, key, meta, detectedAt, beforeAt, vintage));
       continue;
     }
     if (prev.occupancyAuthority !== row.occupancyAuthority) {
-      changes.push(occupancyChange("authority_flip", row, prev, row, key, meta, detectedAt, vintage));
+      changes.push(occupancyChange("authority_flip", row, prev, row, key, meta, detectedAt, beforeAt, vintage));
+    } else if (occupancyTleEpochChanged(prev, row, beforeAt, detectedAt)) {
+      changes.push(occupancyChange("tle_epoch", row, prev, row, key, meta, detectedAt, beforeAt, vintage));
     }
   }
   for (const [key, row] of prevOcc) {
     if (!nextOcc.has(key)) {
-      changes.push(occupancyChange("leave", row, row, null, key, meta, detectedAt, vintage));
+      changes.push(occupancyChange("leave", row, row, null, key, meta, detectedAt, beforeAt, vintage));
     }
   }
 
@@ -346,6 +352,7 @@ export function assembleDeltaFeed(input: {
         fromSnapshotId: prev.id,
         toSnapshotId: next.id,
         detectedAt: next.capturedAt,
+        fromCapturedAt: prev.capturedAt,
       }),
     );
   }
@@ -542,20 +549,20 @@ function limitationsFor(coverage: DeltaCoverage): string[] {
     "FCC slug is lonToSlug of the authorization longitude. That can differ from the occupancy slot slug.",
     "Call sign N/A is not a diff key, matching FCC ingest.",
     "A call sign that remains listed and changes only longitude does not emit a separate kind. Longitude is included on new, lapsed, licensee, and status rows.",
-    "A re-ingest that does not change occupancy membership, dispute records, FCC call-sign rows, or source file vintages does not append a snapshot.",
+    "A re-ingest that does not change occupancy membership, the TLE epoch on an occupancy row, dispute records, FCC call-sign rows, or source file vintages does not append a snapshot.",
     "since is exclusive. Changes that share a detectedAt are omitted together when since equals that timestamp.",
   ];
   if (coverage === "bootstrap") {
     return [
       ...shared,
-      "coverage is bootstrap. One registry snapshot, or none, is stored, so occupancy and dispute changes are not emitted. There is no earlier weekly occupancy or dispute vintage to diff.",
+      "coverage is bootstrap. One registry snapshot, or none, is stored, so occupancy and dispute changes are not emitted. There is no earlier weekly occupancy or dispute vintage to diff. TLE epoch and tleStale transitions are occupancy changes. They are not invented from the single snapshot.",
       "FCC new, lapsed, licensee, and status changes in this response are slot_events from FCC ingest diffs already in the database. They are not a backfilled weekly series.",
       "An as_of change is emitted only when two registry snapshots record different fccAsOf values. The prior workbook date was overwritten in ingest_meta and is not reconstructed here.",
     ];
   }
   return [
     ...shared,
-    "coverage is ingest_deltas. Occupancy, dispute, and FCC changes between snapshots are diffs of registry_snapshots. There is no vintage before the first snapshot.",
+    "coverage is ingest_deltas. Occupancy, dispute, and FCC changes between snapshots are diffs of registry_snapshots. There is no vintage before the first snapshot. A tle_epoch row is the same member whose TLE epoch changed, or whose 14 day stale flag changed, between those snapshots. A UCS fallback row does not emit tle_epoch.",
     "FCC slot_events dated at or before the first snapshot stay in the feed. Later FCC slot_events are not repeated, because the snapshot diff is the record for those intervals.",
     "An as_of change is one row when fccAsOf differs between snapshots. It has no slug.",
   ];
@@ -569,6 +576,7 @@ function occupancyChange(
   key: string,
   meta: { fromSnapshotId: number; toSnapshotId: number },
   detectedAt: string,
+  beforeAt: string,
   vintage: DeltaVintage,
 ): DeltaChange {
   const token = key.replace(/\|/g, ":");
@@ -581,8 +589,8 @@ function occupancyChange(
     detectedAt,
     vintage,
     subject: { noradId: anchor.noradId, name: anchor.name },
-    before: before ? occupancySide(before) : null,
-    after: after ? occupancySide(after) : null,
+    before: before ? occupancySide(before, beforeAt) : null,
+    after: after ? occupancySide(after, detectedAt) : null,
     provenance: {
       sources: OCCUPANCY_SOURCES,
       store: "registry_snapshots",
@@ -590,9 +598,25 @@ function occupancyChange(
       eventId: null,
       fromSnapshotId: meta.fromSnapshotId,
       toSnapshotId: meta.toSnapshotId,
-      note: OCCUPANCY_NOTE,
+      note: kind === "tle_epoch" ? TLE_EPOCH_NOTE : OCCUPANCY_NOTE,
     },
   };
+}
+
+function occupancyTleEpochChanged(
+  prev: OccupancyFact,
+  row: OccupancyFact,
+  beforeAt: string,
+  afterAt: string,
+): boolean {
+  if (prev.occupancyAuthority !== "tle" && row.occupancyAuthority !== "tle") return false;
+  if (clean(prev.tleEpoch) !== clean(row.tleEpoch)) return true;
+  return occupancyTleIsStale(prev.occupancyAuthority, prev.tleEpoch, asOfDate(beforeAt))
+    !== occupancyTleIsStale(row.occupancyAuthority, row.tleEpoch, asOfDate(afterAt));
+}
+
+function asOfDate(iso: string): Date {
+  return parseIsoDate(iso) ?? new Date(iso);
 }
 
 function disputeChange(
@@ -662,13 +686,14 @@ function fccRowChange(
   };
 }
 
-function occupancySide(row: OccupancyFact): DeltaSide {
+function occupancySide(row: OccupancyFact, asOf: string): DeltaSide {
   return {
     occupancyAuthority: row.occupancyAuthority,
     occupancyLongitude: row.occupancyLongitude,
     tleLongitude: row.tleLongitude,
     ucsLongitude: row.ucsLongitude,
     tleEpoch: row.tleEpoch,
+    tleStale: occupancyTleIsStale(row.occupancyAuthority, row.tleEpoch, asOfDate(asOf)),
   };
 }
 

@@ -21,7 +21,11 @@ export function TrustBar({
     <section className="mb-4" data-trust-bar data-freshness-strip>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[15px] text-muted">
         <p className="min-w-0 leading-relaxed">
-          TLE as of <span className="font-mono text-ink">{vintage.tleEpochMax ?? "—"}</span>
+          TLE epoch{" "}
+          <span className={`font-mono ${vintage.tleStale ? "text-stale" : "text-ink"}`}>
+            {vintage.tleEpochMax ?? "n/a"}
+          </span>
+          {vintage.tleStale ? <span className="text-stale"> stale</span> : null}
           {". "}
           {fccStale ? (
             <>
@@ -58,11 +62,18 @@ export function TrustBar({
           <div className="grid sm:grid-cols-3 gap-3 text-sm">
             <div>
               <span className="text-faint">TLE epoch</span>
-              <div className="text-ink font-mono">{vintage.tleEpochMax ?? "—"}</div>
+              <div className={`font-mono ${vintage.tleStale ? "text-stale" : "text-ink"}`}>{vintage.tleEpochMax ?? "n/a"}</div>
               <div className="text-xs text-faint">
                 {vintage.tleEpochMin && vintage.tleEpochMin !== vintage.tleEpochMax
-                  ? `window ${vintage.tleEpochMin}–${vintage.tleEpochMax}`
-                  : "in-window sats"}
+                  ? `window ${vintage.tleEpochMin} to ${vintage.tleEpochMax}`
+                  : vintage.tleEpochMax
+                    ? "TLE used for occupancy"
+                    : "no TLE supplied occupancy"}
+                {vintage.tleStale
+                  ? ` · older than ${vintage.tleStaleAfterDays} days`
+                  : vintage.tleEpochMax
+                    ? ` · within ${vintage.tleStaleAfterDays} days`
+                    : ""}
                 {vintage.tleIngestAt ? ` · ingest ${vintage.tleIngestAt.slice(0, 10)}` : ""}
               </div>
             </div>
@@ -92,6 +103,16 @@ export function TrustBar({
             <span className="text-muted"> · </span>
             <TrustMark cls="S" className="align-middle mr-0.5" /> stub
           </p>
+
+          {vintage.tleStale && (
+            <div data-tle-stale-banner>
+              <p className="text-sm text-stale mb-1">TLE stale</p>
+              <p className="text-muted text-sm leading-relaxed">
+                The TLE used for occupancy has epoch {vintage.tleEpochMax ?? "unknown"}, older than {vintage.tleStaleAfterDays} days.
+                Occupancy stays on that element set. A UCS fallback row is not a TLE epoch.
+              </p>
+            </div>
+          )}
 
           {fccStale && (
             <div data-fcc-stale-banner>

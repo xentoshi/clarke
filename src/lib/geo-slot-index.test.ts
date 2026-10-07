@@ -12,6 +12,7 @@ describe("GEO Slot Index #1", () => {
       assert.ok(d.label);
       assert.ok(d.ucsFileVintage);
       assert.ok(d.fccAsOf);
+      assert.equal(typeof d.tleStale, "boolean");
     }
   });
 
@@ -19,6 +20,7 @@ describe("GEO Slot Index #1", () => {
     const d = edition.dossiers.find((x) => x.slug === "101w");
     assert.ok(d);
     assert.ok(d.satCount >= 1);
+    assert.equal(typeof d.tleStale, "boolean");
     assert.ok(d.left.some((m) => /DirecTV/i.test(m.name)));
     assert.ok(d.left.length >= 1);
     // Enter and in-window dispute-flip counts move with the TLE snapshot.
@@ -36,6 +38,7 @@ describe("GEO Slot Index #1", () => {
     if (d.satCount === 0) {
       assert.equal(d.paperFiling, true);
       assert.equal(d.tleEpochMax, null);
+      assert.equal(d.tleStale, false);
     } else {
       assert.equal(d.paperFiling, false);
     }

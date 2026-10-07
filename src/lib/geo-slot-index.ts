@@ -47,6 +47,7 @@ export interface GeoSlotIndexDossier {
   paperFiling: boolean;
   tleEpochMin: string | null;
   tleEpochMax: string | null;
+  tleStale: boolean;
   fccAsOf: string | null;
   ucsFileVintage: string | null;
 }
@@ -158,6 +159,7 @@ function dossierFromModel(slug: IndexSlug, model: SlotTerminalModel): GeoSlotInd
     paperFiling: model.satCount === 0 && model.fccAuthorizations.length > 0,
     tleEpochMin: model.sourceVintage.tleEpochMin,
     tleEpochMax: model.sourceVintage.tleEpochMax,
+    tleStale: model.sourceVintage.tleStale,
     fccAsOf: model.sourceVintage.fccAsOf,
     ucsFileVintage: model.sourceVintage.ucsFileVintage,
   };

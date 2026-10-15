@@ -1,6 +1,7 @@
 import { slots as curatedSlots, type OrbitalSlot } from "@/data/orbital-slots";
 import {
   mergeWithUcs,
+  findRegistrySlot,
   getGeoSatellites,
   getGeoSatellitesByLongitude,
   getFccAuthorizationsByLongitude,
@@ -91,11 +92,7 @@ function primaryUsers(sats: GeoSatellite[], operator: string): string | undefine
 }
 
 function lookupSlot(slug: string, lon: number): OrbitalSlot | undefined {
-  const merged = mergeWithUcs(curatedSlots);
-  return (
-    merged.find((s) => lonToSlug(s.longitude) === slug) ??
-    merged.find((s) => Math.abs(s.longitude - lon) <= COLOCATION_TOLERANCE_DEG)
-  );
+  return findRegistrySlot(curatedSlots, slug, lon);
 }
 
 /** Provenance the product already attaches to recorded sources (occupancy, UCS, FCC, license, rights). */

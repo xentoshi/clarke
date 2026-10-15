@@ -10,16 +10,19 @@ import CsvExportDialog from "./CsvExportDialog";
 import { EMPTY_FACETS, type ExplorerRow, type Facets, type SortKey, type SortDir } from "./types";
 import { GeoBeltMap } from "@/components/belt/GeoBeltMap";
 import { formatTickLabel, type BeltMark } from "@/lib/geo-belt";
+import { useLiveEntitlements } from "@/components/terminal/useLiveEntitlements";
 
 export default function OrbitalExplorer({
-  rows, updated, pro, beltMarks, beltEpoch,
+  rows, updated, pro = false, beltMarks, beltEpoch,
 }: {
   rows: ExplorerRow[];
   updated: string | null;
-  pro: boolean;
+  pro?: boolean;
   beltMarks: BeltMark[];
   beltEpoch: string;
 }) {
+  const live = useLiveEntitlements();
+  const isPro = pro || live.pro;
   const [facets, setFacets] = useState<Facets>(EMPTY_FACETS);
   const [sortKey, setSortKey] = useState<SortKey>("longitude");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -170,7 +173,7 @@ export default function OrbitalExplorer({
       </div>
 
       {selected && <SlotDrawer row={selected} onClose={() => setSelected(null)} />}
-      {csvOpen && <CsvExportDialog rows={filtered} onClose={() => setCsvOpen(false)} pro={pro} />}
+      {csvOpen && <CsvExportDialog rows={filtered} onClose={() => setCsvOpen(false)} pro={isPro} />}
     </>
   );
 }

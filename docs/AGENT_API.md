@@ -51,7 +51,7 @@ The fence is the key shape. `count` and the empty freshness array are not a live
 | `count` | List routes, including the delta feed | `data.length` for slot and satellite lists. For the delta feed, `data.changes.length`. |
 | `data_freshness` | Slot list, slot detail, and the delta feed | Ingest rows. See freshness below. The satellites route does not send this array. |
 
-Headers on 200: `Content-Type: application/json`, `ETag`, `Cache-Control: public, s-maxage=300, stale-while-revalidate=60`, `Access-Control-Allow-Origin: *`. The handler sets `ETag`. It does not return 304 when `If-None-Match` is sent.
+Headers on 200: `Content-Type: application/json`, `ETag`, `Cache-Control: public, s-maxage=3600, stale-while-revalidate=60`, `Access-Control-Allow-Origin: *`. The handler sets `ETag`. It does not return 304 when `If-None-Match` is sent.
 
 Errors are `{ "error": "..." }`, not the envelope.
 
@@ -63,13 +63,13 @@ Errors are `{ "error": "..." }`, not the envelope.
 
 Slugs from the list are the supported keys. Examples: `101w` (101 degrees west), `19-2e` (19.2 degrees east). A slug that is not in the list can still return 200 when occupancy, an FCC row, or a nearby curated slot matches. `slug` and `longitude` are then the path you asked for. `label`, `country`, and `status` can come from that nearby curated row. Prefer list slugs.
 
-Rate limit, CORS, and the envelope also apply to `GET /api/v1/agents/satellites` (UCS GEO rows, not this slot record). Filters: `operator`, `ownerCountry`, `limit` (1 to 1000). That route's `meta` has `count` and no `data_freshness`.
+Rate limit, CORS, and the envelope also apply to `GET /api/v1/agents/satellites` (UCS GEO rows, not this slot record). Filters: `operator`, `ownerCountry`, `limit` (1 to 1000). Omitted `limit` on HTTP returns every matching row. That route's `meta` has `count` and no `data_freshness`.
 
 `GET /api/v1/openapi` is a short OpenAPI 3.1 index. This page is the field list. [llms.txt](https://www.clarkebelt.finance/llms.txt) is the site root index for these routes.
 
 ### MCP
 
-Tool results are pretty-printed JSON text. They are not wrapped in `{ data, meta }`. Remote MCP and local stdio call the same builders. Neither calls the HTTP routes.
+Tool results are compact JSON text. They are not wrapped in `{ data, meta }`. Remote MCP and local stdio call the same builders. Neither calls the HTTP routes. `clarke_list_satellites` uses `limit` 100 when the argument is omitted (max 1000). Slot tools still return the full agent payload. That payload does not include valuation or congestion scores.
 
 ### Remote Streamable HTTP
 

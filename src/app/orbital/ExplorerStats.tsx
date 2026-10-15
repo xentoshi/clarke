@@ -1,19 +1,17 @@
 "use client";
 
 import type { ExplorerRow } from "./types";
+import { densestBySatelliteCount } from "@/lib/densest";
 
 export default function ExplorerStats({ rows, updated }: { rows: ExplorerRow[]; updated: string | null }) {
   const active = rows.filter((r) => r.status === "active").length;
   const fccLicensed = rows.filter((r) => r.fccLicensed).length;
-  const densest = rows.reduce<ExplorerRow | null>(
-    (max, r) => (!max || r.congestionScore > max.congestionScore ? r : max),
-    null,
-  );
+  const densest = densestBySatelliteCount(rows);
 
   const stats = [
     { label: "positions", value: rows.length.toLocaleString(), mono: false },
     { label: "on station", value: active.toLocaleString(), mono: false },
-    { label: "densest", value: densest ? densest.label : "—", mono: true },
+    { label: "densest", value: densest ? densest.label : "n/a", mono: true },
     { label: "FCC licensed", value: fccLicensed.toLocaleString(), mono: false },
   ];
 

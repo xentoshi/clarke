@@ -95,10 +95,8 @@ export const OPERATOR_ALIAS_ENTRIES: OperatorAliasEntry[] = [
       "National Reconnaissance Office (NRO)/US Air Force",
       "National Reconnaissance Office (NRO)",
       "National Reconnaissance Office",
-      "Unknown US agency",
-      "Federal Government (Reserved)",
     ],
-    notes: "UCS/FCC US military and reserved-federal strings, including MUOS (DoD/US Navy). Not a single program office.",
+    notes: "UCS US military strings, including MUOS (DoD/US Navy). Not a single program office. Unknown US agency stays unknown. Federal Government (Reserved) is an FCC reservation placeholder, not an operator.",
   },
   {
     canonical: "EchoStar",

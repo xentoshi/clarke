@@ -144,7 +144,7 @@ export function licenseSignal(args: {
     biuLabel = "Brought into use (in-orbit + FCC record)";
   } else if (satCount === 0 && fccLicensed) {
     biuHint = "paper_filing";
-    biuLabel = "Paper filing (FCC record, no UCS satellite in orbit)";
+    biuLabel = "FCC record, no satellite in the occupancy window";
   } else if (satCount > 0) {
     biuHint = "foreign_operating";
     // Not a claim about nationality — many US government birds never appear

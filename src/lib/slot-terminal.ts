@@ -87,7 +87,7 @@ function occupancyMajorityOf(sats: GeoSatellite[]): string {
 
 function primaryUsers(sats: GeoSatellite[], operator: string): string | undefined {
   const want = resolveOperator(operator).display;
-  return sats.find((s) => resolveOperator(s.operator).display === want && s.users)?.users ?? undefined;
+  return sats.find((s) => resolveOperator(s.operator, s.ownerCountry).display === want && s.users)?.users ?? undefined;
 }
 
 function lookupSlot(slug: string, lon: number): OrbitalSlot | undefined {

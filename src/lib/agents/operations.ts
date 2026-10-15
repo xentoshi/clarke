@@ -60,7 +60,7 @@ export interface SatellitesQuery {
 
 export function listSatellites(q: SatellitesQuery = {}): GeoSatellite[] {
   const all = getGeoSatellites();
-  let out = all;
+  let out = all.filter((s) => s.catalogSource !== "tle-supplement");
   if (q.operator) {
     out = out.filter((s) => operatorMatchesQuery(s.operator, q.operator!));
   }
@@ -73,7 +73,7 @@ export function listSatellites(q: SatellitesQuery = {}): GeoSatellite[] {
     if (isLaunchVehicleOperator(s.operator, s.launchVehicle)) {
       return { ...s, operatorCanonical: "", operatorRaw: s.operator, aliases: [] as string[] };
     }
-    const op = resolveOperator(s.operator);
+    const op = resolveOperator(s.operator, s.ownerCountry);
     return { ...s, operatorCanonical: op.display, operatorRaw: s.operator, aliases: op.aliases };
   });
 }

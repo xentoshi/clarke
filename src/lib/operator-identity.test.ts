@@ -8,6 +8,7 @@ import {
   operatorMatchesQuery,
   listedOperatorCanonicals,
   isLaunchVehicleOperator,
+  isGenericDefenseOperator,
 } from "./operator-identity";
 import { summarizeOperators, formatOperatorMix } from "./operator-mix";
 import { ituPresence, ITU_RECORDED_DEFAULT } from "./itu-presence";
@@ -37,7 +38,6 @@ describe("operator identity (curated alias map)", () => {
       ["DoD/US Navy", "US DoD"],
       ["US Air Force", "US DoD"],
       ["U.S. Space Force/Other Transaction Authority", "US DoD"],
-      ["Federal Government (Reserved)", "US DoD"],
     ];
     for (const [raw, canonical] of cases) {
       const r = resolveOperator(raw);
@@ -54,6 +54,31 @@ describe("operator identity (curated alias map)", () => {
     assert.equal(joint.display, "EUTELSAT S.A./Nilesat");
     const listedSlash = resolveOperator("DoD/US Navy");
     assert.equal(listedSlash.display, "US DoD");
+  });
+
+  it("does not label an FCC reservation or an unknown agency as US DoD", () => {
+    assert.equal(resolveOperator("Federal Government (Reserved)").display, "Federal Government (Reserved)");
+    assert.equal(resolveOperator("Federal Government (Reserved)").mapped, false);
+    assert.equal(resolveOperator("Unknown US agency").display, "Unknown US agency");
+    assert.equal(resolveOperator("Unknown US agency").mapped, false);
+  });
+
+  it("splits country-free UCS defense labels by owner country", () => {
+    const russia = resolveOperator("Ministry of Defense", "Russia");
+    const japan = resolveOperator("Ministry of Defense", "Japan");
+    assert.equal(isGenericDefenseOperator("Ministry of Defense"), true);
+    assert.equal(isGenericDefenseOperator("Ministry of Defense (Russia)"), false);
+    assert.equal(russia.display, "Ministry of Defense (Russia)");
+    assert.equal(japan.display, "Ministry of Defense (Japan)");
+    assert.notEqual(russia.display, japan.display);
+    assert.equal(russia.raw, "Ministry of Defense");
+    assert.equal(resolveOperator("Ministry of Defense").display, "Ministry of Defense");
+    assert.equal(resolveOperator("Ministry of Defense/XTAR", "Spain").display, "Ministry of Defense/XTAR");
+    const mix = summarizeOperators([
+      { operator: "Ministry of Defense", ownerCountry: "Russia" },
+      { operator: "Ministry of Defense", ownerCountry: "Japan" },
+    ]);
+    assert.equal(mix.length, 2);
   });
 
   it("keeps unmapped operators as the trimmed source string", () => {

@@ -50,7 +50,7 @@ export function pickClaimOperator(sats: UcsClaimSatellite[]): ClaimOperatorPick 
   for (const sat of sats) {
     const raw = (sat.operator ?? "").trim();
     if (!raw || isLaunchVehicleOperator(raw, sat.launchVehicle)) continue;
-    const display = resolveOperator(raw).display;
+    const display = resolveOperator(raw, sat.ownerCountry).display;
     if (!display) continue;
     counts.set(display, (counts.get(display) ?? 0) + 1);
   }
@@ -133,7 +133,7 @@ export function collapseUcsClaimSlots(
     const pick = pickClaimOperator(ordered);
     const label = formatLon(lon);
     const primarySats = pick.display
-      ? ordered.filter((s) => !isLaunchVehicleOperator(s.operator, s.launchVehicle) && resolveOperator(s.operator).display === pick.display)
+      ? ordered.filter((s) => !isLaunchVehicleOperator(s.operator, s.launchVehicle) && resolveOperator(s.operator, s.ownerCountry).display === pick.display)
       : [];
     const countryPool = (primarySats.length ? primarySats : ordered).map((s) => s.ownerCountry ?? "");
     const allDecayed = ordered.every((s) => s.noradId && decayedNoradIds.has(s.noradId));

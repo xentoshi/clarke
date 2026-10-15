@@ -82,6 +82,16 @@ UCS satellites outside every curated slot's ±0.4° window are grouped by `lonTo
 
 The registry operator is the canonical name with the most satellites in the slug (tie: alphabetical canonical name). Source strings stay on `operatorRaw`. A UCS operator string that equals that satellite's launch vehicle is not treated as a GEO operator and is not replaced with a guessed owner.
 
+UCS sometimes stores one country-free defense label (`Ministry of Defense`, `Defense Ministry`, `Armed Forces`) for more than one nation. Clarke appends the owner country on display so those rows are not one operator. `Unknown US agency` stays unknown. `Federal Government (Reserved)` is not mapped to US DoD.
+
+### Post-2023 occupancy and empty licenses
+
+The UCS file vintage is the latest GEO launch in that snapshot (2023-04-07 on the current database). Station-kept GEO payloads launched after that date are missing from a UCS-only occupancy count. Clarke adds them when Space-Track has a PAYLOAD row, the satcat period is 1434 to 1438 minutes, the object is not already in UCS, and the TLE passes the occupancy gates. On this snapshot that set is about 73 satellites. Operator is filled only from a single matching FCC licensee. A country code is not an operator.
+
+An FCC-only registry row requires a real authorization and no satellite or curated slot inside the 0.6 degree license window. `Federal Government (Reserved)` rows (no spacecraft, public-notice reservations) are not registry rows and are not shown as licensees. A license next to an occupied slot is not a second empty slot. The old 0.4 degree cut plus those reservation rows overstated the empty-licensed set (about 15 rows).
+
+Curated status does not override evidence. 45W (Intelsat 14, FCC S2785) and 169E (Horizons 3e, FCC S2947) are On station. A squatted label remains only when a satellite is in the window and Clarke has no FCC row.
+
 A detail URL can still open for an occupancy slug that the table folded into a nearby curated row. That URL resolves to the curated dossier. It is not a second registry row.
 
 ### Before / after (Space-Track TLE epoch 2026-09-15, apply 2026-09-15)
@@ -111,7 +121,7 @@ Occupancy window is ±0.4° TLE-primary. Satellite counts, congestion v0, and fa
 | **72°E** (`72e`) | Intelsat | The congestion majority in the ±2° neighborhood can be a different operator than the registry row. Curated overlay $160M+ is class M. |
 | **172°E** (`172e`) | Canonical majority on the slug | MUOS-2 occupies here while its TLE is near 172°E. That is occupancy, not an FCC assignment. The UCS catalog still says 100.1°W, and the row is `positionDisputed`. |
 | **100.1°W** (`100-1w`) | Canonical majority on the slug | MUOS-2 is not clustered here while its TLE occupancy is elsewhere. The UCS catalog can still read 100.1°W. |
-| **163°W** (`163w`) | Astranis (FCC-only) | A paper filing can show zero occupancy when neither TLE nor UCS places a satellite in the window. |
+| **163°W** (`163w`) | FCC licensee on the empty-license row (Astranis, S3092) | FCC S3092 names ARCTURUS at 163W. The post-UCS TLE (NORAD 56371) is near 119.7E, outside the 0.6 degree license window, so the registry keeps an FCC-only row. The spacecraft is not counted as unlaunched. It is absent from this window. |
 
 ## Satellite identity cross-check (do not invent)
 
@@ -152,7 +162,7 @@ Legend: **V** = verified from a named public source in this product · **M** = m
 | Curated `$NNN M+` overlay | M | Hand-checked opinion. Secondary to v0. Not the model, not a headline. Can diverge by 2×. |
 | Coverage GDP/pop | M | Longitude band heuristic (`coverage-proxy.ts`). Not a measured beam. |
 | Spectrum bands | V/M | Curated tags only. UCS-derived rows often empty. |
-| License / BIU | M | Heuristic: UCS sat + FCC row ≠ ITU brought-into-use. Labeled as a Clarke hint. “Paper filing” can be a UCS lag (163°W). Do not read BIU from UCS+FCC without this label. |
+| License / BIU | M | Heuristic: satellite in the occupancy window + FCC row is not ITU brought-into-use. Labeled as a Clarke hint. "FCC record, no satellite in the occupancy window" is not a count of unlaunched satellites. Do not read BIU from UCS+FCC without this label. |
 | FCC table (call sign, licensee, service) | V | SSAL. Licensee *display* is class M (alias map); raw licensee stays in the cell tooltip and API `licenseeRaw`. Freshness is the FCC ingest, not “today.” Notes can mention later ICFS grants. Default Terminal primary. |
 | Rights: national admin / FCC licensees | V/M | FCC when present; else inferred country. Licensee names canonicalized. Default Terminal primary. |
 | Rights: ITU filing | S | ITU SNS is not ingested. `ituRecorded` is `not_in_product`. Thin “Unrecorded in Clarke” chip on the default Terminal. The flag is not a network name, not brought-into-use evidence, and not a filled filing row. Experimental holds an empty stub, not a deed. |

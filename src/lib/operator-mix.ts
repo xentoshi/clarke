@@ -15,13 +15,13 @@ export interface OperatorShare {
   operatorRaw: string[];
 }
 
-export function summarizeOperators(sats: { operator: string | null }[]): OperatorShare[] {
+export function summarizeOperators(sats: { operator: string | null; ownerCountry?: string | null }[]): OperatorShare[] {
   const groups = new Map<string, { count: number; raws: Map<string, number> }>();
   let attributed = 0;
   for (const s of sats) {
     const raw = (s.operator ?? "").trim();
     if (!raw) continue;
-    const display = resolveOperator(raw).display;
+    const display = resolveOperator(raw, s.ownerCountry).display;
     const g = groups.get(display) ?? { count: 0, raws: new Map() };
     g.count++;
     g.raws.set(raw, (g.raws.get(raw) ?? 0) + 1);

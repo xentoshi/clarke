@@ -196,7 +196,7 @@ export default function GeoSlotIndexPage() {
               <li>UCS snapshot vintage is years behind TLE. Ghosts are expected; they are the point of TLE-primary occupancy.</li>
               <li>One-shot Space-Track ingest produced thousands of relocation events vs the previous UCS clustering. Those events are not a weekly enter/leave time series and are not used as such here or in the agent delta feed.</li>
               <li>FCC workbook as-of can be stale (banner on Terminal when &gt; 14 days). Name matching between SSAL and UCS is imperfect (AT&T T16 vs DIRECTV D16).</li>
-              <li>Paper filings (163°W) can mean no UCS/TLE occupancy, a UCS lag, or a satellite that never showed in this snapshot.</li>
+              <li>An FCC row with no satellite in the occupancy window is not an empty-slot census. The spacecraft can sit outside the window, or it can have launched after the UCS snapshot.</li>
             </ul>
           </section>
         </div>

@@ -44,6 +44,24 @@ export function parseUcsLaunchYear(dateStr: string | null | undefined): number |
   return year > 1950 && year < 2100 ? year : null;
 }
 
+/** UCS M/D/YY or ISO launch date as YYYY-MM-DD. Null when it does not parse. */
+export function ucsLaunchToIso(dateStr: string | null | undefined): string | null {
+  if (!dateStr) return null;
+  const trimmed = dateStr.trim();
+  if (!trimmed) return null;
+  const iso = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const m = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (!m) return null;
+  let year = parseInt(m[3], 10);
+  if (m[3].length <= 2) year = year >= 57 ? 1900 + year : 2000 + year;
+  if (year <= 1950 || year >= 2100) return null;
+  const month = parseInt(m[1], 10);
+  const day = parseInt(m[2], 10);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
 export function occupancyQuality(sats: LifetimeSat[], asOf: Date = new Date()): OccupancyQuality {
   const asOfYear = asOf.getUTCFullYear() + (asOf.getUTCMonth() + 1) / 12;
   const remaining: number[] = [];

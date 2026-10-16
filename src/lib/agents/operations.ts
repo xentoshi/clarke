@@ -9,8 +9,9 @@ import type { FreshnessMeta } from "./envelope";
 import { isSafeSlug } from "../slot-utils";
 import { isLaunchVehicleOperator, resolveOperator, operatorMatchesQuery } from "../operator-identity";
 import { buildAgentSlot, listAgentSlots, type AgentSlotPayload } from "../agent-slot";
-import { selectDeltaChanges, type DeltaFeed, type DeltaFeedQuery } from "../delta-feed";
+import { pageDeltaChanges, type DeltaFeed, type DeltaFeedQuery } from "../delta-feed";
 import { buildDeltaFeedFromDb } from "../registry-snapshot";
+import { cachedRead } from "../process-cache";
 
 export { isSafeSlug };
 
@@ -32,7 +33,10 @@ export function getSlotDossier(slug: string): AgentSlotPayload | null {
 }
 
 export function listDeltas(query: DeltaFeedQuery = {}): DeltaFeed {
-  return selectDeltaChanges(buildDeltaFeedFromDb(), query);
+  const slug = query.slug ?? "";
+  const domain = query.domain ?? "";
+  const since = query.since ?? "";
+  return cachedRead(`deltas:${slug}:${domain}:${since}`, () => pageDeltaChanges(buildDeltaFeedFromDb(), query));
 }
 
 // Adapter: data freshness in the snake_case shape used by the API envelope meta.
@@ -58,9 +62,22 @@ export interface SatellitesQuery {
   limit?: number;
 }
 
+function mappedSatellites(): GeoSatellite[] {
+  return cachedRead("satellites-mapped", () => {
+    return getGeoSatellites()
+      .filter((s) => s.catalogSource !== "tle-supplement")
+      .map((s) => {
+        if (isLaunchVehicleOperator(s.operator, s.launchVehicle)) {
+          return { ...s, operatorCanonical: "", operatorRaw: s.operator, aliases: [] as string[] };
+        }
+        const op = resolveOperator(s.operator, s.ownerCountry);
+        return { ...s, operatorCanonical: op.display, operatorRaw: s.operator, aliases: op.aliases };
+      });
+  });
+}
+
 export function listSatellites(q: SatellitesQuery = {}): GeoSatellite[] {
-  const all = getGeoSatellites();
-  let out = all.filter((s) => s.catalogSource !== "tle-supplement");
+  let out = mappedSatellites();
   if (q.operator) {
     out = out.filter((s) => operatorMatchesQuery(s.operator, q.operator!));
   }
@@ -69,13 +86,7 @@ export function listSatellites(q: SatellitesQuery = {}): GeoSatellite[] {
     out = out.filter((s) => (s.ownerCountry ?? "").toLowerCase().includes(needle));
   }
   if (q.limit && q.limit > 0) out = out.slice(0, Math.min(q.limit, 1000));
-  return out.map((s) => {
-    if (isLaunchVehicleOperator(s.operator, s.launchVehicle)) {
-      return { ...s, operatorCanonical: "", operatorRaw: s.operator, aliases: [] as string[] };
-    }
-    const op = resolveOperator(s.operator, s.ownerCountry);
-    return { ...s, operatorCanonical: op.display, operatorRaw: s.operator, aliases: op.aliases };
-  });
+  return out;
 }
 
 export { lonToSlug, slugToLon };

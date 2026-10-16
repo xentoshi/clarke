@@ -22,7 +22,12 @@ export async function GET(req: NextRequest) {
       domain: param(req.nextUrl.searchParams.get("domain")),
       since: param(req.nextUrl.searchParams.get("since")),
     });
-    return ok(data, { count: data.changes.length, freshness: freshnessMeta() });
+    return ok(data, {
+      count: data.changes.length,
+      freshness: freshnessMeta(),
+      cacheKey: `agents:deltas:${param(req.nextUrl.searchParams.get("slug")) ?? ""}:${param(req.nextUrl.searchParams.get("domain")) ?? ""}:${param(req.nextUrl.searchParams.get("since")) ?? ""}`,
+      ifNoneMatch: req.headers.get("if-none-match"),
+    });
   } catch (err) {
     if (err instanceof DeltaQueryError) return badRequest(err.message);
     throw err;

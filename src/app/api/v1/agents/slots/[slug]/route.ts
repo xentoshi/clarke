@@ -19,5 +19,9 @@ export async function GET(
   const dossier = getSlotDossier(slug);
   if (!dossier) return notFound(`No slot at slug '${slug}'`);
 
-  return ok(dossier, { freshness: freshnessMeta() });
+  return ok(dossier, {
+    freshness: freshnessMeta(),
+    cacheKey: `agents:slot:${slug}`,
+    ifNoneMatch: req.headers.get("if-none-match"),
+  });
 }

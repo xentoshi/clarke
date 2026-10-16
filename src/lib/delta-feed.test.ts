@@ -9,18 +9,19 @@ import {
   assembleDeltaFeed,
   canonicalStateJson,
   diffRegistryStates,
-  emptyVintage,
   selectDeltaChanges,
   DeltaQueryError,
   type DeltaVintage,
   type DisputeFact,
   type FccEventRow,
   type FccFact,
+  type FccWorkbookFiling,
   type OccupancyFact,
   type RegistrySnapshotRecord,
   type RegistryState,
 } from "./delta-feed";
-import { buildCurrentRegistryState, buildDeltaFeedFromDb } from "./registry-snapshot";
+import { buildCurrentRegistryState, buildDeltaFeedFromDb, readRegistrySnapshots } from "./registry-snapshot";
+import { readSsalWorkbookFilings } from "../../scripts/lib/ssal-workbook";
 
 const V1: DeltaVintage = {
   ucsFileVintage: "2023-04-07",
@@ -266,6 +267,94 @@ describe("registry state diff", () => {
     assert.equal(changes.find((row) => row.kind === "status")?.after?.grantStatus, "Surrendered");
   });
 
+  it("diffs parsed ssal.xlsx rows as new, removed, and changed filings", () => {
+    const filing = (over: Partial<FccWorkbookFiling> = {}): FccWorkbookFiling => ({
+      callSign: "S2669",
+      slug: "101w",
+      longitude: -101,
+      orbitalLocation: "101 W.L.",
+      satelliteName: "DIRECTV",
+      licensee: "DIRECTV Enterprises, LLC",
+      administration: "U.S.A.",
+      service: "BSS",
+      frequencyRange: "12.2-12.7 GHz",
+      dateInOrbit: "2009-01-01",
+      grantStatus: "Grant",
+      notes: null,
+      ...over,
+    });
+    const kept = filing({ callSign: "KEEP" });
+    const gone = filing({ callSign: "GONE", slug: "72w", longitude: -72, orbitalLocation: "72 W.L." });
+    const edited = filing({ callSign: "EDIT", licensee: "Old LLC" });
+    const moved = filing({ callSign: "MOVE" });
+    const changes = diffRegistryStates(
+      state({
+        fcc: [fcc({ callSign: "KEEP" }), fcc({ callSign: "GONE" })],
+        fccWorkbook: [kept, gone, edited, moved],
+      }),
+      state({
+        vintage: V2,
+        fcc: [fcc({ callSign: "KEEP" })],
+        fccWorkbook: [
+          kept,
+          filing({ callSign: "NEW", slug: "134e", longitude: 134, orbitalLocation: "134 E.L." }),
+          filing({ callSign: "EDIT", licensee: "New LLC" }),
+          filing({ callSign: "MOVE", slug: "99w", longitude: -99, orbitalLocation: "99 W.L." }),
+        ],
+      }),
+      META,
+    );
+    const fccChanges = changes.filter((row) => row.domain === "fcc" && row.kind !== "as_of");
+    assert.deepEqual(fccChanges.map((row) => row.kind).sort(), ["changed", "changed", "new", "removed"]);
+    assert.equal(fccChanges.some((row) => row.kind === "lapsed" || row.kind === "licensee" || row.kind === "status"), false);
+    const created = fccChanges.find((row) => row.kind === "new");
+    assert.equal(created?.subject.callSign, "NEW");
+    assert.equal(created?.slug, "134e");
+    assert.equal(created?.before, null);
+    assert.equal(created?.provenance.rule, "ssal-xlsx");
+    assert.match(created?.provenance.note ?? "", /data\/ssal\.xlsx/);
+    const removed = fccChanges.find((row) => row.kind === "removed");
+    assert.equal(removed?.subject.callSign, "GONE");
+    assert.equal(removed?.after, null);
+    assert.equal(removed?.slug, "72w");
+    const licensee = fccChanges.find((row) => row.subject.callSign === "EDIT");
+    assert.equal(licensee?.kind, "changed");
+    assert.equal(licensee?.subject.changedFields, "licensee");
+    assert.equal(licensee?.before?.licensee, "Old LLC");
+    assert.equal(licensee?.after?.licensee, "New LLC");
+    const longitude = fccChanges.find((row) => row.subject.callSign === "MOVE");
+    assert.equal(longitude?.kind, "changed");
+    assert.match(String(longitude?.subject.changedFields), /longitude/);
+    assert.match(String(longitude?.subject.changedFields), /orbitalLocation/);
+    assert.equal(longitude?.slug, "99w");
+    assert.ok(changes.some((row) => row.kind === "as_of"));
+  });
+
+  it("does not treat the first stored workbook as a set of new filings", () => {
+    const changes = diffRegistryStates(
+      state({ fcc: [fcc()] }),
+      state({
+        fcc: [fcc()],
+        fccWorkbook: [{
+          callSign: "S2669",
+          slug: "101w",
+          longitude: -101,
+          orbitalLocation: "101 W.L.",
+          satelliteName: "DIRECTV",
+          licensee: "DIRECTV Enterprises, LLC",
+          administration: "U.S.A.",
+          service: "BSS",
+          frequencyRange: null,
+          dateInOrbit: null,
+          grantStatus: "Grant",
+          notes: null,
+        }],
+      }),
+      META,
+    );
+    assert.deepEqual(changes, []);
+  });
+
   it("does not treat a longitude-only FCC row or an unchanged vintage as a change", () => {
     const before = fcc({ longitude: -101, slug: "101w" });
     const after = fcc({ longitude: -101.2, slug: "101-2w" });
@@ -394,6 +483,7 @@ describe("live delta feed", () => {
     assert.equal(feed.vintage.fccAsOf, "2026-09-27");
     assert.equal(feed.baseline?.fccRowCount, fresh.fcc.length);
     assert.equal(feed.baseline?.occupancyCount, fresh.occupancy.length);
+    assert.ok((feed.baseline?.occupancyCount ?? 0) > 1115);
     assert.equal(feed.baseline?.disputeCount, fresh.disputes.length);
     assert.equal(feed.baseline?.registrySlotCount, fresh.registrySlotCount);
     assert.ok((feed.baseline?.occupancyCount ?? 0) > 0);
@@ -442,6 +532,21 @@ describe("live delta feed", () => {
     assert.equal(fresh.vintage.fccAsOf, "2026-09-27");
   });
 
+  it("stores the parsed ssal.xlsx workbook on the latest snapshot", () => {
+    const filings = readSsalWorkbookFilings();
+    assert.ok(filings);
+    assert.ok(filings.length > 100);
+    const latest = readRegistrySnapshots().at(-1);
+    assert.ok(latest);
+    assert.ok(latest.state.fccWorkbook);
+    assert.equal(latest.state.fccWorkbook.length, filings.length);
+    const keys = latest.state.fccWorkbook.map((row) => row.callSign);
+    assert.equal(new Set(keys).size, keys.length);
+    assert.ok(latest.state.fccWorkbook.every((row) => row.callSign !== "N/A"));
+    assert.equal(feed.baseline?.occupancyCount, fresh.occupancy.length);
+    assert.equal(feed.changes.some((row) => row.kind === "removed" && row.provenance.rule === "ssal-xlsx"), false);
+  });
+
   it("keeps the MCP delta tool on the registry record, not labeled models", () => {
     assert.equal(CLARKE_LIST_DELTAS_DESCRIPTION.includes("\u2014"), false);
     assert.equal(CLARKE_LIST_DELTAS_DESCRIPTION.includes("\u2013"), false);
@@ -449,6 +554,9 @@ describe("live delta feed", () => {
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /tle_epoch/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /14 day/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /ITU SNS is not ingested/);
+    assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /data\/ssal\.xlsx/);
+    assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /removed/);
+    assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /changed/);
     assert.doesNotMatch(CLARKE_LIST_DELTAS_DESCRIPTION, /congestion|valuation|bid\/ask|\$\s*\d/i);
   });
 });

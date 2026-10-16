@@ -42,6 +42,7 @@ export default function AppShell({ children, slots }: { children: React.ReactNod
                   <div className="flex flex-col gap-1">
                     {[
                       { label: "Docs", href: "/docs" },
+                      { label: "How it works", href: "/docs#how-to-use-clarke" },
                       { label: "About", href: "/about" },
                       { label: "Registry FAQ", href: "/orbital/faq" },
                       { label: "Data trust", href: "/docs/data-trust" },

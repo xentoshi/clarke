@@ -21,7 +21,7 @@ function Piece({ piece }: { piece: HowToPiece }) {
 export function HowToUse({ className = "" }: { className?: string }) {
   return (
     <section aria-labelledby="how-to-use-clarke" className={className}>
-      <h2 id="how-to-use-clarke" className="text-xl font-semibold text-ink tracking-tight mb-3">
+      <h2 id="how-to-use-clarke" className="scroll-mt-24 text-xl font-semibold text-ink tracking-tight mb-3">
         {HOW_TO_TITLE}
       </h2>
       <ol className="border-t border-line">

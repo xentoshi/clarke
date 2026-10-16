@@ -4,7 +4,7 @@ import { ok, badRequest, rateLimited, preflight } from "@/lib/agents/envelope";
 import { checkRateLimit, getClientIp } from "@/lib/agents/rate-limit";
 
 export const OPTIONS = () => preflight();
-export const revalidate = 300;
+export const revalidate = 3600;
 
 const SAFE_QUERY = /^[A-Za-z0-9 .\-_]{1,80}$/;
 

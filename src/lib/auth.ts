@@ -2,6 +2,11 @@ import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
 
+import { freeEntitlements, type Entitlements } from "./entitlements";
+
+export type { Entitlements };
+export { freeEntitlements };
+
 export const SESSION_COOKIE = "clarke_session";
 export type Plan = "free" | "pro";
 
@@ -11,21 +16,6 @@ export interface Session {
   demo: boolean;
   iat: number;
   exp: number;
-}
-
-export interface Entitlements {
-  loggedIn: boolean;
-  email: string | null;
-  plan: Plan;
-  pro: boolean;
-  demo: boolean;
-  features: {
-    valuationBreakdown: boolean;
-    compare: boolean;
-    exportPlus: boolean;
-    api: boolean;
-    history: boolean;
-  };
 }
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
@@ -89,13 +79,14 @@ export function sessionFromRequest(req: NextRequest): Session | null {
 }
 
 export function entitlementsFor(session: Session | null): Entitlements {
-  const pro = session?.plan === "pro";
+  if (!session) return freeEntitlements();
+  const pro = session.plan === "pro";
   return {
-    loggedIn: Boolean(session),
-    email: session?.email ?? null,
-    plan: session?.plan ?? "free",
+    loggedIn: true,
+    email: session.email,
+    plan: session.plan,
     pro,
-    demo: session?.demo ?? false,
+    demo: session.demo,
     features: {
       valuationBreakdown: pro,
       compare: pro,

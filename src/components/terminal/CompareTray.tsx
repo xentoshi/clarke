@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useCompare } from "./useCompare";
+import { useLiveEntitlements } from "./useLiveEntitlements";
 
 export function CompareTray({ pro }: { pro: boolean }) {
   const { slugs, clear } = useCompare();
+  const live = useLiveEntitlements();
+  const isPro = pro || live.pro;
   if (slugs.length === 0) return null;
 
-  const href = pro ? `/orbital/compare?s=${slugs.join(",")}` : "/pricing";
+  const href = isPro ? `/orbital/compare?s=${slugs.join(",")}` : "/pricing";
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[min(720px,calc(100%-1.5rem))]">
@@ -20,7 +23,7 @@ export function CompareTray({ pro }: { pro: boolean }) {
         </div>
         <button onClick={clear} className="text-muted hover:text-ink text-sm">Clear</button>
         <Link href={href} className="bg-ink text-canvas rounded-sm px-3 py-1.5 text-xs font-semibold hover:bg-ink/85 shrink-0">
-          {pro ? `Open ${slugs.length}` : "Pro to compare"}
+          {isPro ? `Open ${slugs.length}` : "Pro to compare"}
         </Link>
       </div>
     </div>

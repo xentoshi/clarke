@@ -1,6 +1,7 @@
 import { buildMeta } from "@/lib/metadata";
 import Link from "next/link";
 import { DOC_PAGES } from "@/lib/docs";
+import { HowToUse } from "@/components/HowToUse";
 import { TrustLegend } from "@/components/docs/TrustLegend";
 
 export const metadata = buildMeta({
@@ -23,6 +24,8 @@ export default function DocsHubPage() {
         Congestion and fair value are models on the human Slot Terminal. They are not in the agent payload or the delta feed.
         Machine index: <Link href="/llms.txt" className="text-ink underline">llms.txt</Link>.
       </p>
+
+      <HowToUse className="mb-8" />
 
       <TrustLegend className="mb-5" />
 

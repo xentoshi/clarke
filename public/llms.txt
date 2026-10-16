@@ -27,5 +27,5 @@ HTTP success bodies are `{ data, meta }`. Routes are read-only and unauthenticat
 
 ## Optional
 
-- [GEO satellites](https://www.clarkebelt.finance/api/v1/agents/satellites): UCS GEO catalog rows. Not the slot record. Filters: `operator`, `ownerCountry`, `limit` (1 to 1000). MCP tool `clarke_list_satellites` returns the same catalog.
+- [GEO satellites](https://www.clarkebelt.finance/api/v1/agents/satellites): UCS GEO catalog rows. Not the slot record. Filters: `operator`, `ownerCountry`, `limit` (1 to 1000). HTTP returns every matching row when `limit` is omitted. MCP tool `clarke_list_satellites` returns the same row shape and defaults `limit` to 100.
 - [Docs hub](https://www.clarkebelt.finance/docs): Method notes. The valuation page describes the human Terminal model, which the agent record excludes.

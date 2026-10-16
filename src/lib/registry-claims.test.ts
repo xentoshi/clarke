@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { slots as curatedSlots } from "@/data/orbital-slots";
-import { lonToSlug, mergeWithUcs } from "./satellites";
+import { findRegistrySlot, getRegistrySlotIndex, lonToSlug, mergeWithUcs } from "./satellites";
 import { buildSlotTerminal } from "./slot-terminal";
 import { collapseUcsClaimSlots, pickClaimOperator, type UcsClaimSatellite } from "./registry-claims";
 
@@ -86,6 +86,16 @@ describe("live registry claims (clarke.db)", () => {
     assert.equal(dod?.operator, "US DoD");
     assert.ok((hispamar?.ucsCount ?? 0) >= 2);
     assert.match(hispamar?.satellite ?? "", /Amazonas/);
+  });
+
+  it("resolves slot pages from a cached slug index", () => {
+    const first = getRegistrySlotIndex(curatedSlots);
+    const second = getRegistrySlotIndex(curatedSlots);
+    assert.equal(first, second);
+    assert.equal(mergeWithUcs(curatedSlots), first.slots);
+    const hit = findRegistrySlot(curatedSlots, "101w", -101);
+    assert.equal(hit, first.bySlug.get("101w"));
+    assert.equal(hit?.operator, "SES");
   });
 
   it("does not list Atlas 5 as a GEO operator or borrow a neighbor", () => {

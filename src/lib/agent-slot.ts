@@ -8,6 +8,7 @@
 import { slots as curatedSlots, type OrbitalSlot, type SlotStatus } from "@/data/orbital-slots";
 import {
   mergeWithUcs,
+  findRegistrySlot,
   getGeoSatellites,
   getGeoSatellitesByLongitude,
   getFccAuthorizationsByLongitude,
@@ -146,11 +147,7 @@ function formatLon(lon: number) {
 }
 
 function lookupSlot(slug: string, lon: number): OrbitalSlot | undefined {
-  const merged = mergeWithUcs(curatedSlots);
-  return (
-    merged.find((s) => lonToSlug(s.longitude) === slug) ??
-    merged.find((s) => Math.abs(s.longitude - lon) <= COLOCATION_TOLERANCE_DEG)
-  );
+  return findRegistrySlot(curatedSlots, slug, lon);
 }
 
 function toObservation(sat: GeoSatellite, now: Date): AgentOccupancyObservation {

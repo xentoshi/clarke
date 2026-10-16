@@ -8,6 +8,7 @@ import { agentPayloadViolations, buildAgentSlot } from "./agent-slot";
 import { listDeltas } from "./agents/operations";
 import { checkRateLimit } from "./agents/rate-limit";
 import { DELETE, GET, OPTIONS, POST } from "../app/api/v1/mcp/route";
+import { MCP_SATELLITE_DEFAULT_LIMIT } from "../mcp/server";
 import { MCP_PUBLIC_PATH, MCP_PUBLIC_URL, handleMcpHttp } from "./mcp-http";
 
 const ACCEPT = "application/json, text/event-stream";
@@ -142,11 +143,15 @@ describe("public MCP Streamable HTTP", () => {
 
       const slot = await client.callTool({ name: "clarke_get_slot", arguments: { slug: "101w" } });
       const terminal = await client.callTool({ name: "clarke_get_terminal", arguments: { slug: "101w" } });
-      const slotJson = JSON.parse(toolText(slot)) as { ituRecorded?: string; operator?: unknown };
+      const slotText = toolText(slot);
+      assert.equal(slotText.includes("\n"), false);
+      const slotJson = JSON.parse(slotText) as { ituRecorded?: string; operator?: unknown; valuation?: unknown; congestion?: unknown };
       const terminalJson = JSON.parse(toolText(terminal));
       assert.deepEqual(slotJson, terminalJson);
       assert.deepEqual(slotJson, JSON.parse(JSON.stringify(buildAgentSlot("101w"))));
       assert.equal(slotJson.ituRecorded, "not_in_product");
+      assert.equal(slotJson.valuation, undefined);
+      assert.equal(slotJson.congestion, undefined);
       assert.equal("operator" in slotJson, false);
       assert.deepEqual(agentPayloadViolations(slotJson), []);
 
@@ -169,10 +174,20 @@ describe("public MCP Streamable HTTP", () => {
       assert.deepEqual(JSON.parse(toolText(missing)), { error: "No slot at slug 'zz-no-such-slot'" });
 
       const listed = await client.callTool({ name: "clarke_list_slots", arguments: {} });
-      const rows = JSON.parse(toolText(listed)) as Array<{ ituRecorded?: string }>;
+      const listedText = toolText(listed);
+      assert.equal(listedText.includes("\n"), false);
+      const rows = JSON.parse(listedText) as Array<{ ituRecorded?: string; valuation?: unknown; congestion?: unknown }>;
       assert.ok(rows.length > 1);
       assert.ok(rows.every((row) => row.ituRecorded === "not_in_product"));
+      assert.ok(rows.every((row) => row.valuation === undefined && row.congestion === undefined));
       assert.deepEqual(agentPayloadViolations(rows), []);
+
+      const sats = await client.callTool({ name: "clarke_list_satellites", arguments: {} });
+      const satText = toolText(sats);
+      assert.equal(satText.includes("\n"), false);
+      assert.equal((JSON.parse(satText) as unknown[]).length, MCP_SATELLITE_DEFAULT_LIMIT);
+      const few = await client.callTool({ name: "clarke_list_satellites", arguments: { limit: 2 } });
+      assert.equal((JSON.parse(toolText(few)) as unknown[]).length, 2);
     } finally {
       await client.close();
     }

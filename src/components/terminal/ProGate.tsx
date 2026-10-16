@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { useLiveEntitlements } from "./useLiveEntitlements";
 
 export function ProGate({
   entitled,
@@ -10,7 +13,8 @@ export function ProGate({
   title?: string;
   children: ReactNode;
 }) {
-  if (entitled) return <>{children}</>;
+  const live = useLiveEntitlements();
+  if (entitled || live.features.valuationBreakdown) return <>{children}</>;
   return (
     <div className="relative">
       <div className="blur-[6px] pointer-events-none select-none max-h-56 overflow-hidden">{children}</div>

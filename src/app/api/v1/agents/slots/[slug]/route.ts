@@ -4,7 +4,7 @@ import { ok, notFound, badRequest, rateLimited, preflight } from "@/lib/agents/e
 import { checkRateLimit, getClientIp } from "@/lib/agents/rate-limit";
 
 export const OPTIONS = () => preflight();
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export async function GET(
   req: NextRequest,

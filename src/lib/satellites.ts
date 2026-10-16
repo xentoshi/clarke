@@ -87,9 +87,16 @@ export const COLOCATION_TOLERANCE_DEG = COLOCATION_WINDOW_DEG;
 export const FCC_MATCH_TOLERANCE_DEG = 0.6;
 
 let geoCache: GeoSatellite[] | null = null;
+let registrySlotIndex: RegistrySlotIndex | null = null;
+
+export interface RegistrySlotIndex {
+  slots: OrbitalSlot[];
+  bySlug: Map<string, OrbitalSlot>;
+}
 
 export function clearGeoSatelliteCache(): void {
   geoCache = null;
+  registrySlotIndex = null;
 }
 
 interface TleJoin {
@@ -519,7 +526,7 @@ function getDecayedNoradIds(): Set<string> {
   return new Set(rows.map((r) => r.norad_id));
 }
 
-export function mergeWithUcs(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
+function computeMergedRegistry(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
   const ucs = getGeoSatellites();
   if (ucs.length === 0) return curatedSlots.map((s) => ({ ...s, source: "curated" as const }));
 
@@ -561,6 +568,31 @@ export function mergeWithUcs(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
   const fccDerived = fccOnlySlots(allLons, TOLERANCE);
 
   return [...enriched, ...ucsDerived, ...fccDerived].sort((a, b) => a.longitude - b.longitude);
+}
+
+/** One merged registry per process. Slot pages look up a slug instead of rebuilding it. */
+export function getRegistrySlotIndex(curatedSlots: OrbitalSlot[]): RegistrySlotIndex {
+  if (registrySlotIndex) return registrySlotIndex;
+  const slots = computeMergedRegistry(curatedSlots);
+  const bySlug = new Map<string, OrbitalSlot>();
+  for (const slot of slots) {
+    const slug = lonToSlug(slot.longitude);
+    if (!bySlug.has(slug)) bySlug.set(slug, slot);
+  }
+  registrySlotIndex = { slots, bySlug };
+  return registrySlotIndex;
+}
+
+export function mergeWithUcs(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
+  return getRegistrySlotIndex(curatedSlots).slots;
+}
+
+export function findRegistrySlot(curatedSlots: OrbitalSlot[], slug: string, lon: number): OrbitalSlot | undefined {
+  const index = getRegistrySlotIndex(curatedSlots);
+  return (
+    index.bySlug.get(slug) ??
+    index.slots.find((slot) => Math.abs(slot.longitude - lon) <= COLOCATION_TOLERANCE_DEG)
+  );
 }
 
 // Groups FCC authorizations by ~0.1°-rounded longitude, keeping only groups

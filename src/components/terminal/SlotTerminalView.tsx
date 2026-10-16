@@ -12,11 +12,11 @@ import { ituPresence } from "@/lib/itu-presence";
 import { formatLonFixed } from "@/lib/geo-angle";
 import { recordedRightsLayers, stubRightsLayers } from "@/lib/terminal-default";
 import { ProGate } from "./ProGate";
-import { ValuationChart } from "./ValuationChart";
 import { RightsChain } from "./RightsChain";
 import { AddToCompare } from "./AddToCompare";
 import { CompareTray } from "./CompareTray";
 import { ExperimentalDisclosure } from "./ExperimentalDisclosure";
+import { ModelPath } from "./ModelPath";
 import { TrustMark } from "./TrustMark";
 import { TrustBar } from "./TrustBar";
 import { OperatorName } from "./OperatorName";
@@ -440,12 +440,7 @@ export function SlotTerminalView({
           <p className="text-[14px] text-faint mb-4">
             Seeded v0 path. Not observed trades, not a price index.
           </p>
-          <ValuationChart series={entitlements.features.history ? model.history : model.history.slice(-7)} source={model.historySource} />
-          {!entitlements.features.history && (
-            <p className="text-[14px] text-faint mt-2">
-              Free seats see a 7-day backfill. <Link href="/pricing" className="text-ink hover:text-muted underline">Pro unlocks 30-day persisted model path.</Link>
-            </p>
-          )}
+          <ModelPath history={model.history} source={model.historySource} unlocked={entitlements.features.history} />
         </div>
       </details>
 

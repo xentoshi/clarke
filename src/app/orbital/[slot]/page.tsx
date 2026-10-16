@@ -1,17 +1,22 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { buildMeta } from "@/lib/metadata";
 import { getAllRegistrySlugs } from "@/lib/satellites";
 import { slots as curatedSlots } from "@/data/orbital-slots";
 import { slugToLon } from "@/lib/slot-utils";
 import { buildSlotTerminal } from "@/lib/slot-terminal";
-import { getEntitlements } from "@/lib/auth";
+import { freeEntitlements } from "@/lib/entitlements";
 import { SlotTerminalView } from "@/components/terminal/SlotTerminalView";
 
 type Params = { slot: string };
 
+export const revalidate = 3600;
+
+const loadSlotTerminal = cache((slot: string) => buildSlotTerminal(slot));
+
 export async function generateMetadata({ params }: { params: Promise<Params> }) {
   const { slot } = await params;
-  const model = buildSlotTerminal(slot);
+  const model = loadSlotTerminal(slot);
   if (!model) return {};
   const fv = model.valuation.nonCommercial ? "not commercially valued" : `implied ${model.valuation.formatted.range}`;
   return buildMeta({
@@ -29,8 +34,7 @@ export async function generateStaticParams() {
 export default async function SlotPage({ params }: { params: Promise<Params> }) {
   const { slot } = await params;
   if (slugToLon(slot) === null) notFound();
-  const model = buildSlotTerminal(slot);
+  const model = loadSlotTerminal(slot);
   if (!model) notFound();
-  const entitlements = await getEntitlements();
-  return <SlotTerminalView model={model} entitlements={entitlements} />;
+  return <SlotTerminalView model={model} entitlements={freeEntitlements()} />;
 }

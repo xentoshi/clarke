@@ -4,7 +4,8 @@ import OrbitalExplorer from "./OrbitalExplorer";
 import { buildExplorerRows } from "@/lib/explorer";
 import { buildGeoBelt } from "@/lib/belt-data";
 import { getLatestIngest } from "@/lib/freshness";
-import { getEntitlements } from "@/lib/auth";
+
+export const revalidate = 3600;
 
 export const metadata = buildMeta({
   title: "Orbital Registry",
@@ -17,7 +18,6 @@ export default async function OrbitalPage() {
   const rows = buildExplorerRows();
   const belt = buildGeoBelt();
   const latest = getLatestIngest();
-  const { pro } = await getEntitlements();
   const updated = latest
     ? new Date(latest.lastRun.replace(" ", "T") + "Z").toLocaleDateString("en-US", {
         year: "numeric", month: "short", day: "numeric", timeZone: "UTC",
@@ -51,7 +51,7 @@ export default async function OrbitalPage() {
           </Link>
         </div>
       </div>
-      <OrbitalExplorer rows={rows} updated={updated} pro={pro} beltMarks={belt.marks} beltEpoch={belt.epochLabel} />
+      <OrbitalExplorer rows={rows} updated={updated} beltMarks={belt.marks} beltEpoch={belt.epochLabel} />
     </div>
   );
 }

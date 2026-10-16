@@ -45,7 +45,7 @@ export function ok<T>(data: T, opts: OkOptions = {}): NextResponse {
 
   const serialized = JSON.stringify(body);
   const etag = `W/"${crypto.createHash("sha1").update(serialized).digest("hex")}"`;
-  const cacheSeconds = opts.cacheSeconds ?? 300;
+  const cacheSeconds = opts.cacheSeconds ?? 3600;
   const staleSeconds = opts.staleSeconds ?? 60;
 
   return new NextResponse(serialized, {

@@ -17,8 +17,10 @@ export const CLARKE_GET_SLOT_DESCRIPTION =
 export const CLARKE_GET_TERMINAL_DESCRIPTION =
   "Agent slot record for one GEO position. Same payload as clarke_get_slot: operatorMix as the occupancy identity, FCC rows, disputes, ituRecorded, and source vintage including tleStale (older than 14 days). operatorIdentity split means the window is shared. ITU SNS is not ingested (ituRecorded is not_in_product). TLE longitude is a tracked position, not an FCC or ITU assignment.";
 
+export const MCP_SATELLITE_DEFAULT_LIMIT = 100;
+
 export const CLARKE_LIST_SATELLITES_DESCRIPTION =
-  "List GEO satellites from the UCS Satellite Database, optionally filtered by operator or owner country. Returns up to `limit` rows (default unlimited; max 1000).";
+  "List GEO satellites from the UCS Satellite Database, optionally filtered by operator or owner country. Returns up to `limit` rows (default 100; max 1000).";
 
 export const CLARKE_LIST_DELTAS_DESCRIPTION =
   "On-ingest change feed for GEO slot occupancy, FCC rows, and disputes (Slot Index delta feed, edition 2). coverage is bootstrap when fewer than two registry snapshots are stored, and ingest_deltas once a later snapshot exists. Each change has slug, longitude when available, detectedAt, source vintage, before and after, and provenance. Occupancy changes are enter, leave, authority_flip, and tle_epoch. tle_epoch is a TLE epoch change or a 14 day stale transition on a TLE used for occupancy. Bootstrap does not invent occupancy history. FCC changes are new, lapsed, licensee, status, and as_of. Dispute changes are appear, clear, and kind. ITU SNS is not ingested. TLE longitude is a tracked position, not an FCC or ITU assignment. satellite_relocated rows are not occupancy changes. Optional filters: slug, domain (occupancy, fcc, dispute), since (exclusive ISO-8601 UTC).";
@@ -31,7 +33,7 @@ function textResult(payload: unknown) {
     content: [
       {
         type: "text" as const,
-        text: JSON.stringify(payload, null, 2),
+        text: JSON.stringify(payload),
       },
     ],
   };
@@ -103,10 +105,14 @@ export function createServer(): McpServer {
     {
       operator: z.string().regex(SAFE_STRING).optional(),
       ownerCountry: z.string().regex(SAFE_STRING).optional(),
-      limit: z.number().int().min(1).max(1000).optional(),
+      limit: z.number().int().min(1).max(1000).default(MCP_SATELLITE_DEFAULT_LIMIT),
     },
     async ({ operator, ownerCountry, limit }) =>
-      textResult(listSatellites({ operator, ownerCountry, limit })),
+      textResult(listSatellites({
+        operator,
+        ownerCountry,
+        limit: limit ?? MCP_SATELLITE_DEFAULT_LIMIT,
+      })),
   );
 
   return server;

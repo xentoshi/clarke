@@ -148,12 +148,12 @@ Keys below are the object in HTTP `data` and in the MCP tool text. Placeholder n
 | `operatorIdentity` | M | string | `split`, `single`, or `none`. See below. |
 | `operatorMix` | V/M | array | Who is in the occupancy window. See below. |
 | `country` | V/M | string | Curated country, else the first occupancy row's owner country, else the first FCC administration. Empty string when none of those exist. |
-| `status` | M | string | Curated status when the row has one: `active`, `filed`, `squatted`, or `inactive`. Otherwise `active` when the window has satellites, else `filed`. |
+| `status` | M | string | `active` when the occupancy window has a satellite and an FCC authorization, including when a curated label said squatted or inactive. `squatted` only when a satellite is on station and Clarke has no FCC row. Otherwise the curated status (`active`, `filed`, `squatted`, or `inactive`), or `active` when an uncurated window has satellites, else `filed`. |
 | `ituRecorded` | S | string | Always `not_in_product`. |
 | `ituDetail` | S | string | The fixed sentence in the example. |
 | `satCount` | M | number | Occupancy rows in the ±0.4 degree window. Not an ITU network count. |
 | `occupancyAuthority` | V | string | Always `tle-primary`. That is the slot rule, not a claim that every row used a TLE. |
-| `fccAuthorizations` | V/M | array | SSAL rows within 0.6 degrees of the slot longitude. |
+| `fccAuthorizations` | V/M | array | SSAL rows within 0.6 degrees of the slot longitude. Federal Government (Reserved) placeholder rows are omitted. |
 | `occupancy` | V/M | array | Satellites whose occupancy longitude is inside ±0.4 degrees. |
 | `disputes` | M | array | In-window TLE vs UCS disagreements, plus UCS ghosts. |
 | `sourceVintage` | V | object | Workbook as-of, file vintages, ingest clocks, `fccStale`. |
@@ -199,8 +199,8 @@ The window is ±0.4 degrees on that occupancy longitude. FCC matching is separat
 
 | Field | Class | Meaning |
 |---|---|---|
-| `id` | V | UCS row id. |
-| `name` | V | UCS name. |
+| `id` | V | UCS row id, or a negative NORAD catalog number when the satellite launched after the UCS file vintage and is included from Space-Track. |
+| `name` | V | UCS name, or the Space-Track object name for a post-vintage supplement. |
 | `noradId` | M | UCS-attributed NORAD id, joinable to Space-Track. Not independently verified for every row. |
 | `operator`, `operatorRaw` | V/M | See operator identity. |
 | `launchDate` | V | UCS launch date string. |
@@ -213,6 +213,8 @@ The window is ±0.4 degrees on that occupancy longitude. FCC matching is separat
 | `occupancyAuthority` | V | `tle`, `ucs`, or `none`. |
 
 Ghosts are not in `occupancy`. They are outside the window. They appear only under `disputes`.
+
+Station-kept GEO payloads launched after the UCS file vintage are included in occupancy when a Space-Track TLE passes the same quality gates. Satcat period must be 1434 to 1438 minutes. Those rows have no UCS catalog longitude. Operator is set only when one FCC licensee name matches the spacecraft. Country codes are not operator names. The UCS satellite list route does not return these rows. Federal Government (Reserved) SSAL rows are not FCC authorizations in this payload.
 
 ## Disputes
 

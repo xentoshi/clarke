@@ -337,10 +337,10 @@ export default function AboutPage() {
             <h3 className="text-ink text-sm font-semibold mb-3">Status definitions</h3>
             <div className="space-y-2 mb-6">
               {[
-                { status: "On station",   color: "text-verified border-verified/30 bg-verified/8", desc: "Satellite confirmed operational. Verified against UCS database and operator disclosures." },
-                { status: "Paper filing",    color: "text-ink border-line bg-canvas",          desc: "ITU filing submitted and accepted but satellite not yet launched or operational." },
-                { status: "On station, unlicensed", color: "text-stale border-stale/35 bg-stale/8",       desc: "Filing exists but slot appears underutilized or not actively serving its licensed coverage area." },
-                { status: "Inactive", color: "text-muted border-line bg-canvas",          desc: "Satellite decommissioned. Slot rights may still be held by the operator." },
+                { status: "On station",   color: "text-verified border-verified/30 bg-verified/8", desc: "A satellite is in the occupancy window. When an FCC authorization also matches, a curated squatted or inactive label is not kept." },
+                { status: "Paper filing",    color: "text-ink border-line bg-canvas",          desc: "An FCC record is on file and no satellite is in the occupancy window. That is not proof the satellite never launched. ITU filings are not recorded here." },
+                { status: "On station, unlicensed", color: "text-stale border-stale/35 bg-stale/8",       desc: "A satellite is in the occupancy window and Clarke has no FCC market-access row. This is not an ITU squatting finding." },
+                { status: "Inactive", color: "text-muted border-line bg-canvas",          desc: "No satellite is counted in the occupancy window." },
               ].map((s) => (
                 <div key={s.status} className="flex items-start gap-3">
                   <span className={`text-xs px-1.5 py-0.5 rounded border font-medium shrink-0 ${s.color}`}>{s.status}</span>

@@ -73,7 +73,18 @@ function looksJoint(raw: string): boolean {
   return compact.includes("/");
 }
 
-export function resolveOperator(raw: string | null | undefined): ResolvedOperator {
+const GENERIC_DEFENSE = new Set(["ministry of defense", "defense ministry", "armed forces"]);
+
+/**
+ * UCS uses the same country-free label for several nations. Those strings are
+ * not one operator. The display adds owner country when it is known.
+ */
+export function isGenericDefenseOperator(raw: string | null | undefined): boolean {
+  const key = (raw ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+  return GENERIC_DEFENSE.has(key);
+}
+
+export function resolveOperator(raw: string | null | undefined, ownerCountry?: string | null): ResolvedOperator {
   const trimmed = (raw ?? "").trim();
   if (!trimmed) {
     return { display: "", raw: "", mapped: false, aliases: [] };
@@ -86,6 +97,16 @@ export function resolveOperator(raw: string | null | undefined): ResolvedOperato
       mapped: true,
       aliases: [entry.canonical, ...entry.aliases],
       notes: entry.notes,
+    };
+  }
+  const country = (ownerCountry ?? "").trim();
+  if (isGenericDefenseOperator(trimmed) && country) {
+    return {
+      display: `${trimmed} (${country})`,
+      raw: trimmed,
+      mapped: true,
+      aliases: [trimmed],
+      notes: "UCS defense label has no country. Display adds the owner country so these are not one operator.",
     };
   }
   if (looksJoint(trimmed)) {

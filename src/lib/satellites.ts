@@ -11,6 +11,9 @@ import {
 import type { OrbitalSlot } from "@/data/orbital-slots";
 import { isLaunchVehicleOperator, resolveOperator } from "./operator-identity";
 import { collapseUcsClaimSlots } from "./registry-claims";
+import { loadPostUcsGeoOccupants } from "./post-ucs-occupancy";
+import { reconcileRegistryStatus } from "./slot-status";
+import { isDodPlaceholderAuthorization } from "./fcc-placeholder";
 
 export { lonToSlug, slugToLon, formatLon } from "./slot-utils";
 export { COLOCATION_WINDOW_DEG, NEIGHBORHOOD_WINDOW_DEG } from "./position-authority";
@@ -46,6 +49,8 @@ export interface GeoSatellite {
   cosparId: string | null;
   noradId: string | null;
   comments: string | null;
+  /** tle-supplement: station-kept GEO launched after the UCS file vintage. Absent on UCS rows. */
+  catalogSource?: "ucs" | "tle-supplement";
 }
 
 const GEO_SELECT = `
@@ -183,9 +188,11 @@ export function getGeoSatellites(): GeoSatellite[] {
   const tles = loadTleMap();
   const satcat = loadSatcatMap();
   const enriched = raw.map((r) => enrichGeoSatellite(r, tles, satcat));
-  enriched.sort((a, b) => (a.longitudeGeo ?? 999) - (b.longitudeGeo ?? 999));
-  geoCache = enriched;
-  return enriched;
+  const knownNorad = new Set(raw.map((r) => r.noradId).filter((id): id is string => Boolean(id)));
+  const combined = [...enriched, ...loadPostUcsGeoOccupants(knownNorad)];
+  combined.sort((a, b) => (a.longitudeGeo ?? 999) - (b.longitudeGeo ?? 999) || a.name.localeCompare(b.name));
+  geoCache = combined;
+  return combined;
 }
 
 export function getGeoSatellitesByLongitude(lon: number, toleranceDeg = COLOCATION_TOLERANCE_DEG): GeoSatellite[] {
@@ -399,10 +406,19 @@ export function getCongestion(lon: number): CongestionData {
           isLaunchVehicleOperator(r.operator, r.launchVehicle),
       )
     : false;
+  const dominantCountries = new Set(
+    rows
+      .filter((r) => (r.operator ?? "").trim() === dominantOperatorRaw)
+      .map((r) => (r.ownerCountry ?? "").trim())
+      .filter(Boolean),
+  );
+  const dominantCountry = dominantCountries.size === 1 ? [...dominantCountries][0] : null;
   // Display only. distinctOperators still counts raw source strings, so the
   // congestion score does not change when a launch vehicle is refused as an operator.
   const dominantOperator =
-    dominantOperatorRaw && !dominantIsVehicle ? resolveOperator(dominantOperatorRaw).display : null;
+    dominantOperatorRaw && !dominantIsVehicle
+      ? resolveOperator(dominantOperatorRaw, dominantCountry).display
+      : null;
 
   const densityScore = Math.min(neighborhood / 20, 1) * 50;
   const coLocationScore = Math.min(coLocated / 6, 1) * 30;
@@ -532,16 +548,27 @@ function computeMergedRegistry(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
 
   const TOLERANCE = COLOCATION_TOLERANCE_DEG;
 
+  const fccForStatus = getAllFccAuthorizations().filter(
+    (a) => a.longitudeGeo !== null && !isDodPlaceholderAuthorization(a),
+  );
   const enriched = curatedSlots.map((slot) => {
     const nearby = ucs.filter(
       (s) => s.longitudeGeo !== null && withinLongitudeWindow(s.longitudeGeo, slot.longitude, TOLERANCE)
     );
     const inferredPurpose = nearby[0]?.purpose ?? "Communications";
     const op = resolveOperator(slot.operator);
+    const fccLicensed = fccForStatus.some((a) =>
+      withinLongitudeWindow(a.longitudeGeo!, slot.longitude, FCC_MATCH_TOLERANCE_DEG),
+    );
     return {
       ...slot,
       operator: op.display,
       operatorRaw: slot.operatorRaw ?? slot.operator,
+      status: reconcileRegistryStatus({
+        curated: slot.status,
+        occupied: nearby.length > 0,
+        fccLicensed,
+      }),
       source: "curated" as const,
       ucsCount: nearby.length,
       cosparIds: nearby.map((s) => s.cosparId).filter(Boolean) as string[],
@@ -559,13 +586,12 @@ function computeMergedRegistry(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
     decayedNoradIds,
   );
 
-  // FCC-authorized positions with no UCS satellite and no curated slot nearby
-  // would otherwise have zero representation in the registry: no row, no
-  // congestion score, no valuation — despite being a real, government-issued
-  // authorization. Synthesize a minimal placeholder so they're findable.
+  // FCC authorizations with no satellite and no curated slot inside the FCC
+  // match window (0.6 degrees). A license beside an occupied slot is not a
+  // second empty row. Reservation placeholders are not rows.
   const ucsLons = ucs.filter((s) => s.longitudeGeo !== null).map((s) => s.longitudeGeo!);
   const allLons = [...curatedLons, ...ucsLons];
-  const fccDerived = fccOnlySlots(allLons, TOLERANCE);
+  const fccDerived = fccOnlySlots(allLons, FCC_MATCH_TOLERANCE_DEG);
 
   return [...enriched, ...ucsDerived, ...fccDerived].sort((a, b) => a.longitude - b.longitude);
 }
@@ -595,11 +621,13 @@ export function findRegistrySlot(curatedSlots: OrbitalSlot[], slug: string, lon:
   );
 }
 
-// Groups FCC authorizations by ~0.1°-rounded longitude, keeping only groups
-// with no UCS satellite or curated slot within TOLERANCE, and synthesizes one
-// placeholder OrbitalSlot per group.
+// Groups real FCC authorizations by ~0.1 degree longitude. A group is a row
+// only when no occupancy longitude and no curated slot is inside toleranceDeg
+// (the FCC match window). Federal reservation placeholders are omitted.
 function fccOnlySlots(coveredLons: number[], toleranceDeg: number): OrbitalSlot[] {
-  const auths = getAllFccAuthorizations().filter((a) => a.longitudeGeo !== null);
+  const auths = getAllFccAuthorizations().filter(
+    (a) => a.longitudeGeo !== null && !isDodPlaceholderAuthorization(a),
+  );
   if (auths.length === 0) return [];
 
   const byLon = new Map<string, { lon: number; auths: FccAuthorization[] }>();
@@ -629,7 +657,8 @@ function fccOnlySlots(coveredLons: number[], toleranceDeg: number): OrbitalSlot[
       coverage: [],
       valueEstimate: "",
       description: [
-        `FCC-authorized position with no UCS-tracked satellite in orbit here yet.`,
+        "FCC authorization with no satellite in the 0.6 degree license window.",
+        "This is not a count of unlaunched satellites. The spacecraft may sit outside the window, or it may be missing from the UCS snapshot.",
         group.length > 1 ? `${group.length} authorizations: ${callSigns}.` : callSigns ? `Authorization: ${callSigns}.` : "",
       ].filter(Boolean).join(" "),
       source: "fcc",
@@ -666,9 +695,11 @@ const FCC_SELECT = `
 export function getFccAuthorizationsByLongitude(lon: number, toleranceDeg = FCC_MATCH_TOLERANCE_DEG): FccAuthorization[] {
   const db = getDb();
   if (!db) return [];
-  return db.prepare(
+  return (db.prepare(
     `${FCC_SELECT} WHERE longitude_geo BETWEEN ? AND ? ORDER BY longitude_geo ASC`
-  ).all(lon - toleranceDeg, lon + toleranceDeg) as FccAuthorization[];
+  ).all(lon - toleranceDeg, lon + toleranceDeg) as FccAuthorization[]).filter(
+    (row) => !isDodPlaceholderAuthorization(row),
+  );
 }
 
 export function getAllFccAuthorizations(): FccAuthorization[] {
@@ -678,13 +709,11 @@ export function getAllFccAuthorizations(): FccAuthorization[] {
 }
 
 export function getFccSlugSet(): Set<string> {
-  const db = getDb();
-  if (!db) return new Set();
-  const rows = db.prepare(
-    "SELECT longitude_geo FROM fcc_authorizations WHERE longitude_geo IS NOT NULL"
-  ).all() as { longitude_geo: number }[];
   const seen = new Set<string>();
-  for (const row of rows) seen.add(lonToSlug(row.longitude_geo));
+  for (const row of getAllFccAuthorizations()) {
+    if (row.longitudeGeo === null || isDodPlaceholderAuthorization(row)) continue;
+    seen.add(lonToSlug(row.longitudeGeo));
+  }
   return seen;
 }
 

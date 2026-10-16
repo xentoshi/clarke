@@ -157,7 +157,7 @@ function toObservation(sat: GeoSatellite, now: Date): AgentOccupancyObservation 
     id: sat.id,
     name: sat.name,
     noradId: sat.noradId,
-    operator: refused || !raw ? null : resolveOperator(raw).display,
+    operator: refused || !raw ? null : resolveOperator(raw, sat.ownerCountry).display,
     operatorRaw: raw,
     launchDate: sat.launchDate,
     tleLongitude: sat.longitudeTle,

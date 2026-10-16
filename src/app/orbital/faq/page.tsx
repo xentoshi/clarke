@@ -31,7 +31,7 @@ function faqItems(geoCount: number, registryRows: number) {
   },
   {
     q: "How many total orbital positions exist versus what Clarke currently tracks?",
-    a: `The ITU has registered approximately 1,800 GEO coordination filings across all member states, representing every position that has been filed, coordinated, or historically registered since the space age began. Clarke's registry table currently lists ${registryRows.toLocaleString()} rows, one per slug, built from ${geoCount.toLocaleString()} GEO satellites in the UCS snapshot plus FCC-only rows where a license has no nearby occupancy. Satellites that share an occupancy longitude rounded to 0.1° are one row. A satellite inside a curated slot's 0.4° window is occupancy on that curated row, not a second table row. ITU SNS is not ingested, so Clarke does not record those filings. The gap between filed networks and occupied rows includes squatted slots, historically registered positions no longer in use, and filings whose satellite never launched.`,
+    a: `The ITU has registered approximately 1,800 GEO coordination filings across all member states, representing every position that has been filed, coordinated, or historically registered since the space age began. Clarke's registry table currently lists ${registryRows.toLocaleString()} rows, one per slug, built from ${geoCount.toLocaleString()} GEO satellites in the UCS snapshot, plus station-kept GEO payloads launched after that snapshot when a Space-Track TLE places them. FCC-only rows appear only when a real license has no satellite inside the 0.6 degree license window. Federal Government (Reserved) placeholders are not rows. Satellites that share an occupancy longitude rounded to 0.1° are one row. A satellite inside a curated slot's 0.4° window is occupancy on that curated row, not a second table row. ITU SNS is not ingested, so Clarke does not record those filings. A license with no satellite in the window is not a count of spacecraft that never launched.`,
   },
   {
     q: "What is Ku-band versus Ka-band?",
@@ -39,7 +39,7 @@ function faqItems(geoCount: number, registryRows: number) {
   },
   {
     q: "What does 'squatted' mean?",
-    a: "Clarke's status label is On station, unlicensed. It is a curated registry label, not an ITU SNS record. ITU SNS is not ingested, so the label is not a network name, not brought-into-use evidence, and not a filled filing row. In the industry, squatting means a filing with no operational satellite on station. Clarke does not store that filing.",
+    a: "Clarke's status label is On station, unlicensed. It means a satellite is in the occupancy window and Clarke has no FCC market-access row. It is not kept when that window also has an FCC authorization: 45W and 169E are On station for that reason. The label is not an ITU SNS record. ITU SNS is not ingested, so it is not a network name, not brought-into-use evidence, and not a filled filing row.",
   },
   {
     q: "What does the congestion number mean?",

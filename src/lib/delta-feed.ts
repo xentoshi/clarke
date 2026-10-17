@@ -18,7 +18,7 @@ export const DELTA_DOMAINS = ["occupancy", "fcc", "dispute"] as const;
 export type DeltaDomain = (typeof DELTA_DOMAINS)[number];
 export type DeltaCoverage = "bootstrap" | "ingest_deltas";
 export type OccupancyChangeKind = "enter" | "leave" | "authority_flip" | "tle_epoch";
-export type FccChangeKind = "new" | "lapsed" | "licensee" | "status" | "as_of";
+export type FccChangeKind = "new" | "lapsed" | "licensee" | "status" | "as_of" | "removed" | "changed";
 export type DisputeChangeKind = "appear" | "clear" | "kind";
 export type DeltaKind = OccupancyChangeKind | FccChangeKind | DisputeChangeKind;
 export type DeltaScalar = string | number | boolean | null;
@@ -65,12 +65,33 @@ export interface FccFact {
   grantStatus: string | null;
 }
 
+/** One GEO filing parsed from data/ssal.xlsx. Absent on older snapshots. */
+export interface FccWorkbookFiling {
+  callSign: string;
+  slug: string;
+  longitude: number;
+  orbitalLocation: string | null;
+  satelliteName: string | null;
+  licensee: string | null;
+  administration: string | null;
+  service: string | null;
+  frequencyRange: string | null;
+  dateInOrbit: string | null;
+  grantStatus: string | null;
+  notes: string | null;
+}
+
 export interface RegistryState {
   vintage: DeltaVintage;
   registrySlotCount: number;
   occupancy: OccupancyFact[];
   disputes: DisputeFact[];
   fcc: FccFact[];
+  /**
+   * Parsed GEO rows from data/ssal.xlsx. Missing on snapshots captured before
+   * workbook diffs. An empty array means the file was parsed and had no rows.
+   */
+  fccWorkbook?: FccWorkbookFiling[];
 }
 
 export interface DeltaProvenance {
@@ -186,6 +207,9 @@ const DISPUTE_NOTE =
 const FCC_SNAPSHOT_NOTE =
   "Diff of FCC SSAL rows with a real call sign between registry snapshots. Slug is lonToSlug of the authorization longitude, not the occupancy window. Call sign N/A is not a key.";
 
+const FCC_WORKBOOK_NOTE =
+  "Diff of GEO rows parsed from data/ssal.xlsx between registry snapshots. new is a call sign that appeared. removed is a call sign that left the workbook. changed is the same call sign whose orbital location, satellite name, licensee, administration, service, frequency range, in-orbit date, grant status, or notes differed. Call sign N/A is not a key. Rows without an N.N W.L. or E.L. location are not in this diff. This is not a live fcc.gov scrape.";
+
 const FCC_AS_OF_NOTE =
   "FCC workbook file vintage changed between registry snapshots. ingest_meta.last_run is not this date.";
 
@@ -222,6 +246,9 @@ export function canonicalStateJson(state: RegistryState): string {
     disputes: [...state.disputes].sort(compareDispute),
     fcc: [...state.fcc].sort(compareFcc),
   };
+  if (Array.isArray(state.fccWorkbook)) {
+    normalized.fccWorkbook = [...state.fccWorkbook].sort(compareWorkbook);
+  }
   return JSON.stringify(normalized);
 }
 
@@ -273,24 +300,28 @@ export function diffRegistryStates(
     }
   }
 
-  const prevFcc = indexBy(before.fcc.filter((row) => isRealFccCallSign(row.callSign)), (row) => row.callSign);
-  const nextFcc = indexBy(after.fcc.filter((row) => isRealFccCallSign(row.callSign)), (row) => row.callSign);
-  for (const [callSign, row] of nextFcc) {
-    const prev = prevFcc.get(callSign);
-    if (!prev) {
-      changes.push(fccRowChange("new", row, null, row, meta, detectedAt, vintage));
-      continue;
+  if (Array.isArray(before.fccWorkbook) && Array.isArray(after.fccWorkbook)) {
+    changes.push(...diffFccWorkbook(before.fccWorkbook, after.fccWorkbook, meta, detectedAt, vintage));
+  } else {
+    const prevFcc = indexBy(before.fcc.filter((row) => isRealFccCallSign(row.callSign)), (row) => row.callSign);
+    const nextFcc = indexBy(after.fcc.filter((row) => isRealFccCallSign(row.callSign)), (row) => row.callSign);
+    for (const [callSign, row] of nextFcc) {
+      const prev = prevFcc.get(callSign);
+      if (!prev) {
+        changes.push(fccRowChange("new", row, null, row, meta, detectedAt, vintage));
+        continue;
+      }
+      if (clean(prev.licensee) !== clean(row.licensee)) {
+        changes.push(fccRowChange("licensee", row, prev, row, meta, detectedAt, vintage));
+      }
+      if (clean(prev.grantStatus) !== clean(row.grantStatus)) {
+        changes.push(fccRowChange("status", row, prev, row, meta, detectedAt, vintage));
+      }
     }
-    if (clean(prev.licensee) !== clean(row.licensee)) {
-      changes.push(fccRowChange("licensee", row, prev, row, meta, detectedAt, vintage));
-    }
-    if (clean(prev.grantStatus) !== clean(row.grantStatus)) {
-      changes.push(fccRowChange("status", row, prev, row, meta, detectedAt, vintage));
-    }
-  }
-  for (const [callSign, row] of prevFcc) {
-    if (!nextFcc.has(callSign)) {
-      changes.push(fccRowChange("lapsed", row, row, null, meta, detectedAt, vintage));
+    for (const [callSign, row] of prevFcc) {
+      if (!nextFcc.has(callSign)) {
+        changes.push(fccRowChange("lapsed", row, row, null, meta, detectedAt, vintage));
+      }
     }
   }
 
@@ -596,8 +627,8 @@ function limitationsFor(coverage: DeltaCoverage): string[] {
     "slot_events rows of type satellite_relocated are not occupancy enter or leave. They are not included.",
     "FCC slug is lonToSlug of the authorization longitude. That can differ from the occupancy slot slug.",
     "Call sign N/A is not a diff key, matching FCC ingest.",
-    "A call sign that remains listed and changes only longitude does not emit a separate kind. Longitude is included on new, lapsed, licensee, and status rows.",
-    "A re-ingest that does not change occupancy membership, the TLE epoch on an occupancy row, dispute records, FCC call-sign rows, or source file vintages does not append a snapshot.",
+    "On snapshots that do not store parsed workbook rows, a call sign that remains listed and changes only longitude does not emit a separate kind. Longitude is included on new, lapsed, licensee, and status rows. When both snapshots store parsed data/ssal.xlsx rows, that longitude change is a changed filing.",
+    "A re-ingest that does not change occupancy membership, the TLE epoch on an occupancy row, dispute records, FCC call-sign rows, parsed data/ssal.xlsx filings, or source file vintages does not append a snapshot.",
     "since is exclusive. Changes that share a detectedAt are omitted together when since equals that timestamp.",
   ];
   if (coverage === "bootstrap") {
@@ -611,6 +642,7 @@ function limitationsFor(coverage: DeltaCoverage): string[] {
   return [
     ...shared,
     "coverage is ingest_deltas. Occupancy, dispute, and FCC changes between snapshots are diffs of registry_snapshots. There is no vintage before the first snapshot. A tle_epoch row is the same member whose TLE epoch changed, or whose 14 day stale flag changed, between those snapshots. A UCS fallback row does not emit tle_epoch.",
+    "When both snapshots store parsed data/ssal.xlsx rows, FCC filing diffs for that interval are new, removed, and changed. lapsed, licensee, and status are not also emitted for that interval. Snapshots without those rows keep the earlier call-sign diff.",
     "FCC slot_events dated at or before the first snapshot stay in the feed. Later FCC slot_events are not repeated, because the snapshot diff is the record for those intervals.",
     "An as_of change is one row when fccAsOf differs between snapshots. It has no slug.",
   ];
@@ -701,8 +733,127 @@ function disputeChange(
   };
 }
 
+const WORKBOOK_FIELDS = [
+  "orbitalLocation",
+  "satelliteName",
+  "licensee",
+  "administration",
+  "service",
+  "frequencyRange",
+  "dateInOrbit",
+  "grantStatus",
+  "notes",
+] as const satisfies readonly (keyof FccWorkbookFiling)[];
+
+export function diffFccWorkbook(
+  before: FccWorkbookFiling[],
+  after: FccWorkbookFiling[],
+  meta: { fromSnapshotId: number; toSnapshotId: number },
+  detectedAt: string,
+  vintage: DeltaVintage,
+): DeltaChange[] {
+  const prev = indexFilings(before);
+  const next = indexFilings(after);
+  const changes: DeltaChange[] = [];
+  for (const [key, row] of next) {
+    const prior = prev.get(key);
+    if (!prior) {
+      changes.push(workbookChange("new", key, row, null, row, meta, detectedAt, vintage, null));
+      continue;
+    }
+    const changedFields = workbookChangedFields(prior, row);
+    if (changedFields.length > 0) {
+      changes.push(workbookChange("changed", key, row, prior, row, meta, detectedAt, vintage, changedFields));
+    }
+  }
+  for (const [key, row] of prev) {
+    if (!next.has(key)) {
+      changes.push(workbookChange("removed", key, row, row, null, meta, detectedAt, vintage, null));
+    }
+  }
+  return changes;
+}
+
+function workbookChange(
+  kind: "new" | "removed" | "changed",
+  key: string,
+  anchor: FccWorkbookFiling,
+  before: FccWorkbookFiling | null,
+  after: FccWorkbookFiling | null,
+  meta: { fromSnapshotId: number; toSnapshotId: number },
+  detectedAt: string,
+  vintage: DeltaVintage,
+  changedFields: string[] | null,
+): DeltaChange {
+  const row = after ?? before ?? anchor;
+  const token = key.replace(/\|/g, ":");
+  return {
+    id: `fcc:${kind}:${token}:${meta.toSnapshotId}`,
+    domain: "fcc",
+    kind,
+    slug: row.slug,
+    longitude: row.longitude,
+    detectedAt,
+    vintage,
+    subject: {
+      callSign: anchor.callSign,
+      satelliteName: row.satelliteName,
+      changedFields: changedFields ? changedFields.join(",") : null,
+    },
+    before: before ? workbookSide(before) : null,
+    after: after ? workbookSide(after) : null,
+    provenance: {
+      sources: FCC_SOURCES,
+      store: "registry_snapshots",
+      rule: "ssal-xlsx",
+      eventId: null,
+      fromSnapshotId: meta.fromSnapshotId,
+      toSnapshotId: meta.toSnapshotId,
+      note: FCC_WORKBOOK_NOTE,
+    },
+  };
+}
+
+function workbookChangedFields(before: FccWorkbookFiling, after: FccWorkbookFiling): string[] {
+  const fields: string[] = [];
+  if (before.longitude !== after.longitude) fields.push("longitude");
+  for (const field of WORKBOOK_FIELDS) {
+    if (clean(before[field]) !== clean(after[field])) fields.push(field);
+  }
+  return fields;
+}
+
+function workbookSide(row: FccWorkbookFiling): DeltaSide {
+  return {
+    callSign: row.callSign,
+    satelliteName: row.satelliteName,
+    licensee: row.licensee,
+    administration: row.administration,
+    service: row.service,
+    frequencyRange: row.frequencyRange,
+    dateInOrbit: row.dateInOrbit,
+    grantStatus: row.grantStatus,
+    longitude: row.longitude,
+    orbitalLocation: row.orbitalLocation,
+    notes: row.notes,
+  };
+}
+
+function indexFilings(rows: FccWorkbookFiling[]): Map<string, FccWorkbookFiling> {
+  const counts = new Map<string, number>();
+  for (const row of rows) counts.set(row.callSign, (counts.get(row.callSign) ?? 0) + 1);
+  const map = new Map<string, FccWorkbookFiling>();
+  for (const row of rows) {
+    const key = (counts.get(row.callSign) ?? 0) > 1
+      ? `${row.callSign}|${row.longitude}|${(row.satelliteName ?? "").toLowerCase()}`
+      : row.callSign;
+    map.set(key, row);
+  }
+  return map;
+}
+
 function fccRowChange(
-  kind: Exclude<FccChangeKind, "as_of">,
+  kind: "new" | "lapsed" | "licensee" | "status",
   anchor: FccFact,
   before: FccFact | null,
   after: FccFact | null,
@@ -798,7 +949,7 @@ function identityKey(noradId: string | null, name: string): string {
   return `name:${name.toLowerCase().replace(/[^a-z0-9]+/g, "")}`;
 }
 
-function fccEventKind(eventType: string): Exclude<FccChangeKind, "as_of"> | null {
+function fccEventKind(eventType: string): "new" | "lapsed" | "licensee" | "status" | null {
   switch (eventType) {
     case "new_authorization":
       return "new";
@@ -872,6 +1023,14 @@ function compareDispute(a: DisputeFact, b: DisputeFact): number {
 
 function compareFcc(a: FccFact, b: FccFact): number {
   return chain([a.callSign, b.callSign], [a.slug, b.slug]);
+}
+
+function compareWorkbook(a: FccWorkbookFiling, b: FccWorkbookFiling): number {
+  return chain(
+    [a.callSign, b.callSign],
+    [a.slug, b.slug],
+    [a.satelliteName ?? "", b.satelliteName ?? ""],
+  );
 }
 
 function chain(...pairs: [string, string][]): number {

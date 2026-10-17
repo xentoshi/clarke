@@ -301,7 +301,7 @@ Each object has `asOf` (ISO-8601 UTC). These notes describe sources. They do not
 
 `GET /api/v1/agents/deltas` and `clarke_list_deltas` return one object. HTTP wraps it in `{ data, meta }`. `meta.count` is `data.changes.length`. `meta.data_freshness` is the same ingest table as the slot list. MCP returns the object itself.
 
-The feed is written when ingest captures a `registry_snapshots` row (FCC, UCS, Space-Track, position apply, or `npm run vintages`). A re-ingest that does not change occupancy membership, dispute records, FCC call-sign rows, or source file vintages does not append a row. `npm run snapshot:registry` records the current state once.
+The feed is written when ingest captures a `registry_snapshots` row (FCC, UCS, Space-Track, position apply, or `npm run vintages`). A re-ingest that does not change occupancy membership, dispute records, FCC call-sign rows, parsed `data/ssal.xlsx` filings, or source file vintages does not append a row. `npm run snapshot:registry` records the current state once, including the parsed workbook when `data/ssal.xlsx` is present.
 
 `coverage` is `bootstrap` when fewer than two snapshots are stored. `coverage` is `ingest_deltas` once a later snapshot exists. `coverageNote` and `limitations` say what that means. Do not read an empty occupancy list during bootstrap as "nothing entered this week."
 
@@ -322,7 +322,7 @@ Each change:
 |---|---|
 | `id` | Stable id. Snapshot diffs use the snapshot id. Pre-snapshot FCC rows use `fcc:slot_event:<id>`. |
 | `domain` | `occupancy`, `fcc`, or `dispute`. |
-| `kind` | Occupancy: `enter`, `leave`, `authority_flip`, `tle_epoch`. FCC: `new`, `lapsed`, `licensee`, `status`, `as_of`. Dispute: `appear`, `clear`, `kind`. |
+| `kind` | Occupancy: `enter`, `leave`, `authority_flip`, `tle_epoch`. FCC, when a snapshot does not store parsed workbook rows: `new`, `lapsed`, `licensee`, `status`, `as_of`. FCC, when both snapshots store parsed `data/ssal.xlsx` rows: `new`, `removed`, `changed`, plus `as_of` when the workbook date changes. Dispute: `appear`, `clear`, `kind`. |
 | `slug` | Occupancy and dispute: registry slug of that window. FCC row: `lonToSlug` of the authorization longitude. `as_of`: null. A slug filter drops `as_of`. |
 | `longitude` | Slot longitude, or the authorization longitude. Null for `as_of`. |
 | `detectedAt` | ISO-8601 UTC. Snapshot diffs use the later snapshot time. FCC slot_events use the ingest detection time. |
@@ -335,7 +335,9 @@ Each change:
 
 `appear` and `clear` are dispute records on a slug. `kind` is the same slug and identity whose dispute kind changed. `tle_ucs_disagreement` is an in-window pair with absolute UCS-TLE difference above 2 degrees. `ucs_ghost` is a UCS catalog longitude inside the window whose occupancy longitude is outside it and does not agree within 2 degrees.
 
-FCC `new`, `lapsed`, `licensee`, and `status` follow real call signs. Call sign `N/A` is not a key. `as_of` is one row with no slug when `fccAsOf` differs between snapshots.
+FCC `new`, `lapsed`, `licensee`, and `status` follow real call signs on snapshots that do not store parsed workbook rows. Call sign `N/A` is not a key. `as_of` is one row with no slug when `fccAsOf` differs between snapshots.
+
+When both snapshots store GEO rows parsed from `data/ssal.xlsx`, that interval uses `new`, `removed`, and `changed` instead of `lapsed`, `licensee`, and `status`. `new` is a call sign that appeared. `removed` is a call sign that left the workbook. `changed` is the same call sign whose orbital location, satellite name, licensee, administration, service, frequency range, in-orbit date, grant status, or notes differed. `subject.changedFields` lists those fields, comma-separated. Rows without an `N.N W.L.` or `E.L.` location are not in the workbook diff. The first snapshot that stores workbook rows does not mark every filing as `new`. NGSO rows are not included. This is not a live fcc.gov scrape.
 
 What is not in the feed:
 

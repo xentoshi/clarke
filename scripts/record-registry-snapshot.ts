@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs";
 import { closeDb } from "../src/lib/db";
 import { buildCurrentRegistryState, persistRegistrySnapshot } from "../src/lib/registry-snapshot";
+import { readSsalWorkbookFilings } from "./lib/ssal-workbook";
 
 process.chdir(path.resolve(__dirname, ".."));
 
@@ -18,10 +19,13 @@ if (!fs.existsSync(dbPath)) {
 }
 
 const state = buildCurrentRegistryState();
+const workbook = readSsalWorkbookFilings();
+if (workbook && workbook.length > 0) state.fccWorkbook = workbook;
 closeDb();
 const result = persistRegistrySnapshot(state, trigger);
+const workbookCount = state.fccWorkbook?.length ?? 0;
 console.log(
   result.inserted
-    ? `Recorded registry snapshot ${result.id} (${result.kind}, ${trigger}): ${result.registrySlotCount} slots, ${result.occupancyCount} occupancy memberships, ${result.disputeCount} disputes, ${result.fccRowCount} FCC call signs.`
-    : `Registry snapshot unchanged (${result.kind} id ${result.id}).`,
+    ? `Recorded registry snapshot ${result.id} (${result.kind}, ${trigger}): ${result.registrySlotCount} slots, ${result.occupancyCount} occupancy memberships, ${result.disputeCount} disputes, ${result.fccRowCount} FCC call signs, ${workbookCount} SSAL workbook filings.`
+    : `Registry snapshot unchanged (${result.kind} id ${result.id}, ${workbookCount} SSAL workbook filings).`,
 );

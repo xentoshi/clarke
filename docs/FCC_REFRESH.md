@@ -17,7 +17,7 @@ This:
 3. Refuses to wipe `fcc_authorizations` if zero GEO rows parsed.
 4. Writes `ingest_meta` for `FCC-SSAL`: `last_run` (parse clock), `file_vintage` / `source_as_of` (sheet “Updated …” date), `file_sha256`.
 5. Diffs call signs vs the previous table (new / lapsed / licensee / grant-status events).
-6. Appends a `registry_snapshots` row when occupancy membership, dispute records, FCC call signs, or file vintages changed. `GET /api/v1/agents/deltas` reads that row. An unchanged re-parse does not append one.
+6. Appends a `registry_snapshots` row when occupancy membership, dispute records, FCC call signs, parsed `data/ssal.xlsx` filings, or file vintages changed. `GET /api/v1/agents/deltas` diffs those rows. When two snapshots both store parsed workbook rows, the feed reports new, removed, and changed filings. An unchanged re-parse does not append one.
 
 GitHub Actions: `.github/workflows/ingest-fcc.yml` (Mondays + `workflow_dispatch`). It commits `data/clarke.db` only if the database changed.
 

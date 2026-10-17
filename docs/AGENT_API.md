@@ -353,6 +353,10 @@ While `coverage` is `bootstrap`, FCC `new`, `lapsed`, `licensee`, and `status` r
 
 Filters do not change `baseline`. Pass `since` from the last `detectedAt` you stored. Changes that share that timestamp are omitted together.
 
+Public responses page `changes` by `detectedAt`. The first matching timestamp is always included. Later timestamps are added while the change JSON stays under about 1.5 MB. `truncated` is true when more matches remain. `nextSince` is the exclusive cursor for the next page, or null. A body above 2.5 MB is refused. Slot lists, one slot, and satellite lists fit under that cap. Satellite `limit` stays 1 to 1000.
+
+Those reads are cached in the server process until `data/clarke.db` changes. HTTP sends `Cache-Control: public, max-age=60, s-maxage=3600`. A matching `If-None-Match` returns 304. The same 60 requests per minute per IP limit applies on each instance. Remote MCP POST stays `no-store` because the body is JSON-RPC. `initialize` and `tools/list` do not build the registry. Tool results reuse the same process cache. GET and OPTIONS on `/api/v1/mcp` send a public `Cache-Control` max-age. MCP request bodies above 64 KB are refused.
+
 ## Related pages
 
 - [Data trust](./DATA_TRUST.md): TLE gates, registry row identity, V/M/S audit.

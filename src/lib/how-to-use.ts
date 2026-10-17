@@ -5,7 +5,7 @@ export type HowToPiece =
   | { type: "link"; href: string; text: string };
 
 /**
- * Four steps for the registry homepage and /docs.
+ * Four steps on /docs. The registry homepage links here from the footer.
  * Each step is one sentence and names a control that exists in the UI.
  */
 export const HOW_TO_STEPS: HowToPiece[][] = [

@@ -28,10 +28,12 @@ const CORS: Record<string, string> = {
   "Access-Control-Max-Age": "86400",
 };
 
-function withCors(res: Response): Response {
+export const MAX_MCP_REQUEST_BYTES = 65_536;
+
+function withCors(res: Response, cacheControl = "no-store"): Response {
   const headers = new Headers(res.headers);
   for (const [key, value] of Object.entries(CORS)) headers.set(key, value);
-  headers.set("Cache-Control", "no-store");
+  headers.set("Cache-Control", cacheControl);
   return new Response(res.body, {
     status: res.status,
     statusText: res.statusText,
@@ -59,7 +61,7 @@ async function buffer(res: Response): Promise<Response> {
 
 export async function handleMcpHttp(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: { ...CORS, "Cache-Control": "no-store" } });
+    return new Response(null, { status: 204, headers: { ...CORS, "Cache-Control": "public, max-age=86400" } });
   }
 
   const rl = checkRateLimit(getClientIp(req as NextRequest));
@@ -76,6 +78,7 @@ export async function handleMcpHttp(req: Request): Promise<Response> {
         "Method Not Allowed. This endpoint is stateless Streamable HTTP. POST JSON-RPC messages here. GET returns 405 because this host does not keep a server-push SSE stream. Clients continue with POST.",
         { Allow: "POST, DELETE, OPTIONS" },
       ),
+      "public, max-age=3600",
     );
   }
 
@@ -83,6 +86,19 @@ export async function handleMcpHttp(req: Request): Promise<Response> {
     return withCors(
       jsonRpcError(405, -32000, "Method Not Allowed", { Allow: "POST, DELETE, OPTIONS" }),
     );
+  }
+
+  let rpcRequest = req;
+  if (req.method === "POST") {
+    const buf = await req.arrayBuffer();
+    if (buf.byteLength > MAX_MCP_REQUEST_BYTES) {
+      return withCors(jsonRpcError(413, -32600, `Request body exceeds ${MAX_MCP_REQUEST_BYTES} bytes.`));
+    }
+    rpcRequest = new Request(req.url, {
+      method: req.method,
+      headers: req.headers,
+      body: buf.byteLength ? buf : undefined,
+    });
   }
 
   const server = createServer();
@@ -93,7 +109,7 @@ export async function handleMcpHttp(req: Request): Promise<Response> {
 
   try {
     await server.connect(transport);
-    const raw = await transport.handleRequest(req);
+    const raw = await transport.handleRequest(rpcRequest);
     return withCors(await buffer(raw));
   } catch {
     return withCors(jsonRpcError(500, -32603, "Internal error"));

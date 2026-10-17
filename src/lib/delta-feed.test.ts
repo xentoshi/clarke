@@ -553,6 +553,7 @@ describe("live delta feed", () => {
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /coverage is bootstrap/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /tle_epoch/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /14 day/);
+    assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /nextSince/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /ITU SNS is not ingested/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /data\/ssal\.xlsx/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /removed/);

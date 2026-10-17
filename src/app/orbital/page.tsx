@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
-import { HowToUse } from "@/components/HowToUse";
 import OrbitalExplorer from "./OrbitalExplorer";
 import { buildExplorerRows } from "@/lib/explorer";
 import { buildGeoBelt } from "@/lib/belt-data";
@@ -34,7 +33,6 @@ export default async function OrbitalPage() {
           Every tracked GEO position, by longitude. Who is on station, whether the FCC licensed it, and what is uncertain.
           Open a row for the Slot Terminal. Fair value is a labeled model, hidden by default.
         </p>
-        <HowToUse className="mt-8" />
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-6 text-[14px]">
           <Link href="/orbital/map" className="text-ink hover:text-muted transition-colors">
             Belt

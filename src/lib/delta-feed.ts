@@ -150,8 +150,15 @@ export interface DeltaFeed {
   };
   baseline: DeltaBaseline | null;
   appliedFilter: DeltaFilter;
+  /** True when `changes` is a page and more matches remain. */
+  truncated: boolean;
+  /** Exclusive `since` cursor for the next page. Null when `truncated` is false. */
+  nextSince: string | null;
   changes: DeltaChange[];
 }
+
+/** Keep one public delta response under this many bytes of change JSON. */
+export const DELTA_PAGE_BYTE_BUDGET = 1_500_000;
 
 export interface RegistrySnapshotRecord {
   id: number;
@@ -419,6 +426,8 @@ export function assembleDeltaFeed(input: {
         }
       : null,
     appliedFilter: { ...EMPTY_FILTER },
+    truncated: false,
+    nextSince: null,
     changes: [...pre, ...intervalChanges].sort(compareChanges),
   };
 }
@@ -461,7 +470,46 @@ export function selectDeltaChanges(feed: DeltaFeed, query: DeltaFeedQuery = {}):
   return {
     ...feed,
     appliedFilter: { slug, domain, since: sinceIso },
+    truncated: false,
+    nextSince: null,
     changes,
+  };
+}
+
+/**
+ * Pages `changes` by detectedAt so a public response does not stringify the
+ * full history. The first timestamp group is always included. Later groups
+ * are added while the change JSON stays under DELTA_PAGE_BYTE_BUDGET.
+ * `nextSince` is the last returned detectedAt. `since` stays exclusive, and
+ * changes that share a timestamp stay together.
+ */
+export function pageDeltaChanges(feed: DeltaFeed, query: DeltaFeedQuery = {}): DeltaFeed {
+  const selected = selectDeltaChanges(feed, query);
+  const changes = selected.changes;
+  if (changes.length === 0) return selected;
+
+  let end = 0;
+  let bytes = 2;
+  let index = 0;
+  while (index < changes.length) {
+    const stamp = changes[index].detectedAt;
+    let next = index + 1;
+    while (next < changes.length && changes[next].detectedAt === stamp) next += 1;
+    const groupBytes = JSON.stringify(changes.slice(index, next)).length;
+    if (end > 0 && bytes + groupBytes > DELTA_PAGE_BYTE_BUDGET) break;
+    end = next;
+    bytes += groupBytes;
+    index = next;
+    if (bytes >= DELTA_PAGE_BYTE_BUDGET) break;
+  }
+
+  const page = changes.slice(0, end);
+  const truncated = end < changes.length;
+  return {
+    ...selected,
+    truncated,
+    nextSince: truncated ? page[page.length - 1]?.detectedAt ?? null : null,
+    changes: page,
   };
 }
 

@@ -32,6 +32,7 @@ import { ingestAsOf } from "./provenance";
 import { regionForLongitude } from "./regions";
 import { isSafeSlug } from "./slot-utils";
 import { buildRecordedProvenance, type RecordedProvenance } from "./slot-terminal";
+import { cachedRead } from "./process-cache";
 
 export interface AgentOccupancyObservation {
   id: number;
@@ -252,6 +253,10 @@ function assemble(input: {
 
 export function buildAgentSlot(slug: string): AgentSlotPayload | null {
   if (!isSafeSlug(slug)) return null;
+  return cachedRead(`agent-slot:${slug}`, () => buildAgentSlotUncached(slug));
+}
+
+function buildAgentSlotUncached(slug: string): AgentSlotPayload | null {
   const lon = slugToLon(slug);
   if (lon === null) return null;
 
@@ -277,6 +282,10 @@ export function buildAgentSlot(slug: string): AgentSlotPayload | null {
 }
 
 export function listAgentSlots(): AgentSlotPayload[] {
+  return cachedRead("agent-slots", () => listAgentSlotsUncached());
+}
+
+function listAgentSlotsUncached(): AgentSlotPayload[] {
   const merged = mergeWithUcs(curatedSlots);
   const now = new Date();
   const allSats = getGeoSatellites();

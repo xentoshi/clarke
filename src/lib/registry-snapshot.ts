@@ -26,6 +26,7 @@ import {
   type RegistrySnapshotRecord,
   type RegistryState,
 } from "./delta-feed";
+import { cachedRead } from "./process-cache";
 
 const DB_PATH = path.join(process.cwd(), "data", "clarke.db");
 
@@ -136,12 +137,12 @@ export function fccFactsByCallSign(facts: FccFact[]): Map<string, FccFact> {
 }
 
 export function buildDeltaFeedFromDb(): DeltaFeed {
-  return assembleDeltaFeed({
+  return cachedRead("delta-feed", () => assembleDeltaFeed({
     snapshots: readRegistrySnapshots(),
     fccEvents: readFccSlotEvents(),
     observed: observedFromFreshness(getDataFreshness()),
     fccByCallSign: fccFactsByCallSign(fccFactsFromDb()),
-  });
+  }));
 }
 
 export function fccFactsFromDb(): FccFact[] {

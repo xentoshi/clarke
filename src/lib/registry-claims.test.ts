@@ -79,11 +79,13 @@ describe("live registry claims (clarke.db)", () => {
     const ses = rows.find((row) => lonToSlug(row.longitude) === "103-1w");
     const directv = rows.find((row) => lonToSlug(row.longitude) === "102-7w");
     const hispamar = rows.find((row) => lonToSlug(row.longitude) === "61w");
-    const dod = rows.find((row) => lonToSlug(row.longitude) === "95w");
+    const slot95 = rows.find((row) => lonToSlug(row.longitude) === "95w");
     assert.equal(ses?.operator, "SES");
     assert.equal(directv?.operator, "DirecTV");
     assert.equal(hispamar?.operator, "Hispamar");
-    assert.equal(dod?.operator, "US DoD");
+    assert.equal(slot95?.operator, "Intelsat");
+    assert.match(slot95?.operatorRaw ?? "", /Air Force Satellite Control Network/);
+    assert.match(slot95?.operatorRaw ?? "", /Intelsat S\.A\./);
     assert.ok((hispamar?.ucsCount ?? 0) >= 2);
     assert.match(hispamar?.satellite ?? "", /Amazonas/);
   });

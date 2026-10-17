@@ -11,5 +11,10 @@ export async function GET(req: NextRequest) {
   if (!rl.allowed) return rateLimited(rl.retryAfter);
 
   const data = listSlots();
-  return ok(data, { count: data.length, freshness: freshnessMeta() });
+  return ok(data, {
+    count: data.length,
+    freshness: freshnessMeta(),
+    cacheKey: "agents:slots",
+    ifNoneMatch: req.headers.get("if-none-match"),
+  });
 }

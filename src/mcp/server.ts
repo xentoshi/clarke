@@ -7,6 +7,7 @@ import {
   listDeltas,
 } from "../lib/agents/operations";
 import { DeltaQueryError } from "../lib/delta-feed";
+import { MAX_PUBLIC_JSON_BYTES, cachedRead } from "../lib/process-cache";
 
 export const CLARKE_LIST_SLOTS_DESCRIPTION =
   "List GEO slots in the Clarke registry (curated positions merged with UCS-derived positions). Each entry includes slug, label, longitude, region, operatorIdentity (split, single, or none) and operatorMix (canonical name, count, share, and raw source strings per operator), country, status, ituRecorded, satellite count, FCC authorizations, occupancy observations (TLE longitude, tleEpoch, tleStale, UCS longitude, delta, disputed flag, and which source supplied occupancy), dispute records (TLE vs UCS disagreement above 2 degrees, and UCS ghosts), and source vintage. sourceVintage.tleStale is true when a TLE used for occupancy is older than 14 days. A UCS fallback row does not treat a catalog date as a TLE epoch, and its tleStale is false. operatorMix is who is in the occupancy window. A split window has no single holder name. Provenance is included for occupancy, the UCS catalog, FCC rows, license, and rights. ITU SNS is not ingested (ituRecorded is not_in_product). TLE longitude is a tracked position, not an FCC or ITU assignment.";
@@ -23,20 +24,27 @@ export const CLARKE_LIST_SATELLITES_DESCRIPTION =
   "List GEO satellites from the UCS Satellite Database, optionally filtered by operator or owner country. Returns up to `limit` rows (default 100; max 1000).";
 
 export const CLARKE_LIST_DELTAS_DESCRIPTION =
-  "On-ingest change feed for GEO slot occupancy, FCC rows, and disputes (Slot Index delta feed, edition 2). coverage is bootstrap when fewer than two registry snapshots are stored, and ingest_deltas once a later snapshot exists. Each change has slug, longitude when available, detectedAt, source vintage, before and after, and provenance. Occupancy changes are enter, leave, authority_flip, and tle_epoch. tle_epoch is a TLE epoch change or a 14 day stale transition on a TLE used for occupancy. Bootstrap does not invent occupancy history. FCC changes are new, lapsed, licensee, status, and as_of when a snapshot does not store parsed workbook rows. When both snapshots store parsed data/ssal.xlsx rows, filing diffs for that interval are new, removed, and changed. removed is a call sign that left the workbook. changed is the same call sign with a different orbital location, satellite name, licensee, administration, service, frequency range, in-orbit date, grant status, or notes. Dispute changes are appear, clear, and kind. ITU SNS is not ingested. TLE longitude is a tracked position, not an FCC or ITU assignment. satellite_relocated rows are not occupancy changes. Optional filters: slug, domain (occupancy, fcc, dispute), since (exclusive ISO-8601 UTC).";
+  "On-ingest change feed for GEO slot occupancy, FCC rows, and disputes (Slot Index delta feed, edition 2). coverage is bootstrap when fewer than two registry snapshots are stored, and ingest_deltas once a later snapshot exists. Each change has slug, longitude when available, detectedAt, source vintage, before and after, and provenance. Occupancy changes are enter, leave, authority_flip, and tle_epoch. tle_epoch is a TLE epoch change or a 14 day stale transition on a TLE used for occupancy. Bootstrap does not invent occupancy history. FCC changes are new, lapsed, licensee, status, and as_of when a snapshot does not store parsed workbook rows. When both snapshots store parsed data/ssal.xlsx rows, filing diffs for that interval are new, removed, and changed. removed is a call sign that left the workbook. changed is the same call sign with a different orbital location, satellite name, licensee, administration, service, frequency range, in-orbit date, grant status, or notes. Dispute changes are appear, clear, and kind. ITU SNS is not ingested. TLE longitude is a tracked position, not an FCC or ITU assignment. satellite_relocated rows are not occupancy changes. Optional filters: slug, domain (occupancy, fcc, dispute), since (exclusive ISO-8601 UTC). The public page keeps change JSON under about 1.5 MB. truncated is true when more changes matched. Pass since from nextSince to continue.";
 
 const SAFE_SLUG = /^[a-z0-9-]+$/;
 const SAFE_STRING = /^[A-Za-z0-9 .\-_&]{1,80}$/;
 
-function textResult(payload: unknown) {
+function textResult(text: string) {
+  if (text.length > MAX_PUBLIC_JSON_BYTES) {
+    return errorResult(`Response exceeds ${MAX_PUBLIC_JSON_BYTES} bytes. Narrow the query with slug, domain, since, or limit.`);
+  }
   return {
     content: [
       {
         type: "text" as const,
-        text: JSON.stringify(payload),
+        text,
       },
     ],
   };
+}
+
+function cachedJson(key: string, load: () => unknown) {
+  return textResult(cachedRead(key, () => JSON.stringify(load())));
 }
 
 function errorResult(message: string) {
@@ -56,7 +64,7 @@ export function createServer(): McpServer {
     "clarke_list_slots",
     CLARKE_LIST_SLOTS_DESCRIPTION,
     {},
-    async () => textResult(listSlots()),
+    async () => cachedJson("mcp:list-slots", () => listSlots()),
   );
 
   server.tool(
@@ -66,7 +74,7 @@ export function createServer(): McpServer {
     async ({ slug }) => {
       const dossier = getSlotDossier(slug);
       if (!dossier) return errorResult(`No slot at slug '${slug}'`);
-      return textResult(dossier);
+      return cachedJson(`mcp:slot:${slug}`, () => dossier);
     },
   );
 
@@ -77,7 +85,7 @@ export function createServer(): McpServer {
     async ({ slug }) => {
       const dossier = getSlotDossier(slug);
       if (!dossier) return errorResult(`No slot at slug '${slug}'`);
-      return textResult(dossier);
+      return cachedJson(`mcp:slot:${slug}`, () => dossier);
     },
   );
 
@@ -91,7 +99,7 @@ export function createServer(): McpServer {
     },
     async ({ slug, domain, since }) => {
       try {
-        return textResult(listDeltas({ slug, domain, since }));
+        return cachedJson(`mcp:deltas:${slug ?? ""}:${domain ?? ""}:${since ?? ""}`, () => listDeltas({ slug, domain, since }));
       } catch (err) {
         if (err instanceof DeltaQueryError) return errorResult(err.message);
         throw err;
@@ -108,11 +116,14 @@ export function createServer(): McpServer {
       limit: z.number().int().min(1).max(1000).default(MCP_SATELLITE_DEFAULT_LIMIT),
     },
     async ({ operator, ownerCountry, limit }) =>
-      textResult(listSatellites({
-        operator,
-        ownerCountry,
-        limit: limit ?? MCP_SATELLITE_DEFAULT_LIMIT,
-      })),
+      cachedJson(
+        `mcp:satellites:${operator ?? ""}:${ownerCountry ?? ""}:${limit ?? MCP_SATELLITE_DEFAULT_LIMIT}`,
+        () => listSatellites({
+          operator,
+          ownerCountry,
+          limit: limit ?? MCP_SATELLITE_DEFAULT_LIMIT,
+        }),
+      ),
   );
 
   return server;

@@ -79,13 +79,15 @@ describe("live registry claims (clarke.db)", () => {
     const ses = rows.find((row) => lonToSlug(row.longitude) === "103-1w");
     const directv = rows.find((row) => lonToSlug(row.longitude) === "102-7w");
     const hispamar = rows.find((row) => lonToSlug(row.longitude) === "61w");
-    const slot95 = rows.find((row) => lonToSlug(row.longitude) === "95w");
+    const arc95 = rows.find((row) => lonToSlug(row.longitude) === "95w");
     assert.equal(ses?.operator, "SES");
     assert.equal(directv?.operator, "DirecTV");
     assert.equal(hispamar?.operator, "Hispamar");
-    assert.equal(slot95?.operator, "Intelsat");
-    assert.match(slot95?.operatorRaw ?? "", /Air Force Satellite Control Network/);
-    assert.match(slot95?.operatorRaw ?? "", /Intelsat S\.A\./);
+    // SES (former Intelsat) and US DoD each have two satellites. The tie breaks
+    // on the canonical name, so the registry operator is SES. Raw strings stay.
+    assert.equal(arc95?.operator, "SES");
+    assert.match(arc95?.operatorRaw ?? "", /Air Force Satellite Control Network/);
+    assert.match(arc95?.operatorRaw ?? "", /Intelsat S\.A\./);
     assert.ok((hispamar?.ucsCount ?? 0) >= 2);
     assert.match(hispamar?.satellite ?? "", /Amazonas/);
   });

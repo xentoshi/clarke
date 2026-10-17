@@ -9,9 +9,12 @@ import {
   type PositionSource,
 } from "./position-authority";
 import type { OrbitalSlot } from "@/data/orbital-slots";
+import { DRIFT_TLE_SUPPLEMENT } from "@/data/drift-tle-supplement";
 import { isLaunchVehicleOperator, resolveOperator } from "./operator-identity";
 import { collapseUcsClaimSlots } from "./registry-claims";
 import { loadPostUcsGeoOccupants } from "./post-ucs-occupancy";
+import { servicingByNorad, type ServicingAttachment } from "./servicing-vehicle";
+import { countryFromOccupants } from "./slot-country";
 import { reconcileRegistryStatus } from "./slot-status";
 import { isDodPlaceholderAuthorization } from "./fcc-placeholder";
 import { cachedRead, registryCacheToken } from "./process-cache";
@@ -52,6 +55,8 @@ export interface GeoSatellite {
   comments: string | null;
   /** tle-supplement: station-kept GEO launched after the UCS file vintage. Absent on UCS rows. */
   catalogSource?: "ucs" | "tle-supplement";
+  /** Set when this object shares an element set with a host payload. */
+  servicing: ServicingAttachment | null;
 }
 
 const GEO_SELECT = `
@@ -133,7 +138,17 @@ function loadTleMap(): Map<string, TleJoin> {
   const rows = db.prepare(
     "SELECT norad_id, tle1, tle2, epoch, ingested_at FROM spacetrack_tles",
   ).all() as (TleJoin & { norad_id: string })[];
-  return new Map(rows.map((r) => [r.norad_id, r]));
+  const map = new Map<string, TleJoin>(rows.map((r) => [r.norad_id, r]));
+  for (const extra of DRIFT_TLE_SUPPLEMENT) {
+    if (map.has(extra.noradId)) continue;
+    map.set(extra.noradId, {
+      tle1: extra.tle1,
+      tle2: extra.tle2,
+      epoch: extra.epoch,
+      ingested_at: extra.ingestedAt,
+    });
+  }
+  return map;
 }
 
 function loadSatcatMap(): Map<string, SatcatJoin> {
@@ -180,6 +195,7 @@ function enrichGeoSatellite(raw: RawGeoSatellite, tles: Map<string, TleJoin>, sa
     tleAgeDays: pos.tleAgeDays,
     tleUsable: pos.tleUsable,
     tleRejectReason: pos.tleRejectReason,
+    servicing: null,
   };
 }
 
@@ -195,10 +211,23 @@ export function getGeoSatellites(): GeoSatellite[] {
   const satcat = loadSatcatMap();
   const enriched = raw.map((r) => enrichGeoSatellite(r, tles, satcat));
   const knownNorad = new Set(raw.map((r) => r.noradId).filter((id): id is string => Boolean(id)));
-  const combined = [...enriched, ...loadPostUcsGeoOccupants(knownNorad)];
+  const combined = annotateServicing([...enriched, ...loadPostUcsGeoOccupants(knownNorad)], tles);
   combined.sort((a, b) => (a.longitudeGeo ?? 999) - (b.longitudeGeo ?? 999) || a.name.localeCompare(b.name));
   geoCache = combined;
   return combined;
+}
+
+function annotateServicing(sats: GeoSatellite[], tles: Map<string, TleJoin>): GeoSatellite[] {
+  const attachments = servicingByNorad(
+    sats.map((sat) => {
+      const tle = sat.noradId ? tles.get(sat.noradId) : undefined;
+      return { noradId: sat.noradId, name: sat.name, tle1: tle?.tle1 ?? null, tle2: tle?.tle2 ?? null };
+    }),
+  );
+  return sats.map((sat) => ({
+    ...sat,
+    servicing: sat.noradId ? attachments.get(sat.noradId) ?? null : null,
+  }));
 }
 
 export function getGeoSatellitesByLongitude(lon: number, toleranceDeg = COLOCATION_TOLERANCE_DEG): GeoSatellite[] {
@@ -570,6 +599,7 @@ function computeMergedRegistry(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
       ...slot,
       operator: op.display,
       operatorRaw: slot.operatorRaw ?? slot.operator,
+      country: countryFromOccupants(nearby.map((s) => s.ownerCountry)),
       status: reconcileRegistryStatus({
         curated: slot.status,
         occupied: nearby.length > 0,
@@ -657,7 +687,7 @@ function fccOnlySlots(coveredLons: number[], toleranceDeg: number): OrbitalSlot[
       label: formatLon(lon),
       operator: op.display,
       operatorRaw: primary.licensee ?? "",
-      country: primary.administration ?? "",
+      country: "",
       bands: [],
       status: "filed",
       coverage: [],

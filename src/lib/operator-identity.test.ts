@@ -4,6 +4,7 @@ import { OPERATOR_ALIAS_ENTRIES } from "@/data/operator-aliases";
 import {
   normalizeOperatorKey,
   resolveOperator,
+  resolveSatelliteOperator,
   operatorDisplay,
   operatorMatchesQuery,
   listedOperatorCanonicals,
@@ -27,9 +28,11 @@ describe("operator identity (curated alias map)", () => {
       ["SES S.A.", "SES"],
       ["SES Americom, Inc.", "SES"],
       ["New Skies Satellites B.V.", "SES"],
-      ["Intelsat S.A.", "Intelsat"],
-      ["Intelsat License LLC", "Intelsat"],
-      ["PanAmSat (Intelsat S.A.)", "Intelsat"],
+      ["Intelsat S.A.", "SES"],
+      ["Intelsat License LLC", "SES"],
+      ["PanAmSat (Intelsat S.A.)", "SES"],
+      ["Telenor Satellite Broadcasting", "Space Norway"],
+      ["Horizon-3 Satellite LLC", "Horizons-3 Satellite LLC"],
       ["EUTELSAT S.A.", "Eutelsat"],
       ["EUTELSAT Americas", "Eutelsat"],
       ["ES 172 LLC", "Eutelsat"],
@@ -113,6 +116,42 @@ describe("operator identity (curated alias map)", () => {
   });
 });
 
+describe("known successors stay visible", () => {
+  it("flags Intelsat strings with the former name and the 17 July 2025 close", () => {
+    for (const raw of ["Intelsat", "Intelsat S.A.", "Intelsat License LLC", "PanAmSat"]) {
+      const resolved = resolveOperator(raw);
+      assert.equal(resolved.display, "SES", raw);
+      assert.match(resolved.notes ?? "", /Former name Intelsat/);
+      assert.match(resolved.notes ?? "", /17 July 2025/);
+      assert.equal(resolved.raw, raw);
+    }
+    const ses = resolveOperator("SES S.A.");
+    assert.equal(ses.display, "SES");
+    assert.doesNotMatch(ses.notes ?? "", /17 July 2025/);
+  });
+
+  it("maps Thor operator strings at 1W to Space Norway and keeps the former name", () => {
+    const thor = resolveOperator("Telenor Satellite Broadcasting");
+    assert.equal(thor.display, "Space Norway");
+    assert.match(thor.notes ?? "", /Former name Telenor Satellite Broadcasting/);
+  });
+
+  it("maps Horizons 3e to Horizons-3 Satellite LLC without remapping Horizons 2", () => {
+    const horizons3 = resolveSatelliteOperator(
+      "Horizons 2 Satellite, LLC (Intelsat, Sky Perfect JSAT Corporation)",
+      { noradId: "43633" },
+    );
+    assert.equal(horizons3.display, "Horizons-3 Satellite LLC");
+    assert.match(horizons3.raw, /Horizons 2 Satellite/);
+    const horizons2 = resolveSatelliteOperator(
+      "Horizons 2 Satellite, LLC (Intelsat, Sky Perfect JSAT Corporation)",
+      { noradId: "32388" },
+    );
+    assert.equal(horizons2.display, "Horizons 2 Satellite, LLC (Intelsat, Sky Perfect JSAT Corporation)");
+    assert.equal(resolveOperator("Horizon-3 Satellite LLC").display, "Horizons-3 Satellite LLC");
+  });
+});
+
 describe("launch vehicle is not an operator", () => {
   it("refuses a source string that equals the launch vehicle and leaves other strings alone", () => {
     assert.equal(isLaunchVehicleOperator("Atlas 5", "Atlas 5"), true);
@@ -155,7 +194,10 @@ describe("ITU presence", () => {
     assert.equal(p.ituRecorded, "not_in_product");
     assert.match(p.label, /not recorded in Clarke/i);
     assert.match(p.chip, /Unrecorded in Clarke/);
-    assert.match(p.detail, /SNS is not ingested/i);
+    assert.match(p.detail, /ITU filings are not in this product/);
+    assert.match(p.detail, /ITU Space Explorer/);
+    assert.match(p.detail, /SNS Online shut down in January 2025/);
+    assert.doesNotMatch(p.detail, /SNS is not ingested/i);
     assert.doesNotMatch(p.chip, /brought into use/i);
     assert.doesNotMatch(p.label, /brought into use/i);
   });

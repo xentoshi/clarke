@@ -99,6 +99,30 @@ describe("resolveOccupancyPosition", () => {
     assert.equal(ecc.source, "ucs");
     const mm = tleOk({ tleMeanMotion: 12.5, tleLongitude: 10 });
     assert.equal(mm.tleUsable, false);
+    assert.equal(mm.source, "none");
+    assert.equal(mm.tleRejectReason, "drifting");
+    assert.equal(mm.occupancyLongitude, null);
+  });
+
+  it("does not count a drifter and does not fall back to the UCS longitude", () => {
+    const msat = tleOk({
+      ucsLongitude: -101.21,
+      tleLongitude: 72.18,
+      tleMeanMotion: 0.98906637,
+    });
+    assert.equal(msat.source, "none");
+    assert.equal(msat.occupancyLongitude, null);
+    assert.equal(msat.tleUsable, false);
+    assert.equal(msat.tleRejectReason, "drifting");
+
+    const kept = tleOk({ tleMeanMotion: 1.0013 });
+    const keptHigh = tleOk({ tleMeanMotion: 1.0041 });
+    assert.equal(kept.source, "tle");
+    assert.equal(keptHigh.source, "tle");
+    const under = tleOk({ tleMeanMotion: 1.0012, ucsLongitude: 169.2, tleLongitude: 167.17 });
+    assert.equal(under.source, "none");
+    assert.equal(under.occupancyLongitude, null);
+    assert.equal(under.tleRejectReason, "drifting");
   });
 
   it("rejects a TLE that was already stale when Space-Track ingested it", () => {

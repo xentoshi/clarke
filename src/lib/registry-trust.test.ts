@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { slots as curatedSlots } from "@/data/orbital-slots";
 import { agentPayloadViolations, buildAgentSlot } from "./agent-slot";
 import { densestBySatelliteCount } from "./densest";
+import { buildExplorerRows } from "./explorer";
 import { isDodPlaceholderAuthorization } from "./fcc-placeholder";
 import { isStationKeptPostUcsPayload, loadPostUcsGeoOccupants, ucsFileVintageIso } from "./post-ucs-occupancy";
 import { reconcileRegistryStatus } from "./slot-status";
@@ -127,5 +128,65 @@ describe("live registry trust (clarke.db)", () => {
     assert.equal(e169?.status, "active");
     assert.ok((e169?.satCount ?? 0) > 0);
     assert.equal(lonToSlug(-45), "45w");
+  });
+
+  it("applies the audited occupancy counts and lets densest follow satCount", () => {
+    const absent = (slug: string, count: number, names: RegExp[]) => {
+      const agent = buildAgentSlot(slug);
+      assert.ok(agent, slug);
+      assert.equal(agent.satCount, count, slug);
+      assert.equal(agent.occupancy.length, count, slug);
+      assert.deepEqual(agentPayloadViolations(agent), []);
+      assert.equal("valuation" in agent, false);
+      assert.equal("congestion" in agent, false);
+      for (const name of names) {
+        assert.equal(agent.occupancy.some((row) => name.test(row.name)), false, name.source);
+      }
+    };
+    absent("101w", 3, [/MSAT/i]);
+    absent("45w", 1, [/Intelsat 1R/i]);
+    absent("169e", 1, [/Fengyun/i]);
+    // The 2026-10-17 refresh places Express-AM33 (NORAD 32478) at -1.37,
+    // 0.37 degrees from 1W, with mean motion 1.00250657. That is station-kept
+    // and inside the window, so 1W is 6 after the three drifters leave.
+    absent("1w", 6, [/Astra 1G/i, /Skynet 4C/i, /DSP 20/i]);
+
+    const one = buildAgentSlot("1w");
+    assert.ok(one);
+    assert.ok(one.occupancy.some((row) => row.noradId === "32478"));
+    const mev = one.occupancy.find((row) => row.noradId === "46113");
+    assert.ok(mev);
+    assert.equal(mev.role, "servicing");
+    assert.equal(mev.slotHolder, false);
+    assert.equal(mev.attachedToNoradId, "28358");
+    assert.equal(mev.attachmentBasis, "identical_element_set");
+    assert.equal(one.operatorMix.some((share) => share.operator === "Space Logistics LLC"), false);
+    assert.ok(one.operatorMix.some((share) => share.operator === "Space Norway"));
+    const sesAt1w = one.operatorMix.find((share) => share.operator === "SES");
+    assert.match(sesAt1w?.notes ?? "", /Former name Intelsat/);
+    assert.match(sesAt1w?.notes ?? "", /17 July 2025/);
+    assert.equal(one.country, "");
+
+    const west = buildAgentSlot("101w");
+    assert.equal(west?.country, "");
+    const mid = buildAgentSlot("45w");
+    assert.equal(mid?.occupancy[0]?.operator, "SES");
+    assert.match(mid?.operatorMix[0]?.notes ?? "", /17 July 2025/);
+    assert.equal(mid?.country, "USA");
+    const pacific = buildAgentSlot("169e");
+    assert.equal(pacific?.occupancy[0]?.operator, "Horizons-3 Satellite LLC");
+    assert.equal(pacific?.country, "USA/Japan");
+
+    const rows = buildExplorerRows();
+    const densest = densestBySatelliteCount(rows);
+    const max = Math.max(...rows.map((row) => row.satCount));
+    assert.equal(densest?.satCount, max);
+    assert.equal(densest?.label, rows.find((row) => row.satCount === max)?.label);
+    assert.equal(densest?.label, "128.2°E");
+    assert.equal(densest?.satCount, 7);
+    assert.equal(rows.find((row) => row.slug === "1w")?.satCount, 6);
+    assert.equal(rows.find((row) => row.slug === "101w")?.satCount, 3);
+    assert.equal(rows.find((row) => row.slug === "45w")?.satCount, 1);
+    assert.equal(rows.find((row) => row.slug === "169e")?.satCount, 1);
   });
 });

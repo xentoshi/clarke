@@ -24,7 +24,8 @@ import { ingestAsOf, type Provenance } from "./provenance";
 import { regionForLongitude } from "./regions";
 import { isSafeSlug } from "./slot-utils";
 import { summarizeOperators, type OperatorShare } from "./operator-mix";
-import { isLaunchVehicleOperator, resolveOperator } from "./operator-identity";
+import { isLaunchVehicleOperator, resolveOperator, resolveSatelliteOperator } from "./operator-identity";
+import { countryFromOccupants } from "./slot-country";
 import { ituPresence, type ItuRecorded } from "./itu-presence";
 import { buildSlotPositionTrust, type SlotPositionTrust } from "./position-authority";
 import { circularAbsDiffDeg } from "./geo-angle";
@@ -55,6 +56,8 @@ export interface SlotTerminalModel {
   operatorRaw: string;
   occupancyMajority: string;
   operatorMix: OperatorShare[];
+  /** Former-name note when the registry operator string has a known successor. */
+  operatorNotes?: string;
   ituRecorded: ItuRecorded;
   country: string;
   purpose: string | null;
@@ -162,7 +165,8 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
   if (sats.length === 0 && fccAuths.length === 0 && !curated) return null;
 
   const label = curated?.label ?? formatLon(lon);
-  const attributed = sats.map((s) => ({
+  const holders = sats.filter((s) => !s.servicing);
+  const attributed = holders.map((s) => ({
     ...s,
     operator: isLaunchVehicleOperator(s.operator, s.launchVehicle) ? null : s.operator,
   }));
@@ -174,7 +178,9 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
   const operatorSource = curated
     ? curated.operator
     : occupancyMajority || fccAuths[0]?.licensee || "";
-  const operatorResolved = resolveOperator(operatorSource);
+  const operatorResolved = resolveSatelliteOperator(operatorSource, {
+    noradId: curated?.noradIds?.length === 1 ? curated.noradIds[0] : null,
+  });
   const operator = operatorResolved.display;
   const operatorRaw =
     curated?.operatorRaw ||
@@ -183,7 +189,7 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
     fccAuths[0]?.licensee ||
     "";
   const itu = ituPresence();
-  const country = curated?.country || sats[0]?.ownerCountry || fccAuths[0]?.administration || "";
+  const country = countryFromOccupants(sats.map((s) => s.ownerCountry));
   const congestion = getCongestion(lon);
   const latest = getLatestIngest();
   const asOf = ingestAsOf(latest?.lastRun ?? null);
@@ -227,7 +233,7 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
       longitude: n.lon,
       label: n.label,
       operator: nOp,
-      country: nSats[0]?.ownerCountry || nFcc[0]?.administration || "",
+      country: countryFromOccupants(nSats.map((s) => s.ownerCountry)),
       bands: [],
       status: nSats.length > 0 ? "active" : "filed",
       coverage: [],
@@ -277,6 +283,7 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
     operatorRaw,
     occupancyMajority,
     operatorMix: mix,
+    operatorNotes: operatorResolved.notes,
     ituRecorded: itu.ituRecorded,
     country,
     purpose: valuationSlot.purpose ?? sats[0]?.purpose ?? null,

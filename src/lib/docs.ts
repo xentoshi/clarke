@@ -25,7 +25,7 @@ export const DOC_PAGES: DocMeta[] = [
     description:
       "What a paying operator can trust on Slot Terminal: occupancy, FCC, freshness, and the labeled model.",
     summary: "Field trust matrix, TLE-primary occupancy, one registry row per slug, and what Clarke will not claim.",
-    tldr: "Occupancy clusters on Space-Track TLE longitude when quality gates pass, otherwise the UCS catalog. The registry table is one row per slug. Operator display is a curated alias map over UCS/FCC strings; raw source strings stay inspectable. FCC rows come from the committed SSAL workbook. Congestion v0 and implied fair value are labeled models on the Slot Terminal, not recorded facts. Fair value stays behind one disclosure and off the registry until Show fair value. ITU SNS is not ingested. The flag is not_in_product (Unrecorded in Clarke): not a network name, not brought-into-use evidence, and not a filled filing row. The simulated capacity book is not on Slot Terminal.",
+    tldr: "Occupancy clusters on Space-Track TLE longitude when quality gates pass, otherwise the UCS catalog. The registry table is one row per slug. Operator display is a curated alias map over UCS/FCC strings; raw source strings stay inspectable. FCC rows come from the committed SSAL workbook. Congestion v0 and implied fair value are labeled models on the Slot Terminal, not recorded facts. Fair value stays behind one disclosure and off the registry until Show fair value. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. The flag is not_in_product (Unrecorded in Clarke). The simulated capacity book is not on Slot Terminal.",
   },
   {
     slug: "agent-api",

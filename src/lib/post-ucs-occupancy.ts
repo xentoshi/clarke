@@ -213,6 +213,7 @@ export function loadPostUcsGeoOccupants(knownNoradIds: Set<string>): GeoSatellit
       tleAgeDays: pos.tleAgeDays,
       tleUsable: pos.tleUsable,
       tleRejectReason: pos.tleRejectReason,
+      servicing: null,
       launchDate: row.launch_date,
       expectedLifetimeYears: null,
       contractor: null,

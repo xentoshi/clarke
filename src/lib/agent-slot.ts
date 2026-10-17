@@ -18,7 +18,8 @@ import {
   type GeoSatellite,
   type FccAuthorization,
 } from "./satellites";
-import { isLaunchVehicleOperator, resolveOperator } from "./operator-identity";
+import { isLaunchVehicleOperator, resolveOperator, resolveSatelliteOperator } from "./operator-identity";
+import { countryFromOccupants } from "./slot-country";
 import { summarizeOperators, type OperatorShare } from "./operator-mix";
 import { ituPresence, type ItuRecorded } from "./itu-presence";
 import {
@@ -51,6 +52,13 @@ export interface AgentOccupancyObservation {
   disputed: boolean;
   /** Source that supplied this object's occupancy longitude: tle, ucs fallback, or none. */
   occupancyAuthority: PositionSource;
+  /** payload, or servicing when the object shares an element set with a host. */
+  role: "payload" | "servicing";
+  /** False for a servicing vehicle attached to a host. satCount still includes the row. */
+  slotHolder: boolean;
+  attachedToName: string | null;
+  attachedToNoradId: string | null;
+  attachmentBasis: "identical_element_set" | null;
 }
 
 export interface AgentFccAuthorization extends FccAuthorization {
@@ -96,7 +104,7 @@ export interface AgentSlotPayload {
   country: string;
   status: SlotStatus;
   ituRecorded: ItuRecorded;
-  /** Existing product sentence. SNS is not ingested. */
+  /** Fixed sentence. ITU filings are not in this product. */
   ituDetail: string;
   satCount: number;
   /** Slot rule: TLE when it passes the published gates, otherwise UCS. */
@@ -158,7 +166,7 @@ function toObservation(sat: GeoSatellite, now: Date): AgentOccupancyObservation 
     id: sat.id,
     name: sat.name,
     noradId: sat.noradId,
-    operator: refused || !raw ? null : resolveOperator(raw, sat.ownerCountry).display,
+    operator: refused || !raw ? null : resolveSatelliteOperator(raw, { ownerCountry: sat.ownerCountry, noradId: sat.noradId }).display,
     operatorRaw: raw,
     launchDate: sat.launchDate,
     tleLongitude: sat.longitudeTle,
@@ -168,6 +176,11 @@ function toObservation(sat: GeoSatellite, now: Date): AgentOccupancyObservation 
     deltaDeg: sat.positionDeltaDeg,
     disputed: sat.positionDisputed,
     occupancyAuthority: sat.positionSource,
+    role: sat.servicing ? "servicing" : "payload",
+    slotHolder: !sat.servicing,
+    attachedToName: sat.servicing?.hostName ?? null,
+    attachedToNoradId: sat.servicing?.hostNoradId ?? null,
+    attachmentBasis: sat.servicing?.basis ?? null,
   };
 }
 
@@ -205,13 +218,14 @@ function assemble(input: {
   now: Date;
 }): AgentSlotPayload {
   const { slug, lon, curated, sats, fccAuths, allSats, freshness, asOf, now } = input;
-  const attributed = sats.map((s) => ({
+  const holders = sats.filter((s) => !s.servicing);
+  const attributed = holders.map((s) => ({
     ...s,
     operator: isLaunchVehicleOperator(s.operator, s.launchVehicle) ? null : s.operator,
   }));
   const mix = summarizeOperators(attributed);
   const itu = ituPresence();
-  const country = curated?.country || sats[0]?.ownerCountry || fccAuths[0]?.administration || "";
+  const country = countryFromOccupants(sats.map((s) => s.ownerCountry));
   const status: SlotStatus = curated?.status ?? (sats.length > 0 ? "active" : "filed");
   const positionTrust = buildSlotPositionTrust(lon, sats, allSats, COLOCATION_TOLERANCE_DEG);
   const sourceVintage = slotSourceVintage(

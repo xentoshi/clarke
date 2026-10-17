@@ -7,6 +7,9 @@ export interface OperatorAliasEntry {
   canonical: string;
   aliases: string[];
   notes?: string;
+  /** Source strings that should carry formerNameNote. They are also aliases. */
+  formerNames?: string[];
+  formerNameNote?: string;
 }
 
 export const OPERATOR_ALIAS_ENTRIES: OperatorAliasEntry[] = [
@@ -21,19 +24,36 @@ export const OPERATOR_ALIAS_ENTRIES: OperatorAliasEntry[] = [
       "SES DTH do Brasil Ltda",
       "New Skies Satellites B.V.",
       "SES S.A. -- total capacity leased to subsidiary of EchoStar Corp.",
-    ],
-    notes: "UCS SES S.A. and FCC SES / New Skies legal entities. New Skies is the SES brand, not a second operator.",
-  },
-  {
-    canonical: "Intelsat",
-    aliases: [
+      "Intelsat",
       "Intelsat S.A.",
       "Intelsat License LLC",
       "Intelsat Inflight Licenses LLC",
       "PanAmSat (Intelsat S.A.)",
       "PanAmSat",
     ],
-    notes: "PanAmSat strings in UCS are Intelsat fleet identity, not a live second operator.",
+    notes: "UCS SES S.A. and FCC SES / New Skies legal entities. New Skies is the SES brand.",
+    formerNames: [
+      "Intelsat",
+      "Intelsat S.A.",
+      "Intelsat License LLC",
+      "Intelsat Inflight Licenses LLC",
+      "PanAmSat (Intelsat S.A.)",
+      "PanAmSat",
+    ],
+    formerNameNote:
+      "Former name Intelsat. PanAmSat strings in UCS are that fleet. SES completed the acquisition on 17 July 2025. The FCC licensee string stays on the source row.",
+  },
+  {
+    canonical: "Space Norway",
+    aliases: ["Telenor Satellite Broadcasting"],
+    notes:
+      "Former name Telenor Satellite Broadcasting. Space Norway operates Thor 5, Thor 6, and Thor 7 at 1W. Telenor sold the satellite division in 2023.",
+  },
+  {
+    canonical: "Horizons-3 Satellite LLC",
+    aliases: ["Horizon-3 Satellite LLC", "Horizons-3 Satellite, LLC"],
+    notes:
+      "Owner of Horizons 3e. FCC licensee spelling on call sign S2947 is Horizon-3 Satellite LLC. The UCS owner string names Horizons 2 Satellite, LLC. Joint venture of JSAT International and Intelsat.",
   },
   {
     canonical: "Eutelsat",

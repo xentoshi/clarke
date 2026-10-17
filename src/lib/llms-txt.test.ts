@@ -43,7 +43,10 @@ describe("llms.txt agent discovery", () => {
     assert.match(text, /Valuation and congestion are not in the public agent or MCP payload/);
     assert.match(text, /live only as labeled models on the human Slot Terminal/);
     assert.match(text, /must not treat them as facts/);
-    assert.match(text, /ITU SNS is not ingested/);
+    assert.match(text, /ITU filings are not in this product/);
+    assert.match(text, /ITU Space Explorer/);
+    assert.match(text, /SNS Online shut down in January 2025/);
+    assert.doesNotMatch(text, /SNS is not ingested/);
     assert.match(text, /`ituRecorded` is `not_in_product`/);
     assert.match(text, /workbook as-of is 2026-09-27/);
     assert.match(text, /`sourceVintage\.tleStale` is true when a TLE that supplied occupancy is older than 14 days/);

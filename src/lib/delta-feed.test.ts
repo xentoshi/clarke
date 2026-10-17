@@ -554,7 +554,9 @@ describe("live delta feed", () => {
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /tle_epoch/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /14 day/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /nextSince/);
-    assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /ITU SNS is not ingested/);
+    assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /ITU filings are not in this product/);
+    assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /ITU Space Explorer/);
+    assert.doesNotMatch(CLARKE_LIST_DELTAS_DESCRIPTION, /SNS is not ingested/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /data\/ssal\.xlsx/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /removed/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /changed/);

@@ -47,7 +47,9 @@ describe("agent slot payload", () => {
     assert.equal(agent.country, terminal.country);
     assert.equal(agent.status, terminal.status);
     assert.equal(agent.ituRecorded, "not_in_product");
-    assert.match(agent.ituDetail, /SNS is not ingested/i);
+    assert.match(agent.ituDetail, /ITU filings are not in this product/);
+    assert.match(agent.ituDetail, /ITU Space Explorer/);
+    assert.doesNotMatch(agent.ituDetail, /SNS is not ingested/i);
     assert.equal(agent.satCount, terminal.satCount);
     assert.equal(agent.occupancyAuthority, "tle-primary");
     assert.equal(agent.fccAuthorizations.length, terminal.fccAuthorizations.length);

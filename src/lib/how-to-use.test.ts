@@ -53,12 +53,15 @@ describe("How to use Clarke", () => {
     assert.doesNotMatch(copy, /company map layer/i);
   });
 
-  it("is rendered on the registry homepage and the docs hub", () => {
+  it("stays on the docs hub and off the registry hero", () => {
     const orbital = readFileSync(join(root, "src/app/orbital/page.tsx"), "utf8");
     const docs = readFileSync(join(root, "src/app/docs/page.tsx"), "utf8");
+    const shell = readFileSync(join(root, "src/components/AppShell.tsx"), "utf8");
     const component = readFileSync(join(root, "src/components/HowToUse.tsx"), "utf8");
-    assert.match(orbital, /HowToUse/);
+    assert.doesNotMatch(orbital, /HowToUse/);
     assert.match(docs, /HowToUse/);
+    assert.match(shell, /How it works/);
+    assert.match(shell, /\/docs#how-to-use-clarke/);
     assert.match(component, /HOW_TO_TITLE/);
     assert.match(component, /id="how-to-use-clarke"/);
   });

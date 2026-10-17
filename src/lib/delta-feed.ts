@@ -622,7 +622,7 @@ function coverageNote(coverage: DeltaCoverage): string {
 
 function limitationsFor(coverage: DeltaCoverage): string[] {
   const shared = [
-    "ITU SNS is not ingested. This feed does not report ITU filings, brought-into-use, or network names.",
+    "ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025.",
     "Valuation, congestion, bid/ask, comps, and dollar amounts are not in this feed. Labeled models on the human Slot Terminal are not facts here.",
     "slot_events rows of type satellite_relocated are not occupancy enter or leave. They are not included.",
     "FCC slug is lonToSlug of the authorization longitude. That can differ from the occupancy slot slug.",

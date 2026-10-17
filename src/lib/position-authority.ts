@@ -5,7 +5,8 @@ import { circularAbsDiffDeg, normalizeLonDeg, parseUtcDate, daysBetweenUtc } fro
 // Rules (see docs/DATA_TRUST.md):
 //   1. Prefer Space-Track / Clarke TLE-derived sub-satellite longitude when
 //      the TLE was fresh at ingest and passes GEO-payload quality gates.
-//   2. Fall back to the UCS-reported longitude when no usable TLE exists.
+//   2. Fall back to the UCS-reported longitude only when no TLE mean motion
+//      is available. A drifting object does not fall back to the stale catalog.
 //   3. Record both longitudes, the circular Δ, and which source occupancy used.
 //   4. Never invent a position (no interpolation, no 0° pile-up).
 //   5. TLE longitude is a tracked-object location, never an FCC assignment
@@ -20,8 +21,14 @@ export const NEIGHBORHOOD_WINDOW_DEG = 2;
 export const POSITION_DISPUTE_DEG = 2;
 export const MAX_TLE_AGE_AT_INGEST_DAYS = 30;
 export const MAX_TLE_ECCENTRICITY = 0.01;
-export const MIN_TLE_MEAN_MOTION = 0.99;
-export const MAX_TLE_MEAN_MOTION = 1.01;
+export const MIN_TLE_MEAN_MOTION = 0.98;
+export const MAX_TLE_MEAN_MOTION = 1.02;
+// Station-kept GEO satellites sit near 1.0027 rev/day (sidereal rate 1.00274).
+// Objects outside this band drift more than about 0.5 degrees per day and are
+// passing through a slot, not holding it. On 2026-10-17 CelesTrak showed 553 of
+// 588 GEO-like objects inside the band and 35 outside it.
+export const STATION_KEPT_MIN_MEAN_MOTION = 1.0013;
+export const STATION_KEPT_MAX_MEAN_MOTION = 1.0041;
 
 export type PositionSource = "tle" | "ucs" | "none";
 
@@ -63,9 +70,19 @@ export function resolveOccupancyPosition(input: PositionAuthorityInput): Occupan
 
   const { usable: tleUsable, reason: tleRejectReason } = tleQuality(input, tleLongitude);
 
+  const drifting =
+    input.tleMeanMotion != null &&
+    (input.tleMeanMotion < STATION_KEPT_MIN_MEAN_MOTION ||
+      input.tleMeanMotion > STATION_KEPT_MAX_MEAN_MOTION);
+
   let occupancyLongitude: number | null = null;
   let source: PositionSource = "none";
-  if (tleUsable && tleLongitude !== null) {
+  if (drifting) {
+    // A drifting object has no slot. Do not count it and do not fall back to
+    // the 2023 UCS longitude, which is where it used to be.
+    occupancyLongitude = null;
+    source = "none";
+  } else if (tleUsable && tleLongitude !== null) {
     occupancyLongitude = tleLongitude;
     source = "tle";
   } else if (ucsUsableAsFallback(ucsLongitude)) {
@@ -88,8 +105,8 @@ export function resolveOccupancyPosition(input: PositionAuthorityInput): Occupan
     disputed,
     tleEpoch: input.tleEpoch ?? null,
     tleAgeDays,
-    tleUsable,
-    tleRejectReason,
+    tleUsable: drifting ? false : tleUsable,
+    tleRejectReason: drifting ? "drifting" : tleRejectReason,
   };
 }
 

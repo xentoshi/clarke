@@ -49,13 +49,13 @@ const sources: { name: string; abbr: string; url: string; cadence: string; what:
     why: "The only government-issued, per-satellite licensing record Clarke currently has. Directly expresses the spectrum coordination pillar: which frequencies are authorized at which position, under which jurisdiction. A position absent from this list has no FCC authorization, which is itself a meaningful signal for US market access.",
   },
   {
-    name: "ITU Space Network System",
-    abbr: "ITU SNS",
+    name: "ITU Space Explorer",
+    abbr: "ITU",
     url: "https://www.itu.int/itu-r/space/apps/public/spaceexplorer/networks-explorer",
     cadence: "Continuous",
     status: "planned",
-    what: "Every filed and coordinated orbital slot and frequency assignment across all regimes. The canonical international registry for satellite positions. A filed ITU slot is the closest thing to a deed that orbital real estate currently has. Publicly accessible via web, paywalled for bulk data.",
-    why: "The foundational dataset Clarke does not yet have. ITU data would cover all operators regardless of US jurisdiction, add coordination dispute history, and make congestion scores authoritative rather than approximate. Bulk access requires an ITU BR IFIC subscription.",
+    what: "ITU filings are not in this product. SNS Online shut down in January 2025. ITU Space Explorer is the current public ITU source for filings and brought-into-use status. Clarke has not confirmed an export or API from Space Explorer, so no ITU ingest is promised.",
+    why: "An ITU filing layer would cover operators outside US market access. Until that ingest exists, ituRecorded stays not_in_product on every slot.",
   },
   {
     name: "SEC EDGAR",

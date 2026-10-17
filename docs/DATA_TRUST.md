@@ -24,7 +24,7 @@ The default Slot Terminal screen is **occupancy + recorded FCC + ingest freshnes
 | Surface | Default Terminal | Why |
 |---|---|---|
 | Simulated capacity book | **Off the Terminal.** Not rendered on the slot page. Method note only (this page and Valuation v0). API may still return `bidAsk` for inspection. | Function of v0 midpoint + congestion. There is no public GEO bid/ask feed. |
-| ITU filing layer | **Unrecorded.** Default Terminal shows a thin chip only: **Unrecorded in Clarke** (`ituRecorded: not_in_product`). Experimental keeps an empty rights-chain stub, not a filled row. | ITU SNS is not ingested. The flag is not a network name, not brought-into-use evidence, and not a filled filing row. |
+| ITU filing layer | **Unrecorded.** Default Terminal shows a thin chip only: **Unrecorded in Clarke** (`ituRecorded: not_in_product`). Experimental keeps an empty rights-chain stub. | ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. |
 | Sub-lease / capacity-lease layer | **Quarantined stub.** Same Experimental disclosure. | No public sub-lease registry. Must not look like a named lessee. |
 | Seeded valuation sparkline | **Inside Labeled model.** Model path, labeled model backfill, not trades. Not on the default fold. | `terminal.db` is a deterministic v0 path, not observed trades. |
 | Curated `$NNN M+` overlay | **Visible, secondary.** Class **M** “hand estimate / curated opinion,” under the model range, not a competing headline. Valuation `basis` is always `model`. | Overlay can diverge ~2× from v0. V/M/S discipline. |
@@ -51,7 +51,7 @@ Tests: `src/lib/terminal-default.test.ts` asserts default primary markup does no
 | 7 | **Medium** | Occupancy grouping 0.3° (agents dossier default) vs 0.4° (Terminal / congestion). | **Fixed.** Default co-location window is 0.4°. |
 | 8 | **Medium** | Agents list valuation omitted satellite lifetimes, so remaining life stayed 1.0 even after a parser fix. | **Fixed.** `listSlots` / explorer / seed pass the occupancy window. |
 | 9 | **Won’t invent** | Curated overlay ($350M+ at 101°W, $400M+ at 19.2°E) can sit far from v0. The cutover off UCS clustering moved the model. The live Terminal is the current v0. | Overlay is class M, secondary to the model; `basis` is always `model`. No new prices invented. |
-| 10 | **Open** | UCS ingest `last_run` is the parse clock. The **file vintage** is the latest GEO launch in the snapshot, not that clock. Terminal shows file vintage, TLE epoch, and FCC workbook as-of separately. FCC SSAL workbook as-of is the committed sheet name (Updated 27 September 2026). The stale flag is true only when that date is older than 14 days. ITU SNS is not ingested. NORAD/COSPAR omitted from UI; API still returns them. | Vintage fields + compact Trust bar (FCC stale / position disagreement expand-in-place); weekly `ingest:fcc` re-parse documented. Same-slug duplicate rows are collapsed (see Registry row identity). |
+| 10 | **Open** | UCS ingest `last_run` is the parse clock. The **file vintage** is the latest GEO launch in the snapshot, not that clock. Terminal shows file vintage, TLE epoch, and FCC workbook as-of separately. FCC SSAL workbook as-of is the committed sheet name (Updated 27 September 2026). The stale flag is true only when that date is older than 14 days. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. NORAD/COSPAR omitted from UI; API still returns them. | Vintage fields + compact Trust bar (FCC stale / position disagreement expand-in-place); weekly `ingest:fcc` re-parse documented. Same-slug duplicate rows are collapsed (see Registry row identity). |
 | 11 | **High (UI)** | Simulated book, ITU/sub-lease stubs, and seeded sparkline still sat on the default Terminal as filled panels. | **Fixed.** Simulated book is docs-only. Implied value, comps, and the model path are behind one Labeled model disclosure. ITU/sub-lease stubs stay collapsed under Experimental. |
 
 ## Position authority (TLE-primary occupancy)
@@ -62,13 +62,15 @@ Dual-track. `satellites.longitude_geo` remains the **UCS catalog** longitude (wr
    - Object is a satcat **PAYLOAD** (or satcat type is missing — UCS GEO identity is kept). Explicit `DEBRIS`, `ROCKET BODY`, and `UNKNOWN` are not moved.
    - Not decayed (`decay_date` empty) and satcat `current` is not `N`.
    - TLE epoch was within **30 days of TLE ingest** (the Space-Track query already filters `EPOCH > now-30`; usability is relative to ingest, so a shipped snapshot does not silently revert to UCS as the wall clock moves).
-   - Eccentricity ≤ 0.01 and mean motion in [0.99, 1.01] rev/day when those elements parse (same gates as the GEO TLE feed).
+   - Eccentricity ≤ 0.01 and mean motion in [0.98, 1.02] rev/day when those elements parse (same gates as the GEO TLE feed).
+   - Mean motion is inside the station-kept band [1.0013, 1.0041] rev/day. Outside that band the object is drifting (about 0.5 degrees per day or more). It gets no occupancy longitude and no UCS fallback.
    - SGP4 at the TLE epoch (`tsince=0`) returns a finite longitude in (−180, 180].
-2. Else fall back to UCS longitude **unless** that value is the `0°` placeholder (classified/undisclosed pile-up). No TLE and UCS `0` → occupancy `null` (do not invent a Prime-Meridian station).
+2. Else fall back to UCS longitude **unless** that value is the `0°` placeholder (classified/undisclosed pile-up), and **unless** a stored mean motion says the object is drifting. No TLE and UCS `0` → occupancy `null` (do not invent a Prime-Meridian station). The three disposal-orbit objects the old 0.99 query never stored (NORAD 23553 MSAT-2, 26608 Intelsat 1R, 20776 Skynet 4C) are filled from CelesTrak GP element sets fetched 17 October 2026, and only when `spacetrack_tles` has no row. Space-Track was not re-queried on that date.
 3. Never interpolate UCS and TLE. Never present TLE longitude as an FCC assignment or ITU filing location. FCC matching stays on the authorization’s own longitude (±0.6°).
 4. Flag `positionDisputed` when both longs exist and circular \|UCS−TLE\| > **2°** (tunable `POSITION_DISPUTE_DEG`).
 5. A UCS ghost is a catalog longitude inside the slot window whose occupancy longitude is outside that window and whose \|UCS−TLE\| exceeds 2°. Agreement within 2°, with the track just outside the ±0.4° co-location cut, is the same station-keeping neighborhood, not a stale catalog hit.
-6. Occupancy / congestion window remains **±0.4°** co-location and **±2°** neighborhood, using circular longitude difference.
+6. Occupancy / congestion window remains **±0.4°** co-location and **±2°** neighborhood, using circular longitude difference. The occupancy window is 0.4 degrees on either side of the slot longitude. A satellite at 0.5 degrees is outside it. On the stored Space-Track TLE, MUOS-1 (NORAD 38093) is 0.42 degrees from 101W. A CelesTrak element set fetched 17 October 2026 places it 0.505 degrees from 101W. Both are outside the window, so MUOS-1 is not an occupant of 101W.
+7. A servicing vehicle that shares an element set with a host payload is flagged and left out of the operator mix. `satCount` still includes the row. MEV-2 shares an element set with Intelsat 10-02. Docking is inferred from that match. A separate docking notice was not checked.
 
 Read-time freshness is separate from the 30 day ingest gate. `sourceVintage.tleStale` and each occupancy row's `tleStale` are true when the TLE that supplied occupancy has an epoch older than 14 days (`tleStaleAfterDays`). A missing epoch is not stale. A UCS fallback row is not given a catalog date as a TLE epoch, and its `tleStale` stays false. The flag does not move occupancy back to UCS. A shipped snapshot still does not silently revert to UCS as the wall clock moves.
 
@@ -165,7 +167,7 @@ Legend: **V** = verified from a named public source in this product · **M** = m
 | License / BIU | M | Heuristic: satellite in the occupancy window + FCC row is not ITU brought-into-use. Labeled as a Clarke hint. "FCC record, no satellite in the occupancy window" is not a count of unlaunched satellites. Do not read BIU from UCS+FCC without this label. |
 | FCC table (call sign, licensee, service) | V | SSAL. Licensee *display* is class M (alias map); raw licensee stays in the cell tooltip and API `licenseeRaw`. Freshness is the FCC ingest, not “today.” Notes can mention later ICFS grants. Default Terminal primary. |
 | Rights: national admin / FCC licensees | V/M | FCC when present; else inferred country. Licensee names canonicalized. Default Terminal primary. |
-| Rights: ITU filing | S | ITU SNS is not ingested. `ituRecorded` is `not_in_product`. Thin “Unrecorded in Clarke” chip on the default Terminal. The flag is not a network name, not brought-into-use evidence, and not a filled filing row. Experimental holds an empty stub, not a deed. |
+| Rights: ITU filing | S | ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. `ituRecorded` is `not_in_product`. Thin “Unrecorded in Clarke” chip on the default Terminal. Experimental holds an empty stub. |
 | Rights: sub-lease | S | No public feed. **Quarantined** — Experimental only. |
 | Simulated capacity book | S | Function of v0 midpoint + congestion. **Not rendered** on Slot Terminal. Documented here only. |
 | Valuation chart / 30-day history | S | Seeded model path. Inside the **Labeled model** disclosure (Model path), labeled model backfill. Not trades. |
@@ -184,7 +186,7 @@ Legend: **V** = verified from a named public source in this product · **M** = m
 - “Congestion is a 0–100 coordination-risk index from TLE-primary occupancy positions, not an ITU filing count.”
 - “Identity of named satellites can be checked against Space-Track / CelesTrak; we do not treat UCS NORAD IDs as authoritative for every row.”
 - “UCS vs TLE longitude disagreement is shown (Δ and `positionDisputed`); TLE longitude is not an FCC or ITU assignment.”
-- “Clarke does not record ITU deeds. `ituRecorded` is `not_in_product` because SNS is not ingested. The Unrecorded chip is not a network name, not brought-into-use evidence, and not a filled filing row.”
+- “ITU filings are not in this product. `ituRecorded` is `not_in_product`. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025.”
 - “The registry table is one row per slug.”
 - “Congestion v0 and implied fair value are labeled models on the Slot Terminal.”
 - “Operator labels are a curated alias map over UCS and FCC strings; source strings remain inspectable.”

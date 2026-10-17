@@ -78,7 +78,9 @@ describe("public docs load the repo markdown", () => {
     assert.match(doc.html, /14 days/);
     assert.match(doc.html, /not_in_product/);
     assert.match(doc.html, /Unrecorded in Clarke/);
-    assert.match(doc.html, /not a network name/);
+    assert.match(doc.html, /ITU Space Explorer/);
+    assert.match(doc.html, /SNS Online shut down in January 2025/);
+    assert.match(doc.html, /0\.4 degrees/);
     assert.match(doc.html, /one row per slug/);
     assert.match(doc.html, /labeled model/i);
     assert.doesNotMatch(doc.html, /docs\/DATA_TRUST\.md/);
@@ -143,8 +145,10 @@ describe("public docs load the repo markdown", () => {
     assert.match(doc.html, /href="\/docs\/data-trust"/);
     assert.match(doc.html, /href="\/docs\/fcc-refresh"/);
     assert.match(doc.html, /href="\/docs\/valuation"/);
-    assert.match(doc.html, /ITU SNS is not ingested/);
-    assert.match(doc.html, /Do not claim ITU filings are in the product/);
+    assert.match(doc.html, /ITU filings are not in this product/);
+    assert.match(doc.html, /ITU Space Explorer/);
+    assert.match(doc.html, /SNS Online shut down in January 2025/);
+    assert.match(doc.html, /0\.4 degrees/);
     assert.match(doc.html, /href="https:\/\/www\.clarkebelt\.finance\/llms\.txt"/);
     assert.doesNotMatch(doc.html, /Bloomberg|CoStar|\bCME\b/);
     assert.ok(doc.toc.some((t) => /operator identity/i.test(t.label)));

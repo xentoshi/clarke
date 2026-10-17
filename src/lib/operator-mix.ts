@@ -5,7 +5,7 @@
 // Mix grouping uses the curated alias map (class M). Raw UCS strings stay on
 // `operatorRaw`. Congestion *score* still counts raw source strings.
 
-import { resolveOperator } from "./operator-identity";
+import { resolveSatelliteOperator } from "./operator-identity";
 
 export interface OperatorShare {
   operator: string;
@@ -13,18 +13,24 @@ export interface OperatorShare {
   share: number;
   /** Distinct source strings that rolled up into `operator`. */
   operatorRaw: string[];
+  /** Former-name or owner note when one applies to a source string in this share. */
+  notes?: string;
 }
 
-export function summarizeOperators(sats: { operator: string | null; ownerCountry?: string | null }[]): OperatorShare[] {
-  const groups = new Map<string, { count: number; raws: Map<string, number> }>();
+export function summarizeOperators(
+  sats: { operator: string | null; ownerCountry?: string | null; noradId?: string | null }[],
+): OperatorShare[] {
+  const groups = new Map<string, { count: number; raws: Map<string, number>; notes: Set<string> }>();
   let attributed = 0;
   for (const s of sats) {
     const raw = (s.operator ?? "").trim();
     if (!raw) continue;
-    const display = resolveOperator(raw, s.ownerCountry).display;
-    const g = groups.get(display) ?? { count: 0, raws: new Map() };
+    const resolved = resolveSatelliteOperator(raw, { ownerCountry: s.ownerCountry, noradId: s.noradId });
+    const display = resolved.display;
+    const g = groups.get(display) ?? { count: 0, raws: new Map(), notes: new Set<string>() };
     g.count++;
     g.raws.set(raw, (g.raws.get(raw) ?? 0) + 1);
+    if (resolved.notes) g.notes.add(resolved.notes);
     groups.set(display, g);
     attributed++;
   }
@@ -34,6 +40,7 @@ export function summarizeOperators(sats: { operator: string | null; ownerCountry
       count: g.count,
       share: attributed > 0 ? g.count / attributed : 0,
       operatorRaw: [...g.raws.keys()].sort((a, b) => a.localeCompare(b)),
+      notes: g.notes.size ? [...g.notes].sort().join(" ") : undefined,
     }))
     .sort((a, b) => b.count - a.count || a.operator.localeCompare(b.operator));
 }

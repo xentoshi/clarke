@@ -60,6 +60,16 @@ function lookupCandidates(raw: string): string[] {
   return [...new Set([trimmed, firstLine].filter(Boolean))];
 }
 
+function matchesLabel(raw: string, label: string): boolean {
+  return fold(raw) === fold(label) || normalizeOperatorKey(raw) === normalizeOperatorKey(label);
+}
+
+function noteFor(entry: OperatorAliasEntry, raw: string): string | undefined {
+  const former = entry.formerNames?.some((label) => matchesLabel(raw, label)) ? entry.formerNameNote : undefined;
+  const notes = [entry.notes, former].filter(Boolean).join(" ");
+  return notes || undefined;
+}
+
 function findEntry(raw: string): OperatorAliasEntry | undefined {
   for (const candidate of lookupCandidates(raw)) {
     const hit = LOOKUP.get(fold(candidate)) ?? LOOKUP.get(normalizeOperatorKey(candidate));
@@ -96,7 +106,7 @@ export function resolveOperator(raw: string | null | undefined, ownerCountry?: s
       raw: trimmed,
       mapped: true,
       aliases: [entry.canonical, ...entry.aliases],
-      notes: entry.notes,
+      notes: noteFor(entry, trimmed),
     };
   }
   const country = (ownerCountry ?? "").trim();
@@ -113,6 +123,28 @@ export function resolveOperator(raw: string | null | undefined, ownerCountry?: s
     return { display: trimmed, raw: trimmed, mapped: false, aliases: [] };
   }
   return { display: trimmed, raw: trimmed, mapped: false, aliases: [] };
+}
+
+const HORIZONS_3E_NORAD = "43633";
+
+/**
+ * Same alias map as resolveOperator, plus spacecraft-specific owners.
+ * Horizons 3e (NORAD 43633) is Horizons-3 Satellite LLC. The UCS string on
+ * that row names the Horizons-2 entity and is not remapped for other satellites.
+ */
+export function resolveSatelliteOperator(
+  raw: string | null | undefined,
+  ctx?: { noradId?: string | null; ownerCountry?: string | null },
+): ResolvedOperator {
+  if (ctx?.noradId === HORIZONS_3E_NORAD) {
+    const base = resolveOperator("Horizons-3 Satellite LLC");
+    return {
+      ...base,
+      raw: (raw ?? "").trim(),
+      mapped: true,
+    };
+  }
+  return resolveOperator(raw, ctx?.ownerCountry);
 }
 
 export function operatorDisplay(raw: string | null | undefined): string {

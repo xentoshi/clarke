@@ -1,4 +1,4 @@
-// Thin ITU presence. SNS is not ingested. This is not a deed, network name, or BIU record.
+// Thin ITU presence. ITU filings are not in this product.
 
 export type ItuRecorded = "unknown" | "not_in_product";
 
@@ -8,7 +8,7 @@ export const ITU_RECORDED_DEFAULT: ItuRecorded = "not_in_product";
 export const ITU_UNRECORDED_LABEL = "ITU filing: not recorded in Clarke";
 export const ITU_UNRECORDED_CHIP = "Unrecorded in Clarke";
 export const ITU_UNRECORDED_DETAIL =
-  "ITU SNS is not ingested. This flag is not a network name, not brought-into-use evidence, and not a filled filing row.";
+  "ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025.";
 
 export interface ItuPresence {
   ituRecorded: ItuRecorded;

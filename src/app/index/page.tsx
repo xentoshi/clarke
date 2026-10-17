@@ -182,7 +182,7 @@ export default function GeoSlotIndexPage() {
           <section id="what-this-is-not" className="mb-16 scroll-mt-10">
             <h2 className="text-ink font-semibold text-2xl tracking-tight mb-5">What this is not</h2>
             <p className="text-muted text-[16px] leading-relaxed">
-              Not a price index, bid/ask, last trade, or appraisal. Implied fair value v0 lives on Slot Terminal as a labeled model. Curated dollar overlays are hand estimates. This page does not reprint them. ITU SNS is not ingested; Clarke does not record ITU deeds. BIU here is a Clarke hint.
+              Not a price index, bid/ask, last trade, or appraisal. Implied fair value v0 lives on Slot Terminal as a labeled model. Curated dollar overlays are hand estimates. This page does not reprint them. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025; Clarke does not record ITU deeds. BIU here is a Clarke hint.
             </p>
           </section>
 

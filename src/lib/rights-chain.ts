@@ -79,7 +79,7 @@ export function buildRightsChain(args: {
       holder: "Not recorded in Clarke",
       status: "stub",
       detail: `${itu.detail} Quarantined stub. A filled ITU network panel would look like a deed; this row is not one.`,
-      provenance: { source: "Clarke stub (ITU SNS not ingested)", asOf, note: itu.label },
+      provenance: { source: "Clarke stub (ITU filings are not in this product)", asOf, note: itu.label },
     },
     {
       layer: "administration",

@@ -16,7 +16,8 @@
 // - Every distinct source operator string is kept on operatorRaw.
 
 import type { OrbitalSlot } from "@/data/orbital-slots";
-import { isLaunchVehicleOperator, resolveOperator } from "./operator-identity";
+import { isLaunchVehicleOperator, resolveSatelliteOperator } from "./operator-identity";
+import { countryFromOccupants } from "./slot-country";
 import { parseUcsLaunchYear } from "./occupancy-quality";
 import { formatLon, lonToSlug, slugToLon } from "./slot-utils";
 
@@ -50,7 +51,7 @@ export function pickClaimOperator(sats: UcsClaimSatellite[]): ClaimOperatorPick 
   for (const sat of sats) {
     const raw = (sat.operator ?? "").trim();
     if (!raw || isLaunchVehicleOperator(raw, sat.launchVehicle)) continue;
-    const display = resolveOperator(raw, sat.ownerCountry).display;
+    const display = resolveSatelliteOperator(raw, { ownerCountry: sat.ownerCountry, noradId: sat.noradId }).display;
     if (!display) continue;
     counts.set(display, (counts.get(display) ?? 0) + 1);
   }
@@ -133,9 +134,9 @@ export function collapseUcsClaimSlots(
     const pick = pickClaimOperator(ordered);
     const label = formatLon(lon);
     const primarySats = pick.display
-      ? ordered.filter((s) => !isLaunchVehicleOperator(s.operator, s.launchVehicle) && resolveOperator(s.operator, s.ownerCountry).display === pick.display)
+      ? ordered.filter((s) => !isLaunchVehicleOperator(s.operator, s.launchVehicle) && resolveSatelliteOperator(s.operator, { ownerCountry: s.ownerCountry, noradId: s.noradId }).display === pick.display)
       : [];
-    const countryPool = (primarySats.length ? primarySats : ordered).map((s) => s.ownerCountry ?? "");
+    const countryPool = (primarySats.length ? primarySats : ordered).map((s) => s.ownerCountry);
     const allDecayed = ordered.every((s) => s.noradId && decayedNoradIds.has(s.noradId));
     const names = ordered.map((s) => s.name);
     slots.push({
@@ -144,7 +145,7 @@ export function collapseUcsClaimSlots(
       label,
       operator: pick.display,
       operatorRaw: pick.raws.join("; "),
-      country: mode(countryPool),
+      country: countryFromOccupants(countryPool),
       bands: [],
       status: allDecayed ? "inactive" : "active",
       satellite: names.join(", "),

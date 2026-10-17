@@ -74,5 +74,7 @@ export async function query(cookie: string, path: string): Promise<string> {
 
 export const PATHS = {
   satcat: "/basicspacedata/query/class/satcat/PERIOD/1400--1480/CURRENT/Y/orderby/NORAD_CAT_ID/format/json",
-  tles: "/basicspacedata/query/class/gp/MEAN_MOTION/0.99--1.01/ECCENTRICITY/0--0.01/EPOCH/%3Enow-30/orderby/NORAD_CAT_ID/format/tle",
+  // 0.98 to 1.02 keeps drifting disposal-orbit objects visible. Occupancy then
+  // requires the station-kept band (1.0013 to 1.0041) in position-authority.
+  tles: "/basicspacedata/query/class/gp/MEAN_MOTION/0.98--1.02/ECCENTRICITY/0--0.01/EPOCH/%3Enow-30/orderby/NORAD_CAT_ID/format/tle",
 };

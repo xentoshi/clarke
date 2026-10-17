@@ -123,10 +123,10 @@ Keys below are the object in HTTP `data` and in the MCP tool text. Placeholder n
       "operatorRaw": ["SES"]
     }
   ],
-  "country": "USA",
+  "country": "",
   "status": "active",
   "ituRecorded": "not_in_product",
-  "ituDetail": "ITU SNS is not ingested. This flag is not a network name, not brought-into-use evidence, and not a filled filing row.",
+  "ituDetail": "ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025.",
   "satCount": 1,
   "occupancyAuthority": "tle-primary",
   "fccAuthorizations": [],
@@ -147,11 +147,11 @@ Keys below are the object in HTTP `data` and in the MCP tool text. Placeholder n
 | `region` | M | string | Coarse band from longitude, not a beam. One of `Europe / Africa / MEA`, `Asia-Pacific`, `Pacific`, `North America`, `Atlantic / Latin America`. |
 | `operatorIdentity` | M | string | `split`, `single`, or `none`. See below. |
 | `operatorMix` | V/M | array | Who is in the occupancy window. See below. |
-| `country` | V/M | string | Curated country, else the first occupancy row's owner country, else the first FCC administration. Empty string when none of those exist. |
+| `country` | V/M | string | Owner country of the occupancy rows when every row shares one. Empty when the window is mixed or has no owner country. Curated labels and FCC administrations are not copied into this field. |
 | `status` | M | string | `active` when the occupancy window has a satellite and an FCC authorization, including when a curated label said squatted or inactive. `squatted` only when a satellite is on station and Clarke has no FCC row. Otherwise the curated status (`active`, `filed`, `squatted`, or `inactive`), or `active` when an uncurated window has satellites, else `filed`. |
 | `ituRecorded` | S | string | Always `not_in_product`. |
 | `ituDetail` | S | string | The fixed sentence in the example. |
-| `satCount` | M | number | Occupancy rows in the ±0.4 degree window. Not an ITU network count. |
+| `satCount` | M | number | Occupancy rows in the 0.4 degree window, including a flagged servicing vehicle. |
 | `occupancyAuthority` | V | string | Always `tle-primary`. That is the slot rule, not a claim that every row used a TLE. |
 | `fccAuthorizations` | V/M | array | SSAL rows within 0.6 degrees of the slot longitude. Federal Government (Reserved) placeholder rows are omitted. |
 | `occupancy` | V/M | array | Satellites whose occupancy longitude is inside ±0.4 degrees. |
@@ -193,7 +193,11 @@ Occupancy rows still carry per-satellite operators:
 
 The slot rule is TLE-primary. For each satellite, occupancy longitude is the Space-Track TLE sub-satellite longitude when published quality gates pass, otherwise the UCS catalog longitude. UCS `0` is not a usable fallback. TLE and UCS are never averaged. TLE longitude is a tracked position. It is not an FCC assignment and not an ITU filing. The quality gates are in [Data trust](./DATA_TRUST.md).
 
-The window is ±0.4 degrees on that occupancy longitude. FCC matching is separate: ±0.6 degrees on the authorization's own longitude.
+The occupancy window is 0.4 degrees on either side of the slot longitude. A satellite farther than 0.4 degrees is outside the window and is not an occupant. On the stored Space-Track TLE, MUOS-1 (NORAD 38093) is 0.42 degrees from 101W. A CelesTrak element set fetched 17 October 2026 places it at -100.495, 0.505 degrees from 101W. Both are outside the window. FCC matching is separate: 0.6 degrees on the authorization's own longitude.
+
+A TLE whose mean motion is outside 1.0013 to 1.0041 revolutions per day is drifting. It has no occupancy longitude and does not fall back to the UCS catalog longitude. UCS fallback remains only when no TLE mean motion is stored and the UCS longitude is not the 0 degree placeholder.
+
+A servicing vehicle that shares an element set with another satellite in the window is flagged on the occupancy row (`role` `servicing`, `slotHolder` false, `attachedToName`, `attachmentBasis` `identical_element_set`). `satCount` still includes that row. MEV-2 shares an element set with Intelsat 10-02. Docking was inferred from that match. A separate docking notice was not checked. Servicing rows are left out of `operatorMix`.
 
 `occupancyAuthority` on the slot is the rule name `tle-primary`. On each occupancy row, `occupancyAuthority` is the source that supplied that object's longitude: `tle`, `ucs`, or `none`.
 
@@ -227,7 +231,7 @@ Each dispute object: `kind`, `name`, `noradId`, `ucsLongitude`, `tleLongitude`, 
 
 ## ITU
 
-`ituRecorded` is `not_in_product` on every slot. That is the permanent hole until a real ITU ingest exists. ITU SNS is not ingested. The flag is not a network name, not brought-into-use evidence, and not a filled filing row. Do not claim ITU filings are in the product. `ituDetail` repeats that limit in one sentence and does not vary by slug.
+`ituRecorded` is `not_in_product` on every slot. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. `ituDetail` repeats that sentence on every slug.
 
 The human Terminal shows the same fact as a thin Unrecorded chip. An empty experimental stub on that page is still not a deed.
 
@@ -342,7 +346,7 @@ When both snapshots store GEO rows parsed from `data/ssal.xlsx`, that interval u
 What is not in the feed:
 
 - Valuation, congestion, bid/ask, comps, and dollar amounts.
-- ITU filings. SNS is not ingested. There is no `ituRecorded` field on this object.
+- ITU filings. ITU filings are not in this product. There is no `ituRecorded` field on this object.
 - `satellite_relocated` rows from `slot_events`. Those are a TLE-to-TLE threshold log, including the one-shot Space-Track compare. They are not occupancy enter or leave.
 - A weekly history from before the first snapshot. That history was not stored. The feed does not reconstruct it.
 - An `as_of` row for the workbook refresh that overwrote `ingest_meta` before the first snapshot. Current `vintage.fccAsOf` is the date to cite. The prior workbook date is not in the database.

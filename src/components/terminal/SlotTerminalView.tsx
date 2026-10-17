@@ -130,7 +130,7 @@ export function SlotTerminalView({
                 notes={
                   !model.operator && model.operatorRaw
                     ? "Source string is not used as the GEO operator."
-                    : undefined
+                    : model.operatorNotes
                 }
               />
             }
@@ -159,7 +159,7 @@ export function SlotTerminalView({
             <summary className="cursor-pointer text-faint hover:text-ink">Source operator strings (UCS)</summary>
             <ul className="mt-2 space-y-1 font-mono text-[12px] text-faint">
               {model.operatorMix.map((m) => (
-                <li key={m.operator}>{m.operator}: {m.operatorRaw.join("; ")}</li>
+                <li key={m.operator}>{m.operator}: {m.operatorRaw.join("; ")}{m.notes ? `. ${m.notes}` : ""}</li>
               ))}
             </ul>
           </details>
@@ -197,6 +197,11 @@ export function SlotTerminalView({
                     <div className="text-[12px] text-faint mt-0.5">
                       {sat.positionSource === "tle" ? "TLE occupancy" : sat.positionSource === "ucs" ? "UCS fallback" : "no position"}
                     </div>
+                    {sat.servicing && (
+                      <div className="text-[12px] text-muted mt-0.5">
+                        Servicing vehicle attached to {sat.servicing.hostName} (identical element set).
+                      </div>
+                    )}
                   </td>
                   <td className="py-3.5 pr-4 hidden sm:table-cell text-muted text-[14px]">
                     <OperatorName
@@ -445,7 +450,7 @@ export function SlotTerminalView({
       </details>
 
       <div className="mt-4 mb-10">
-        <ExperimentalDisclosure id="rights-stubs" title="Unrecorded layers (ITU SNS not ingested; sub-lease stub)">
+        <ExperimentalDisclosure id="rights-stubs" title="Unrecorded layers (ITU filings are not in this product; sub-lease stub)">
           <RightsChain links={stubRights} variant="stubs" />
         </ExperimentalDisclosure>
       </div>
@@ -458,7 +463,7 @@ export function SlotTerminalView({
         </p>
         <p>
           Default Terminal is occupancy, recorded FCC, and freshness. Implied value is behind Labeled model.
-          ITU SNS is not ingested ({itu.chip}). The simulated capacity book is not on this page. Not financial advice.
+          ITU filings are not in this product ({itu.chip}). ITU Space Explorer is the current ITU source. The simulated capacity book is not on this page. Not financial advice.
         </p>
       </footer>
       <CompareTray pro={entitlements.pro} />

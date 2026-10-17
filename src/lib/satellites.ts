@@ -14,6 +14,7 @@ import { collapseUcsClaimSlots } from "./registry-claims";
 import { loadPostUcsGeoOccupants } from "./post-ucs-occupancy";
 import { reconcileRegistryStatus } from "./slot-status";
 import { isDodPlaceholderAuthorization } from "./fcc-placeholder";
+import { cachedRead, registryCacheToken } from "./process-cache";
 
 export { lonToSlug, slugToLon, formatLon } from "./slot-utils";
 export { COLOCATION_WINDOW_DEG, NEIGHBORHOOD_WINDOW_DEG } from "./position-authority";
@@ -92,6 +93,7 @@ export const COLOCATION_TOLERANCE_DEG = COLOCATION_WINDOW_DEG;
 export const FCC_MATCH_TOLERANCE_DEG = 0.6;
 
 let geoCache: GeoSatellite[] | null = null;
+let geoCacheToken = "";
 let registrySlotIndex: RegistrySlotIndex | null = null;
 
 export interface RegistrySlotIndex {
@@ -101,6 +103,7 @@ export interface RegistrySlotIndex {
 
 export function clearGeoSatelliteCache(): void {
   geoCache = null;
+  geoCacheToken = "";
   registrySlotIndex = null;
 }
 
@@ -181,7 +184,10 @@ function enrichGeoSatellite(raw: RawGeoSatellite, tles: Map<string, TleJoin>, sa
 }
 
 export function getGeoSatellites(): GeoSatellite[] {
-  if (geoCache) return geoCache;
+  const token = registryCacheToken();
+  if (geoCache && geoCacheToken === token) return geoCache;
+  geoCache = null;
+  geoCacheToken = token;
   const db = getDb();
   if (!db) return [];
   const raw = db.prepare(`${GEO_SELECT} WHERE orbit_class = 'GEO'`).all() as RawGeoSatellite[];
@@ -693,19 +699,19 @@ const FCC_SELECT = `
 `;
 
 export function getFccAuthorizationsByLongitude(lon: number, toleranceDeg = FCC_MATCH_TOLERANCE_DEG): FccAuthorization[] {
-  const db = getDb();
-  if (!db) return [];
-  return (db.prepare(
-    `${FCC_SELECT} WHERE longitude_geo BETWEEN ? AND ? ORDER BY longitude_geo ASC`
-  ).all(lon - toleranceDeg, lon + toleranceDeg) as FccAuthorization[]).filter(
-    (row) => !isDodPlaceholderAuthorization(row),
-  );
+  const lo = lon - toleranceDeg;
+  const hi = lon + toleranceDeg;
+  return getAllFccAuthorizations()
+    .filter((row) => row.longitudeGeo != null && row.longitudeGeo >= lo && row.longitudeGeo <= hi && !isDodPlaceholderAuthorization(row))
+    .sort((a, b) => (a.longitudeGeo ?? 0) - (b.longitudeGeo ?? 0));
 }
 
 export function getAllFccAuthorizations(): FccAuthorization[] {
-  const db = getDb();
-  if (!db) return [];
-  return db.prepare(`${FCC_SELECT} ORDER BY longitude_geo ASC`).all() as FccAuthorization[];
+  return cachedRead("fcc-authorizations", () => {
+    const db = getDb();
+    if (!db) return [];
+    return db.prepare(`${FCC_SELECT} ORDER BY longitude_geo ASC`).all() as FccAuthorization[];
+  });
 }
 
 export function getFccSlugSet(): Set<string> {

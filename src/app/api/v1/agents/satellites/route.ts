@@ -28,5 +28,9 @@ export async function GET(req: NextRequest) {
   }
 
   const data = listSatellites({ operator, ownerCountry, limit });
-  return ok(data, { count: data.length });
+  return ok(data, {
+    count: data.length,
+    cacheKey: `agents:satellites:${operator ?? ""}:${ownerCountry ?? ""}:${limit ?? ""}`,
+    ifNoneMatch: req.headers.get("if-none-match"),
+  });
 }

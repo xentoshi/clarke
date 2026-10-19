@@ -5,7 +5,8 @@ import { DOC_PAGES } from "@/lib/docs";
 import { getAllRegistrySlugs } from "@/lib/satellites";
 
 export const runtime = "nodejs";
-export const revalidate = 3600;
+// Slug list is the committed registry. Rebuild on deploy only.
+export const revalidate = false;
 
 const RESERVED_SLOT_PATHS = new Set(["map", "faq", "compare", "changes"]);
 
@@ -35,7 +36,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return paths.map((path) => ({
     url: `${origin}${path}`,
     lastModified: now,
-    changeFrequency: "hourly" as const,
+    changeFrequency: "daily" as const,
     priority: path === "/orbital" ? 1 : 0.6,
   }));
 }

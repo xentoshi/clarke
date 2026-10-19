@@ -4,7 +4,9 @@ import { ok, badRequest, rateLimited, preflight } from "@/lib/agents/envelope";
 import { checkRateLimit, getClientIp } from "@/lib/agents/rate-limit";
 
 export const OPTIONS = () => preflight();
-export const revalidate = 3600;
+// Query filters, rate limit, and ETag are per request. A revalidate period would ISR-write each URL.
+// Repeat reads stay on the process cache and the CDN Cache-Control header.
+export const dynamic = "force-dynamic";
 
 const SAFE_QUERY = /^[A-Za-z0-9 .\-_]{1,80}$/;
 

@@ -10,7 +10,8 @@ import { SlotTerminalView } from "@/components/terminal/SlotTerminalView";
 
 type Params = { slot: string };
 
-export const revalidate = 3600;
+// Slot HTML is baked from committed data/clarke.db. Rebuild on deploy only.
+export const revalidate = false;
 
 const loadSlotTerminal = cache((slot: string) => buildSlotTerminal(slot));
 

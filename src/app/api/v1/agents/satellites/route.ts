@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { listSatellites } from "@/lib/agents/operations";
 import { ok, badRequest, rateLimited, preflight } from "@/lib/agents/envelope";
 import { checkRateLimit, getClientIp } from "@/lib/agents/rate-limit";
+import { withPublicUsage } from "@/lib/agents/usage-log";
 
 export const OPTIONS = () => preflight();
 // Query filters, rate limit, and ETag are per request. A revalidate period would ISR-write each URL.
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 const SAFE_QUERY = /^[A-Za-z0-9 .\-_]{1,80}$/;
 
-export async function GET(req: NextRequest) {
+export const GET = withPublicUsage("/api/v1/agents/satellites", async function GET(req: NextRequest) {
   const rl = checkRateLimit(getClientIp(req));
   if (!rl.allowed) return rateLimited(rl.retryAfter);
 
@@ -35,4 +36,4 @@ export async function GET(req: NextRequest) {
     cacheKey: `agents:satellites:${operator ?? ""}:${ownerCountry ?? ""}:${limit ?? ""}`,
     ifNoneMatch: req.headers.get("if-none-match"),
   });
-}
+});

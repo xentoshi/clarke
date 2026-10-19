@@ -3,6 +3,7 @@ import { freshnessMeta, listDeltas } from "@/lib/agents/operations";
 import { DeltaQueryError } from "@/lib/delta-feed";
 import { ok, badRequest, rateLimited, preflight } from "@/lib/agents/envelope";
 import { checkRateLimit, getClientIp } from "@/lib/agents/rate-limit";
+import { withPublicUsage } from "@/lib/agents/usage-log";
 
 export const OPTIONS = () => preflight();
 // Query filters, rate limit, and ETag are per request. A revalidate period would ISR-write each URL.
@@ -14,7 +15,7 @@ function param(value: string | null): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withPublicUsage("/api/v1/agents/deltas", async function GET(req: NextRequest) {
   const rl = checkRateLimit(getClientIp(req));
   if (!rl.allowed) return rateLimited(rl.retryAfter);
 
@@ -34,4 +35,4 @@ export async function GET(req: NextRequest) {
     if (err instanceof DeltaQueryError) return badRequest(err.message);
     throw err;
   }
-}
+});

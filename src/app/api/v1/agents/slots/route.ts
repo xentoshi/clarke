@@ -3,6 +3,7 @@ import { freshnessMeta } from "@/lib/agents/operations";
 import { pageSlotList, parseSlotListSearch, slotListIsHeavy } from "@/lib/agents/slot-page";
 import { ok, badRequest, rateLimited, preflight } from "@/lib/agents/envelope";
 import { HEAVY_RATE_MAX, checkRateLimit, getClientIp } from "@/lib/agents/rate-limit";
+import { withPublicUsage } from "@/lib/agents/usage-log";
 
 export const OPTIONS = () => preflight();
 // Request-aware (rate limit and ETag). A revalidate period would ISR-write this body.
@@ -10,7 +11,7 @@ export const OPTIONS = () => preflight();
 // The cache key is the query, not the client IP or cookie.
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+export const GET = withPublicUsage("/api/v1/agents/slots", async function GET(req: NextRequest) {
   const parsed = parseSlotListSearch(req.nextUrl.searchParams);
   if (!parsed.ok) return badRequest(parsed.error);
 
@@ -32,4 +33,4 @@ export async function GET(req: NextRequest) {
     ifNoneMatch: req.headers.get("if-none-match"),
     acceptEncoding: req.headers.get("accept-encoding"),
   });
-}
+});

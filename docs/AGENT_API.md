@@ -364,6 +364,18 @@ Public responses page `changes` at 40 rows and about 48 KB of change JSON. A tim
 
 Those reads are cached in the server process until `data/clarke.db` changes. The process cache key is the query, not the client IP. HTTP sends `Cache-Control: public, max-age=60, s-maxage=3600, stale-while-revalidate=86400` and `Vary: Accept-Encoding`. A matching `If-None-Match` returns 304. Compact slot pages are 60 requests per minute per IP on each instance. Full slot pages and explicit full lists are 12 per minute. Remote MCP POST stays `no-store` because the body is JSON-RPC. A gzip `Accept-Encoding` still compresses that POST body. `initialize` and `tools/list` do not build the registry. Tool results reuse the same process cache. GET and OPTIONS on `/api/v1/mcp` send a public `Cache-Control` max-age. MCP request bodies above 64 KB are refused. Documented agent routes stay reachable. `robots.txt` asks crawlers to skip the delta feed, the satellite list, compare, and `/api/og`. It does not ask them to skip `/api/v1/agents/slots` or `/api/v1/mcp`.
 
+## Usage logs
+
+Public agent HTTP routes and remote MCP each write one JSON line to stdout when the function runs. Vercel Observability shows that line. A log drain attached to the project receives the same stdout. The write is not a database row and not a second request. It does not change the JSON body, the status code, the cache headers, or the rate limits. Ordinary reads stay at 60 per minute. A full slot page and an explicit full list stay at 12 per minute.
+
+The event name is `clarke.usage`. Fields are `ts` (UTC timestamp), `transport` (`http` or `mcp`), `route`, `method`, `status`, `ipHash`, and `ua` when a user agent is present. `ipHash` is the first 16 hex characters of SHA-256 over a daily salt, the UTC date, and the client IP. The raw IP is not written. The same IP keeps the same hash until the next UTC day, then the hash changes. `USAGE_LOG_SALT` sets the salt. If it is unset, the salt is `AUTH_SECRET`.
+
+MCP lines add `rpc` when the JSON-RPC method is a known method. `tools/call` also adds `tool` when the name matches `clarke_` plus letters, digits, and underscores. Whitelisted parameters are `slug`, `limit`, `view` (`compact` or `full`), `all` when it is true, and the page cursors `since`, `offset`, and `after`. `operator`, `ownerCountry`, `domain`, and every other argument are dropped. Cookies, authorization headers, and request bodies are not logged. OPTIONS preflight is not logged. A POST body larger than 8 KB is counted without `rpc` or parameters, so that body is not parsed twice. Local stdio (`npm run mcp`) does not write this line. Stdout on that process is the MCP transport.
+
+MCP traffic is in these logs. Tool calls are POST and `Cache-Control: no-store`, so they run on the function and emit a line. Filter Vercel Observability for `clarke.usage` together with `"transport":"mcp"`. One tool is `"tool":"clarke_get_slot"`. HTTP agent routes use `"transport":"http"`. A caller on one UTC day is `"ipHash"` plus the 16 hex characters. A CDN cache hit does not run the function, so it does not emit a line. MCP POST is not cached, so those calls do.
+
+These lines do not challenge or block clients. A scraper can still spend CPU on `/api/v1/mcp` until Firewall bot protection is turned on. The log says who called and which whitelisted query ran. Reads stay open. The routes stay unauthenticated, and a cookie is not required.
+
 ## Related pages
 
 - [Data trust](./DATA_TRUST.md): TLE gates, registry row identity, V/M/S audit.

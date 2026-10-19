@@ -56,6 +56,8 @@ npm run mcp
 
 Tools: `clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`, `clarke_list_deltas`, `clarke_list_satellites`. Tool text is compact JSON. `clarke_get_terminal` is the same JSON as `clarke_get_slot`. `clarke_list_deltas` is the same JSON as `GET /api/v1/agents/deltas`. `clarke_list_satellites` defaults `limit` to 100. The slot record uses operatorIdentity and operatorMix, not a single headline operator. Valuation and congestion live only as labeled models on the human Slot Terminal. Field list: [`docs/AGENT_API.md`](./docs/AGENT_API.md) (public page [`/docs/agent-api`](https://clarkebelt.finance/docs/agent-api)). See the header of `scripts/clarke-mcp.ts` for a sample client config.
 
+Public agent HTTP routes and remote MCP write one `clarke.usage` JSON line to stdout on each origin hit (Vercel Observability, and a log drain if the project has one). The line is a daily-salted IP hash, user agent, route, status, MCP tool name, and the whitelisted fields `slug`, `limit`, `view`, `all`, `since`, `offset`, and `after`. It does not include the raw IP, cookies, authorization, or the request body. MCP POST is `no-store`, so tool calls show up. Filter logs for `clarke.usage` and `"transport":"mcp"`. The line does not block clients and does not change the 60 per minute ordinary limit or the 12 per minute heavy limit. Firewall bot protection is a separate switch. Local stdio does not print this line, because stdout is the MCP transport.
+
 ---
 
 ## Data pipeline
@@ -114,6 +116,7 @@ npm test                  # valuation v0 + TLE occupancy authority tests
 | `SPACETRACK_PASSWORD` | No | Space-Track password (for `npm run ingest:spacetrack`) |
 | `PV_SECRET` | No | Legacy fallback HMAC secret when `AUTH_SECRET` is unset. The `/api/pv` beacon has been removed. |
 | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | No | Plausible analytics domain |
+| `USAGE_LOG_SALT` | No | Daily salt for public agent and MCP `ipHash` logs. Falls back to `AUTH_SECRET` |
 
 ---
 

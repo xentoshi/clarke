@@ -4,6 +4,7 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { createServer } from "../mcp/server";
 import { rateLimited } from "./agents/envelope";
 import { checkRateLimit, getClientIp } from "./agents/rate-limit";
+import { emitMcpUsage, MAX_USAGE_BODY_BYTES } from "./agents/usage-log";
 
 /**
  * Public remote MCP endpoint.
@@ -72,36 +73,51 @@ export async function handleMcpHttp(req: Request): Promise<Response> {
     return new Response(null, { status: 204, headers: { ...CORS, "Cache-Control": "public, max-age=86400" } });
   }
 
+  // Log on the way out. The line is stdout only. It is not a header and not
+  // part of the JSON-RPC body. OPTIONS stays quiet so preflight does not
+  // add a line. The 60 per minute check below is the same bucket as before.
+  const finish = (res: Response, body?: ArrayBuffer | null): Response => {
+    emitMcpUsage(req, res.status, body ?? null);
+    return res;
+  };
+
   const rl = checkRateLimit(getClientIp(req as NextRequest));
-  if (!rl.allowed) return withCors(rateLimited(rl.retryAfter));
+  if (!rl.allowed) return finish(withCors(rateLimited(rl.retryAfter)));
 
   // Spec: a server that does not offer server-to-client SSE MUST return 405.
   // A hanging GET would pin a serverless invocation and still deliver nothing,
   // because this host does not keep session state.
   if (req.method === "GET") {
-    return withCors(
-      jsonRpcError(
-        405,
-        -32000,
-        "Method Not Allowed. This endpoint is stateless Streamable HTTP. POST JSON-RPC messages here. GET returns 405 because this host does not keep a server-push SSE stream. Clients continue with POST.",
-        { Allow: "POST, DELETE, OPTIONS" },
+    return finish(
+      withCors(
+        jsonRpcError(
+          405,
+          -32000,
+          "Method Not Allowed. This endpoint is stateless Streamable HTTP. POST JSON-RPC messages here. GET returns 405 because this host does not keep a server-push SSE stream. Clients continue with POST.",
+          { Allow: "POST, DELETE, OPTIONS" },
+        ),
+        "public, max-age=3600",
       ),
-      "public, max-age=3600",
     );
   }
 
   if (req.method !== "POST" && req.method !== "DELETE") {
-    return withCors(
-      jsonRpcError(405, -32000, "Method Not Allowed", { Allow: "POST, DELETE, OPTIONS" }),
+    return finish(
+      withCors(
+        jsonRpcError(405, -32000, "Method Not Allowed", { Allow: "POST, DELETE, OPTIONS" }),
+      ),
     );
   }
 
   let rpcRequest = req;
+  let loggedBody: ArrayBuffer | null = null;
   if (req.method === "POST") {
     const buf = await req.arrayBuffer();
     if (buf.byteLength > MAX_MCP_REQUEST_BYTES) {
-      return withCors(jsonRpcError(413, -32600, `Request body exceeds ${MAX_MCP_REQUEST_BYTES} bytes.`));
+      return finish(withCors(jsonRpcError(413, -32600, `Request body exceeds ${MAX_MCP_REQUEST_BYTES} bytes.`)));
     }
+    // Skip a second parse of a fat-but-legal body. The handler still answers.
+    if (buf.byteLength > 0 && buf.byteLength <= MAX_USAGE_BODY_BYTES) loggedBody = buf;
     rpcRequest = new Request(req.url, {
       method: req.method,
       headers: req.headers,
@@ -118,9 +134,9 @@ export async function handleMcpHttp(req: Request): Promise<Response> {
   try {
     await server.connect(transport);
     const raw = await transport.handleRequest(rpcRequest);
-    return withCors(await buffer(raw, req.headers.get("accept-encoding")));
+    return finish(withCors(await buffer(raw, req.headers.get("accept-encoding"))), loggedBody);
   } catch {
-    return withCors(jsonRpcError(500, -32603, "Internal error"));
+    return finish(withCors(jsonRpcError(500, -32603, "Internal error")), loggedBody);
   } finally {
     await Promise.allSettled([transport.close(), server.close()]);
   }

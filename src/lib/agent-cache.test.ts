@@ -1,10 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { gunzipSync } from "node:zlib";
 import { NextRequest } from "next/server";
 import { GET as getSlots } from "../app/api/v1/agents/slots/route";
 import { POST, GET as getMcp } from "../app/api/v1/mcp/route";
 import { listDeltas } from "./agents/operations";
-import { buildDeltaFeedFromDb } from "./registry-snapshot";
+import { DELTA_PAGE_BYTE_BUDGET, DELTA_PAGE_MAX_CHANGES } from "./delta-feed";
 import { MAX_MCP_REQUEST_BYTES } from "./mcp-http";
 import { processCacheStats } from "./process-cache";
 
@@ -23,9 +24,23 @@ describe("public read cache and delta page", () => {
     assert.match(first.headers.get("cache-control") ?? "", /public, max-age=60, s-maxage=3600/);
     const etag = first.headers.get("etag");
     assert.ok(etag);
-    const body = await first.json() as { data: unknown[]; meta: { count: number } };
+    const body = await first.json() as {
+      data: Array<{ slug?: string; occupancy?: unknown; valuation?: unknown; congestion?: unknown }>;
+      meta: { count: number; view?: string; total?: number };
+    };
+    assert.equal(body.meta.view, "compact");
     assert.ok(body.data.length > 1);
+    assert.ok(body.data.length <= 50);
     assert.equal(body.meta.count, body.data.length);
+    assert.ok((body.meta.total ?? 0) >= body.data.length);
+    assert.equal(body.data[0]?.occupancy, undefined);
+    assert.equal(body.data[0]?.valuation, undefined);
+    assert.equal(body.data[0]?.congestion, undefined);
+    assert.ok(body.data[0]?.slug);
+    assert.ok(JSON.stringify(body).length < 32_000);
+    assert.doesNotMatch(first.headers.get("vary") ?? "", /cookie/i);
+    assert.match(first.headers.get("vary") ?? "", /Accept-Encoding/);
+    assert.equal(first.headers.get("vercel-cdn-cache-control")?.includes("s-maxage=3600"), true);
     assert.ok(mid.misses > before.misses);
 
     const second = await getSlots(slotsRequest("203.0.113.81", { "if-none-match": etag }));
@@ -35,21 +50,39 @@ describe("public read cache and delta page", () => {
     assert.equal(after.misses, mid.misses);
   });
 
-  it("pages delta changes on detectedAt boundaries", () => {
-    const full = buildDeltaFeedFromDb();
+  it("pages delta changes under the byte budget and resumes with after", () => {
     const first = listDeltas();
     assert.equal(first.truncated, true);
-    assert.ok(first.nextSince);
-    const stamp = first.nextSince;
-    assert.equal(
-      first.changes.filter((row) => row.detectedAt === stamp).length,
-      full.changes.filter((row) => row.detectedAt === stamp).length,
-    );
-    const second = listDeltas({ since: stamp });
+    assert.ok(first.nextAfter);
+    assert.ok(first.changes.length <= DELTA_PAGE_MAX_CHANGES);
+    assert.ok(JSON.stringify(first.changes).length <= DELTA_PAGE_BYTE_BUDGET);
+    const second = listDeltas({ after: first.nextAfter ?? undefined });
     assert.ok(second.changes.length > 0);
-    assert.equal(second.changes.some((row) => row.detectedAt === stamp), false);
     const seen = new Set(first.changes.map((row) => row.id));
     assert.equal(second.changes.some((row) => seen.has(row.id)), false);
+  });
+
+  it("gzip compresses the compact slot list and keeps the ETag on the uncompressed body", async () => {
+    const plain = await getSlots(slotsRequest("203.0.113.84"));
+    const etag = plain.headers.get("etag");
+    const gzipped = await getSlots(slotsRequest("203.0.113.85", { "accept-encoding": "gzip" }));
+    assert.equal(gzipped.status, 200);
+    assert.equal(gzipped.headers.get("content-encoding"), "gzip");
+    assert.equal(gzipped.headers.get("etag"), etag);
+    const json = JSON.parse(gunzipSync(Buffer.from(await gzipped.arrayBuffer())).toString("utf8")) as { meta: { view?: string } };
+    assert.equal(json.meta.view, "compact");
+  });
+
+  it("serves the full slot record only when view=full is explicit", async () => {
+    const res = await getSlots(new NextRequest("https://www.clarkebelt.finance/api/v1/agents/slots?view=full&limit=2", {
+      headers: { "x-forwarded-for": "203.0.113.86" },
+    }));
+    assert.equal(res.status, 200);
+    const body = await res.json() as { data: Array<{ occupancy?: unknown; valuation?: unknown }>; meta: { view?: string; count: number } };
+    assert.equal(body.meta.view, "full");
+    assert.equal(body.meta.count, 2);
+    assert.ok(Array.isArray(body.data[0]?.occupancy));
+    assert.equal(body.data[0]?.valuation, undefined);
   });
 
   it("caches MCP GET and refuses an oversized POST body", async () => {

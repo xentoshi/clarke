@@ -112,7 +112,7 @@ npm test                  # valuation v0 + TLE occupancy authority tests
 | `STRIPE_WEBHOOK_SECRET` | No | TODO: verify `checkout.session.completed` in `/api/billing/webhook` |
 | `SPACETRACK_USERNAME` | No | Space-Track login (for `npm run ingest:spacetrack`) |
 | `SPACETRACK_PASSWORD` | No | Space-Track password (for `npm run ingest:spacetrack`) |
-| `PV_SECRET` | No | Secret to read the internal page-view counter at `/api/pv` |
+| `PV_SECRET` | No | Legacy fallback HMAC secret when `AUTH_SECRET` is unset. The `/api/pv` beacon has been removed. |
 | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | No | Plausible analytics domain |
 
 ---

@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# Prebuilt social cards. scripts/build-og.tsx writes these during npm run build.
+/public/og/
+
 # production
 /build
 

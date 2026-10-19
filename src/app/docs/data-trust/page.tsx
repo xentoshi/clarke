@@ -9,6 +9,7 @@ export const metadata = buildMeta({
   description: doc.description,
   tag: "Docs",
   path: doc.href,
+  image: `/og/page/docs-${doc.slug}.png`,
 });
 
 export default function DataTrustDocsPage() {

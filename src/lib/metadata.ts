@@ -7,14 +7,17 @@ export function buildMeta({
   description,
   tag = "",
   path,
+  image = "/og/default.png",
 }: {
   title: string;
   description: string;
   tag?: string;
   path?: string;
+  /** Static file under public/. Built by scripts/build-og.tsx. */
+  image?: string;
 }): Metadata {
   const fullTitle = `${title} · Clarke`;
-  const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(title)}&sub=${encodeURIComponent(description)}&tag=${encodeURIComponent(tag)}`;
+  const ogUrl = image.startsWith("http") ? image : `${baseUrl}${image}`;
 
   return {
     title: fullTitle,

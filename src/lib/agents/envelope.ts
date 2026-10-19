@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { MAX_PUBLIC_JSON_BYTES, registryCacheToken } from "../process-cache";
+import { gzipSync } from "zlib";
+import { MAX_PUBLIC_JSON_BYTES, registryCacheToken, registryGeneratedAt } from "../process-cache";
 
 export { MAX_PUBLIC_JSON_BYTES };
 
@@ -25,17 +26,35 @@ export interface Envelope<T> {
     generated_at: string;
     count?: number;
     data_freshness?: FreshnessMeta[];
+    view?: string;
+    total?: number;
+    offset?: number;
+    limit?: number | null;
+    next_offset?: number | null;
   };
 }
+
+/** Public CDN policy. Browser may reuse for a minute. The edge keeps the body for an hour. */
+export const PUBLIC_CACHE_CONTROL = "public, max-age=60, s-maxage=3600, stale-while-revalidate=86400";
+export const PUBLIC_VARY = "Accept-Encoding";
+export const VERCEL_CDN_CACHE_CONTROL = "public, s-maxage=3600, stale-while-revalidate=86400";
 
 interface OkOptions {
   count?: number;
   cacheSeconds?: number;
   staleSeconds?: number;
   freshness?: FreshnessMeta[];
-  /** Process-level response cache key. Set on public agent reads. */
+  /** Process-level response cache key. Set on public agent reads. Omit IP and cookies. */
   cacheKey?: string;
   ifNoneMatch?: string | null;
+  /** Pro Terminal and other cookie- or key-gated bodies. Never a shared CDN entry. */
+  private?: boolean;
+  acceptEncoding?: string | null;
+  view?: string;
+  total?: number;
+  offset?: number;
+  limit?: number | null;
+  nextOffset?: number | null;
 }
 
 interface CachedResponse {
@@ -48,10 +67,21 @@ interface CachedResponse {
 const responseCache = new Map<string, CachedResponse>();
 
 function cacheControlFor(opts: OkOptions, cacheSeconds: number, staleSeconds: number): string {
-  if (!opts.cacheKey) {
-    return `public, s-maxage=${cacheSeconds}, stale-while-revalidate=${staleSeconds}`;
+  if (opts.private) return "private, no-store";
+  if (opts.cacheKey) return PUBLIC_CACHE_CONTROL;
+  return `public, s-maxage=${cacheSeconds}, stale-while-revalidate=${staleSeconds}`;
+}
+
+function payloadFor(
+  serialized: string,
+  acceptEncoding: string | null | undefined,
+  status: number,
+): { body: BodyInit | null; encoding: string | null } {
+  if (status === 304) return { body: null, encoding: null };
+  if (serialized.length >= 860 && acceptEncoding && /\bgzip\b/.test(acceptEncoding)) {
+    return { body: gzipSync(Buffer.from(serialized), { level: 6 }), encoding: "gzip" };
   }
-  return `public, max-age=60, s-maxage=${cacheSeconds}, stale-while-revalidate=${staleSeconds}`;
+  return { body: serialized, encoding: null };
 }
 
 function etagMatches(header: string | null | undefined, etag: string): boolean {
@@ -59,19 +89,28 @@ function etagMatches(header: string | null | undefined, etag: string): boolean {
   return header.split(",").some((part) => part.trim() === etag);
 }
 
-function jsonResponse(serialized: string, etag: string, cacheControl: string, status = 200): NextResponse {
-  return new NextResponse(status === 304 ? null : serialized, {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": cacheControl,
-      ETag: etag,
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "If-None-Match, Authorization, X-Clarke-Key, Content-Type",
-      "Access-Control-Expose-Headers": "ETag",
-    },
-  });
+function jsonResponse(
+  serialized: string,
+  etag: string,
+  cacheControl: string,
+  status = 200,
+  acceptEncoding: string | null = null,
+  shared = true,
+): NextResponse {
+  const encoded = payloadFor(serialized, acceptEncoding, status);
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": cacheControl,
+    ETag: etag,
+    Vary: PUBLIC_VARY,
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "If-None-Match, Authorization, X-Clarke-Key, Content-Type",
+    "Access-Control-Expose-Headers": "ETag",
+  };
+  if (shared) headers["Vercel-CDN-Cache-Control"] = VERCEL_CDN_CACHE_CONTROL;
+  if (encoded.encoding) headers["Content-Encoding"] = encoded.encoding;
+  return new NextResponse(encoded.body, { status, headers });
 }
 
 export function ok<T>(data: T, opts: OkOptions = {}): NextResponse {
@@ -82,8 +121,9 @@ export function ok<T>(data: T, opts: OkOptions = {}): NextResponse {
   if (opts.cacheKey) {
     const hit = responseCache.get(opts.cacheKey);
     if (hit && hit.token === token) {
-      if (etagMatches(opts.ifNoneMatch, hit.etag)) return jsonResponse(hit.body, hit.etag, hit.cacheControl, 304);
-      return jsonResponse(hit.body, hit.etag, hit.cacheControl);
+      const accept = opts.acceptEncoding ?? null;
+      if (etagMatches(opts.ifNoneMatch, hit.etag)) return jsonResponse(hit.body, hit.etag, hit.cacheControl, 304, accept, !opts.private);
+      return jsonResponse(hit.body, hit.etag, hit.cacheControl, 200, accept, !opts.private);
     }
   }
 
@@ -91,9 +131,14 @@ export function ok<T>(data: T, opts: OkOptions = {}): NextResponse {
     data,
     meta: {
       version: API_VERSION,
-      generated_at: new Date().toISOString(),
+      generated_at: opts.cacheKey ? registryGeneratedAt() : new Date().toISOString(),
       ...(opts.count !== undefined ? { count: opts.count } : {}),
       ...(opts.freshness ? { data_freshness: opts.freshness } : {}),
+      ...(opts.view !== undefined ? { view: opts.view } : {}),
+      ...(opts.total !== undefined ? { total: opts.total } : {}),
+      ...(opts.offset !== undefined ? { offset: opts.offset } : {}),
+      ...(opts.limit !== undefined ? { limit: opts.limit } : {}),
+      ...(opts.nextOffset !== undefined ? { next_offset: opts.nextOffset } : {}),
     },
   };
 
@@ -112,8 +157,10 @@ export function ok<T>(data: T, opts: OkOptions = {}): NextResponse {
   }
   const etag = `W/"${crypto.createHash("sha1").update(serialized).digest("hex")}"`;
   if (opts.cacheKey) responseCache.set(opts.cacheKey, { token, body: serialized, etag, cacheControl });
-  if (etagMatches(opts.ifNoneMatch, etag)) return jsonResponse(serialized, etag, cacheControl, 304);
-  return jsonResponse(serialized, etag, cacheControl);
+  const shared = !opts.private;
+  const accept = opts.acceptEncoding ?? null;
+  if (etagMatches(opts.ifNoneMatch, etag)) return jsonResponse(serialized, etag, cacheControl, 304, accept, shared);
+  return jsonResponse(serialized, etag, cacheControl, 200, accept, shared);
 }
 
 export function notFound(message: string): NextResponse {
@@ -121,7 +168,7 @@ export function notFound(message: string): NextResponse {
     { error: message },
     {
       status: 404,
-      headers: { "Access-Control-Allow-Origin": "*" },
+      headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" },
     },
   );
 }
@@ -131,7 +178,7 @@ export function badRequest(message: string): NextResponse {
     { error: message },
     {
       status: 400,
-      headers: { "Access-Control-Allow-Origin": "*" },
+      headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" },
     },
   );
 }
@@ -141,7 +188,7 @@ export function unauthorized(message: string): NextResponse {
     { error: message, upgrade: "/pricing" },
     {
       status: 401,
-      headers: { "Access-Control-Allow-Origin": "*" },
+      headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" },
     },
   );
 }
@@ -151,7 +198,7 @@ export function forbidden(message: string): NextResponse {
     { error: message, upgrade: "/pricing" },
     {
       status: 403,
-      headers: { "Access-Control-Allow-Origin": "*" },
+      headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" },
     },
   );
 }

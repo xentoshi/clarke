@@ -7,6 +7,8 @@ export const metadata: Metadata = buildMeta({
   title: "Blog",
   description: "Thinking on space infrastructure, orbital economics, and the companies building the multiplanetary stack.",
   tag: "Clarke Blog",
+  path: "/blog",
+  image: "/og/page/blog.png",
 });
 
 function formatDate(iso: string) {

@@ -29,6 +29,14 @@ export function registryCacheToken(): string {
   }
 }
 
+/** Stable envelope time. Public ETags stay put until clarke.db changes. */
+export function registryGeneratedAt(): string {
+  const token = registryCacheToken();
+  const ms = Number(token.split(":")[0]);
+  if (!Number.isFinite(ms) || token === "missing") return "1970-01-01T00:00:00.000Z";
+  return new Date(ms).toISOString();
+}
+
 export function cachedRead<T>(key: string, load: () => T): T {
   const token = registryCacheToken();
   const hit = store.get(key);

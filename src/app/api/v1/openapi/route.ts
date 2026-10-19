@@ -26,7 +26,7 @@ const spec = {
       get: {
         tags: ["Agents"],
         summary: "List orbital slots",
-        description: "All registry positions. Each row includes operatorIdentity (split, single, or none) and operatorMix (canonical name plus raw source strings). Occupancy observations (tleEpoch, tleStale), FCC authorizations, dispute records, ituRecorded, and source vintage (tleEpochMin, tleEpochMax, tleStale, tleStaleAfterDays 14) follow. `ituRecorded` is `not_in_product` (ITU filings are not in this product). Occupancy is TLE-primary. A UCS fallback row does not invent a TLE epoch. The slot record uses operatorIdentity and operatorMix, not a single headline operator. Valuation and congestion live only as labeled models on the human Slot Terminal. Bid/ask, comps, and dollar strings live on that Terminal surface.",
+        description: "Compact page by default (50 rows): slug, label, longitude, region, operatorIdentity, country, status, satCount. view=full returns the slot record (operatorMix, occupancy, FCC rows, disputes, source vintage) in pages of 10, max 25. all=1 is the explicit full list for that view. offset pages the result. The slot record uses operatorIdentity and operatorMix, not a single headline operator. ituRecorded is not_in_product (ITU filings are not in this product). Valuation and congestion live only as labeled models on the human Slot Terminal. Bid/ask, comps, and dollar strings live on that Terminal surface. Cache-Control is public, max-age=60, s-maxage=3600. Vary is Accept-Encoding. Gzip when the client accepts gzip. ETag 304s. view=full and all=1 are 12 requests per minute per IP.",
         responses: { "200": { description: "{ data, meta } envelope. meta.data_freshness includes last_run plus file_vintage / source_as_of / TLE epoch (not ingest clock alone)." } },
       },
     },
@@ -43,11 +43,12 @@ const spec = {
         tags: ["Agents"],
         summary: "Occupancy, FCC, and dispute change feed",
         description:
-          "Slot Index delta feed (edition 2). On-ingest diffs of registry snapshots. coverage is bootstrap until a second snapshot exists: FCC call-sign events already in slot_events are included, and occupancy or dispute changes are not invented, including tle_epoch. Once a later snapshot exists, tle_epoch records a TLE epoch change or a 14 day stale transition on a TLE used for occupancy. When both snapshots store parsed data/ssal.xlsx rows, FCC filing diffs for that interval are new, removed, and changed. satellite_relocated rows are a TLE-to-TLE log, separate from occupancy changes. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. Valuation and congestion live only as labeled models on the human Slot Terminal. Bid/ask, comps, and dollar strings live on that Terminal surface. changes are paged by detectedAt under about 1.5 MB. truncated and nextSince continue the page. Responses above 2.5 MB are refused. Cache-Control is public, max-age=60, s-maxage=3600.",
+          "Slot Index delta feed (edition 2). On-ingest diffs of registry snapshots. coverage is bootstrap until a second snapshot exists: FCC call-sign events already in slot_events are included, and occupancy or dispute changes are not invented, including tle_epoch. Once a later snapshot exists, tle_epoch records a TLE epoch change or a 14 day stale transition on a TLE used for occupancy. When both snapshots store parsed data/ssal.xlsx rows, FCC filing diffs for that interval are new, removed, and changed. satellite_relocated rows are a TLE-to-TLE log, separate from occupancy changes. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. Valuation and congestion live only as labeled models on the human Slot Terminal. Bid/ask, comps, and dollar strings live on that Terminal surface. changes are paged at 40 rows and about 48 KB. A large timestamp is split. truncated and nextAfter continue the page. since is an exclusive time filter. nextSince is set only on a timestamp boundary. Responses above 2.5 MB are refused. Cache-Control is public, max-age=60, s-maxage=3600. Vary is Accept-Encoding.",
         parameters: [
           { name: "slug", in: "query", schema: { type: "string", example: "101w" } },
           { name: "domain", in: "query", schema: { type: "string", enum: ["occupancy", "fcc", "dispute"] } },
-          { name: "since", in: "query", schema: { type: "string" }, description: "Exclusive cursor. ISO-8601 UTC." },
+          { name: "since", in: "query", schema: { type: "string" }, description: "Exclusive time filter. ISO-8601 UTC." },
+          { name: "after", in: "query", schema: { type: "string" }, description: "Exclusive change id from nextAfter." },
         ],
         responses: {
           "200": { description: "{ data, meta } envelope. data.changes is the feed. meta.count is data.changes.length. meta.data_freshness matches the slot list." },
@@ -84,9 +85,11 @@ const spec = {
         parameters: [
           { name: "operator", in: "query", schema: { type: "string" } },
           { name: "ownerCountry", in: "query", schema: { type: "string" } },
-          { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 1000 } },
+          { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 1000 }, description: "Default 100." },
+          { name: "offset", in: "query", schema: { type: "integer", minimum: 0 } },
+          { name: "all", in: "query", schema: { type: "string", enum: ["1"] }, description: "Explicit full match list." },
         ],
-        responses: { "200": { description: "GEO satellite rows" } },
+        responses: { "200": { description: "GEO satellite rows. Default page is 100." } },
       },
     },
     "/terminal/slots": {

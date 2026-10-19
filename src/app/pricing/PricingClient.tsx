@@ -1,21 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { freeEntitlements, type Entitlements } from "@/lib/entitlements";
 
-export default function PricingClient({
-  loggedIn,
-  pro,
-  email,
-}: {
-  loggedIn: boolean;
-  pro: boolean;
-  email: string | null;
-}) {
+export default function PricingClient() {
   const router = useRouter();
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [ent, setEnt] = useState<Entitlements>(freeEntitlements());
+
+  useEffect(() => {
+    let cancel = false;
+    fetch("/api/auth/entitlements", { credentials: "same-origin" })
+      .then((res) => res.json() as Promise<Entitlements>)
+      .then((next) => {
+        if (!cancel) setEnt(next);
+      })
+      .catch(() => {});
+    return () => {
+      cancel = true;
+    };
+  }, [msg]);
+
+  const loggedIn = ent.loggedIn;
+  const pro = ent.pro;
+  const email = ent.email;
 
   async function checkout() {
     setPending(true);
@@ -33,7 +44,6 @@ export default function PricingClient({
     }
     if (json.mode === "demo") {
       setMsg(json.message ?? "Demo Pro seat issued.");
-      router.refresh();
       return;
     }
     setMsg(json.error ?? "Checkout failed");

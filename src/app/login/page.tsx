@@ -7,6 +7,7 @@ export const metadata = buildMeta({
   description: "Clarke Terminal seats — free registry or Pro demo.",
   tag: "Account",
   path: "/login",
+  image: "/og/page/login.png",
 });
 
 export default function LoginPage() {

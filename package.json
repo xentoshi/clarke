@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "tsx scripts/build-og.tsx && next build",
     "start": "next start",
     "lint": "eslint",
     "ingest": "ts-node --project tsconfig.scripts.json scripts/ingest-ucs.ts",

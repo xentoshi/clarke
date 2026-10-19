@@ -133,6 +133,8 @@ export interface DeltaFilter {
   slug: string | null;
   domain: DeltaDomain | null;
   since: string | null;
+  /** Exclusive change id. Set when the previous page split a timestamp. */
+  after: string | null;
 }
 
 export interface DeltaFeed {
@@ -152,13 +154,21 @@ export interface DeltaFeed {
   appliedFilter: DeltaFilter;
   /** True when `changes` is a page and more matches remain. */
   truncated: boolean;
-  /** Exclusive `since` cursor for the next page. Null when `truncated` is false. */
+  /**
+   * Exclusive `since` cursor when this page ended on a timestamp boundary.
+   * Null when the page split a timestamp, or when `truncated` is false.
+   * Prefer `nextAfter` to continue.
+   */
   nextSince: string | null;
+  /** Exclusive change id for the next page. Null when `truncated` is false. */
+  nextAfter: string | null;
   changes: DeltaChange[];
 }
 
-/** Keep one public delta response under this many bytes of change JSON. */
-export const DELTA_PAGE_BYTE_BUDGET = 1_500_000;
+/** Keep one public delta page under this many bytes of change JSON. */
+export const DELTA_PAGE_BYTE_BUDGET = 48_000;
+/** Cap rows so one timestamp group cannot fill a multi-megabyte page. */
+export const DELTA_PAGE_MAX_CHANGES = 40;
 
 export interface RegistrySnapshotRecord {
   id: number;
@@ -216,7 +226,7 @@ const FCC_AS_OF_NOTE =
 const FCC_EVENT_NOTE =
   "slot_events row written by FCC ingest when this call sign was new, lapsed, or changed licensee or grant status versus the previous fcc_authorizations table. The prior workbook as-of was not stored on the event.";
 
-const EMPTY_FILTER: DeltaFilter = { slug: null, domain: null, since: null };
+const EMPTY_FILTER: DeltaFilter = { slug: null, domain: null, since: null, after: null };
 
 export function isRealFccCallSign(callSign: string | null | undefined): callSign is string {
   return !!callSign && callSign !== "N/A";
@@ -428,6 +438,7 @@ export function assembleDeltaFeed(input: {
     appliedFilter: { ...EMPTY_FILTER },
     truncated: false,
     nextSince: null,
+    nextAfter: null,
     changes: [...pre, ...intervalChanges].sort(compareChanges),
   };
 }
@@ -436,6 +447,8 @@ export interface DeltaFeedQuery {
   slug?: string;
   domain?: string;
   since?: string;
+  /** Exclusive change id from `nextAfter`. */
+  after?: string;
 }
 
 /** Filters apply to `changes` only. Baseline counts stay on the latest snapshot. `since` is exclusive. */
@@ -443,8 +456,10 @@ export function selectDeltaChanges(feed: DeltaFeed, query: DeltaFeedQuery = {}):
   const slug = query.slug?.trim() || null;
   const domainRaw = query.domain?.trim() || null;
   const sinceRaw = query.since?.trim() || null;
+  const afterRaw = query.after?.trim() || null;
 
   if (slug && !/^[a-z0-9-]+$/.test(slug)) throw new DeltaQueryError("Invalid slug");
+  if (afterRaw && !/^[A-Za-z0-9:._-]{1,160}$/.test(afterRaw)) throw new DeltaQueryError("Invalid after");
   if (domainRaw && !DELTA_DOMAINS.includes(domainRaw as DeltaDomain)) {
     throw new DeltaQueryError("Invalid domain");
   }
@@ -457,7 +472,7 @@ export function selectDeltaChanges(feed: DeltaFeed, query: DeltaFeedQuery = {}):
     sinceMs = Date.parse(sinceIso);
   }
 
-  const changes = feed.changes.filter((change) => {
+  let changes = feed.changes.filter((change) => {
     if (slug && change.slug !== slug) return false;
     if (domain && change.domain !== domain) return false;
     if (sinceIso) {
@@ -467,21 +482,27 @@ export function selectDeltaChanges(feed: DeltaFeed, query: DeltaFeedQuery = {}):
     return true;
   });
 
+  if (afterRaw) {
+    const idx = changes.findIndex((change) => change.id === afterRaw);
+    if (idx < 0) throw new DeltaQueryError("Unknown after cursor");
+    changes = changes.slice(idx + 1);
+  }
+
   return {
     ...feed,
-    appliedFilter: { slug, domain, since: sinceIso },
+    appliedFilter: { slug, domain, since: sinceIso, after: afterRaw },
     truncated: false,
     nextSince: null,
+    nextAfter: null,
     changes,
   };
 }
 
 /**
- * Pages `changes` by detectedAt so a public response does not stringify the
- * full history. The first timestamp group is always included. Later groups
- * are added while the change JSON stays under DELTA_PAGE_BYTE_BUDGET.
- * `nextSince` is the last returned detectedAt. `since` stays exclusive, and
- * changes that share a timestamp stay together.
+ * Pages `changes` so one response stays small. A timestamp with thousands of
+ * rows is split. `nextAfter` is the exclusive id cursor. `nextSince` is set
+ * only when the page ends on a timestamp boundary, so an older client that
+ * only sends `since` does not skip the rest of a split group.
  */
 export function pageDeltaChanges(feed: DeltaFeed, query: DeltaFeedQuery = {}): DeltaFeed {
   const selected = selectDeltaChanges(feed, query);
@@ -490,25 +511,24 @@ export function pageDeltaChanges(feed: DeltaFeed, query: DeltaFeedQuery = {}): D
 
   let end = 0;
   let bytes = 2;
-  let index = 0;
-  while (index < changes.length) {
-    const stamp = changes[index].detectedAt;
-    let next = index + 1;
-    while (next < changes.length && changes[next].detectedAt === stamp) next += 1;
-    const groupBytes = JSON.stringify(changes.slice(index, next)).length;
-    if (end > 0 && bytes + groupBytes > DELTA_PAGE_BYTE_BUDGET) break;
-    end = next;
-    bytes += groupBytes;
-    index = next;
-    if (bytes >= DELTA_PAGE_BYTE_BUDGET) break;
+  for (let i = 0; i < changes.length; i += 1) {
+    const one = JSON.stringify(changes[i]).length + 1;
+    if (end > 0 && (end >= DELTA_PAGE_MAX_CHANGES || bytes + one > DELTA_PAGE_BYTE_BUDGET)) break;
+    end += 1;
+    bytes += one;
+    if (end >= DELTA_PAGE_MAX_CHANGES || bytes >= DELTA_PAGE_BYTE_BUDGET) break;
   }
 
   const page = changes.slice(0, end);
   const truncated = end < changes.length;
+  const last = page[page.length - 1];
+  const next = truncated ? changes[end] : undefined;
+  const endedOnBoundary = truncated && !!last && !!next && next.detectedAt !== last.detectedAt;
   return {
     ...selected,
     truncated,
-    nextSince: truncated ? page[page.length - 1]?.detectedAt ?? null : null,
+    nextSince: endedOnBoundary && last ? last.detectedAt : null,
+    nextAfter: truncated ? last?.id ?? null : null,
     changes: page,
   };
 }

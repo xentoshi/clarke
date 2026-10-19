@@ -146,14 +146,13 @@ describe("live registry trust (clarke.db)", () => {
     absent("101w", 3, [/MSAT/i]);
     absent("45w", 1, [/Intelsat 1R/i]);
     absent("169e", 1, [/Fengyun/i]);
-    // The 2026-10-17 refresh places Express-AM33 (NORAD 32478) at -1.37,
-    // 0.37 degrees from 1W, with mean motion 1.00250657. That is station-kept
-    // and inside the window, so 1W is 6 after the three drifters leave.
-    absent("1w", 6, [/Astra 1G/i, /Skynet 4C/i, /DSP 20/i]);
+    // The 2026-10-19 TLE places Express-AM33 (NORAD 32478) at -1.86,
+    // 0.86 degrees from 1W. That is outside the 0.4 degree window, so 1W is 5.
+    absent("1w", 5, [/Astra 1G/i, /Skynet 4C/i, /DSP 20/i, /Express-AM33/i]);
 
     const one = buildAgentSlot("1w");
     assert.ok(one);
-    assert.ok(one.occupancy.some((row) => row.noradId === "32478"));
+    assert.equal(one.occupancy.some((row) => row.noradId === "32478"), false);
     const mev = one.occupancy.find((row) => row.noradId === "46113");
     assert.ok(mev);
     assert.equal(mev.role, "servicing");
@@ -182,9 +181,10 @@ describe("live registry trust (clarke.db)", () => {
     const max = Math.max(...rows.map((row) => row.satCount));
     assert.equal(densest?.satCount, max);
     assert.equal(densest?.label, rows.find((row) => row.satCount === max)?.label);
-    assert.equal(densest?.label, "128.2°E");
+    // 2026-10-19 refresh: 54.9E, 128.2E, and 128.3E tie at 7. Densest keeps the first.
+    assert.equal(densest?.label, "54.9°E");
     assert.equal(densest?.satCount, 7);
-    assert.equal(rows.find((row) => row.slug === "1w")?.satCount, 6);
+    assert.equal(rows.find((row) => row.slug === "1w")?.satCount, 5);
     assert.equal(rows.find((row) => row.slug === "101w")?.satCount, 3);
     assert.equal(rows.find((row) => row.slug === "45w")?.satCount, 1);
     assert.equal(rows.find((row) => row.slug === "169e")?.satCount, 1);

@@ -34,6 +34,10 @@ const ALLOWED_KEYS = new Set([
   "slug",
   "limit",
   "since",
+  "offset",
+  "after",
+  "view",
+  "all",
 ]);
 
 function assertLine(line: UsageLine, raw: string) {
@@ -92,7 +96,7 @@ describe("usage whitelist", () => {
   it("keeps slug, limit, and since and drops every other argument", () => {
     const now = new Date("2026-10-19T12:00:00.000Z");
     const req = new Request(
-      "https://www.clarkebelt.finance/api/v1/agents/deltas?slug=101w&limit=25&since=2026-10-01T00:00:00.000Z&domain=fcc&operator=SES-SENTINEL&ownerCountry=ZZ-SENTINEL&authorization=Bearer%20ck_live_supersecretvalue",
+      "https://www.clarkebelt.finance/api/v1/agents/deltas?slug=101w&limit=25&since=2026-10-01T00:00:00.000Z&offset=50&view=full&all=1&after=fcc:slot_event:12&domain=fcc&operator=SES-SENTINEL&ownerCountry=ZZ-SENTINEL&authorization=Bearer%20ck_live_supersecretvalue",
       { headers: { "x-forwarded-for": "203.0.113.44", "user-agent": "clarke-test", authorization: "Bearer ck_live_supersecretvalue" } },
     );
     const line = buildHttpUsage(req, "/api/v1/agents/deltas", 200, now);
@@ -103,6 +107,10 @@ describe("usage whitelist", () => {
     assert.equal(line.slug, "101w");
     assert.equal(line.limit, 25);
     assert.equal(line.since, "2026-10-01T00:00:00.000Z");
+    assert.equal(line.offset, 50);
+    assert.equal(line.view, "full");
+    assert.equal(line.all, true);
+    assert.equal(line.after, "fcc:slot_event:12");
     assert.equal(line.ua, "clarke-test");
     assert.equal(cleanUserAgent("clarke-test\ninjected"), "clarke-test injected");
     assert.equal(cleanUserAgent("Bearer ck_live_supersecretvalue"), "[redacted]");
@@ -144,6 +152,10 @@ describe("usage whitelist", () => {
           slug: "101w",
           limit: 5000,
           since: "not-a-date",
+          offset: 12,
+          view: "nope",
+          all: true,
+          after: "not a cursor",
           operator: "SES-SENTINEL",
           domain: "fcc",
           authorization: "Bearer ck_live_supersecretvalue",
@@ -158,6 +170,10 @@ describe("usage whitelist", () => {
     assert.equal(line.slug, "101w");
     assert.equal(line.limit, undefined);
     assert.equal(line.since, undefined);
+    assert.equal(line.offset, 12);
+    assert.equal(line.view, undefined);
+    assert.equal(line.all, true);
+    assert.equal(line.after, undefined);
     assert.equal(raw.includes("SES-SENTINEL"), false);
     assert.equal(raw.includes("ck_live_supersecretvalue"), false);
     assert.equal(raw.includes("full-body-sentinel"), false);
@@ -275,7 +291,8 @@ describe("agent and MCP routes keep their responses", () => {
       assert.equal(res.status, 200);
       assert.match(res.headers.get("cache-control") ?? "", /public, max-age=60, s-maxage=3600/);
       assert.equal(res.headers.get("set-cookie"), null);
-      const body = await res.json() as { data: unknown };
+      const body = await res.json() as { data: unknown; meta: { view?: string } };
+      assert.equal(body.meta.view, "compact");
       assert.deepEqual(agentPayloadViolations(body.data), []);
     });
     assert.equal(lines.length, 1);

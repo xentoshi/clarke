@@ -25,6 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }) 
     description: `${model.operator || "GEO position"} at ${model.label}. ${model.satCount} satellites. ${fv}. Model v0, not a live market price.`,
     tag: "Terminal",
     path: `/orbital/${slot}`,
+    image: `/og/slot/${slot}.png`,
   });
 }
 

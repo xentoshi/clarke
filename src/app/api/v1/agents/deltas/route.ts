@@ -19,17 +19,19 @@ export const GET = withPublicUsage("/api/v1/agents/deltas", async function GET(r
   const rl = checkRateLimit(getClientIp(req));
   if (!rl.allowed) return rateLimited(rl.retryAfter);
 
+  const slug = param(req.nextUrl.searchParams.get("slug"));
+  const domain = param(req.nextUrl.searchParams.get("domain"));
+  const since = param(req.nextUrl.searchParams.get("since"));
+  const after = param(req.nextUrl.searchParams.get("after"));
+
   try {
-    const data = listDeltas({
-      slug: param(req.nextUrl.searchParams.get("slug")),
-      domain: param(req.nextUrl.searchParams.get("domain")),
-      since: param(req.nextUrl.searchParams.get("since")),
-    });
+    const data = listDeltas({ slug, domain, since, after });
     return ok(data, {
       count: data.changes.length,
       freshness: freshnessMeta(),
-      cacheKey: `agents:deltas:${param(req.nextUrl.searchParams.get("slug")) ?? ""}:${param(req.nextUrl.searchParams.get("domain")) ?? ""}:${param(req.nextUrl.searchParams.get("since")) ?? ""}`,
+      cacheKey: `agents:deltas:${slug ?? ""}:${domain ?? ""}:${since ?? ""}:${after ?? ""}`,
       ifNoneMatch: req.headers.get("if-none-match"),
+      acceptEncoding: req.headers.get("accept-encoding"),
     });
   } catch (err) {
     if (err instanceof DeltaQueryError) return badRequest(err.message);

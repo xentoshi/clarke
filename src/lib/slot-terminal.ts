@@ -23,6 +23,7 @@ import { getLatestIngest, getDataFreshness } from "./freshness";
 import { ingestAsOf, type Provenance } from "./provenance";
 import { regionForLongitude } from "./regions";
 import { isSafeSlug } from "./slot-utils";
+import { cachedRead } from "./process-cache";
 import { summarizeOperators, type OperatorShare } from "./operator-mix";
 import { isLaunchVehicleOperator, resolveOperator, resolveSatelliteOperator } from "./operator-identity";
 import { countryFromOccupants } from "./slot-country";
@@ -156,6 +157,10 @@ export function buildRecordedProvenance(input: {
 
 export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
   if (!isSafeSlug(slug)) return null;
+  return cachedRead(`terminal-slot:${slug}`, () => buildSlotTerminalUncached(slug));
+}
+
+function buildSlotTerminalUncached(slug: string): SlotTerminalModel | null {
   const lon = slugToLon(slug);
   if (lon === null) return null;
 
@@ -326,6 +331,10 @@ export function buildSlotTerminal(slug: string): SlotTerminalModel | null {
 }
 
 export function listTerminalSummaries() {
+  return cachedRead("terminal-summaries", () => listTerminalSummariesUncached());
+}
+
+function listTerminalSummariesUncached() {
   const merged = mergeWithUcs(curatedSlots);
   const latest = getLatestIngest();
   const asOfDate = new Date(ingestAsOf(latest?.lastRun ?? null));

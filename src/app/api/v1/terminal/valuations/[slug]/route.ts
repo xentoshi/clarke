@@ -23,6 +23,10 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
       valuation: model.valuation,
       provenance: model.provenance.fairValue,
     },
-    { freshness: freshnessMeta(), cacheSeconds: 60 },
+    {
+      freshness: freshnessMeta(),
+      private: true,
+      acceptEncoding: req.headers.get("accept-encoding"),
+    },
   );
 }

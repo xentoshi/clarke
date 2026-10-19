@@ -12,6 +12,8 @@ interface Bucket {
 const buckets = new Map<string, Bucket>();
 const WINDOW_MS = 60_000;
 const DEFAULT_MAX = 60;
+/** Full slot lists and unpaged satellite dumps. Separate bucket from ordinary reads. */
+export const HEAVY_RATE_MAX = 12;
 
 export function getClientIp(req: NextRequest): string {
   const forwarded = req.headers.get("x-forwarded-for");
@@ -26,12 +28,13 @@ export interface RateLimitResult {
   retryAfter: number;
 }
 
-export function checkRateLimit(ip: string, max = DEFAULT_MAX): RateLimitResult {
+export function checkRateLimit(ip: string, max = DEFAULT_MAX, scope = ""): RateLimitResult {
+  const key = scope ? `${scope}:${ip}` : ip;
   const now = Date.now();
-  const entry = buckets.get(ip);
+  const entry = buckets.get(key);
 
   if (!entry || now > entry.reset) {
-    buckets.set(ip, { count: 1, reset: now + WINDOW_MS });
+    buckets.set(key, { count: 1, reset: now + WINDOW_MS });
     return { allowed: true, retryAfter: 0 };
   }
 

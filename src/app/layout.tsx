@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Script from "next/script";
 import AppShell from "@/components/AppShell";
-import Analytics from "@/components/Analytics";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { Geist, IBM_Plex_Mono } from "next/font/google";
 import { slots as curatedSlots } from "@/data/orbital-slots";
@@ -42,7 +41,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             strategy="afterInteractive"
           />
         )}
-        <Analytics />
         <VercelAnalytics />
         <AppShell slots={allSlots}>{children}</AppShell>
       </body>

@@ -9,6 +9,7 @@ export const metadata = buildMeta({
   description: "What Clarke is, why GEO orbital slots matter now, the public data sources it normalizes, registry methodology, data quality notes, and the agents API.",
   tag: "About",
   path: "/about",
+  image: "/og/page/about.png",
 });
 
 const sections = [
@@ -242,10 +243,10 @@ export default function AboutPage() {
             <h3 className="text-ink text-sm font-semibold mb-3">HTTP endpoints</h3>
             <div className="space-y-2 mb-6">
               {[
-                { path: "GET /api/v1/agents/slots", desc: "All registry rows, one per slug, sorted by longitude. Each row is the agent slot record: operatorIdentity and operatorMix, occupancy, FCC authorizations, disputes, ituRecorded (not_in_product), and source vintage. The slot record uses operatorIdentity and operatorMix, not a single headline operator. Valuation and congestion live only as labeled models on the human Slot Terminal." },
-                { path: "GET /api/v1/agents/slots/{slug}", desc: "One slot, same record as the list. operatorIdentity is split, single, or none. ituRecorded is not_in_product. fccStale and tleStale are on sourceVintage. tleStale is true when a TLE used for occupancy is older than 14 days. A UCS fallback row does not invent a TLE epoch. Valuation and congestion live only as labeled models on the human Slot Terminal." },
-                { path: "GET /api/v1/agents/satellites", desc: "GEO satellites from the UCS database. Optional filters: operator, ownerCountry, limit (max 1000). HTTP returns every matching row when limit is omitted. The MCP tool defaults limit to 100." },
-                { path: "GET /api/v1/agents/deltas", desc: "On-ingest occupancy, FCC, and dispute changes. coverage is bootstrap until a second registry snapshot exists, so empty occupancy changes are not a claim that nothing moved. tle_epoch is included once a later snapshot exists. Valuation and congestion live only as labeled models on the human Slot Terminal. Field list: /docs/agent-api." },
+                { path: "GET /api/v1/agents/slots", desc: "Compact page of 50 by default: slug, label, longitude, region, operatorIdentity, country, status, satCount. view=full returns the slot record, paged. all=1 is the explicit full list. No valuation or congestion." },
+                { path: "GET /api/v1/agents/slots/{slug}", desc: "One slot record. operatorIdentity is split, single, or none. ituRecorded is not_in_product. fccStale and tleStale are on sourceVintage. tleStale is true when a TLE used for occupancy is older than 14 days. A UCS fallback row does not invent a TLE epoch. Valuation and congestion live only as labeled models on the human Slot Terminal." },
+                { path: "GET /api/v1/agents/satellites", desc: "GEO satellites from the UCS database. Optional filters: operator, ownerCountry, limit (max 1000), offset. HTTP defaults limit to 100. all=1 returns the matching rows. The MCP tool defaults limit to 100." },
+                { path: "GET /api/v1/agents/deltas", desc: "On-ingest occupancy, FCC, and dispute changes, 40 rows a page. coverage is bootstrap until a second registry snapshot exists, so empty occupancy changes are not a claim that nothing moved. tle_epoch is included once a later snapshot exists. Pass after from nextAfter to continue. Valuation and congestion live only as labeled models on the human Slot Terminal. Field list: /docs/agent-api." },
                 { path: "GET /api/v1/openapi", desc: "OpenAPI 3.1 document covering agents and Pro Terminal routes." },
                 { path: "GET /api/v1/terminal/slots/{slug}", desc: "Pro: Slot Terminal model — TLE-primary occupancy, recorded FCC layers, valuation v0. Simulated book / ITU stubs are labeled experimental, not the default view." },
                 { path: "GET /api/v1/terminal/valuations/{slug}/history", desc: "Pro: daily valuation snapshots (persisted or model backfill). Not trade prints." },
@@ -260,7 +261,7 @@ export default function AboutPage() {
             <h3 className="text-ink text-sm font-semibold mb-3">Response shape</h3>
             <div className="border border-line rounded-xl p-5 bg-surface mb-6">
               <p className="text-muted text-xs leading-relaxed mb-3">
-                Every successful response is a JSON envelope with a versioned <span className="font-mono text-ink">data</span> field and a <span className="font-mono text-ink">meta</span> object: API version, <span className="font-mono text-ink">generated_at</span>, and on list routes a <span className="font-mono text-ink">count</span> equal to the number of rows in <span className="font-mono text-ink">data</span>. Slot routes also include <span className="font-mono text-ink">meta.data_freshness</span>. Responses set <span className="font-mono text-ink">ETag</span> and <span className="font-mono text-ink">Cache-Control: public, s-maxage=3600, stale-while-revalidate=60</span>. The handler does not return 304 when <span className="font-mono text-ink">If-None-Match</span> is sent.
+                Every successful response is a JSON envelope with a versioned <span className="font-mono text-ink">data</span> field and a <span className="font-mono text-ink">meta</span> object: API version, <span className="font-mono text-ink">generated_at</span>, and on list routes a <span className="font-mono text-ink">count</span> equal to the number of rows in <span className="font-mono text-ink">data</span>. The slot list also sends <span className="font-mono text-ink">total</span>, <span className="font-mono text-ink">offset</span>, <span className="font-mono text-ink">limit</span>, and <span className="font-mono text-ink">next_offset</span>. Slot routes include <span className="font-mono text-ink">meta.data_freshness</span>. Responses set <span className="font-mono text-ink">ETag</span> and <span className="font-mono text-ink">Cache-Control: public, max-age=60, s-maxage=3600, stale-while-revalidate=86400</span>. <span className="font-mono text-ink">Vary</span> is <span className="font-mono text-ink">Accept-Encoding</span> only. A matching <span className="font-mono text-ink">If-None-Match</span> returns 304.
               </p>
               <pre className="text-muted text-xs font-mono bg-canvas border border-line rounded p-3 overflow-x-auto">{`{
   "data": [],

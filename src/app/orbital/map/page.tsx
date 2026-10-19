@@ -1,40 +1,19 @@
 import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
 import { buildGeoBelt } from "@/lib/belt-data";
-import { parseBeltWindow, type BeltMark } from "@/lib/geo-belt";
-import { operatorDisplay } from "@/lib/operator-identity";
 import { GeoBeltView } from "@/components/belt/GeoBeltView";
+
+export const revalidate = false;
 
 export const metadata = buildMeta({
   title: "GEO belt",
   description: "Flat GEO belt of Space-Track TLE occupancy longitudes. Catalog names from UCS. Not an ITU assignment or an FCC filing.",
   tag: "Registry",
   path: "/orbital/map",
+  image: "/og/page/map.png",
 });
 
-function first(value: string | string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-function knownOperator(raw: string | undefined, marks: BeltMark[]): string | null {
-  if (!raw) return null;
-  const canonical = operatorDisplay(raw);
-  if (marks.some((mark) => mark.operator && operatorDisplay(mark.operator) === canonical)) return canonical;
-  return null;
-}
-
-export default async function GeoBeltPage({
-  searchParams,
-}: {
-  searchParams: Promise<{
-    disputes?: string | string[];
-    min?: string | string[];
-    max?: string | string[];
-    mark?: string | string[];
-    operator?: string | string[];
-  }>;
-}) {
-  const sp = await searchParams;
+export default function GeoBeltPage() {
   const belt = buildGeoBelt();
 
   return (
@@ -56,13 +35,7 @@ export default async function GeoBeltPage({
           Sample Terminal
         </Link>
       </div>
-      <GeoBeltView
-        model={belt}
-        initialDisputes={first(sp.disputes) === "1"}
-        initialOperator={knownOperator(first(sp.operator), belt.marks)}
-        initialWindow={parseBeltWindow(first(sp.min), first(sp.max))}
-        initialMarkId={first(sp.mark) ?? null}
-      />
+      <GeoBeltView model={belt} />
     </div>
   );
 }

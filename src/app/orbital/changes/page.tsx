@@ -3,11 +3,14 @@ import { buildMeta } from "@/lib/metadata";
 import { getRecentSlotEvents, type SlotEvent } from "@/lib/events";
 import { lonToSlug, formatLon } from "@/lib/slot-utils";
 
+export const revalidate = false;
+
 export const metadata = buildMeta({
   title: "What Changed",
   description: "New FCC authorizations, lapsed filings, licensee changes, and satellite relocations detected in the GEO arc since Clarke started tracking history.",
   tag: "Registry",
   path: "/orbital/changes",
+  image: "/og/page/changes.png",
 });
 
 const EVENT_META: Record<string, { label: string; color: string }> = {

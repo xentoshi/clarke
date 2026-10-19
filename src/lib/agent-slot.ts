@@ -295,6 +295,31 @@ function buildAgentSlotUncached(slug: string): AgentSlotPayload | null {
   });
 }
 
+export interface AgentSlotSummary {
+  slug: string;
+  label: string;
+  longitude: number;
+  region: string;
+  operatorIdentity: OperatorIdentity;
+  country: string;
+  status: SlotStatus;
+  satCount: number;
+}
+
+/** List default. The full record stays on the slug route and on view=full. */
+export function toAgentSlotSummary(slot: AgentSlotPayload): AgentSlotSummary {
+  return {
+    slug: slot.slug,
+    label: slot.label,
+    longitude: slot.longitude,
+    region: slot.region,
+    operatorIdentity: slot.operatorIdentity,
+    country: slot.country,
+    status: slot.status,
+    satCount: slot.satCount,
+  };
+}
+
 export function listAgentSlots(): AgentSlotPayload[] {
   return cachedRead("agent-slots", () => listAgentSlotsUncached());
 }

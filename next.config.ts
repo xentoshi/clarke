@@ -9,6 +9,20 @@ const nextConfig: NextConfig = {
     "/docs": ["./docs/*.md"],
     "/docs/**": ["./docs/*.md"],
   },
+  // Large files that runtime routes do not read. clarke.db stays traced where code opens it.
+  // terminal.db is only needed by Terminal routes and slot history, not by public agent reads.
+  outputFileTracingExcludes: {
+    "*": [
+      "./data/ssal.xlsx",
+      "./public/nasa-main.jpg",
+      "./public/nasa-footer.jpg",
+      "./public/textures/**/*",
+      "./public/og/**/*",
+    ],
+    "/api/v1/agents/**": ["./data/terminal.db"],
+    "/api/v1/mcp": ["./data/terminal.db"],
+    "/api/v1/openapi": ["./data/terminal.db", "./data/clarke.db"],
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.nasa.gov" },
@@ -23,6 +37,7 @@ const nextConfig: NextConfig = {
       { source: "/", destination: "/orbital", permanent: true },
       { source: "/research", destination: "/index", permanent: false },
       { source: "/data", destination: "/about", permanent: true },
+      { source: "/api/og", destination: "/og/default.png", permanent: true },
     ];
   },
   async headers() {
@@ -46,6 +61,12 @@ const nextConfig: NextConfig = {
         source: "/sitemap.xml",
         headers: [
           { key: "Cache-Control", value: "public, s-maxage=3600, stale-while-revalidate=86400" },
+        ],
+      },
+      {
+        source: "/og/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=86400, s-maxage=604800" },
         ],
       },
     ];

@@ -26,5 +26,6 @@ export const GET = withPublicUsage("/api/v1/agents/slots/[slug]", async function
     freshness: freshnessMeta(),
     cacheKey: `agents:slot:${slug}`,
     ifNoneMatch: req.headers.get("if-none-match"),
+    acceptEncoding: req.headers.get("accept-encoding"),
   });
 });

@@ -33,5 +33,10 @@ export async function GET(req: NextRequest) {
       disclaimer: valuation.disclaimer,
     },
   }));
-  return ok(data, { count: data.length, freshness: freshnessMeta(), cacheSeconds: 60 });
+  return ok(data, {
+    count: data.length,
+    freshness: freshnessMeta(),
+    private: true,
+    acceptEncoding: req.headers.get("accept-encoding"),
+  });
 }

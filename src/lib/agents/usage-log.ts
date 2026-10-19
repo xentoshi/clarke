@@ -21,6 +21,7 @@ const SLUG_RE = /^[a-z0-9-]{1,64}$/;
 const TOOL_RE = /^clarke_[a-z0-9_]{1,40}$/;
 const SINCE_RE =
   /^[0-9]{4}-[0-9]{2}-[0-9]{2}(?:[T ][0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,3})?(?:Z|[+-][0-9]{2}:?[0-9]{2})?)?$/;
+const AFTER_RE = /^[A-Za-z0-9:._-]{1,160}$/;
 
 const RPC_METHODS = new Set([
   "initialize",
@@ -48,6 +49,10 @@ export interface UsageLine {
   slug?: string;
   limit?: number;
   since?: string;
+  offset?: number;
+  after?: string;
+  view?: "compact" | "full";
+  all?: true;
 }
 
 export function usageSalt(): string {
@@ -78,19 +83,47 @@ export function whitelistSince(value: unknown): string | undefined {
   return SINCE_RE.test(trimmed) ? trimmed : undefined;
 }
 
+export function whitelistOffset(value: unknown): number | undefined {
+  const n = typeof value === "number" ? value : typeof value === "string" && /^[0-9]{1,6}$/.test(value) ? Number(value) : NaN;
+  if (!Number.isInteger(n) || n < 0 || n > 100_000) return undefined;
+  return n;
+}
+
+export function whitelistAfter(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return AFTER_RE.test(trimmed) ? trimmed : undefined;
+}
+
+export function whitelistView(value: unknown): "compact" | "full" | undefined {
+  return value === "compact" || value === "full" ? value : undefined;
+}
+
+export function whitelistAll(value: unknown): true | undefined {
+  return value === true || value === "1" ? true : undefined;
+}
+
 export function whitelistTool(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
   return TOOL_RE.test(value) ? value : undefined;
 }
 
-function whitelistFields(input: Record<string, unknown>): Pick<UsageLine, "slug" | "limit" | "since"> {
-  const out: Pick<UsageLine, "slug" | "limit" | "since"> = {};
+function whitelistFields(input: Record<string, unknown>): Pick<UsageLine, "slug" | "limit" | "since" | "offset" | "after" | "view" | "all"> {
+  const out: Pick<UsageLine, "slug" | "limit" | "since" | "offset" | "after" | "view" | "all"> = {};
   const slug = whitelistSlug(input.slug);
   const limit = whitelistLimit(input.limit);
   const since = whitelistSince(input.since);
+  const offset = whitelistOffset(input.offset);
+  const after = whitelistAfter(input.after);
+  const view = whitelistView(input.view);
+  const all = whitelistAll(input.all);
   if (slug) out.slug = slug;
   if (limit !== undefined) out.limit = limit;
   if (since) out.since = since;
+  if (offset !== undefined) out.offset = offset;
+  if (after) out.after = after;
+  if (view) out.view = view;
+  if (all) out.all = all;
   return out;
 }
 
@@ -120,7 +153,7 @@ function baseUsage(
   return line;
 }
 
-export function whitelistFromUrl(url: string): Pick<UsageLine, "slug" | "limit" | "since"> {
+export function whitelistFromUrl(url: string): Pick<UsageLine, "slug" | "limit" | "since" | "offset" | "after" | "view" | "all"> {
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -143,6 +176,14 @@ export function whitelistFromUrl(url: string): Pick<UsageLine, "slug" | "limit" 
   if (limit !== null) fields.limit = limit;
   const since = parsed.searchParams.get("since");
   if (since !== null) fields.since = since;
+  const offset = parsed.searchParams.get("offset");
+  if (offset !== null) fields.offset = offset;
+  const after = parsed.searchParams.get("after");
+  if (after !== null) fields.after = after;
+  const view = parsed.searchParams.get("view");
+  if (view !== null) fields.view = view;
+  const all = parsed.searchParams.get("all");
+  if (all !== null) fields.all = all;
   return whitelistFields(fields);
 }
 

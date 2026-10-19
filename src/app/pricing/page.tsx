@@ -1,15 +1,16 @@
 import { buildMeta } from "@/lib/metadata";
-import { getEntitlements } from "@/lib/auth";
 import PricingClient from "./PricingClient";
+
+export const revalidate = false;
 
 export const metadata = buildMeta({
   title: "Pricing",
   description: "Free GEO registry. Pro Slot Terminal seats for valuation breakdown, compare, export+, and API.",
   tag: "Pricing",
   path: "/pricing",
+  image: "/og/page/pricing.png",
 });
 
-export default async function PricingPage() {
-  const e = await getEntitlements();
-  return <PricingClient loggedIn={e.loggedIn} pro={e.pro} email={e.email} />;
+export default function PricingPage() {
+  return <PricingClient />;
 }

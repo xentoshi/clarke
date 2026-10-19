@@ -8,7 +8,10 @@ import {
 import {
   assembleDeltaFeed,
   canonicalStateJson,
+  DELTA_PAGE_BYTE_BUDGET,
+  DELTA_PAGE_MAX_CHANGES,
   diffRegistryStates,
+  pageDeltaChanges,
   selectDeltaChanges,
   DeltaQueryError,
   type DeltaVintage,
@@ -561,6 +564,32 @@ describe("live delta feed", () => {
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /removed/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /changed/);
     assert.doesNotMatch(CLARKE_LIST_DELTAS_DESCRIPTION, /congestion|valuation|bid\/ask|\$\s*\d/i);
+  });
+});
+
+describe("delta page size", () => {
+  it("splits a timestamp that would otherwise be a multi-megabyte page", () => {
+    const full = buildDeltaFeedFromDb();
+    const counts = new Map<string, number>();
+    for (const row of full.changes) counts.set(row.detectedAt, (counts.get(row.detectedAt) ?? 0) + 1);
+    let stamp = "";
+    let n = 0;
+    for (const [key, count] of counts) {
+      if (count > n) {
+        stamp = key;
+        n = count;
+      }
+    }
+    assert.ok(n > DELTA_PAGE_MAX_CHANGES);
+    const page = pageDeltaChanges(full, { since: new Date(Date.parse(stamp) - 1).toISOString() });
+    assert.equal(page.changes[0]?.detectedAt, stamp);
+    assert.ok(page.changes.length <= DELTA_PAGE_MAX_CHANGES);
+    assert.ok(JSON.stringify(page.changes).length <= DELTA_PAGE_BYTE_BUDGET);
+    assert.equal(page.nextSince, null);
+    assert.ok(page.nextAfter);
+    const rest = pageDeltaChanges(full, { since: new Date(Date.parse(stamp) - 1).toISOString(), after: page.nextAfter ?? undefined });
+    assert.equal(rest.changes.some((row) => row.id === page.nextAfter), false);
+    assert.equal(rest.changes[0]?.detectedAt, stamp);
   });
 });
 

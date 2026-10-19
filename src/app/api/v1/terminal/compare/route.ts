@@ -30,6 +30,8 @@ export async function GET(req: NextRequest) {
       country: model.country,
       status: model.status,
       satCount: model.satCount,
+      purpose: model.purpose,
+      fccCount: model.fccAuthorizations.length,
       congestion: model.congestion,
       valuation: model.valuation,
       license: model.valuation.license,
@@ -37,5 +39,10 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  return ok(slots, { count: slots.length, freshness: freshnessMeta(), cacheSeconds: 60 });
+  return ok(slots, {
+    count: slots.length,
+    freshness: freshnessMeta(),
+    private: true,
+    acceptEncoding: req.headers.get("accept-encoding"),
+  });
 }

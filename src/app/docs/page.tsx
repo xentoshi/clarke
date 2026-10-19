@@ -10,6 +10,7 @@ export const metadata = buildMeta({
     "Clarke Docs: occupancy, the public agent record, FCC freshness, and the labeled models on Slot Terminal.",
   tag: "Docs",
   path: "/docs",
+  image: "/og/page/docs.png",
 });
 
 export default function DocsHubPage() {

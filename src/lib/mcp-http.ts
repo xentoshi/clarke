@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { gzipSync } from "zlib";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { createServer } from "../mcp/server";
 import { rateLimited } from "./agents/envelope";
@@ -50,12 +51,19 @@ function jsonRpcError(status: number, code: number, message: string, extra?: Hea
   );
 }
 
-async function buffer(res: Response): Promise<Response> {
-  const body = await res.arrayBuffer();
-  return new Response(body.byteLength ? body : null, {
+async function buffer(res: Response, acceptEncoding: string | null): Promise<Response> {
+  const raw = await res.arrayBuffer();
+  const headers = new Headers(res.headers);
+  let body: BodyInit | null = raw.byteLength ? raw : null;
+  if (raw.byteLength >= 860 && acceptEncoding && /\bgzip\b/.test(acceptEncoding) && !headers.get("content-encoding")) {
+    body = gzipSync(Buffer.from(raw), { level: 6 });
+    headers.set("content-encoding", "gzip");
+    headers.set("vary", "Accept-Encoding");
+  }
+  return new Response(body, {
     status: res.status,
     statusText: res.statusText,
-    headers: res.headers,
+    headers,
   });
 }
 
@@ -110,7 +118,7 @@ export async function handleMcpHttp(req: Request): Promise<Response> {
   try {
     await server.connect(transport);
     const raw = await transport.handleRequest(rpcRequest);
-    return withCors(await buffer(raw));
+    return withCors(await buffer(raw, req.headers.get("accept-encoding")));
   } catch {
     return withCors(jsonRpcError(500, -32603, "Internal error"));
   } finally {

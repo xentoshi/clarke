@@ -13,6 +13,7 @@ export const metadata = buildMeta({
   description: "Search, filter, and compare every tracked GEO orbital position. Occupancy, congestion scores, FCC filing status, and Slot Terminal.",
   tag: "Registry",
   path: "/orbital",
+  image: "/og/page/orbital.png",
 });
 
 export default async function OrbitalPage() {

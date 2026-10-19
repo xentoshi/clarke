@@ -1,26 +1,33 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GeoBeltMap } from "./GeoBeltMap";
-import type { GeoBeltModel } from "@/lib/geo-belt";
+import { parseBeltWindow, type BeltMark, type GeoBeltModel } from "@/lib/geo-belt";
 import { operatorDisplay } from "@/lib/operator-identity";
 
-export function GeoBeltView({
-  model,
-  initialDisputes = false,
-  initialOperator = null,
-  initialWindow = null,
-  initialMarkId = null,
-}: {
-  model: GeoBeltModel;
-  initialDisputes?: boolean;
-  initialOperator?: string | null;
-  initialWindow?: { min: number; max: number } | null;
-  initialMarkId?: string | null;
-}) {
+function knownOperator(raw: string | null, marks: BeltMark[]): string | null {
+  if (!raw) return null;
+  const canonical = operatorDisplay(raw);
+  if (marks.some((mark) => mark.operator && operatorDisplay(mark.operator) === canonical)) return canonical;
+  return null;
+}
+
+export function GeoBeltView({ model }: { model: GeoBeltModel }) {
   const [query, setQuery] = useState("");
-  const [operator, setOperator] = useState<string | null>(initialOperator);
-  const [disputes, setDisputes] = useState(initialDisputes);
+  const [operator, setOperator] = useState<string | null>(null);
+  const [disputes, setDisputes] = useState(false);
+  const [beltWindow, setBeltWindow] = useState<{ min: number; max: number } | null>(null);
+  const [markId, setMarkId] = useState<string | null>(null);
+  const [urlKey, setUrlKey] = useState("base");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setDisputes(params.get("disputes") === "1");
+    setOperator(knownOperator(params.get("operator"), model.marks));
+    setBeltWindow(parseBeltWindow(params.get("min") ?? undefined, params.get("max") ?? undefined));
+    setMarkId(params.get("mark"));
+    setUrlKey(window.location.search || "base");
+  }, [model.marks]);
 
   const operatorOptions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -75,11 +82,12 @@ export function GeoBeltView({
       />
 
       <GeoBeltMap
+        key={urlKey}
         marks={visible}
         variant="full"
         epochFallback={model.epochLabel}
-        initialWindow={initialWindow}
-        initialMarkId={initialMarkId}
+        initialWindow={beltWindow}
+        initialMarkId={markId}
       />
 
       <p className="mt-3 text-[14px] leading-relaxed text-muted">

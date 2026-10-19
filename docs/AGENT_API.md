@@ -1,6 +1,6 @@
 # Agent API
 
-Public agents read one GEO slot record. HTTP `GET /api/v1/agents/slots` and `GET /api/v1/agents/slots/{slug}` return it inside a `{ data, meta }` envelope. The MCP tools `clarke_list_slots`, `clarke_get_slot`, and `clarke_get_terminal` return the same JSON. `clarke_get_terminal` is not a second schema. It is the same object as `clarke_get_slot`.
+Public agents read one GEO slot record. HTTP `GET /api/v1/agents/slots/{slug}` returns it inside a `{ data, meta }` envelope. `GET /api/v1/agents/slots` defaults to a compact page of that registry. `view=full` returns the same record, paged. The MCP tools `clarke_get_slot` and `clarke_get_terminal` return the same JSON as the slug route. `clarke_get_terminal` is not a second schema. It is the same object as `clarke_get_slot`. `clarke_list_slots` defaults to the compact page.
 
 `GET /api/v1/agents/deltas` is the on-ingest change feed for that record (Slot Index delta feed, edition 2). The MCP tool `clarke_list_deltas` returns the same JSON object. It is not a second copy of the slot record and it is not the human method note at `/index`.
 
@@ -24,9 +24,9 @@ The HTTP routes, remote MCP, and local stdio are read-only and unauthenticated. 
 
 | Route | `data` |
 |---|---|
-| `GET /api/v1/agents/slots` | Array of slot records, one per registry slug, sorted by longitude (west, negative, through east). |
+| `GET /api/v1/agents/slots` | Compact page by default (50 rows): `slug`, `label`, `longitude`, `region`, `operatorIdentity`, `country`, `status`, `satCount`. Query: `view` (`compact` or `full`), `limit`, `offset`, `all=1`. Sorted by longitude (west, negative, through east). |
 | `GET /api/v1/agents/slots/{slug}` | One slot record. |
-| `GET /api/v1/agents/deltas` | Change feed. Query: `slug`, `domain` (`occupancy`, `fcc`, or `dispute`), `since` (exclusive). |
+| `GET /api/v1/agents/deltas` | Change feed. Query: `slug`, `domain` (`occupancy`, `fcc`, or `dispute`), `since` (exclusive time), `after` (exclusive change id from `nextAfter`). |
 
 Successful JSON:
 
@@ -47,11 +47,12 @@ The fence is the key shape. `count` and the empty freshness array are not a live
 | `meta` field | Where | Meaning |
 |---|---|---|
 | `version` | Every 200 | `"1.0"`. |
-| `generated_at` | Every 200 | ISO-8601 UTC time the envelope was built. |
-| `count` | List routes, including the delta feed | `data.length` for slot and satellite lists. For the delta feed, `data.changes.length`. |
+| `generated_at` | Every 200 | ISO-8601 UTC. On a cached public read this is the `data/clarke.db` mtime, so the body and ETag stay stable until that file changes. |
+| `count` | List routes, including the delta feed | `data.length` for slot and satellite pages. For the delta feed, `data.changes.length`. This is the page, not `meta.total`. |
+| `total`, `offset`, `limit`, `next_offset`, `view` | Slot list and satellite list | Page window. `view` is only on the slot list (`compact` or `full`). `limit` is null when `all=1`. `next_offset` is null on the last page. |
 | `data_freshness` | Slot list, slot detail, and the delta feed | Ingest rows. See freshness below. The satellites route does not send this array. |
 
-Headers on 200: `Content-Type: application/json`, `ETag`, `Cache-Control: public, s-maxage=3600, stale-while-revalidate=60`, `Access-Control-Allow-Origin: *`. The handler sets `ETag`. It does not return 304 when `If-None-Match` is sent.
+Headers on 200: `Content-Type: application/json; charset=utf-8`, `ETag`, `Cache-Control: public, max-age=60, s-maxage=3600, stale-while-revalidate=86400`, `Vary: Accept-Encoding`, `Vercel-CDN-Cache-Control` with that same edge lifetime, `Access-Control-Allow-Origin: *`. The cache key is the URL. It does not vary on cookies or client IP. A request that sends `Accept-Encoding: gzip` gets `Content-Encoding: gzip`. The ETag is the uncompressed JSON. A matching `If-None-Match` returns 304 with an empty body.
 
 Errors are `{ "error": "..." }`, not the envelope.
 
@@ -59,17 +60,19 @@ Errors are `{ "error": "..." }`, not the envelope.
 |---|---|
 | 400 | Slug fails `^[a-z0-9-]+$`. Body: `Invalid slug`. |
 | 404 | Safe slug with no occupancy, no FCC row within 0.6 degrees, and no curated slot at that slug or within 0.4 degrees. Body: `No slot at slug '<slug>'`. A safe slug that is not a longitude (`abc`) is also 404. |
-| 429 | Over 60 requests per minute per IP on this instance. Header `Retry-After` is seconds. Body: `Too many requests`. The limiter is in-memory per server instance. |
+| 429 | Over 60 requests per minute per IP on this instance for a compact slot page, one slot, a delta page, or a satellite page at the default limit. `view=full`, slot `all=1`, and a satellite `all=1` or `limit` above 100 are 12 per minute on a separate counter. Header `Retry-After` is seconds. Body: `Too many requests`. The limiter is in-memory per server instance. |
 
 Slugs from the list are the supported keys. Examples: `101w` (101 degrees west), `19-2e` (19.2 degrees east). A slug that is not in the list can still return 200 when occupancy, an FCC row, or a nearby curated slot matches. `slug` and `longitude` are then the path you asked for. `label`, `country`, and `status` can come from that nearby curated row. Prefer list slugs.
 
-Rate limit, CORS, and the envelope also apply to `GET /api/v1/agents/satellites` (UCS GEO rows, not this slot record). Filters: `operator`, `ownerCountry`, `limit` (1 to 1000). Omitted `limit` on HTTP returns every matching row. That route's `meta` has `count` and no `data_freshness`.
+Rate limit, CORS, and the envelope also apply to `GET /api/v1/agents/satellites` (UCS GEO rows, not this slot record). Filters: `operator`, `ownerCountry`, `limit` (1 to 1000), `offset`, `all=1`. Omitted `limit` returns 100 rows. `all=1` is the explicit full match list. That route's `meta` has `count`, `total`, `offset`, `limit`, and `next_offset`, and no `data_freshness`.
+
+The slot list default does not include occupancy, FCC rows, or disputes. `view=full` returns the slot record below, 10 rows unless `limit` is set (max 25). `all=1` returns every row for that view. `all=1` with `view=full` is the explicit full registry and is the large body. Valuation and congestion are not in the compact row or the full record.
 
 `GET /api/v1/openapi` is a short OpenAPI 3.1 index. This page is the field list. [llms.txt](https://www.clarkebelt.finance/llms.txt) is the site root index for these routes.
 
 ### MCP
 
-Tool results are compact JSON text. They are not wrapped in `{ data, meta }`. Remote MCP and local stdio call the same builders. Neither calls the HTTP routes. `clarke_list_satellites` uses `limit` 100 when the argument is omitted (max 1000). Slot tools still return the full agent payload. That payload does not include valuation or congestion scores.
+Tool results are compact JSON text. They are not wrapped in `{ data, meta }`. Remote MCP and local stdio call the same builders. Neither calls the HTTP routes. `clarke_list_satellites` uses `limit` 100 when the argument is omitted (max 1000). `clarke_list_slots` defaults to the compact page. `view` `full` and `all` true match the HTTP list. `clarke_get_slot` and `clarke_get_terminal` return the full slot record. That record does not include valuation or congestion scores.
 
 ### Remote Streamable HTTP
 
@@ -95,10 +98,10 @@ Send one JSON-RPC message per POST. `Content-Type` is `application/json`. `Accep
 
 | Tool | Arguments | Result |
 |---|---|---|
-| `clarke_list_slots` | none | JSON array of slot records. |
+| `clarke_list_slots` | optional `view` (`compact` or `full`), `limit`, `offset`, `all` | Compact page by default. `all: true` is the explicit full list for that view. |
 | `clarke_get_slot` | `slug` matching `^[a-z0-9-]+$` | One slot record. |
 | `clarke_get_terminal` | `slug` matching `^[a-z0-9-]+$` | The same JSON as `clarke_get_slot`. |
-| `clarke_list_deltas` | optional `slug`, `domain`, `since` | The same object as `GET /api/v1/agents/deltas` `data`. Not wrapped in `{ data, meta }`. |
+| `clarke_list_deltas` | optional `slug`, `domain`, `since`, `after` | The same object as `GET /api/v1/agents/deltas` `data`. Not wrapped in `{ data, meta }`. |
 
 Unknown slug: error result whose text is `{ "error": "No slot at slug '<slug>'" }`. The tool schema rejects a slug that fails the pattern before that lookup.
 
@@ -353,13 +356,13 @@ What is not in the feed:
 
 While `coverage` is `bootstrap`, FCC `new`, `lapsed`, `licensee`, and `status` rows are `slot_events` already recorded at FCC ingest, dated at or before the first snapshot. Occupancy and dispute `changes` are empty, including `tle_epoch`. The feed does not invent a TLE epoch history from the single snapshot. `baseline` is the state computed after the latest ingest, so an agent can cite snapshot id and vintages without calling the empty list a week of moves.
 
-`slug` that matches no change returns 200 and `changes: []`. It is not a 404. `domain` must be `occupancy`, `fcc`, or `dispute`. `since` accepts ISO-8601 UTC or `YYYY-MM-DD HH:MM:SS` and is exclusive. Invalid `slug`, `domain`, or `since` is 400. The same rate limit as the slot list applies.
+`slug` that matches no change returns 200 and `changes: []`. It is not a 404. `domain` must be `occupancy`, `fcc`, or `dispute`. `since` accepts ISO-8601 UTC or `YYYY-MM-DD HH:MM:SS` and is exclusive. `after` is an exclusive change id. Invalid `slug`, `domain`, `since`, or `after` is 400. Unknown `after` is 400. The same 60 per minute limit as a compact slot page applies.
 
-Filters do not change `baseline`. Pass `since` from the last `detectedAt` you stored. Changes that share that timestamp are omitted together.
+Filters do not change `baseline`. `since` drops every change at or before that time, including rows that share the timestamp. Use it as a time filter. Use `after` to turn pages.
 
-Public responses page `changes` by `detectedAt`. The first matching timestamp is always included. Later timestamps are added while the change JSON stays under about 1.5 MB. `truncated` is true when more matches remain. `nextSince` is the exclusive cursor for the next page, or null. A body above 2.5 MB is refused. Slot lists, one slot, and satellite lists fit under that cap. Satellite `limit` stays 1 to 1000.
+Public responses page `changes` at 40 rows and about 48 KB of change JSON. A timestamp with thousands of rows is split. `truncated` is true when more matches remain. `nextAfter` is the exclusive id for the next page. `nextSince` is set only when the page ended on a timestamp boundary, and is null when the page split a timestamp. Pass `after` from `nextAfter` to continue. A body above 2.5 MB is refused. One slot record fits under that cap. The explicit full slot list (`all=1` and `view=full`) is the large list and is gzip compressed. Satellite `limit` stays 1 to 1000. The satellite default is 100.
 
-Those reads are cached in the server process until `data/clarke.db` changes. HTTP sends `Cache-Control: public, max-age=60, s-maxage=3600`. A matching `If-None-Match` returns 304. The same 60 requests per minute per IP limit applies on each instance. Remote MCP POST stays `no-store` because the body is JSON-RPC. `initialize` and `tools/list` do not build the registry. Tool results reuse the same process cache. GET and OPTIONS on `/api/v1/mcp` send a public `Cache-Control` max-age. MCP request bodies above 64 KB are refused.
+Those reads are cached in the server process until `data/clarke.db` changes. The process cache key is the query, not the client IP. HTTP sends `Cache-Control: public, max-age=60, s-maxage=3600, stale-while-revalidate=86400` and `Vary: Accept-Encoding`. A matching `If-None-Match` returns 304. Compact slot pages are 60 requests per minute per IP on each instance. Full slot pages and explicit full lists are 12 per minute. Remote MCP POST stays `no-store` because the body is JSON-RPC. A gzip `Accept-Encoding` still compresses that POST body. `initialize` and `tools/list` do not build the registry. Tool results reuse the same process cache. GET and OPTIONS on `/api/v1/mcp` send a public `Cache-Control` max-age. MCP request bodies above 64 KB are refused. Documented agent routes stay reachable. `robots.txt` asks crawlers to skip the delta feed, the satellite list, compare, and `/api/og`. It does not ask them to skip `/api/v1/agents/slots` or `/api/v1/mcp`.
 
 ## Related pages
 

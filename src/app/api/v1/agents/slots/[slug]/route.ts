@@ -25,5 +25,6 @@ export async function GET(
     freshness: freshnessMeta(),
     cacheKey: `agents:slot:${slug}`,
     ifNoneMatch: req.headers.get("if-none-match"),
+    acceptEncoding: req.headers.get("accept-encoding"),
   });
 }

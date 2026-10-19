@@ -36,7 +36,8 @@ export function listDeltas(query: DeltaFeedQuery = {}): DeltaFeed {
   const slug = query.slug ?? "";
   const domain = query.domain ?? "";
   const since = query.since ?? "";
-  return cachedRead(`deltas:${slug}:${domain}:${since}`, () => pageDeltaChanges(buildDeltaFeedFromDb(), query));
+  const after = query.after ?? "";
+  return cachedRead(`deltas:${slug}:${domain}:${since}:${after}`, () => pageDeltaChanges(buildDeltaFeedFromDb(), query));
 }
 
 // Adapter: data freshness in the snake_case shape used by the API envelope meta.

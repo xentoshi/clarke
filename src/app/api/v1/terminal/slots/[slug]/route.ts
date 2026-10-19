@@ -16,5 +16,9 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
   const model = buildSlotTerminal(slug);
   if (!model) return notFound(`No slot at slug '${slug}'`);
 
-  return ok(model, { freshness: freshnessMeta(), cacheSeconds: 60 });
+  return ok(model, {
+    freshness: freshnessMeta(),
+    private: true,
+    acceptEncoding: req.headers.get("accept-encoding"),
+  });
 }

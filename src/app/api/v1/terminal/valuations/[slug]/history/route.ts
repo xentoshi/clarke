@@ -25,6 +25,11 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
         ? "Series is a deterministic v0 model path (not observed trades). Run npm run seed:valuations to persist snapshots."
         : "Series read from data/terminal.db. Last point is a model snapshot, not a trade print.",
     },
-    { count: model.history.length, freshness: freshnessMeta(), cacheSeconds: 60 },
+    {
+      count: model.history.length,
+      freshness: freshnessMeta(),
+      private: true,
+      acceptEncoding: req.headers.get("accept-encoding"),
+    },
   );
 }

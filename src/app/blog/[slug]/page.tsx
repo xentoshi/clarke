@@ -26,7 +26,13 @@ export async function generateMetadata({ params }: { params: Promise<Params> }) 
   const { slug } = await params;
   const post = getPost(slug);
   if (!post) return {};
-  return buildMeta({ title: post.title, description: post.excerpt, tag: post.tag });
+  return buildMeta({
+    title: post.title,
+    description: post.excerpt,
+    tag: post.tag,
+    path: `/blog/${slug}`,
+    image: `/og/blog/${slug}.png`,
+  });
 }
 
 export async function generateStaticParams() {

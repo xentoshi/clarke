@@ -12,6 +12,7 @@ export const metadata = buildMeta({
   description: "Method note: occupancy enter/leave, UCS–TLE dispute flips, and FCC license deltas. Not a price index.",
   tag: "Index",
   path: "/index",
+  image: "/og/page/index.png",
 });
 
 const toc = [

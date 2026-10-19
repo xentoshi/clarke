@@ -173,7 +173,17 @@ describe("public MCP Streamable HTTP", () => {
       assert.equal(missing.isError, true);
       assert.deepEqual(JSON.parse(toolText(missing)), { error: "No slot at slug 'zz-no-such-slot'" });
 
-      const listed = await client.callTool({ name: "clarke_list_slots", arguments: {} });
+      const compact = await client.callTool({ name: "clarke_list_slots", arguments: {} });
+      const compactText = toolText(compact);
+      assert.equal(compactText.includes("\n"), false);
+      const compactRows = JSON.parse(compactText) as Array<{ slug?: string; occupancy?: unknown; valuation?: unknown; congestion?: unknown }>;
+      assert.ok(compactRows.length > 1);
+      assert.ok(compactRows.length <= 50);
+      assert.equal(compactRows[0]?.occupancy, undefined);
+      assert.ok(compactRows.every((row) => row.valuation === undefined && row.congestion === undefined));
+      assert.deepEqual(agentPayloadViolations(compactRows), []);
+
+      const listed = await client.callTool({ name: "clarke_list_slots", arguments: { view: "full", all: true } });
       const listedText = toolText(listed);
       assert.equal(listedText.includes("\n"), false);
       const rows = JSON.parse(listedText) as Array<{ ituRecorded?: string; valuation?: unknown; congestion?: unknown }>;

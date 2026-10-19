@@ -5,7 +5,8 @@ import { buildExplorerRows } from "@/lib/explorer";
 import { buildGeoBelt } from "@/lib/belt-data";
 import { getLatestIngest } from "@/lib/freshness";
 
-export const revalidate = 3600;
+// Registry rows come from committed data/clarke.db. Rebuild on deploy only.
+export const revalidate = false;
 
 export const metadata = buildMeta({
   title: "Orbital Registry",

@@ -4,7 +4,9 @@ import { ok, rateLimited, preflight } from "@/lib/agents/envelope";
 import { checkRateLimit, getClientIp } from "@/lib/agents/rate-limit";
 
 export const OPTIONS = () => preflight();
-export const revalidate = 3600;
+// Request-aware (rate limit and ETag). A revalidate period would ISR-write this body.
+// Repeat reads stay on the process cache and the CDN Cache-Control header.
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const rl = checkRateLimit(getClientIp(req));

@@ -7,6 +7,7 @@ import { posts } from "../src/data/posts";
 import { DOC_PAGES } from "../src/lib/docs";
 import { getAllRegistrySlugs } from "../src/lib/satellites";
 import { formatLon, slugToLon } from "../src/lib/slot-utils";
+import { formatRegistryCensus, getRegistryCensus } from "../src/lib/registry-census";
 
 const OUT = path.join(process.cwd(), "public", "og");
 
@@ -83,22 +84,23 @@ async function write(rel: string, title: string, tag: string, sub: string) {
 function slotLabel(slug: string): string {
   const lon = slugToLon(slug);
   if (lon === null) return slug;
-  const curated = curatedSlots.find((slot) => Math.abs(slot.longitude - lon) < 0.05);
-  return curated?.label ?? formatLon(lon);
+  return formatLon(lon);
 }
 
+const censusLine = formatRegistryCensus(getRegistryCensus());
+
 const PAGES: { file: string; title: string; tag: string; sub: string }[] = [
-  { file: "default.png", title: "Clarke", tag: "Registry", sub: "GEO orbital positions" },
-  { file: "page/orbital.png", title: "GEO registry", tag: "Registry", sub: "Public slot table" },
-  { file: "page/about.png", title: "About", tag: "Clarke", sub: "How the registry is built" },
+  { file: "default.png", title: "Clarke", tag: "Registry", sub: censusLine },
+  { file: "page/orbital.png", title: "GEO registry", tag: "Registry", sub: censusLine },
+  { file: "page/about.png", title: "About", tag: "Clarke", sub: censusLine },
   { file: "page/account.png", title: "Account", tag: "Account", sub: "Terminal seat and API key" },
   { file: "page/index.png", title: "GEO Slot Index", tag: "Index", sub: "Occupancy, FCC, and dispute changes" },
-  { file: "page/login.png", title: "Sign in", tag: "Account", sub: "Free registry or Pro seat" },
+  { file: "page/login.png", title: "Sign in", tag: "Account", sub: "Free registry session" },
   { file: "page/changes.png", title: "What changed", tag: "Registry", sub: "FCC and relocation events" },
   { file: "page/compare.png", title: "Compare slots", tag: "Terminal", sub: "Up to four GEO positions" },
   { file: "page/faq.png", title: "Orbital Registry FAQ", tag: "FAQ", sub: "Sources, agents, and FCC records" },
   { file: "page/map.png", title: "GEO belt", tag: "Registry", sub: "TLE occupancy longitudes" },
-  { file: "page/pricing.png", title: "Pricing", tag: "Pricing", sub: "Free registry. Pro Terminal seats." },
+  { file: "page/pricing.png", title: "Pricing", tag: "Pricing", sub: "Registry access is free. Paid seat by contact." },
   { file: "page/blog.png", title: "Blog", tag: "Clarke Blog", sub: "Space infrastructure notes" },
   { file: "page/docs.png", title: "Docs", tag: "Docs", sub: "Occupancy, agents, FCC, and models" },
 ];

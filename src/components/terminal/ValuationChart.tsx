@@ -30,7 +30,7 @@ export function ValuationChart({
   }, [series, pad.l, pad.r, pad.t, pad.b]);
 
   if (pts.length === 0) {
-    return <div className="text-muted text-sm">No model-path backfill yet. Run <span className="font-mono">npm run seed:valuations</span>. Not a trade tape.</div>;
+    return <div className="text-muted text-sm">No model path is stored for this slot.</div>;
   }
 
   const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");

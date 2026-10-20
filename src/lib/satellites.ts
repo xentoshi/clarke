@@ -12,7 +12,7 @@ import type { OrbitalSlot } from "@/data/orbital-slots";
 import { DRIFT_TLE_SUPPLEMENT } from "@/data/drift-tle-supplement";
 import { isLaunchVehicleOperator, resolveOperator } from "./operator-identity";
 import { collapseUcsClaimSlots } from "./registry-claims";
-import { loadPostUcsGeoOccupants } from "./post-ucs-occupancy";
+import { loadPostUcsGeoOccupants, ucsFileVintageIso } from "./post-ucs-occupancy";
 import { servicingByNorad, type ServicingAttachment } from "./servicing-vehicle";
 import { countryFromOccupants } from "./slot-country";
 import { reconcileRegistryStatus } from "./slot-status";
@@ -618,6 +618,7 @@ function computeMergedRegistry(curatedSlots: OrbitalSlot[]): OrbitalSlot[] {
       (s) => s.longitudeGeo !== null && !curatedLons.some((lon) => withinLongitudeWindow(lon, s.longitudeGeo!, TOLERANCE)),
     ),
     decayedNoradIds,
+    ucsFileVintageIso(),
   );
 
   // FCC authorizations with no satellite and no curated slot inside the FCC

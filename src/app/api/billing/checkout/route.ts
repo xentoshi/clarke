@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const res = NextResponse.json({
       mode: "demo",
       plan: "pro",
-      message: "Stripe secrets are not configured. Issued a local demo Pro seat. Set STRIPE_SECRET_KEY and STRIPE_PRICE_ID to enable Checkout.",
+      message: "Live billing is not configured. Issued a local demo Pro seat.",
     });
     res.cookies.set(SESSION_COOKIE, token, cookieOptions());
     return res;
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
   const json = (await stripeRes.json()) as { id?: string; url?: string; error?: { message?: string } };
   if (!stripeRes.ok || !json.url) {
     return NextResponse.json(
-      { error: json.error?.message ?? "Stripe Checkout failed", todo: "Check STRIPE_SECRET_KEY / STRIPE_PRICE_ID" },
+      { error: json.error?.message ?? "Stripe Checkout failed" },
       { status: 502 },
     );
   }

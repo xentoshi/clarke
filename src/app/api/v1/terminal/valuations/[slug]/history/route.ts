@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
       source: model.historySource,
       series: model.history,
       note: model.historySource === "backfill"
-        ? "Series is a deterministic v0 model path (not observed trades). Run npm run seed:valuations to persist snapshots."
+        ? "Series is a deterministic v0 model path (not observed trades)."
         : "Series read from data/terminal.db. Last point is a model snapshot, not a trade print.",
     },
     {

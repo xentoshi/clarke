@@ -21,10 +21,10 @@ export function ProGate({
       <div className="absolute inset-0 flex items-center justify-center bg-canvas/70">
         <div className="text-center px-4">
           <div className="text-ink text-sm font-semibold mb-1">{title}</div>
-          <p className="text-muted text-sm mb-3">Full driver breakdown, compare, export+, and API sit behind a Terminal seat.</p>
+          <p className="text-muted text-sm mb-3">Driver breakdown, compare, and export sit on a paid seat. Registry access is free.</p>
           <div className="flex items-center justify-center gap-3">
             <Link href="/pricing" data-unlock-pro className="bg-ink text-canvas rounded px-3 py-1.5 text-xs font-semibold hover:bg-ink/85">
-              Unlock Pro
+              Pricing
             </Link>
             <Link href="/login" className="text-muted hover:text-ink text-xs">
               Sign in

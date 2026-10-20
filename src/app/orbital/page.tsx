@@ -4,6 +4,7 @@ import OrbitalExplorer from "./OrbitalExplorer";
 import { buildExplorerRows } from "@/lib/explorer";
 import { buildGeoBelt } from "@/lib/belt-data";
 import { getLatestIngest } from "@/lib/freshness";
+import { formatRegistryCensusDetail, getRegistryCensus } from "@/lib/registry-census";
 
 // Registry rows come from committed data/clarke.db. Rebuild on deploy only.
 export const revalidate = false;
@@ -19,6 +20,7 @@ export const metadata = buildMeta({
 export default async function OrbitalPage() {
   const rows = buildExplorerRows();
   const belt = buildGeoBelt();
+  const census = getRegistryCensus();
   const latest = getLatestIngest();
   const updated = latest
     ? new Date(latest.lastRun.replace(" ", "T") + "Z").toLocaleDateString("en-US", {
@@ -35,6 +37,7 @@ export default async function OrbitalPage() {
           Every tracked GEO position, by longitude. Who is on station, whether the FCC licensed it, and what is uncertain.
           Open a row for the Slot Terminal. Fair value is a labeled model, hidden by default.
         </p>
+        <p className="text-faint text-sm leading-relaxed mt-4">{formatRegistryCensusDetail(census)}</p>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-6 text-[14px]">
           <Link href="/orbital/map" className="text-ink hover:text-muted transition-colors">
             Belt

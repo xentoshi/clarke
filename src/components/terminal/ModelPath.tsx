@@ -22,7 +22,7 @@ export function ModelPath({
       <ValuationChart series={series} source={source} />
       {!showAll && (
         <p className="text-[14px] text-faint mt-2">
-          Free seats see a 7-day backfill. <Link href="/pricing" className="text-ink hover:text-muted underline">Pro unlocks 30-day persisted model path.</Link>
+          This chart shows 7 days of the model path. <Link href="/pricing" className="text-ink hover:text-muted underline">Pricing</Link>
         </p>
       )}
     </>

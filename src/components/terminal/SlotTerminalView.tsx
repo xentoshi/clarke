@@ -7,7 +7,7 @@ import { formatAsOfDate } from "@/lib/provenance";
 import { occupancyTleIsStale } from "@/lib/source-vintage";
 import { parseUcsLaunchYear } from "@/lib/occupancy-quality";
 import { formatOperatorMix } from "@/lib/operator-mix";
-import { isLaunchVehicleOperator, operatorDisplay } from "@/lib/operator-identity";
+import { isLaunchVehicleOperator, operatorDisplay, resolveSatelliteOperator, spacecraftIdentity } from "@/lib/operator-identity";
 import { ituPresence } from "@/lib/itu-presence";
 import { formatLonFixed } from "@/lib/geo-angle";
 import { recordedRightsLayers, stubRightsLayers } from "@/lib/terminal-default";
@@ -20,6 +20,8 @@ import { ModelPath } from "./ModelPath";
 import { TrustMark } from "./TrustMark";
 import { TrustBar } from "./TrustBar";
 import { OperatorName } from "./OperatorName";
+import { CiteThis } from "@/components/CiteThis";
+import { CLARKE_SITE, correctionIssueUrl, formatCitationVintage } from "@/lib/citation";
 
 function identityCopy(model: SlotTerminalModel): string {
   const operator = model.operator
@@ -202,15 +204,19 @@ export function SlotTerminalView({
                         Servicing vehicle attached to {sat.servicing.hostName} (identical element set).
                       </div>
                     )}
+                    {hostedPayloadLine(sat.noradId) && (
+                      <div className="text-[12px] text-muted mt-0.5">{hostedPayloadLine(sat.noradId)}</div>
+                    )}
                   </td>
                   <td className="py-3.5 pr-4 hidden sm:table-cell text-muted text-[14px]">
                     <OperatorName
-                      display={satelliteOperator(sat.operator, sat.launchVehicle)}
+                      display={satelliteOperator(sat)}
                       raw={sat.operator}
                       notes={
-                        isLaunchVehicleOperator(sat.operator, sat.launchVehicle)
+                        spacecraftIdentity(sat.noradId)?.notes
+                        ?? (isLaunchVehicleOperator(sat.operator, sat.launchVehicle)
                           ? "Source string matches the launch vehicle and is not the GEO operator."
-                          : undefined
+                          : undefined)
                       }
                     />
                   </td>
@@ -459,21 +465,55 @@ export function SlotTerminalView({
         <p>
           Provenance · occupancy TLE-primary {formatAsOfDate(model.provenance.occupancy.asOf)} · UCS catalog {formatAsOfDate(model.provenance.ucsCatalog.asOf)} · FCC SSAL {formatAsOfDate(model.provenance.fcc.asOf)} ·
           valuation {v.modelVersion} {formatAsOfDate(v.asOf)}
-          {model.modelRunAsOf ? ` · snapshots seeded ${model.modelRunAsOf} (model path, not trades)` : " · history synthesized (run npm run seed:valuations to persist)"}
+          {model.modelRunAsOf ? ` · snapshots seeded ${model.modelRunAsOf} (model path, not trades)` : " · history is a model path, not trades"}
         </p>
         <p>
           Default Terminal is occupancy, recorded FCC, and freshness. Implied value is behind Labeled model.
           ITU filings are not in this product ({itu.chip}). ITU Space Explorer is the current ITU source. The simulated capacity book is not on this page. Not financial advice.
         </p>
+        <p>
+          <a
+            href={correctionIssueUrl({
+              slug: model.slug,
+              registryRowId: model.slot.id,
+              longitude: model.longitude,
+              label: model.label,
+              operator: model.operator,
+              status: statusLabels[model.status] ?? model.status,
+              satellites: model.satellites.map((sat) => sat.name),
+              fccRows: model.fccAuthorizations.length,
+            })}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-faint hover:text-ink"
+          >
+            Report a correction
+          </a>
+        </p>
       </footer>
+      <CiteThis
+        title={`Clarke slot record, ${model.label} (${model.slug})`}
+        url={`${CLARKE_SITE}/orbital/${model.slug}`}
+        vintage={formatCitationVintage(model.sourceVintage)}
+      />
       <CompareTray pro={entitlements.pro} />
     </div>
   );
 }
 
-function satelliteOperator(operator: string | null, launchVehicle: string | null): string {
-  if (isLaunchVehicleOperator(operator, launchVehicle)) return "Unknown";
-  return operatorDisplay(operator) || "Unknown";
+function satelliteOperator(sat: { operator: string | null; launchVehicle: string | null; noradId: string | null; ownerCountry: string | null }): string {
+  const resolved = resolveSatelliteOperator(sat.operator, {
+    noradId: sat.noradId,
+    ownerCountry: sat.ownerCountry,
+    launchVehicle: sat.launchVehicle,
+  });
+  return resolved.display || "Unknown";
+}
+
+function hostedPayloadLine(noradId: string | null): string | null {
+  const payloads = spacecraftIdentity(noradId)?.hostedPayloads ?? [];
+  if (payloads.length === 0) return null;
+  return `Hosted payload: ${payloads.join(", ")}.`;
 }
 
 function Row({ k, val }: { k: string; val: ReactNode }) {

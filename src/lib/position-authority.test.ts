@@ -66,6 +66,23 @@ describe("resolveOccupancyPosition", () => {
     const p = tleOk({ ucsLongitude: 0, tleLongitude: null, tleEpoch: null });
     assert.equal(p.source, "none");
     assert.equal(p.occupancyLongitude, null);
+    assert.equal(p.ucsLongitude, null);
+    assert.equal(p.disputed, false);
+    assert.equal(p.deltaDeg, null);
+  });
+
+  it("does not dispute a TLE against a UCS 0 placeholder or a missing catalog longitude", () => {
+    const placeholder = tleOk({ ucsLongitude: 0, tleLongitude: -111.87 });
+    assert.equal(placeholder.source, "tle");
+    assert.equal(placeholder.occupancyLongitude, -111.87);
+    assert.equal(placeholder.ucsLongitude, null);
+    assert.equal(placeholder.disputed, false);
+    assert.equal(placeholder.deltaDeg, null);
+
+    const missing = tleOk({ ucsLongitude: null, tleLongitude: -111.87 });
+    assert.equal(missing.disputed, false);
+    assert.equal(missing.deltaDeg, null);
+    assert.equal(missing.source, "tle");
   });
 
   it("still uses a TLE near 0°E rather than inventing or keeping the UCS placeholder", () => {

@@ -2,6 +2,8 @@
 
 > Public GEO slot registry. Agents read one slot record over HTTP. The human pages are not the data source.
 
+Registry size in this build: 463 positions, 456 on station. Positions are registry rows, one per slug. On station means at least one satellite in the ±0.4° occupancy window.
+
 The slot record is occupancy (TLE-primary, UCS catalog longitude as fallback), `operatorIdentity` (`split`, `single`, or `none`), `operatorMix`, FCC authorizations, disputes, source vintage, and provenance. The slot record uses `operatorIdentity` and `operatorMix`, not a single headline operator.
 
 Valuation and congestion are not in the public agent or MCP payload. They live only as labeled models on the human Slot Terminal. Bid/ask, comps, valuation history, and dollar strings live on that Terminal surface. Agents must not treat them as facts. The Pro Terminal API (`/api/v1/terminal/...`) is a separate authenticated surface and can return those models.

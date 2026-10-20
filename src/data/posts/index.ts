@@ -47,11 +47,11 @@ export const posts: Post[] = [
   },
   {
     slug: "intelsat-bankruptcy-orbital-real-estate",
-    title: "What the Intelsat Bankruptcy Revealed About Orbital Real Estate",
-    subtitle: "A company filed for Chapter 11 with $14.8 billion in debt. Its orbital slot portfolio survived intact and sold for $3.1 billion three years later.",
+    title: "What the Intelsat Bankruptcy Showed About GEO Slots",
+    subtitle: "A company filed for Chapter 11 with $14.8 billion in debt. Its GEO slot portfolio survived intact. SES acquired Intelsat for $3.1 billion in 2025.",
     date: "2026-05-19",
     readingMinutes: 7,
-    excerpt: "On May 13, 2020, Intelsat filed for Chapter 11 with $14.8 billion in debt. Through two years of restructuring, its orbital slot portfolio emerged intact. SES acquired it for $3.1 billion in 2025. The sequence reveals something fundamental about what makes these positions valuable, and what Clarke is built to price.",
+    excerpt: "On May 13, 2020, Intelsat filed for Chapter 11 with $14.8 billion in debt. Through two years of restructuring, its GEO slot portfolio emerged intact. SES acquired it for $3.1 billion in 2025.",
     tag: "Market Intelligence",
   },
 ];

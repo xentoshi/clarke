@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
-import { slots as curatedSlots } from "@/data/orbital-slots";
-import { getSatelliteStats, mergeWithUcs } from "@/lib/satellites";
+import { formatRegistryCensusDetail, getRegistryCensus } from "@/lib/registry-census";
 import FaqList from "./FaqList";
 
 export const metadata = buildMeta({
@@ -13,7 +12,7 @@ export const metadata = buildMeta({
   image: "/og/page/faq.png",
 });
 
-function faqItems(geoCount: number, registryRows: number) {
+function faqItems(censusLine: string, ucsGeoRows: number, withOccupancy: number) {
   return [
   {
     q: "Where does this data come from?",
@@ -33,7 +32,7 @@ function faqItems(geoCount: number, registryRows: number) {
   },
   {
     q: "How many total orbital positions exist versus what Clarke currently tracks?",
-    a: `The ITU has registered approximately 1,800 GEO coordination filings across all member states, representing every position that has been filed, coordinated, or historically registered since the space age began. Clarke's registry table currently lists ${registryRows.toLocaleString()} rows, one per slug, built from ${geoCount.toLocaleString()} GEO satellites in the UCS snapshot, plus station-kept GEO payloads launched after that snapshot when a Space-Track TLE places them. FCC-only rows appear only when a real license has no satellite inside the 0.6 degree license window. Federal Government (Reserved) placeholders are not rows. Satellites that share an occupancy longitude rounded to 0.1° are one row. A satellite inside a curated slot's 0.4° window is occupancy on that curated row, not a second table row. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025, so Clarke does not record those filings. A license with no satellite in the window is not a count of spacecraft that never launched.`,
+    a: `The ITU has registered approximately 1,800 GEO coordination filings across all member states. ${censusLine} The UCS snapshot in this build has ${ucsGeoRows.toLocaleString("en-US")} GEO rows. ${withOccupancy.toLocaleString("en-US")} GEO satellites have an occupancy longitude, including station-kept payloads launched after that snapshot. FCC-only rows appear only when a real license has no satellite inside the 0.6 degree license window. Federal Government (Reserved) placeholders are not rows. Satellites that share an occupancy longitude rounded to 0.1° are one row. A satellite inside a curated slot's 0.4° window is occupancy on that curated row. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025, so Clarke does not record those filings.`,
   },
   {
     q: "What is Ku-band versus Ka-band?",
@@ -51,9 +50,8 @@ function faqItems(geoCount: number, registryRows: number) {
 }
 
 export default function OrbitalFaqPage() {
-  const geoCount = getSatelliteStats().geoCount;
-  const registryRows = mergeWithUcs(curatedSlots).length;
-  const faq = faqItems(geoCount, registryRows);
+  const census = getRegistryCensus();
+  const faq = faqItems(formatRegistryCensusDetail(census), census.ucsGeoRows, census.geoSatellitesWithOccupancy);
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">

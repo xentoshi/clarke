@@ -177,7 +177,7 @@ export function GeoBeltMap({
     <div data-geo-belt={variant}>
       <div className="mb-1.5 flex items-baseline justify-between gap-3">
         <p className="font-mono text-[11px] text-faint">
-          {marks.length.toLocaleString()} TLE {marks.length === 1 ? "position" : "positions"}
+          {marks.length.toLocaleString()} TLE occupancy {marks.length === 1 ? "mark" : "marks"}
           {disputed > 0 ? ` · ${disputed.toLocaleString()} with UCS disagreement` : ""}
         </p>
         <div className="flex items-center gap-1.5">
@@ -374,7 +374,7 @@ export function GeoBeltMap({
             })}
             {placed.length === 0 && (
               <text x={plotWidth / 2} y={baseline - 16} textAnchor="middle" fill={PAINT.label} fontSize={11} fontFamily="var(--font-ibm-mono), ui-monospace, monospace">
-                No TLE positions in this view.
+                No TLE occupancy marks in this view.
               </text>
             )}
           </svg>

@@ -126,6 +126,26 @@ export function resolveOperator(raw: string | null | undefined, ownerCountry?: s
 }
 
 const HORIZONS_3E_NORAD = "43633";
+const STPSAT_6_NORAD = "49817";
+
+export interface SpacecraftIdentity {
+  display: string;
+  notes: string;
+  hostedPayloads: string[];
+}
+
+const SPACECRAFT_IDENTITY: Record<string, SpacecraftIdentity> = {
+  [STPSAT_6_NORAD]: {
+    display: "US Space Force / DoD STP",
+    notes: "UCS stored the launch vehicle in the operator column. Space Test Program is a US Space Force / DoD program.",
+    hostedPayloads: ["NASA LCRD"],
+  },
+};
+
+export function spacecraftIdentity(noradId: string | null | undefined): SpacecraftIdentity | null {
+  if (!noradId) return null;
+  return SPACECRAFT_IDENTITY[noradId] ?? null;
+}
 
 /**
  * Same alias map as resolveOperator, plus spacecraft-specific owners.
@@ -134,14 +154,33 @@ const HORIZONS_3E_NORAD = "43633";
  */
 export function resolveSatelliteOperator(
   raw: string | null | undefined,
-  ctx?: { noradId?: string | null; ownerCountry?: string | null },
+  ctx?: { noradId?: string | null; ownerCountry?: string | null; launchVehicle?: string | null },
 ): ResolvedOperator {
+  const identity = spacecraftIdentity(ctx?.noradId);
+  if (identity) {
+    return {
+      display: identity.display,
+      raw: (raw ?? "").trim(),
+      mapped: true,
+      aliases: [identity.display],
+      notes: identity.notes,
+    };
+  }
   if (ctx?.noradId === HORIZONS_3E_NORAD) {
     const base = resolveOperator("Horizons-3 Satellite LLC");
     return {
       ...base,
       raw: (raw ?? "").trim(),
       mapped: true,
+    };
+  }
+  if (isLaunchVehicleOperator(raw, ctx?.launchVehicle)) {
+    return {
+      display: "",
+      raw: (raw ?? "").trim(),
+      mapped: false,
+      aliases: [],
+      notes: "Source string matches the launch vehicle and is not the GEO operator.",
     };
   }
   return resolveOperator(raw, ctx?.ownerCountry);

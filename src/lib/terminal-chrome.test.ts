@@ -284,7 +284,7 @@ describe("product chrome — Fair value, Trust bar, Terminal fold", () => {
     assert.doesNotMatch(primary, /mt-16/);
 
     const labeled = html.slice(html.indexOf("data-labeled-model"));
-    assert.match(labeled, /Unlock Pro/);
+    assert.match(labeled, /Pricing/);
     assert.match(labeled, /data-unlock-pro/);
     assert.match(labeled, /data-kpi="fair-value"/);
     assert.match(html, /Implied value, comps, and model path/);

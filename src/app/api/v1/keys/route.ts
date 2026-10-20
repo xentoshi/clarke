@@ -11,6 +11,6 @@ export async function POST() {
   return NextResponse.json({
     key,
     prefix: key.slice(0, 12),
-    note: "Store this now. v0 keys are signed tokens (not hashed server-side). Send as Authorization: Bearer <key> or X-Clarke-Key. TODO: persist hashed keys before production metering.",
+    note: "Store this now. v0 keys are signed tokens (not hashed server-side). Send as Authorization: Bearer <key> or X-Clarke-Key.",
   });
 }

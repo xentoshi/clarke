@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { formatRegistryCensusDetail, getRegistryCensus } from "@/lib/registry-census";
 
 export const dynamic = "force-static";
+
+const registrySize = formatRegistryCensusDetail(getRegistryCensus());
 
 const spec = {
   openapi: "3.1.0",
@@ -8,7 +11,7 @@ const spec = {
     title: "Clarke API",
     version: "1.5.0",
     description:
-      "Read-only GEO registry. The public agents API returns occupancy, operator identity, FCC rows, disputes, and source vintage (including tleEpoch and tleStale, older than 14 days). Remote MCP is stateless Streamable HTTP at https://www.clarkebelt.finance/api/v1/mcp (reads are open, same tools and JSON as local stdio). Pro Slot Terminal endpoints add the labeled model used on the human Terminal. Occupancy is TLE-primary (Space-Track) with UCS fallback. tleStale applies only to a TLE that supplied occupancy. TLE longitude is not an FCC or ITU assignment. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. Simulated bid/ask and ITU stubs are experimental, not the default Terminal view.",
+      `Read-only GEO registry. ${registrySize} The public agents API returns occupancy, operator identity, FCC rows, disputes, and source vintage (including tleEpoch and tleStale, older than 14 days). Remote MCP is stateless Streamable HTTP at https://www.clarkebelt.finance/api/v1/mcp (reads are open, same tools and JSON as local stdio). Pro Slot Terminal endpoints add the labeled model used on the human Terminal. Occupancy is TLE-primary (Space-Track) with UCS fallback. tleStale applies only to a TLE that supplied occupancy. TLE longitude is not an FCC or ITU assignment. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. Simulated bid/ask and ITU stubs are experimental, not the default Terminal view.`,
   },
   servers: [{ url: "/api/v1" }],
   tags: [

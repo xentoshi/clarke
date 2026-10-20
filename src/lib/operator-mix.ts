@@ -18,15 +18,20 @@ export interface OperatorShare {
 }
 
 export function summarizeOperators(
-  sats: { operator: string | null; ownerCountry?: string | null; noradId?: string | null }[],
+  sats: { operator: string | null; ownerCountry?: string | null; noradId?: string | null; launchVehicle?: string | null }[],
 ): OperatorShare[] {
   const groups = new Map<string, { count: number; raws: Map<string, number>; notes: Set<string> }>();
   let attributed = 0;
   for (const s of sats) {
     const raw = (s.operator ?? "").trim();
     if (!raw) continue;
-    const resolved = resolveSatelliteOperator(raw, { ownerCountry: s.ownerCountry, noradId: s.noradId });
+    const resolved = resolveSatelliteOperator(raw, {
+      ownerCountry: s.ownerCountry,
+      noradId: s.noradId,
+      launchVehicle: s.launchVehicle,
+    });
     const display = resolved.display;
+    if (!display) continue;
     const g = groups.get(display) ?? { count: 0, raws: new Map(), notes: new Set<string>() };
     g.count++;
     g.raws.set(raw, (g.raws.get(raw) ?? 0) + 1);

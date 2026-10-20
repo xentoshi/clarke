@@ -28,7 +28,11 @@ export interface BeltMark {
   name: string;
   /** TLE-primary occupancy longitude in (−180, 180]. Not an assignment. */
   longitude: number;
-  /** UCS catalog operator, when the row has one. Not an alias-normalized name. */
+  /**
+   * UCS catalog operator string. Not alias-normalized.
+   * A known spacecraft identity replaces a bad catalog string.
+   * A launch-vehicle string is omitted.
+   */
   operator: string | null;
   dispute: BeltDisputeClass;
   deltaDeg: number | null;
@@ -326,7 +330,7 @@ export function formatBeltEpoch(epochs: (string | null | undefined)[]): string |
 }
 
 export function beltCaption(epochAsOf: string): string {
-  return `Positions from Space-Track TLE as of ${epochAsOf} · catalog names from UCS · not an ITU assignment.`;
+  return `Occupancy longitudes from Space-Track TLE as of ${epochAsOf} · catalog names from UCS · not an ITU assignment.`;
 }
 
 export function formatDisputeDetail(deltaDeg: number | null, ucsLongitude: number | null): string | null {

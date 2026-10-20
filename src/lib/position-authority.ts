@@ -62,7 +62,10 @@ export interface OccupancyPosition {
 }
 
 export function resolveOccupancyPosition(input: PositionAuthorityInput): OccupancyPosition {
-  const ucsLongitude = finiteLon(input.ucsLongitude);
+  // A UCS longitude of 0 is a placeholder for an undisclosed position, not 0°E.
+  // Missing and placeholder catalog longitudes are not positions, so they
+  // cannot form a UCS–TLE dispute or a ghost.
+  const ucsLongitude = usableCatalogLongitude(finiteLon(input.ucsLongitude));
   const tleLongitude = finiteLon(input.tleLongitude);
   const asOf = input.asOf ?? new Date();
   const tleEpochDate = parseUtcDate(input.tleEpoch);
@@ -149,10 +152,14 @@ function tleQuality(
 // rather than leaving it blank. That is not evidence the bird is at 0°E, so it
 // is not a usable occupancy fallback. A usable TLE that independently places
 // the object at ~0° still wins via the TLE-primary branch.
+function usableCatalogLongitude(lon: number | null): number | null {
+  if (lon === null) return null;
+  if (lon === 0) return null;
+  return lon;
+}
+
 function ucsUsableAsFallback(ucsLongitude: number | null): boolean {
-  if (ucsLongitude === null) return false;
-  if (ucsLongitude === 0) return false;
-  return true;
+  return usableCatalogLongitude(ucsLongitude) !== null;
 }
 
 function finiteLon(lon: number | null | undefined): number | null {

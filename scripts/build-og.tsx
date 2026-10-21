@@ -100,7 +100,7 @@ const PAGES: { file: string; title: string; tag: string; sub: string }[] = [
   { file: "page/compare.png", title: "Compare slots", tag: "Terminal", sub: "Up to four GEO positions" },
   { file: "page/faq.png", title: "Orbital Registry FAQ", tag: "FAQ", sub: "Sources, agents, and FCC records" },
   { file: "page/map.png", title: "GEO belt", tag: "Registry", sub: "TLE occupancy longitudes" },
-  { file: "page/pricing.png", title: "Pricing", tag: "Pricing", sub: "Registry access is free. Paid seat by contact." },
+  { file: "page/pricing.png", title: "Pricing", tag: "Pricing", sub: "Registry access is free. For the paid seat, message @ClarkeBeltFi on X." },
   { file: "page/blog.png", title: "Blog", tag: "Clarke Blog", sub: "Space infrastructure notes" },
   { file: "page/docs.png", title: "Docs", tag: "Docs", sub: "Occupancy, agents, FCC, and models" },
 ];

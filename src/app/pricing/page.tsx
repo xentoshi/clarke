@@ -5,7 +5,7 @@ export const revalidate = false;
 
 export const metadata = buildMeta({
   title: "Pricing",
-  description: "Registry access is currently free. A paid Terminal seat is contact only.",
+  description: "Registry access is currently free. For the paid seat, message @ClarkeBeltFi on X.",
   tag: "Pricing",
   path: "/pricing",
   image: "/og/page/pricing.png",

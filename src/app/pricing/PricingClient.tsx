@@ -7,8 +7,8 @@ export default function PricingClient() {
       <h1 className="text-4xl sm:text-5xl font-semibold text-ink tracking-tight mb-4">Registry access is free</h1>
       <p className="text-muted text-base mb-10 leading-relaxed max-w-2xl">
         The public GEO registry, slot pages, agents API, and remote MCP are free.
-        A paid seat for the longer Terminal tools is not on sale. Write to{" "}
-        <a href="mailto:contact@clarkebelt.finance" className="text-ink underline">contact@clarkebelt.finance</a>.
+        For the paid seat, message{" "}
+        <a href="https://x.com/ClarkeBeltFi" className="text-ink underline" target="_blank" rel="noopener noreferrer">@ClarkeBeltFi</a> on X.
       </p>
 
       <div className="grid sm:grid-cols-2 gap-4 mb-8">
@@ -25,15 +25,15 @@ export default function PricingClient() {
         </div>
         <div className="border border-ink/20 bg-surface p-6">
           <div className="text-faint text-sm mb-2">Paid seat</div>
-          <div className="text-ink text-2xl font-semibold mb-4">Contact</div>
+          <div className="text-ink text-2xl font-semibold mb-4">@ClarkeBeltFi</div>
           <ul className="text-muted text-sm space-y-2 mb-6">
             <li>Valuation driver breakdown</li>
             <li>Longer model path</li>
             <li>Compare and export with driver columns</li>
             <li>Terminal API key</li>
           </ul>
-          <a href="mailto:contact@clarkebelt.finance" className="text-sm text-ink underline">
-            contact@clarkebelt.finance
+          <a href="https://x.com/ClarkeBeltFi" className="text-sm text-ink underline" target="_blank" rel="noopener noreferrer">
+            Message @ClarkeBeltFi on X
           </a>
         </div>
       </div>

@@ -62,7 +62,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                       rel="noopener noreferrer"
                       className="text-muted text-sm hover:text-ink transition-colors py-0.5"
                     >
-                      X / Twitter
+                      @ClarkeBeltFi
                     </a>
                   </div>
                 </div>

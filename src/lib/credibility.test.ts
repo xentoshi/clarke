@@ -29,6 +29,8 @@ describe("registry census", () => {
     assert.doesNotMatch(about, /what it&apos;s worth|what it's worth/i);
     assert.doesNotMatch(pricing, /TODO/);
     assert.doesNotMatch(pricing, /STRIPE_/);
+    assert.doesNotMatch(pricing, /mailto:|contact@/i);
+    assert.match(pricing, /https:\/\/x\.com\/ClarkeBeltFi/);
   });
 });
 

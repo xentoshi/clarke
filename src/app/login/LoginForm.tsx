@@ -31,14 +31,14 @@ export default function LoginForm() {
       <p className="text-muted text-[14px] mb-3">Seats</p>
       <h1 className="text-4xl font-semibold text-ink tracking-tight mb-3">Sign in</h1>
       <p className="text-muted text-sm mb-6 leading-relaxed">
-        An email address opens a free session cookie for this browser. A paid seat is arranged from the pricing page.
+        An email address opens a free session cookie for this browser. For the paid seat, message{" "}
+        <a href="https://x.com/ClarkeBeltFi" className="text-ink underline" target="_blank" rel="noopener noreferrer">@ClarkeBeltFi</a> on X.
       </p>
       <label className="block text-sm text-muted mb-1">Email</label>
       <input
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         type="email"
-        placeholder="you@example.com"
         className="w-full bg-surface border border-line rounded-sm px-3 py-2 text-sm text-ink mb-4 focus:outline-none focus:border-line-strong"
       />
       {error && <p className="text-danger text-sm mb-3">{error}</p>}

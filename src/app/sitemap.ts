@@ -36,7 +36,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return paths.map((path) => ({
     url: `${origin}${path}`,
     lastModified: now,
-    changeFrequency: "daily" as const,
+    changeFrequency: "monthly" as const,
     priority: path === "/orbital" ? 1 : 0.6,
   }));
 }

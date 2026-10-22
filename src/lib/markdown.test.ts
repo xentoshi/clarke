@@ -75,7 +75,7 @@ describe("public docs load the repo markdown", () => {
     assert.match(doc.html, /docs-mark-v/);
     assert.match(doc.html, /positionDisputed/);
     assert.match(doc.html, /tleStale/);
-    assert.match(doc.html, /14 days/);
+    assert.match(doc.html, /45 days/);
     assert.match(doc.html, /not_in_product/);
     assert.match(doc.html, /Unrecorded in Clarke/);
     assert.match(doc.html, /ITU Space Explorer/);
@@ -160,7 +160,7 @@ describe("public docs load the repo markdown", () => {
     const doc = loadDoc("fcc-refresh");
     assert.match(doc.html, /npm run ingest:fcc/);
     assert.match(doc.html, /data\/ssal\.xlsx/);
-    assert.match(doc.html, /14 days/);
+    assert.match(doc.html, /45 days/);
     assert.match(doc.html, /fcc\.gov\/approved-space-station-list/);
     assert.match(doc.html, /<table>/);
   });

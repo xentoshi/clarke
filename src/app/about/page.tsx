@@ -1,6 +1,6 @@
 import { buildMeta } from "@/lib/metadata";
 import Link from "next/link";
-import { getDataFreshness } from "@/lib/freshness";
+import { formatRegistryCountAsOf, getDataFreshness } from "@/lib/freshness";
 import { formatRegistryCensusDetail, getRegistryCensus } from "@/lib/registry-census";
 
 export const metadata = buildMeta({
@@ -110,17 +110,11 @@ function formatDate(lastRun: string): string {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
 }
 
-function ageLabel(ageDays: number): string {
-  if (ageDays < 0) return "";
-  if (ageDays === 0) return "today";
-  if (ageDays === 1) return "1 day ago";
-  return `${ageDays} days ago`;
-}
-
 export default function AboutPage() {
   const census = getRegistryCensus();
   const fccCount = census.fccAuthorizations;
   const freshness = getDataFreshness();
+  const dataAsOf = formatRegistryCountAsOf();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
@@ -131,7 +125,7 @@ export default function AboutPage() {
           Clarke is a reference record of who sits at each GEO longitude. A row lists the satellites in the occupancy window, the operator on the record, FCC filings when Clarke has them, how fresh the orbit data is, and disagreements between the UCS catalog longitude and the Space-Track TLE.
         </p>
         <p className="text-muted text-base leading-relaxed">
-          {formatRegistryCensusDetail(census)} The same sentence is on the orbital registry, the docs, llms.txt, and the API description.
+          {formatRegistryCensusDetail(census)} {dataAsOf} The same sentence is on the orbital registry, the docs, llms.txt, and the API description.
         </p>
       </div>
 
@@ -162,6 +156,7 @@ export default function AboutPage() {
           </div>
         ))}
       </div>
+      {dataAsOf && <p className="text-faint text-sm font-mono mb-10 max-w-3xl">{dataAsOf}</p>}
 
       <div className="mb-6 max-w-3xl">
         <Link href="/orbital"
@@ -227,7 +222,7 @@ export default function AboutPage() {
             <div className="space-y-2 mb-6">
               {[
                 { path: "GET /api/v1/agents/slots", desc: "Compact page of 50 by default: slug, label, longitude, region, operatorIdentity, country, status, satCount. view=full returns the slot record, paged. all=1 is the explicit full list. No valuation or congestion." },
-                { path: "GET /api/v1/agents/slots/{slug}", desc: "One slot record. operatorIdentity is split, single, or none. ituRecorded is not_in_product. fccStale and tleStale are on sourceVintage. tleStale is true when a TLE used for occupancy is older than 14 days. A UCS fallback row does not invent a TLE epoch. Valuation and congestion live only as labeled models on the human Slot Terminal." },
+                { path: "GET /api/v1/agents/slots/{slug}", desc: "One slot record. operatorIdentity is split, single, or none. ituRecorded is not_in_product. fccStale and tleStale are on sourceVintage. tleStale is true when a TLE used for occupancy is older than 45 days. A UCS fallback row does not invent a TLE epoch. Valuation and congestion live only as labeled models on the human Slot Terminal." },
                 { path: "GET /api/v1/agents/satellites", desc: "GEO satellites from the UCS database. Optional filters: operator, ownerCountry, limit (max 1000), offset. HTTP defaults limit to 100. all=1 returns the matching rows. The MCP tool defaults limit to 100." },
                 { path: "GET /api/v1/agents/deltas", desc: "On-ingest occupancy, FCC, and dispute changes, 40 rows a page. coverage is bootstrap until a second registry snapshot exists, so empty occupancy changes are not a claim that nothing moved. tle_epoch is included once a later snapshot exists. Pass after from nextAfter to continue. Valuation and congestion live only as labeled models on the human Slot Terminal. Field list: /docs/agent-api." },
                 { path: "GET /api/v1/openapi", desc: "OpenAPI 3.1 document covering agents and Pro Terminal routes." },
@@ -368,14 +363,12 @@ export default function AboutPage() {
                       </div>
                       <div className="text-faint text-xs">
                         Parsed {formatDate(f.lastRun)}
-                        {ageLabel(f.ageDays) && <span className="text-faint"> · ingest {ageLabel(f.ageDays)}</span>}
                       </div>
                       {(f.fileVintage || f.sourceAsOf || f.tleEpochMax) && (
                         <div className={`text-xs font-mono mt-1 ${f.stale ? "text-stale" : "text-muted"}`}>
                           {f.source === "Space-Track TLE" && f.tleEpochMax
-                            ? `TLE epoch ${f.tleEpochMin && f.tleEpochMin !== f.tleEpochMax ? `${f.tleEpochMin}–${f.tleEpochMax}` : f.tleEpochMax}`
+                            ? `TLE epoch ${f.tleEpochMin && f.tleEpochMin !== f.tleEpochMax ? `${f.tleEpochMin} to ${f.tleEpochMax}` : f.tleEpochMax}`
                             : `As-of ${f.sourceAsOf || f.fileVintage}`}
-                          {f.vintageAgeDays >= 0 ? ` · ${ageLabel(f.vintageAgeDays)}` : ""}
                           {f.stale ? " · STALE" : ""}
                         </div>
                       )}

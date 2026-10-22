@@ -65,11 +65,11 @@ const vintage: SlotSourceVintage = {
   fccAsOf: "2026-04-30",
   fccIngestAt: "2026-09-15",
   fccStale: true,
-  fccStaleAfterDays: 14,
+  fccStaleAfterDays: 45,
   tleEpochMin: "2026-09-14",
   tleEpochMax: "2026-09-15",
   tleStale: true,
-  tleStaleAfterDays: 14,
+  tleStaleAfterDays: 45,
   tleIngestAt: "2026-09-15",
 };
 

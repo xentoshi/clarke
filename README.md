@@ -31,7 +31,7 @@ Clarke exposes its registry as machine-readable data for LLM agents and tools.
 
 | Endpoint | Returns |
 |---|---|
-| `GET /api/v1/agents/slots` | All registry rows: operatorIdentity and operatorMix, occupancy, FCC rows, disputes, source vintage (`fccStale`, `tleStale`, 14 days). Valuation and congestion live on the human Slot Terminal. |
+| `GET /api/v1/agents/slots` | All registry rows: operatorIdentity and operatorMix, occupancy, FCC rows, disputes, source vintage (`fccStale`, `tleStale`, 45 days). Valuation and congestion live on the human Slot Terminal. |
 | `GET /api/v1/agents/slots/{slug}` | One slot, same record as the list. `clarke_get_terminal` returns this same JSON. |
 | `GET /api/v1/agents/satellites` | GEO satellites (filter by `operator`, `ownerCountry`, `limit`) |
 | `GET /api/v1/agents/deltas` | On-ingest occupancy, FCC, and dispute changes. `coverage=bootstrap` until a second registry snapshot exists. Valuation and congestion live on the human Slot Terminal. |
@@ -59,6 +59,14 @@ Tools: `clarke_list_slots`, `clarke_get_slot`, `clarke_get_terminal`, `clarke_li
 Public agent HTTP routes and remote MCP write one `clarke.usage` JSON line to stdout on each origin hit (Vercel Observability, and a log drain if the project has one). The line is a daily-salted IP hash, user agent, route, status, MCP tool name, and the whitelisted fields `slug`, `limit`, `view`, `all`, `since`, `offset`, and `after`. It does not include the raw IP, cookies, authorization, or the request body. MCP POST is `no-store`, so tool calls show up. Filter logs for `clarke.usage` and `"transport":"mcp"`. The line does not block clients and does not change the 60 per minute ordinary limit or the 12 per minute heavy limit. Firewall bot protection is a separate switch. Local stdio does not print this line, because stdout is the MCP transport.
 
 ---
+
+## MCP
+
+`https://www.clarkebelt.finance/api/v1/mcp`
+
+Who sits at each GEO longitude, with FCC licences, orbit freshness and disputes. Keyless, cached, citable.
+
+Registry metadata for the official MCP registry is [`server.json`](./server.json) (`io.github.xentoshi/clarke` v1.0.0, remote streamable HTTP).
 
 ## Data pipeline
 

@@ -13,10 +13,10 @@ import { formatTickLabel, type BeltMark } from "@/lib/geo-belt";
 import { useLiveEntitlements } from "@/components/terminal/useLiveEntitlements";
 
 export default function OrbitalExplorer({
-  rows, updated, pro = false, beltMarks, beltEpoch,
+  rows, dataAsOf, pro = false, beltMarks, beltEpoch,
 }: {
   rows: ExplorerRow[];
-  updated: string | null;
+  dataAsOf: string | null;
   pro?: boolean;
   beltMarks: BeltMark[];
   beltEpoch: string;
@@ -107,7 +107,7 @@ export default function OrbitalExplorer({
 
   return (
     <>
-      <div className="mb-8"><ExplorerStats rows={rows} updated={updated} /></div>
+      <div className="mb-8"><ExplorerStats rows={rows} dataAsOf={dataAsOf} /></div>
 
       <div className="flex flex-wrap items-end gap-3 mb-6 pb-5 border-b border-line">
         <label className="flex-1 min-w-[16rem]">

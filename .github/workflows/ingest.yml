@@ -1,15 +1,14 @@
-name: Scheduled data ingest
+name: Monthly data ingest
 
 # Keeps data/clarke.db from going silently stale. Runs UCS, Space-Track, and
-# SEC EDGAR ingest on a schedule and commits the refreshed database straight
+# SEC EDGAR ingest once a month and commits the refreshed database straight
 # to main if anything changed. FCC-SSAL is excluded, see below. Low blast
-# radius (data only, easily reverted) and no human has to remember to run
-# this by hand.
+# radius (data only, easily reverted). workflow_dispatch remains for a manual run.
 
 on:
   schedule:
-    # 06:17 UTC daily — off-peak, deliberately not on the hour.
-    - cron: "17 6 * * *"
+    # 06:17 UTC on the 1st (14:17 HKT). Off the hour.
+    - cron: "17 6 1 * *"
   workflow_dispatch: {}
 
 permissions:
@@ -35,9 +34,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # FCC-SSAL is not fetched here: fcc.gov is behind Akamai. Weekly
+      # FCC-SSAL is not fetched here: fcc.gov is behind Akamai. Monthly
       # `.github/workflows/ingest-fcc.yml` re-parses the committed
-      # data/ssal.xlsx and records workbook vintage (not a fake daily refresh).
+      # data/ssal.xlsx and records workbook vintage (not a fake refresh date).
       # Human download steps: docs/FCC_REFRESH.md.
       - name: Run ingest pipeline (UCS + Space-Track + SEC EDGAR)
         env:
@@ -54,5 +53,5 @@ jobs:
             exit 0
           fi
           git add data/clarke.db
-          git commit -m "Scheduled data refresh ($(date -u +%Y-%m-%d))"
+          git commit -m "Monthly data refresh ($(date -u +%Y-%m-%d))"
           git push

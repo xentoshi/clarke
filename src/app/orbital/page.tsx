@@ -3,7 +3,7 @@ import { buildMeta } from "@/lib/metadata";
 import OrbitalExplorer from "./OrbitalExplorer";
 import { buildExplorerRows } from "@/lib/explorer";
 import { buildGeoBelt } from "@/lib/belt-data";
-import { getLatestIngest } from "@/lib/freshness";
+import { formatRegistryCountAsOf } from "@/lib/freshness";
 import { formatRegistryCensusDetail, getRegistryCensus } from "@/lib/registry-census";
 
 // Registry rows come from committed data/clarke.db. Rebuild on deploy only.
@@ -21,12 +21,7 @@ export default async function OrbitalPage() {
   const rows = buildExplorerRows();
   const belt = buildGeoBelt();
   const census = getRegistryCensus();
-  const latest = getLatestIngest();
-  const updated = latest
-    ? new Date(latest.lastRun.replace(" ", "T") + "Z").toLocaleDateString("en-US", {
-        year: "numeric", month: "short", day: "numeric", timeZone: "UTC",
-      })
-    : null;
+  const dataAsOf = formatRegistryCountAsOf();
 
   return (
     <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-14">
@@ -38,6 +33,7 @@ export default async function OrbitalPage() {
           Open a row for the Slot Terminal. Fair value is a labeled model, hidden by default.
         </p>
         <p className="text-faint text-sm leading-relaxed mt-4">{formatRegistryCensusDetail(census)}</p>
+        {dataAsOf && <p className="text-faint text-sm leading-relaxed mt-2 font-mono">{dataAsOf}</p>}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-6 text-[14px]">
           <Link href="/orbital/map" className="text-ink hover:text-muted transition-colors">
             Belt
@@ -56,7 +52,7 @@ export default async function OrbitalPage() {
           </Link>
         </div>
       </div>
-      <OrbitalExplorer rows={rows} updated={updated} beltMarks={belt.marks} beltEpoch={belt.epochLabel} />
+      <OrbitalExplorer rows={rows} dataAsOf={dataAsOf} beltMarks={belt.marks} beltEpoch={belt.epochLabel} />
     </div>
   );
 }

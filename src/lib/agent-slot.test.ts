@@ -62,9 +62,9 @@ describe("agent slot payload", () => {
     assert.deepEqual(agent.provenance.rights, terminal.provenance.rights);
     assert.deepEqual(agent.sourceVintage, terminal.sourceVintage);
     assert.equal(typeof agent.sourceVintage.fccStale, "boolean");
-    assert.equal(agent.sourceVintage.fccStaleAfterDays, 14);
+    assert.equal(agent.sourceVintage.fccStaleAfterDays, 45);
     assert.equal(typeof agent.sourceVintage.tleStale, "boolean");
-    assert.equal(agent.sourceVintage.tleStaleAfterDays, 14);
+    assert.equal(agent.sourceVintage.tleStaleAfterDays, 45);
     const usedEpochs = agent.occupancy
       .filter((row) => row.occupancyAuthority === "tle" && row.tleEpoch)
       .map((row) => row.tleEpoch as string)
@@ -129,7 +129,7 @@ describe("agent slot payload", () => {
     assert.ok(slots.some((slot) => slot.operatorIdentity === "single" && slot.operatorMix.length === 1));
     assert.ok(slots.some((slot) => slot.operatorIdentity === "none" && slot.operatorMix.length === 0));
     for (const slot of slots) {
-      assert.equal(slot.sourceVintage.tleStaleAfterDays, 14, slot.slug);
+      assert.equal(slot.sourceVintage.tleStaleAfterDays, 45, slot.slug);
       assert.equal(slot.sourceVintage.tleStale, slot.occupancy.some((row) => row.tleStale), slot.slug);
       for (const row of slot.occupancy) {
         if (row.occupancyAuthority !== "tle") {
@@ -207,7 +207,7 @@ describe("agent slot payload", () => {
     }
     assert.match(CLARKE_GET_SLOT_DESCRIPTION, /ituRecorded is not_in_product/);
     assert.match(CLARKE_GET_SLOT_DESCRIPTION, /tleStale/);
-    assert.match(CLARKE_GET_SLOT_DESCRIPTION, /14/);
+    assert.match(CLARKE_GET_SLOT_DESCRIPTION, /45/);
     assert.match(CLARKE_LIST_SLOTS_DESCRIPTION, /tleStale/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /tle_epoch/);
     assert.match(CLARKE_LIST_SLOTS_DESCRIPTION, /occupancy observations/i);

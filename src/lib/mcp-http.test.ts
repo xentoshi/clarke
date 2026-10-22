@@ -238,4 +238,32 @@ describe("MCP discovery copy", () => {
     assert.equal(MCP_PUBLIC_PATH, "/api/v1/mcp");
     assert.doesNotMatch(llms, /has no public URL/);
   });
+
+  it("matches the published MCP registry entry", () => {
+    const server = JSON.parse(readFileSync(join(root, "server.json"), "utf8")) as {
+      $schema: string;
+      name: string;
+      title: string;
+      description: string;
+      version: string;
+      websiteUrl: string;
+      repository: { url: string; source: string };
+      remotes: Array<{ type: string; url: string }>;
+    };
+    assert.equal(server.$schema, "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json");
+    assert.equal(server.name, "io.github.xentoshi/clarke");
+    assert.equal(server.title, "Clarke GEO registry");
+    assert.equal(server.description, "Who sits at each GEO longitude, with FCC licences, orbit freshness and disputes. Keyless.");
+    assert.ok(server.description.length <= 100);
+    assert.equal(server.version, "1.0.0");
+    assert.equal(server.websiteUrl, "https://www.clarkebelt.finance");
+    assert.equal(server.repository.url, "https://github.com/xentoshi/clarke");
+    assert.equal(server.repository.source, "github");
+    assert.equal(server.remotes.length, 1);
+    assert.equal(server.remotes[0]?.type, "streamable-http");
+    assert.equal(server.remotes[0]?.url, "https://www.clarkebelt.finance/api/v1/mcp");
+    const readme = readFileSync(join(root, "README.md"), "utf8");
+    assert.ok(readme.includes("https://www.clarkebelt.finance/api/v1/mcp"));
+    assert.ok(readme.includes("Who sits at each GEO longitude, with FCC licences, orbit freshness and disputes. Keyless, cached, citable."));
+  });
 });

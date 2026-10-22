@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { formatRegistryCountAsOf } from "./freshness";
 
 const root = process.cwd();
 
@@ -49,13 +50,20 @@ describe("llms.txt agent discovery", () => {
     assert.doesNotMatch(text, /SNS is not ingested/);
     assert.match(text, /`ituRecorded` is `not_in_product`/);
     assert.match(text, /workbook as-of is 2026-09-27/);
-    assert.match(text, /`sourceVintage\.tleStale` is true when a TLE that supplied occupancy is older than 14 days/);
+    assert.match(text, /`sourceVintage\.tleStale` is true when a TLE that supplied occupancy is older than 45 days/);
     assert.match(text, /tleStaleAfterDays/);
     assert.match(text, /UCS fallback row does not use a catalog date as a TLE epoch/);
     assert.match(text, /`coverage` is `bootstrap` until a second registry snapshot is stored/);
     assert.match(text, /including `tle_epoch`/);
     assert.match(text, /empty occupancy list is not a claim that nothing moved/);
     assert.match(text, /uses `operatorIdentity` and `operatorMix`, not a single headline operator/);
+  });
+
+  it("prints the database data-as-of line, not the wall clock", () => {
+    const asOf = formatRegistryCountAsOf();
+    assert.ok(asOf);
+    assert.match(asOf, /^Data as of \d{4}-\d{2}-\d{2}/);
+    assert.ok(text.includes(asOf), asOf);
   });
 
   it("is linked from the docs hub and the agent API page source", () => {

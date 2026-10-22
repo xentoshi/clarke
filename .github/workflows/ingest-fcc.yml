@@ -1,18 +1,19 @@
-name: Weekly FCC SSAL re-parse
+name: Monthly FCC SSAL re-parse
 
 # Re-reads the committed data/ssal.xlsx. Does not fetch fcc.gov (Akamai).
 # Product as-of is the workbook sheet vintage, not last_run. See docs/FCC_REFRESH.md.
 
 on:
   schedule:
-    - cron: "17 7 * * 1"
+    # 07:17 UTC on the 1st, after the data ingest at 06:17 UTC.
+    - cron: "17 7 1 * *"
   workflow_dispatch: {}
 
 permissions:
   contents: write
 
 concurrency:
-  group: weekly-fcc-ingest
+  group: monthly-fcc-ingest
   cancel-in-progress: false
 
 jobs:
@@ -43,5 +44,5 @@ jobs:
             exit 0
           fi
           git add data/clarke.db
-          git commit -m "Weekly FCC SSAL re-parse ($(date -u +%Y-%m-%d))"
+          git commit -m "Monthly FCC SSAL re-parse ($(date -u +%Y-%m-%d))"
           git push

@@ -38,6 +38,13 @@ function biuCopy(hint: string): string {
   return hint.replace(/_/g, " ");
 }
 
+function occupancyDataAsOf(value: string | null): string {
+  if (!value) return "";
+  const day = value.trim().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return "";
+  return `Data as of ${day} · `;
+}
+
 export function SlotTerminalView({
   model,
   entitlements,
@@ -118,7 +125,8 @@ export function SlotTerminalView({
               : `${statusLabels[model.status]}. ${model.operator || "Unknown operator"}.`}
           </p>
           <div className="text-xs font-mono text-faint mt-3">
-            {model.provenance.occupancy.source} · {formatAsOfDate(model.provenance.occupancy.asOf)}
+            {occupancyDataAsOf(model.sourceVintage.tleEpochMax ?? model.sourceVintage.ucsFileVintage)}
+            {model.provenance.occupancy.source}
           </div>
         </div>
 

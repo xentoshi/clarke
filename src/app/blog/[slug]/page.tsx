@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getPost } from "@/data/posts";
 import { buildMeta } from "@/lib/metadata";
 import { TableOfContents } from "@/components/TableOfContents";
+import GeoSatelliteRelocationsPost, { toc as geoSatelliteRelocationsToc } from "@/data/posts/content/geo-satellite-relocations";
+import GeoLaserRelaysPost, { toc as geoLaserRelaysToc } from "@/data/posts/content/geo-laser-relays";
 import FccPart100Post, { toc as fccPart100Toc } from "@/data/posts/content/fcc-part-100-space-modernization-order";
 import IntelsatBankruptcyPost, { toc as intelsatBankruptcyToc } from "@/data/posts/content/intelsat-bankruptcy-orbital-real-estate";
 import OrbitalDataCentersPost, { toc as orbitalDataCentersToc } from "@/data/posts/content/orbital-data-centers-engineering";
@@ -13,6 +15,8 @@ import type { TocItem } from "@/components/TableOfContents";
 type ContentEntry = { Component: React.FC; toc: TocItem[] };
 
 const contentMap: Record<string, ContentEntry> = {
+  "geo-satellite-relocations": { Component: GeoSatelliteRelocationsPost, toc: geoSatelliteRelocationsToc },
+  "geo-laser-relays": { Component: GeoLaserRelaysPost, toc: geoLaserRelaysToc },
   "fcc-part-100-space-modernization-order": { Component: FccPart100Post, toc: fccPart100Toc },
   "intelsat-bankruptcy-orbital-real-estate": { Component: IntelsatBankruptcyPost, toc: intelsatBankruptcyToc },
   "orbital-data-centers-engineering": { Component: OrbitalDataCentersPost, toc: orbitalDataCentersToc },

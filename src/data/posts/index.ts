@@ -10,6 +10,24 @@ export interface Post {
 
 export const posts: Post[] = [
   {
+    slug: "geo-satellite-relocations",
+    title: "Two satellite moves that official status pages missed",
+    subtitle: "In both cases a page that presents itself as current lists a position the satellite has left. In one more case, INSAT-3D, the page is weaker evidence because it does not claim to be current.",
+    date: "2026-10-22",
+    readingMinutes: 11,
+    excerpt: "EDRS-C, the second satellite of Europe's laser data relay system, was launched in August 2019 to work at 31°E. Two ESA pages now disagree about where it is. NOAA's GOES status page, stamped \"Last Updated: September 3, 2026,\" lists GOES-17 at \"104.4 West,\" with the note \"GOES-17 will be moved to 89.5W after GOES-16 relieves its position at 104.7W in July 2025.\" A NOAA notice from June 2026 says GOES-17 is at 89.5°W.",
+    tag: "Registry",
+  },
+  {
+    slug: "geo-laser-relays",
+    title: "Where the laser relays sit in the geostationary belt",
+    subtitle: "For now, the list is short: five satellites, and one of them, EDRS-C, has moved more than 110 degrees east while two ESA pages still list the old slot.",
+    date: "2026-10-22",
+    readingMinutes: 8,
+    excerpt: "EDRS-C, the second satellite of Europe's laser data relay system, was launched to work at 31°E. ESA's EDRS page lists it at 31°E. ESA's space weather service, which runs a radiation monitor on the satellite, says it was moved on May 12, 2025 and has been at 142.5°E since June 15, 2025. The World Meteorological Organization's satellite database also lists 142.5°E, and public tracking data puts it at 142.52°E. We found this while listing the laser relays in the geostationary belt. There are five.",
+    tag: "Infrastructure",
+  },
+  {
     slug: "fcc-part-100-space-modernization-order",
     title: "The FCC's Part 100 Order: The Reform's Biggest Test Case Is Exempt From the Reform",
     subtitle: "The FCC just made satellite licensing dramatically faster for almost everyone, while quietly confirming that the largest application in its history stays in the slow lane, and that the agency's authority to regulate orbital safety at all is now an open fight with Congress.",

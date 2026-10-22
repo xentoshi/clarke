@@ -19,15 +19,20 @@ describe("FCC / UCS / TLE source vintage", () => {
     assert.equal(parseFccSheetVintage("Sheet1"), null);
   });
 
-  it("treats FCC as stale after N days from workbook vintage, not ingest clock", () => {
+  it("treats FCC as stale after the monthly threshold, not the ingest clock", () => {
     const now = new Date("2026-09-15T00:00:00Z");
-    assert.equal(FCC_STALE_AFTER_DAYS, 14);
+    assert.equal(FCC_STALE_AFTER_DAYS, 45);
     assert.equal(fccIsStale("2026-04-30", now), true);
     assert.equal(fccIsStale("2026-09-10", now), false);
     assert.equal(ageDaysFrom("2026-04-30", now), 138);
     const refreshDay = new Date("2026-10-02T00:00:00Z");
     assert.equal(ageDaysFrom("2026-09-27", refreshDay), 5);
     assert.equal(fccIsStale("2026-09-27", refreshDay), false);
+    const thisBuild = new Date("2026-10-22T00:00:00Z");
+    assert.equal(ageDaysFrom("2026-09-27", thisBuild), 25);
+    assert.equal(fccIsStale("2026-09-27", thisBuild), false);
+    assert.equal(fccIsStale("2026-09-27", new Date("2026-11-11T00:00:00Z")), false);
+    assert.equal(fccIsStale("2026-09-27", new Date("2026-11-12T00:00:00Z")), true);
   });
 
   it("approximates UCS file vintage from latest GEO launch in the snapshot", () => {
@@ -50,7 +55,7 @@ describe("FCC / UCS / TLE source vintage", () => {
     assert.equal(v.tleEpochMin, "2026-09-14");
     assert.equal(v.tleEpochMax, "2026-09-15");
     assert.equal(v.tleStale, false);
-    assert.equal(v.tleStaleAfterDays, 14);
+    assert.equal(v.tleStaleAfterDays, 45);
   });
 
   it("does not copy fleet-wide TLE epochs onto an empty occupancy window", () => {
@@ -66,17 +71,17 @@ describe("FCC / UCS / TLE source vintage", () => {
     assert.equal(v.tleStale, false);
   });
 
-  it("marks a used TLE stale after 14 days and leaves a fresh epoch unmarked", () => {
+  it("marks a used TLE stale after the monthly threshold and leaves a fresh epoch unmarked", () => {
     const now = new Date("2026-09-15T00:00:00Z");
-    assert.equal(TLE_STALE_AFTER_DAYS, 14);
-    assert.equal(ageDaysFrom("2026-09-01", now), 14);
-    assert.equal(tleIsStale("2026-09-01", now), false);
-    assert.equal(tleIsStale("2026-08-31", now), true);
+    assert.equal(TLE_STALE_AFTER_DAYS, 45);
+    assert.equal(ageDaysFrom("2026-08-01", now), 45);
+    assert.equal(tleIsStale("2026-08-01", now), false);
+    assert.equal(tleIsStale("2026-07-31", now), true);
     assert.equal(tleIsStale("2026-09-10", now), false);
     assert.equal(tleIsStale(null, now), false);
     assert.equal(occupancyTleIsStale("ucs", "2020-01-01", now), false);
     assert.equal(occupancyTleIsStale("none", "2020-01-01", now), false);
-    assert.equal(occupancyTleIsStale("tle", "2026-08-01", now), true);
+    assert.equal(occupancyTleIsStale("tle", "2026-07-01", now), true);
     assert.equal(occupancyTleIsStale("tle", "2026-09-10", now), false);
 
     const fresh = slotSourceVintage(
@@ -89,13 +94,13 @@ describe("FCC / UCS / TLE source vintage", () => {
     assert.equal(fresh.tleEpochMax, "2026-09-10");
 
     const stale = slotSourceVintage(
-      [{ tleEpoch: "2026-08-01", occupancyAuthority: "tle" }],
+      [{ tleEpoch: "2026-07-01", occupancyAuthority: "tle" }],
       [],
       now,
     );
     assert.equal(stale.tleStale, true);
-    assert.equal(stale.tleEpochMax, "2026-08-01");
-    assert.equal(stale.tleStaleAfterDays, 14);
+    assert.equal(stale.tleEpochMax, "2026-07-01");
+    assert.equal(stale.tleStaleAfterDays, 45);
   });
 
   it("does not treat a UCS fallback epoch as the TLE used for occupancy", () => {
@@ -125,13 +130,13 @@ describe("FCC / UCS / TLE source vintage", () => {
     const mixedStale = slotSourceVintage(
       [
         { tleEpoch: "2026-09-14", occupancyAuthority: "tle" },
-        { tleEpoch: "2026-08-01", occupancyAuthority: "tle" },
+        { tleEpoch: "2026-07-31", occupancyAuthority: "tle" },
         { tleEpoch: "2018-01-01", occupancyAuthority: "ucs" },
       ],
       [],
       now,
     );
-    assert.equal(mixedStale.tleEpochMin, "2026-08-01");
+    assert.equal(mixedStale.tleEpochMin, "2026-07-31");
     assert.equal(mixedStale.tleEpochMax, "2026-09-14");
     assert.equal(mixedStale.tleStale, true);
   });

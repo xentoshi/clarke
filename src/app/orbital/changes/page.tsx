@@ -34,15 +34,6 @@ function formatDate(detectedAt: string): string {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
 }
 
-function ageLabel(detectedAt: string): string {
-  const d = new Date(detectedAt.replace(" ", "T") + "Z");
-  if (isNaN(d.getTime())) return "";
-  const ageDays = Math.floor((Date.now() - d.getTime()) / 86_400_000);
-  if (ageDays <= 0) return "today";
-  if (ageDays === 1) return "1 day ago";
-  return `${ageDays} days ago`;
-}
-
 function EventRow({ event, built }: { event: SlotEvent; built: ReadonlySet<string> }) {
   const meta = eventMeta(event.eventType);
   const slug = event.longitudeGeo !== null ? lonToSlug(event.longitudeGeo) : null;
@@ -72,7 +63,6 @@ function EventRow({ event, built }: { event: SlotEvent; built: ReadonlySet<strin
       </div>
       <div className="text-right shrink-0">
         <div className="text-muted text-sm font-mono">{formatDate(event.detectedAt)}</div>
-        <div className="text-faint text-xs">{ageLabel(event.detectedAt)}</div>
       </div>
     </div>
   );

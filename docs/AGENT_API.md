@@ -47,7 +47,7 @@ The fence is the key shape. `count` and the empty freshness array are not a live
 | `meta` field | Where | Meaning |
 |---|---|---|
 | `version` | Every 200 | `"1.0"`. |
-| `generated_at` | Every 200 | ISO-8601 UTC. On a cached public read this is the `data/clarke.db` mtime, so the body and ETag stay stable until that file changes. |
+| `generated_at` | Every 200 | ISO-8601 UTC. On a cached public read this is the newest `ingest_meta.last_run` in `data/clarke.db`, not the file mtime. Vercel sets traced file mtimes to 2018-10-20, so mtime is not the data clock. The value stays put until that ingest clock changes. |
 | `count` | List routes, including the delta feed | `data.length` for slot and satellite pages. For the delta feed, `data.changes.length`. This is the page, not `meta.total`. |
 | `total`, `offset`, `limit`, `next_offset`, `view` | Slot list and satellite list | Page window. `view` is only on the slot list (`compact` or `full`). `limit` is null when `all=1`. `next_offset` is null on the last page. |
 | `data_freshness` | Slot list, slot detail, and the delta feed | Ingest rows. See freshness below. The satellites route does not send this array. |
@@ -260,19 +260,19 @@ An authorization object is the SSAL row plus two alias fields:
 | `fccAsOf` | FCC workbook as-of (`file_vintage`, else `source_as_of`). Example shape: `2026-09-27` from a sheet named `Updated 27 September 2026`. |
 | `fccIngestAt` | When Clarke parsed the committed workbook. Not the product as-of. |
 | `fccStale` | `true` only when `fccAsOf` parses and is older than `fccStaleAfterDays`. |
-| `fccStaleAfterDays` | `14`. |
+| `fccStaleAfterDays` | `45`. |
 | `tleEpochMin`, `tleEpochMax` | Epochs of TLEs that supplied occupancy in this window, sorted. Rows whose `occupancyAuthority` is `ucs` or `none` do not contribute. Null when the window used no TLE. |
 | `tleStale` | `true` when at least one TLE-primary occupancy row has an epoch older than `tleStaleAfterDays`. `false` when the window used no TLE, every used epoch is inside the threshold, or a used epoch does not parse. |
-| `tleStaleAfterDays` | `14`. |
+| `tleStaleAfterDays` | `45`. |
 | `tleIngestAt` | When Clarke ingested Space-Track TLEs. Not the epoch. |
 
-`fccStale` is a comparison of the workbook date to 14 days. It is not "the FCC feed failed" and it is not a reason to drop occupancy. Occupancy stays TLE-primary and does not wait on FCC. A missing or unparsed `fccAsOf` is not marked stale (`fccStale` stays `false`). The human Trust bar uses this same flag. Workbook replace steps are in [FCC SSAL refresh](./FCC_REFRESH.md).
+`fccStale` is a comparison of the workbook date to 45 days. It is not "the FCC feed failed" and it is not a reason to drop occupancy. Occupancy stays TLE-primary and does not wait on FCC. A missing or unparsed `fccAsOf` is not marked stale (`fccStale` stays `false`). The human Trust bar uses this same flag. Workbook replace steps are in [FCC SSAL refresh](./FCC_REFRESH.md).
 
 ## TLE freshness
 
-`tleStale` describes the element set that supplied the occupancy longitude. It does not switch that row to UCS. The 30 day ingest gate is separate: a TLE older than 30 days at ingest is not used, and the row falls back to UCS. A TLE that passed that gate can still be older than 14 days when you read it. That read is `tleStale`.
+`tleStale` describes the element set that supplied the occupancy longitude. It does not switch that row to UCS. The 30 day ingest gate is separate: a TLE older than 30 days at ingest is not used, and the row falls back to UCS. A TLE that passed that gate can still be older than 45 days when you read it. That read is `tleStale`.
 
-`sourceVintage.tleEpochMin` and `tleEpochMax` are the epochs of those used TLEs. `tleStaleAfterDays` is `14`. Age must be greater than 14 days. An epoch that is exactly 14 days old is not stale. A missing or unparsed epoch is not stale.
+`sourceVintage.tleEpochMin` and `tleEpochMax` are the epochs of those used TLEs. `tleStaleAfterDays` is `45`. Age must be greater than 45 days. An epoch that is exactly 45 days old is not stale. A missing or unparsed epoch is not stale. The threshold matches the monthly ingest: a normal gap from the 1st to the next 1st stays under 45 days.
 
 On each occupancy row, `tleStale` is `true` only when `occupancyAuthority` is `tle` and that row's `tleEpoch` is past the threshold. A UCS fallback row keeps `tleStale` false. Clarke does not copy a UCS launch date into `tleEpoch`. An unused element set may still sit on `tleEpoch` for audit. Do not cite that value as the epoch that placed the satellite.
 
@@ -296,7 +296,7 @@ Slot `sourceVintage.fccStale` is the field to trust for "is this slot's FCC work
 
 | Key | `source` | `note` |
 |---|---|---|
-| `occupancy` | Space-Track TLE (primary) plus UCS Satellite Database (fallback) | Window, how many rows are TLE-primary, the TLE epoch used for occupancy, `tleStale` after 14 days, and a reminder that TLE longitude is not an FCC or ITU assignment. |
+| `occupancy` | Space-Track TLE (primary) plus UCS Satellite Database (fallback) | Window, how many rows are TLE-primary, the TLE epoch used for occupancy, `tleStale` after 45 days, and a reminder that TLE longitude is not an FCC or ITU assignment. |
 | `ucsCatalog` | UCS Satellite Database | File vintage. The ingest clock is not the catalog epoch. |
 | `fcc` | FCC Approved Space Station List | Workbook as-of and ingest time. |
 | `license` | FCC SSAL plus UCS occupancy | No `note`. `source` and `asOf` only. |

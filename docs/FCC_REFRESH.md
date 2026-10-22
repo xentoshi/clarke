@@ -2,9 +2,9 @@
 
 Operator runbook for refreshing FCC license rows. Clarke does **not** scrape fcc.gov. The Approved Space Station List sits behind Akamai bot protection; automated `curl` / headless Chromium requests return Access Denied. The product as-of date is the **workbook vintage** (sheet name, e.g. `Updated 27 September 2026`), not `ingest_meta.last_run`.
 
-Daily `ingest.yml` still skips FCC so a re-parse of the same committed file cannot claim “updated today.” A **weekly** job re-parses `data/ssal.xlsx` and records vintage + sha256 without pretending the file was re-downloaded.
+Monthly `ingest.yml` still skips FCC. A re-parse of the same committed file records the workbook vintage, not the day the job ran. A **monthly** job re-parses `data/ssal.xlsx` and records vintage + sha256 without pretending the file was re-downloaded.
 
-## Weekly (automated)
+## Monthly (automated)
 
 ```
 npm run ingest:fcc
@@ -19,7 +19,7 @@ This:
 5. Diffs call signs vs the previous table (new / lapsed / licensee / grant-status events).
 6. Appends a `registry_snapshots` row when occupancy membership, dispute records, FCC call signs, parsed `data/ssal.xlsx` filings, or file vintages changed. `GET /api/v1/agents/deltas` diffs those rows. When two snapshots both store parsed workbook rows, the feed reports new, removed, and changed filings. An unchanged re-parse does not append one.
 
-GitHub Actions: `.github/workflows/ingest-fcc.yml` (Mondays + `workflow_dispatch`). It commits `data/clarke.db` only if the database changed.
+GitHub Actions: `.github/workflows/ingest-fcc.yml` (1st of the month, 07:17 UTC, plus `workflow_dispatch`). It commits `data/clarke.db` only if the database changed.
 
 ## Human refresh (when the FCC publishes a new list)
 
@@ -35,7 +35,7 @@ npm run vintages          # backfill UCS / TLE vintages without re-downloading t
 ```
 
 6. Commit `data/ssal.xlsx` and `data/clarke.db`.
-7. Check `/orbital/101w`: FCC as-of should match the sheet date; the Trust bar stale chip clears when as-of is ≤ 14 days old.
+7. Check `/orbital/101w`: FCC as-of should match the sheet date. The Trust bar stale chip clears when as-of is 45 days old or newer.
 
 ## What the Terminal shows
 
@@ -43,11 +43,11 @@ npm run vintages          # backfill UCS / TLE vintages without re-downloading t
 |---|---|
 | FCC SSAL as-of | Workbook vintage (`file_vintage`) |
 | parsed | `last_run` — when Clarke last read the committed xlsx |
-| Stale chip | Workbook as-of older than **14 days** (Trust bar) |
+| Stale chip | Workbook as-of older than **45 days** (Trust bar) |
 
 Occupancy stays TLE-primary and does not wait on FCC.
 
-The same 14-day comparison is `sourceVintage.fccStale` on the public agent record (`fccStaleAfterDays` is 14). A missing or unparsed workbook as-of is not marked stale. TLE occupancy freshness on that record is `sourceVintage.tleStale`, also 14 days, and applies only to a TLE that supplied the position. See [Agent API](./AGENT_API.md). Valuation and congestion are not on that record.
+The same 45-day comparison is `sourceVintage.fccStale` on the public agent record (`fccStaleAfterDays` is 45). A missing or unparsed workbook as-of is not marked stale. TLE occupancy freshness on that record is `sourceVintage.tleStale`, also 45 days, and applies only to a TLE that supplied the position. Both thresholds match the monthly job: a file from the 1st is not stale on the next 1st. See [Agent API](./AGENT_API.md). Valuation and congestion are not on that record.
 
 ## Credentials
 

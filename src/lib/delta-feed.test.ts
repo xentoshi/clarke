@@ -158,7 +158,7 @@ describe("registry state diff", () => {
     assert.equal(changes.some((row) => row.kind === "tle_epoch"), false);
   });
 
-  it("emits tle_epoch when a used TLE epoch or its 14 day stale flag changes", () => {
+  it("emits tle_epoch when a used TLE epoch or its 45 day stale flag changes", () => {
     const epochShift = diffRegistryStates(
       state({ occupancy: [occ({ tleEpoch: "2026-09-01T00:00:00.000Z" })] }),
       state({ occupancy: [occ({ tleEpoch: "2026-09-18T00:00:00.000Z" })] }),
@@ -171,13 +171,13 @@ describe("registry state diff", () => {
     assert.equal(shifted.before?.tleStale, false);
     assert.equal(shifted.after?.tleEpoch, "2026-09-18T00:00:00.000Z");
     assert.equal(shifted.after?.tleStale, false);
-    assert.match(shifted.provenance.note, /14 days/);
+    assert.match(shifted.provenance.note, /45 days/);
     assert.equal(epochShift.some((row) => row.kind === "authority_flip"), false);
 
     const aged = diffRegistryStates(
-      state({ occupancy: [occ({ tleEpoch: "2026-09-01T00:00:00.000Z" })] }),
-      state({ occupancy: [occ({ tleEpoch: "2026-09-01T00:00:00.000Z" })] }),
-      { fromSnapshotId: 1, toSnapshotId: 2, detectedAt: "2026-09-20T00:00:00.000Z", fromCapturedAt: "2026-09-10T00:00:00.000Z" },
+      state({ occupancy: [occ({ tleEpoch: "2026-07-01T00:00:00.000Z" })] }),
+      state({ occupancy: [occ({ tleEpoch: "2026-07-01T00:00:00.000Z" })] }),
+      { fromSnapshotId: 1, toSnapshotId: 2, detectedAt: "2026-08-20T00:00:00.000Z", fromCapturedAt: "2026-08-01T00:00:00.000Z" },
     );
     assert.equal(aged.length, 1);
     assert.equal(aged[0].kind, "tle_epoch");
@@ -556,7 +556,7 @@ describe("live delta feed", () => {
     assert.equal(CLARKE_LIST_DELTAS_DESCRIPTION.includes("\u2013"), false);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /coverage is bootstrap/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /tle_epoch/);
-    assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /14 day/);
+    assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /45 day/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /nextSince/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /ITU filings are not in this product/);
     assert.match(CLARKE_LIST_DELTAS_DESCRIPTION, /ITU Space Explorer/);

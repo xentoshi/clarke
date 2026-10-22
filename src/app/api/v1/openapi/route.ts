@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
+import { formatRegistryCountAsOf } from "@/lib/freshness";
 import { formatRegistryCensusDetail, getRegistryCensus } from "@/lib/registry-census";
 
 export const dynamic = "force-static";
 
 const registrySize = formatRegistryCensusDetail(getRegistryCensus());
+const registryAsOf = formatRegistryCountAsOf();
 
 const spec = {
   openapi: "3.1.0",
@@ -11,7 +13,7 @@ const spec = {
     title: "Clarke API",
     version: "1.5.0",
     description:
-      `Read-only GEO registry. ${registrySize} The public agents API returns occupancy, operator identity, FCC rows, disputes, and source vintage (including tleEpoch and tleStale, older than 14 days). Remote MCP is stateless Streamable HTTP at https://www.clarkebelt.finance/api/v1/mcp (reads are open, same tools and JSON as local stdio). Pro Slot Terminal endpoints add the labeled model used on the human Terminal. Occupancy is TLE-primary (Space-Track) with UCS fallback. tleStale applies only to a TLE that supplied occupancy. TLE longitude is not an FCC or ITU assignment. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. Simulated bid/ask and ITU stubs are experimental, not the default Terminal view.`,
+      `Read-only GEO registry. ${registrySize} ${registryAsOf ?? ""} The public agents API returns occupancy, operator identity, FCC rows, disputes, and source vintage (including tleEpoch and tleStale, older than 45 days). Remote MCP is stateless Streamable HTTP at https://www.clarkebelt.finance/api/v1/mcp (reads are open, same tools and JSON as local stdio). Pro Slot Terminal endpoints add the labeled model used on the human Terminal. Occupancy is TLE-primary (Space-Track) with UCS fallback. tleStale applies only to a TLE that supplied occupancy. TLE longitude is not an FCC or ITU assignment. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. Simulated bid/ask and ITU stubs are experimental, not the default Terminal view.`,
   },
   servers: [{ url: "/api/v1" }],
   tags: [
@@ -38,7 +40,7 @@ const spec = {
         tags: ["Agents"],
         summary: "Slot dossier",
         parameters: [{ name: "slug", in: "path", required: true, schema: { type: "string", example: "101w" } }],
-        responses: { "200": { description: "Same slot record as the list: operatorIdentity plus operatorMix (raw source strings per operator), occupancy observations (TLE longitude, tleEpoch, tleStale, UCS longitude, delta, disputed, occupancy authority), FCC rows (licenseeCanonical / licenseeRaw), dispute records, source vintage (including fccStale and tleStale, each older than 14 days), and provenance for occupancy, UCS, FCC, license, and rights. ituRecorded is not_in_product (ITU filings are not in this product). A split mix is shared occupancy, recorded as operatorIdentity split. Valuation and congestion live only as labeled models on the human Slot Terminal. Bid/ask, comps, and dollar strings live on that Terminal surface." }, "404": { description: "Unknown slug" } },
+        responses: { "200": { description: "Same slot record as the list: operatorIdentity plus operatorMix (raw source strings per operator), occupancy observations (TLE longitude, tleEpoch, tleStale, UCS longitude, delta, disputed, occupancy authority), FCC rows (licenseeCanonical / licenseeRaw), dispute records, source vintage (including fccStale and tleStale, each older than 45 days), and provenance for occupancy, UCS, FCC, license, and rights. ituRecorded is not_in_product (ITU filings are not in this product). A split mix is shared occupancy, recorded as operatorIdentity split. Valuation and congestion live only as labeled models on the human Slot Terminal. Bid/ask, comps, and dollar strings live on that Terminal surface." }, "404": { description: "Unknown slug" } },
       },
     },
     "/agents/deltas": {
@@ -46,7 +48,7 @@ const spec = {
         tags: ["Agents"],
         summary: "Occupancy, FCC, and dispute change feed",
         description:
-          "Slot Index delta feed (edition 2). On-ingest diffs of registry snapshots. coverage is bootstrap until a second snapshot exists: FCC call-sign events already in slot_events are included, and occupancy or dispute changes are not invented, including tle_epoch. Once a later snapshot exists, tle_epoch records a TLE epoch change or a 14 day stale transition on a TLE used for occupancy. When both snapshots store parsed data/ssal.xlsx rows, FCC filing diffs for that interval are new, removed, and changed. satellite_relocated rows are a TLE-to-TLE log, separate from occupancy changes. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. Valuation and congestion live only as labeled models on the human Slot Terminal. Bid/ask, comps, and dollar strings live on that Terminal surface. changes are paged at 40 rows and about 48 KB. A large timestamp is split. truncated and nextAfter continue the page. since is an exclusive time filter. nextSince is set only on a timestamp boundary. Responses above 2.5 MB are refused. Cache-Control is public, max-age=60, s-maxage=3600. Vary is Accept-Encoding.",
+          "Slot Index delta feed (edition 2). On-ingest diffs of registry snapshots. coverage is bootstrap until a second snapshot exists: FCC call-sign events already in slot_events are included, and occupancy or dispute changes are not invented, including tle_epoch. Once a later snapshot exists, tle_epoch records a TLE epoch change or a 45 day stale transition on a TLE used for occupancy. When both snapshots store parsed data/ssal.xlsx rows, FCC filing diffs for that interval are new, removed, and changed. satellite_relocated rows are a TLE-to-TLE log, separate from occupancy changes. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. Valuation and congestion live only as labeled models on the human Slot Terminal. Bid/ask, comps, and dollar strings live on that Terminal surface. changes are paged at 40 rows and about 48 KB. A large timestamp is split. truncated and nextAfter continue the page. since is an exclusive time filter. nextSince is set only on a timestamp boundary. Responses above 2.5 MB are refused. Cache-Control is public, max-age=60, s-maxage=3600. Vary is Accept-Encoding.",
         parameters: [
           { name: "slug", in: "query", schema: { type: "string", example: "101w" } },
           { name: "domain", in: "query", schema: { type: "string", enum: ["occupancy", "fcc", "dispute"] } },

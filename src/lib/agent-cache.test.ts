@@ -7,7 +7,8 @@ import { POST, GET as getMcp } from "../app/api/v1/mcp/route";
 import { listDeltas } from "./agents/operations";
 import { DELTA_PAGE_BYTE_BUDGET, DELTA_PAGE_MAX_CHANGES } from "./delta-feed";
 import { MAX_MCP_REQUEST_BYTES } from "./mcp-http";
-import { processCacheStats } from "./process-cache";
+import { getDb } from "./db";
+import { processCacheStats, registryGeneratedAt } from "./process-cache";
 
 function slotsRequest(ip: string, headers: Record<string, string> = {}) {
   return new NextRequest("https://www.clarkebelt.finance/api/v1/agents/slots", {
@@ -83,6 +84,20 @@ describe("public read cache and delta page", () => {
     assert.equal(body.meta.count, 2);
     assert.ok(Array.isArray(body.data[0]?.occupancy));
     assert.equal(body.data[0]?.valuation, undefined);
+  });
+
+  it("stamps meta.generated_at from the newest ingest, not the file mtime", async () => {
+    const res = await getSlots(slotsRequest("203.0.113.87"));
+    assert.equal(res.status, 200);
+    const body = await res.json() as { meta: { generated_at: string } };
+    const db = getDb();
+    assert.ok(db);
+    const row = db.prepare("SELECT MAX(last_run) AS lastRun FROM ingest_meta").get() as { lastRun: string };
+    const expected = new Date(`${row.lastRun.trim().replace(" ", "T")}Z`).toISOString();
+    assert.equal(body.meta.generated_at, expected);
+    assert.equal(body.meta.generated_at, registryGeneratedAt());
+    assert.notEqual(body.meta.generated_at, "2018-10-20T01:46:40.000Z");
+    assert.doesNotMatch(body.meta.generated_at, /^2018-10-20/);
   });
 
   it("caches MCP GET and refuses an oversized POST body", async () => {

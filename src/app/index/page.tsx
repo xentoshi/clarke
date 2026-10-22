@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { TLE_STALE_AFTER_DAYS } from "@/lib/source-vintage";
+import { formatRegistryCountAsOf } from "@/lib/freshness";
 import { buildMeta } from "@/lib/metadata";
 import { buildGeoSlotIndex, type GeoSlotIndexDossier, type OccupancyMove } from "@/lib/geo-slot-index";
 import { formatLonFixed } from "@/lib/geo-angle";
@@ -129,7 +129,7 @@ function Dossier({ d, headingId }: { d: GeoSlotIndexDossier; headingId: string }
         </>
       )}
       <p className="text-xs font-mono text-faint mt-5">
-        FCC as-of {d.fccAsOf ?? "n/a"} · TLE epoch {d.tleEpochMin && d.tleEpochMax ? (d.tleEpochMin === d.tleEpochMax ? d.tleEpochMax : `${d.tleEpochMin} to ${d.tleEpochMax}`) : "n/a"}{d.tleEpochMax ? (d.tleStale ? ` · older than ${TLE_STALE_AFTER_DAYS} days` : ` · within ${TLE_STALE_AFTER_DAYS} days`) : ""} · UCS vintage {d.ucsFileVintage ?? "n/a"}
+        FCC as-of {d.fccAsOf ?? "n/a"} · TLE epoch {d.tleEpochMin && d.tleEpochMax ? (d.tleEpochMin === d.tleEpochMax ? d.tleEpochMax : `${d.tleEpochMin} to ${d.tleEpochMax}`) : "n/a"} · UCS vintage {d.ucsFileVintage ?? "n/a"}
       </p>
     </section>
   );
@@ -137,6 +137,7 @@ function Dossier({ d, headingId }: { d: GeoSlotIndexDossier; headingId: string }
 
 export default function GeoSlotIndexPage() {
   const edition = buildGeoSlotIndex();
+  const dataAsOf = formatRegistryCountAsOf();
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20">
@@ -144,9 +145,10 @@ export default function GeoSlotIndexPage() {
         <div className="min-w-0">
           <p className="text-muted text-[14px] mb-3">GEO Slot Index · Edition 1</p>
           <h1 className="text-4xl sm:text-5xl font-semibold text-ink tracking-tight mb-6 leading-[1.12]">GEO Slot Index #1</h1>
-          <p className="text-muted text-xl leading-relaxed mb-14">
+          <p className="text-muted text-xl leading-relaxed mb-4">
             A method-note snapshot of five GEO longitudes from Clarke&apos;s public feeds. This edition counts occupancy enter/leave (TLE vs UCS), dispute flips, and FCC license-table mismatches. It does not say prices rose, and it is not a market.
           </p>
+          {dataAsOf && <p className="text-faint font-mono text-[15px] mb-14">{dataAsOf}</p>}
 
           <section id="method" className="mb-16 scroll-mt-10">
             <h2 className="text-ink font-semibold text-2xl tracking-tight mb-5">Method</h2>
@@ -196,7 +198,7 @@ export default function GeoSlotIndexPage() {
             <ul className="text-muted text-[16px] leading-relaxed space-y-3 list-disc pl-5">
               <li>UCS snapshot vintage is years behind TLE. Ghosts are expected; they are the point of TLE-primary occupancy.</li>
               <li>One-shot Space-Track ingest produced thousands of relocation events vs the previous UCS clustering. Those events are not a weekly enter/leave time series and are not used as such here or in the agent delta feed.</li>
-              <li>FCC workbook as-of can be stale (banner on Terminal when &gt; 14 days). Name matching between SSAL and UCS is imperfect (AT&T T16 vs DIRECTV D16).</li>
+              <li>FCC workbook as-of can be stale (banner on Terminal when older than 45 days). Name matching between SSAL and UCS is imperfect (AT&T T16 vs DIRECTV D16).</li>
               <li>An FCC row with no satellite in the occupancy window is not an empty-slot census. The spacecraft can sit outside the window, or it can have launched after the UCS snapshot.</li>
             </ul>
           </section>

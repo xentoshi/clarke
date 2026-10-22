@@ -8,7 +8,7 @@
 // changes are not invented.
 
 import { lonToSlug } from "./slot-utils";
-import { occupancyTleIsStale, parseIsoDate } from "./source-vintage";
+import { TLE_STALE_AFTER_DAYS, occupancyTleIsStale, parseIsoDate } from "./source-vintage";
 import type { PositionSource } from "./position-authority";
 import type { AgentDisputeKind } from "./agent-slot";
 
@@ -209,7 +209,7 @@ const OCCUPANCY_NOTE =
   "Diff of TLE-primary occupancy membership between registry snapshots. The window is ±0.4 degrees. UCS longitude is the fallback when the TLE fails published gates. TLE longitude is not an FCC assignment or an ITU filing.";
 
 const TLE_EPOCH_NOTE =
-  "Same occupancy member between registry snapshots. tleEpoch changed, or tleStale changed, for a TLE that supplied the occupancy longitude. tleStale is true when that epoch is older than 14 days at the snapshot time. A UCS fallback row does not emit this change. Bootstrap does not invent it.";
+  `Same occupancy member between registry snapshots. tleEpoch changed, or tleStale changed, for a TLE that supplied the occupancy longitude. tleStale is true when that epoch is older than ${TLE_STALE_AFTER_DAYS} days at the snapshot time. A UCS fallback row does not emit this change. Bootstrap does not invent it.`;
 
 const DISPUTE_NOTE =
   "Diff of dispute records between registry snapshots. tle_ucs_disagreement is an in-window pair whose absolute UCS-TLE difference is above 2 degrees. ucs_ghost is a UCS catalog longitude inside the slot window whose occupancy longitude is outside it and does not agree within 2 degrees.";
@@ -661,7 +661,7 @@ function limitationsFor(coverage: DeltaCoverage): string[] {
   }
   return [
     ...shared,
-    "coverage is ingest_deltas. Occupancy, dispute, and FCC changes between snapshots are diffs of registry_snapshots. There is no vintage before the first snapshot. A tle_epoch row is the same member whose TLE epoch changed, or whose 14 day stale flag changed, between those snapshots. A UCS fallback row does not emit tle_epoch.",
+    `coverage is ingest_deltas. Occupancy, dispute, and FCC changes between snapshots are diffs of registry_snapshots. There is no vintage before the first snapshot. A tle_epoch row is the same member whose TLE epoch changed, or whose ${TLE_STALE_AFTER_DAYS} day stale flag changed, between those snapshots. A UCS fallback row does not emit tle_epoch.`,
     "When both snapshots store parsed data/ssal.xlsx rows, FCC filing diffs for that interval are new, removed, and changed. lapsed, licensee, and status are not also emitted for that interval. Snapshots without those rows keep the earlier call-sign diff.",
     "FCC slot_events dated at or before the first snapshot stay in the feed. Later FCC slot_events are not repeated, because the snapshot diff is the record for those intervals.",
     "An as_of change is one row when fccAsOf differs between snapshots. It has no slug.",

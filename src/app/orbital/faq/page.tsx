@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
+import { formatRegistryCountAsOf } from "@/lib/freshness";
 import { formatRegistryCensusDetail, getRegistryCensus } from "@/lib/registry-census";
 import FaqList from "./FaqList";
 
@@ -12,7 +13,7 @@ export const metadata = buildMeta({
   image: "/og/page/faq.png",
 });
 
-function faqItems(censusLine: string, ucsGeoRows: number, withOccupancy: number) {
+function faqItems(censusLine: string, dataAsOf: string | null, ucsGeoRows: number, withOccupancy: number) {
   return [
   {
     q: "Where does this data come from?",
@@ -20,7 +21,7 @@ function faqItems(censusLine: string, ucsGeoRows: number, withOccupancy: number)
   },
   {
     q: "What does the public agent API return?",
-    a: "GET /api/v1/agents/slots defaults to a compact page (slug, label, longitude, region, operatorIdentity, country, status, satCount). view=full returns the registry record, paged. all=1 is the explicit full list. GET /api/v1/agents/slots/{slug}, and the MCP tools clarke_get_slot and clarke_get_terminal, return one registry record. clarke_list_slots defaults to the compact page. The record is occupancy (TLE-primary, UCS fallback), operatorIdentity (split, single, or none) and operatorMix, per-satellite operators, FCC rows, disputes, source vintage, and ituRecorded. clarke_get_terminal is the same JSON as clarke_get_slot. The slot record uses operatorIdentity and operatorMix, not a single headline operator. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025; ituRecorded stays not_in_product on every slot. fccStale is true when the FCC workbook as-of parses and is older than 14 days. Valuation and congestion are not in the public agent or MCP payload. They live only as labeled models on the human Slot Terminal and must not be treated as facts. Bid/ask, comps, and dollar strings live on that Terminal surface. GET /api/v1/agents/deltas (MCP clarke_list_deltas) is the on-ingest change feed for occupancy, FCC rows, and disputes. With one stored snapshot its coverage is bootstrap, so it does not invent weekly occupancy history. Remote MCP is stateless Streamable HTTP at https://www.clarkebelt.finance/api/v1/mcp. Reads are open. GET returns 405 because this host does not keep a server-push SSE stream. Clients continue with POST. Field list: /docs/agent-api.",
+    a: "GET /api/v1/agents/slots defaults to a compact page (slug, label, longitude, region, operatorIdentity, country, status, satCount). view=full returns the registry record, paged. all=1 is the explicit full list. GET /api/v1/agents/slots/{slug}, and the MCP tools clarke_get_slot and clarke_get_terminal, return one registry record. clarke_list_slots defaults to the compact page. The record is occupancy (TLE-primary, UCS fallback), operatorIdentity (split, single, or none) and operatorMix, per-satellite operators, FCC rows, disputes, source vintage, and ituRecorded. clarke_get_terminal is the same JSON as clarke_get_slot. The slot record uses operatorIdentity and operatorMix, not a single headline operator. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025; ituRecorded stays not_in_product on every slot. fccStale is true when the FCC workbook as-of parses and is older than 45 days. tleStale is true when a TLE used for occupancy is older than 45 days. Valuation and congestion are not in the public agent or MCP payload. They live only as labeled models on the human Slot Terminal and must not be treated as facts. Bid/ask, comps, and dollar strings live on that Terminal surface. GET /api/v1/agents/deltas (MCP clarke_list_deltas) is the on-ingest change feed for occupancy, FCC rows, and disputes. With one stored snapshot its coverage is bootstrap, so it does not invent weekly occupancy history. Remote MCP is stateless Streamable HTTP at https://www.clarkebelt.finance/api/v1/mcp. Reads are open. GET returns 405 because this host does not keep a server-push SSE stream. Clients continue with POST. Field list: /docs/agent-api.",
   },
   {
     q: "Why do some positions have FCC authorization data and others don't?",
@@ -32,7 +33,7 @@ function faqItems(censusLine: string, ucsGeoRows: number, withOccupancy: number)
   },
   {
     q: "How many total orbital positions exist versus what Clarke currently tracks?",
-    a: `The ITU has registered approximately 1,800 GEO coordination filings across all member states. ${censusLine} The UCS snapshot in this build has ${ucsGeoRows.toLocaleString("en-US")} GEO rows. ${withOccupancy.toLocaleString("en-US")} GEO satellites have an occupancy longitude, including station-kept payloads launched after that snapshot. FCC-only rows appear only when a real license has no satellite inside the 0.6 degree license window. Federal Government (Reserved) placeholders are not rows. Satellites that share an occupancy longitude rounded to 0.1° are one row. A satellite inside a curated slot's 0.4° window is occupancy on that curated row. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025, so Clarke does not record those filings.`,
+    a: `The ITU has registered approximately 1,800 GEO coordination filings across all member states. ${censusLine} ${dataAsOf ?? ""} The UCS snapshot in this build has ${ucsGeoRows.toLocaleString("en-US")} GEO rows. ${withOccupancy.toLocaleString("en-US")} GEO satellites have an occupancy longitude, including station-kept payloads launched after that snapshot. FCC-only rows appear only when a real license has no satellite inside the 0.6 degree license window. Federal Government (Reserved) placeholders are not rows. Satellites that share an occupancy longitude rounded to 0.1° are one row. A satellite inside a curated slot's 0.4° window is occupancy on that curated row. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025, so Clarke does not record those filings.`,
   },
   {
     q: "What is Ku-band versus Ka-band?",
@@ -51,7 +52,7 @@ function faqItems(censusLine: string, ucsGeoRows: number, withOccupancy: number)
 
 export default function OrbitalFaqPage() {
   const census = getRegistryCensus();
-  const faq = faqItems(formatRegistryCensusDetail(census), census.ucsGeoRows, census.geoSatellitesWithOccupancy);
+  const faq = faqItems(formatRegistryCensusDetail(census), formatRegistryCountAsOf(), census.ucsGeoRows, census.geoSatellitesWithOccupancy);
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">

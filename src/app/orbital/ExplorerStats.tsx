@@ -3,7 +3,7 @@
 import type { ExplorerRow } from "./types";
 import { densestBySatelliteCount } from "@/lib/densest";
 
-export default function ExplorerStats({ rows, updated }: { rows: ExplorerRow[]; updated: string | null }) {
+export default function ExplorerStats({ rows, dataAsOf }: { rows: ExplorerRow[]; dataAsOf: string | null }) {
   const onStation = rows.filter((r) => r.satCount > 0).length;
   const fccLicensed = rows.filter((r) => r.fccLicensed).length;
   const densest = densestBySatelliteCount(rows);
@@ -23,9 +23,9 @@ export default function ExplorerStats({ rows, updated }: { rows: ExplorerRow[]; 
           <span className="text-faint text-[13px]">{s.label}</span>
         </div>
       ))}
-      {updated && (
+      {dataAsOf && (
         <span className="text-faint text-[13px] w-full sm:w-auto sm:ml-auto">
-          As of <span className="font-mono">{updated}</span>
+          <span className="font-mono">{dataAsOf}</span>
         </span>
       )}
     </div>

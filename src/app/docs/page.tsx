@@ -5,7 +5,7 @@ import { HowToUse } from "@/components/HowToUse";
 import { TrustLegend } from "@/components/docs/TrustLegend";
 import { CiteThis } from "@/components/CiteThis";
 import { CLARKE_SITE, formatCitationVintage } from "@/lib/citation";
-import { getDataFreshness } from "@/lib/freshness";
+import { formatRegistryCountAsOf, getDataFreshness } from "@/lib/freshness";
 import { formatRegistryCensusDetail, getRegistryCensus } from "@/lib/registry-census";
 
 export const metadata = buildMeta({
@@ -19,6 +19,7 @@ export const metadata = buildMeta({
 
 export default function DocsHubPage() {
   const census = getRegistryCensus();
+  const dataAsOf = formatRegistryCountAsOf();
   const freshness = getDataFreshness();
   const ucs = freshness.find((row) => row.source === "UCS");
   const fcc = freshness.find((row) => row.source === "FCC-SSAL");
@@ -41,7 +42,8 @@ export default function DocsHubPage() {
         Congestion and fair value are models on the human Slot Terminal. They are not in the agent payload or the delta feed.
         Machine index: <Link href="/llms.txt" className="text-ink underline">llms.txt</Link>.
       </p>
-      <p className="text-muted text-[15px] leading-relaxed mb-8">{formatRegistryCensusDetail(census)}</p>
+      <p className="text-muted text-[15px] leading-relaxed mb-2">{formatRegistryCensusDetail(census)}</p>
+      {dataAsOf && <p className="text-faint text-[15px] font-mono leading-relaxed mb-8">{dataAsOf}</p>}
 
       <HowToUse className="mb-8" />
 

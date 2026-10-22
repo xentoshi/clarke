@@ -122,3 +122,26 @@ export function getLatestIngest(): SourceFreshness | null {
 export function getFccFreshness(): SourceFreshness | null {
   return getDataFreshness().find((f) => f.source === "FCC-SSAL") ?? null;
 }
+
+function dateOnly(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const day = value.trim().slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null;
+}
+
+/**
+ * Absolute dates from the committed database, for pages that show counts.
+ * Not the wall clock and not the filesystem mtime, so a stopped refresh
+ * cannot leave the page looking like today.
+ */
+export function formatRegistryCountAsOf(): string | null {
+  const rows = getDataFreshness();
+  const tle = rows.find((row) => row.source === "Space-Track TLE");
+  const fcc = rows.find((row) => row.source === "FCC-SSAL");
+  const tleDay = dateOnly(tle?.tleEpochMax ?? tle?.sourceAsOf ?? tle?.fileVintage);
+  const fccDay = dateOnly(fcc?.fileVintage ?? fcc?.sourceAsOf);
+  if (tleDay && fccDay) return `Data as of ${tleDay}. FCC workbook ${fccDay}.`;
+  if (tleDay) return `Data as of ${tleDay}.`;
+  if (fccDay) return `Data as of ${fccDay}.`;
+  return null;
+}

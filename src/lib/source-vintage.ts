@@ -1,16 +1,27 @@
 import { getDb } from "./db";
 import { parseUcsLaunchYear } from "./occupancy-quality";
 
+/**
+ * Read-time stale threshold for the monthly refresh.
+ * The data ingest and the FCC re-parse both run on the 1st. A file from that
+ * day is about 31 days old by the next 1st. 45 days leaves that gap unmarked
+ * and flags the source only after the next cycle is about two weeks late.
+ * Age must be greater than this value. An as-of or epoch exactly 45 days old
+ * is not stale. A missing or unparsed date is not stale.
+ * The 30-day ingest gate that refuses a TLE is separate and still decides
+ * whether that element set is used.
+ */
+export const MONTHLY_STALE_AFTER_DAYS = 45;
+
 /** FCC SSAL is treated stale when the workbook as-of is older than this. */
-export const FCC_STALE_AFTER_DAYS = 14;
+export const FCC_STALE_AFTER_DAYS = MONTHLY_STALE_AFTER_DAYS;
 
 /**
  * A TLE that supplied occupancy is stale when its epoch is older than this.
- * Same comparison style as FCC_STALE_AFTER_DAYS: age must be greater than the
- * threshold. A missing or unparsed epoch is not stale. This is a read-time
- * flag. It is not the 30-day ingest gate that refuses a TLE and falls back to UCS.
+ * Same comparison as FCC_STALE_AFTER_DAYS. This flag does not move occupancy
+ * back to the UCS catalog.
  */
-export const TLE_STALE_AFTER_DAYS = 14;
+export const TLE_STALE_AFTER_DAYS = MONTHLY_STALE_AFTER_DAYS;
 
 const MONTHS: Record<string, number> = {
   january: 1, february: 2, march: 3, april: 4, may: 5, june: 6,

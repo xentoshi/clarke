@@ -12,7 +12,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       received: true,
       mode: "stub",
-      todo: "Set STRIPE_WEBHOOK_SECRET and persist subscription state. This stub acknowledges the event only.",
     });
   }
 

@@ -3,6 +3,10 @@ import Link from "next/link";
 import { DOC_PAGES } from "@/lib/docs";
 import { HowToUse } from "@/components/HowToUse";
 import { TrustLegend } from "@/components/docs/TrustLegend";
+import { CiteThis } from "@/components/CiteThis";
+import { CLARKE_SITE, formatCitationVintage } from "@/lib/citation";
+import { getDataFreshness } from "@/lib/freshness";
+import { formatRegistryCensusDetail, getRegistryCensus } from "@/lib/registry-census";
 
 export const metadata = buildMeta({
   title: "Docs",
@@ -14,6 +18,18 @@ export const metadata = buildMeta({
 });
 
 export default function DocsHubPage() {
+  const census = getRegistryCensus();
+  const freshness = getDataFreshness();
+  const ucs = freshness.find((row) => row.source === "UCS");
+  const fcc = freshness.find((row) => row.source === "FCC-SSAL");
+  const tle = freshness.find((row) => row.source === "Space-Track TLE");
+  const vintage = formatCitationVintage({
+    ucsFileVintage: ucs?.fileVintage ?? ucs?.sourceAsOf ?? null,
+    fccAsOf: fcc?.sourceAsOf ?? fcc?.fileVintage ?? null,
+    tleEpochMin: tle?.tleEpochMin ?? null,
+    tleEpochMax: tle?.tleEpochMax ?? null,
+  });
+
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-12 pb-16">
       <p className="text-muted text-[13px] mb-2">Docs</p>
@@ -25,6 +41,7 @@ export default function DocsHubPage() {
         Congestion and fair value are models on the human Slot Terminal. They are not in the agent payload or the delta feed.
         Machine index: <Link href="/llms.txt" className="text-ink underline">llms.txt</Link>.
       </p>
+      <p className="text-muted text-[15px] leading-relaxed mb-8">{formatRegistryCensusDetail(census)}</p>
 
       <HowToUse className="mb-8" />
 
@@ -56,6 +73,12 @@ export default function DocsHubPage() {
           About: registry methodology
         </Link>
       </nav>
+
+      <CiteThis
+        title="Clarke documentation"
+        url={`${CLARKE_SITE}/docs`}
+        vintage={vintage}
+      />
     </div>
   );
 }

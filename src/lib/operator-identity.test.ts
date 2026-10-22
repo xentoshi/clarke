@@ -159,6 +159,11 @@ describe("launch vehicle is not an operator", () => {
     assert.equal(isLaunchVehicleOperator("SES S.A.", "Ariane 5"), false);
     assert.equal(isLaunchVehicleOperator("Atlas 5", null), false);
     assert.equal(resolveOperator("Atlas 5").display, "Atlas 5");
+    const refused = resolveSatelliteOperator("Atlas 5", { launchVehicle: "Atlas 5" });
+    assert.equal(refused.display, "");
+    const stp = resolveSatelliteOperator("Atlas 5", { launchVehicle: "Atlas 5", noradId: "49817" });
+    assert.equal(stp.display, "US Space Force / DoD STP");
+    assert.equal(stp.raw, "Atlas 5");
   });
 });
 

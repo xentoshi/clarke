@@ -94,7 +94,7 @@ An FCC-only registry row requires a real authorization and no satellite or curat
 
 Curated status does not override evidence. 45W (Intelsat 14, FCC S2785) and 169E (Horizons 3e, FCC S2947) are On station. A squatted label remains only when a satellite is in the window and Clarke has no FCC row.
 
-A detail URL can still open for an occupancy slug that the table folded into a nearby curated row. That URL resolves to the curated dossier. It is not a second registry row.
+A detail URL can still open for an occupancy slug that the table folded into a nearby row. The label on that URL is the nominal longitude of the slug. The page can still show satellites from the shared ±0.4° window. It is not a second registry row. The live registry size is the positions and on-station line on `/docs` and `/orbital`.
 
 ### Before / after (Space-Track TLE epoch 2026-09-15, apply 2026-09-15)
 

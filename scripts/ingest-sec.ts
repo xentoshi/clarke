@@ -5,8 +5,8 @@ import { recordIngest } from "./lib/ingest-meta";
 const DB_PATH = path.join(process.cwd(), "data", "clarke.db");
 
 // SEC's fair-access policy requires a descriptive User-Agent with contact
-// info, unidentified/generic clients get blocked.
-const USER_AGENT = "Clarke (orbital registry) contact@clarkebelt.finance";
+// info. Unidentified clients get blocked. The public contact is the X account.
+const USER_AGENT = "Clarke (orbital registry) https://x.com/ClarkeBeltFi";
 
 // Only operators confirmed to actually file real financial disclosures with
 // the SEC. Verified 2026-08-30 by querying EDGAR directly: Eutelsat has only

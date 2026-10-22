@@ -98,13 +98,14 @@ export default function CompareClient() {
     return (
       <div className="max-w-xl mx-auto px-4 py-20 text-center">
         <p className="text-muted text-sm mb-2">Compare</p>
-        <h1 className="text-2xl font-semibold text-ink mb-3">Compare is a Pro Terminal feature</h1>
+        <h1 className="text-2xl font-semibold text-ink mb-3">Compare sits on a paid seat</h1>
         <p className="text-muted text-sm mb-6 leading-relaxed">
           Side-by-side fair value, congestion, occupancy, and license signals for up to four GEO slots.
+          Registry access is free.
           {slugs.length > 0 && <span className="block mt-2 font-mono text-ink">{slugs.join(" · ")}</span>}
         </p>
         <Link href="/pricing" className="inline-block bg-ink text-canvas rounded-sm px-5 py-2.5 text-sm font-semibold hover:bg-ink/85">
-          Unlock Pro
+          Pricing
         </Link>
       </div>
     );

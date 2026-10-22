@@ -1,12 +1,11 @@
 import { buildMeta } from "@/lib/metadata";
 import Link from "next/link";
-import { slots as curatedSlots } from "@/data/orbital-slots";
-import { getSatelliteStats, getFccCount, mergeWithUcs } from "@/lib/satellites";
 import { getDataFreshness } from "@/lib/freshness";
+import { formatRegistryCensusDetail, getRegistryCensus } from "@/lib/registry-census";
 
 export const metadata = buildMeta({
   title: "About",
-  description: "What Clarke is, why GEO orbital slots matter now, the public data sources it normalizes, registry methodology, data quality notes, and the agents API.",
+  description: "Clarke is a reference record of who sits at each GEO longitude, with FCC filings, orbit freshness, and disputes.",
   tag: "About",
   path: "/about",
   image: "/og/page/about.png",
@@ -119,11 +118,8 @@ function ageLabel(ageDays: number): string {
 }
 
 export default function AboutPage() {
-  const dbStats = getSatelliteStats();
-  const geoCount = dbStats.geoCount;
-  const totalSats = dbStats.total;
-  const fccCount = getFccCount();
-  const registryRows = mergeWithUcs(curatedSlots).length;
+  const census = getRegistryCensus();
+  const fccCount = census.fccAuthorizations;
   const freshness = getDataFreshness();
 
   return (
@@ -132,29 +128,19 @@ export default function AboutPage() {
       {/* What Clarke is */}
       <div className="max-w-3xl mb-10">
         <p className="text-ink text-lg leading-relaxed mb-5">
-          Clarke is the data infrastructure for orbital real estate. Positions in geostationary orbit
-          are licensed by the ITU, sublicensed to operators, and increasingly fought over as the belt
-          fills up, but the market trading on them is still negotiated deal by deal, with no public record
-          of who holds what. Clarke turns satellite databases, FCC licensing filings, and orbital tracking
-          data into a structured registry: what&apos;s at a position, who holds it, how congested it is,
-          and what it&apos;s worth.
+          Clarke is a reference record of who sits at each GEO longitude. A row lists the satellites in the occupancy window, the operator on the record, FCC filings when Clarke has them, how fresh the orbit data is, and disagreements between the UCS catalog longitude and the Space-Track TLE.
         </p>
         <p className="text-muted text-base leading-relaxed">
-          Orbital infrastructure changes hands for hundreds of billions of dollars through satellite
-          acquisitions, spectrum leasing, fleet consolidations, and regulatory transfers, yet there is no
-          unified data layer, no public pricing index, and no canonical registry of ownership, congestion,
-          or implied value. Every other mature asset class, real estate, terrestrial spectrum, equities,
-          converged on public registries once enough capital moved through it. Orbital real estate is
-          already trading at that scale. It&apos;s just missing the reference layer.
+          {formatRegistryCensusDetail(census)} The same sentence is on the orbital registry, the docs, llms.txt, and the API description.
         </p>
       </div>
 
       {/* Three pillars */}
       <div className="grid sm:grid-cols-3 gap-4 mb-10 max-w-3xl">
         {[
-          { title: "Registry", body: "What's at a position and who holds it, from satellite and FCC licensing data." },
-          { title: "Congestion", body: "How contested an arc is. A labeled 0-100 model from TLE-primary occupancy on the Slot Terminal." },
-          { title: "Valuation", body: "Implied fair value v0, a labeled model from public drivers on the Slot Terminal." },
+          { title: "Occupancy", body: "Satellites in the ±0.4° window and the operator on the record." },
+          { title: "FCC filings", body: "Call sign, licensee, and bands when an SSAL row matches the longitude." },
+          { title: "Freshness and disputes", body: "TLE epoch, catalog vintage, and a flag when the catalog longitude and the TLE differ by more than 2°." },
         ].map((p) => (
           <div key={p.title} className="border border-line rounded-xl p-5 bg-surface">
             <div className="text-ink text-sm font-semibold mb-2">{p.title}</div>
@@ -166,8 +152,8 @@ export default function AboutPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-px bg-line rounded-xl overflow-hidden mb-10 max-w-3xl">
         {[
-          { value: `${geoCount}`, label: "GEO satellites tracked (registry)" },
-          { value: `${registryRows}`, label: "Registry rows" },
+          { value: census.positions.toLocaleString("en-US"), label: "positions" },
+          { value: census.onStation.toLocaleString("en-US"), label: "on station" },
           { value: `${fccCount}`, label: "FCC authorizations" },
         ].map((s) => (
           <div key={s.label} className="bg-surface px-5 py-5 text-center">
@@ -215,17 +201,14 @@ export default function AboutPage() {
 
           <Section id="why-now" title="Why Now?">
             <p className="text-muted text-sm leading-relaxed mb-6">
-              The geostationary belt is a fixed resource, and the market built on top of it is entering
-              a period of forced clarity. Consolidation, spectrum pressure from low-orbit constellations,
-              and rising scrutiny of unused filings are pushing an opaque asset class toward the kind of
-              public data infrastructure every other tradable resource already has.
+              Geostationary orbit is a ring of longitudes. Operators file for them and fly satellites to them. Clarke keeps the occupancy, the FCC filing, and the orbit freshness in one table.
             </p>
             <div className="space-y-4">
               {[
-                { title: "A fixed resource, not a growing one", body: "The ITU allocates roughly 1,800 geostationary positions globally, a number set by physics, not policy. As of 2022 only 541 were occupied by active satellites, and demand for the remaining capacity keeps rising as broadband, IoT, and direct-to-device services compete for the same orbital arc and frequency bands. Unlike compute or bandwidth, GEO slots cannot be manufactured to meet demand." },
-                { title: "Consolidation is already underway", body: "SES's $3.1B acquisition of Intelsat was substantially driven by Intelsat's orbital slot portfolio, not its terrestrial business. As low-orbit constellations pull broadband subscribers away from legacy GEO operators, more fleet operators face the same choice: consolidate, or monetize the spectrum and slot rights they hold. Either path turns orbital positions into a more actively traded asset." },
-                { title: "Filed is not occupied", body: "The ITU found that 45% of investigated satellite networks showed no proof of being brought into use, a practice known as slot squatting. As pressure builds to reclaim underused positions for real deployment, the gap between what is filed on paper and what is actually operating in orbit becomes the question regulators, operators, and acquirers all need answered." },
-                { title: "No public data layer exists yet", body: "Hundreds of billions of dollars in orbital infrastructure change hands through acquisitions, spectrum leases, and fleet consolidations, with no unified registry, no public pricing index, and no canonical record of who holds what. Real estate, terrestrial spectrum, and even domain names each converged on public registries once enough value moved through them. Orbital slots are already trading at that scale; they are just missing the reference layer." },
+                { title: "Fixed longitudes", body: "The ITU coordinates roughly 1,800 geostationary positions. Clarke's table is the positions it can support from the UCS catalog, Space-Track TLEs, and FCC records. ITU filings are not in this product." },
+                { title: "A filing and a satellite are separate records", body: "An FCC authorization and a satellite in the ±0.4° window are stored separately. A filing with no satellite in the window stays a paper filing. A satellite with no FCC row stays on station, unlicensed." },
+                { title: "Catalog longitude and TLE longitude", body: "The UCS catalog and the Space-Track TLE can give different longitudes for the same satellite. Clarke occupies at the TLE when the quality gates pass, keeps the catalog longitude beside it, and flags a disagreement above 2°. A catalog longitude of 0, or a missing catalog longitude, is not a position and does not create a dispute." },
+                { title: "One count", body: formatRegistryCensusDetail(census) + ` The UCS snapshot has ${census.ucsGeoRows.toLocaleString("en-US")} GEO rows. ${census.geoSatellitesWithOccupancy.toLocaleString("en-US")} GEO satellites have an occupancy longitude, including station-kept payloads launched after that snapshot. The belt draws ${census.tleOccupancyMarks.toLocaleString("en-US")} TLE occupancy marks.` },
               ].map((item) => (
                 <div key={item.title} className="border border-line rounded-xl p-5 bg-surface">
                   <div className="text-ink text-sm font-semibold mb-2">{item.title}</div>
@@ -369,11 +352,8 @@ export default function AboutPage() {
 
           <Section id="data-sources" title="Data Sources">
             <p className="text-muted text-sm leading-relaxed mb-8">
-              The orbital asset market is opaque, fragmented, and priced through information asymmetry.
-              The data to change that is almost entirely public. It is just scattered across a dozen
-              institutions, each with a different format, cadence, and level of accessibility.
-              Clarke normalizes these sources into a single legible view. Sources marked Live are
-              currently ingested; sources marked Planned are on the roadmap but not yet integrated.
+              Clarke reads public catalogs and filings and keeps one row per registry slug.
+              Sources marked Live are in this build. Sources marked Planned are not ingested.
             </p>
 
             {freshness.length > 0 && (
@@ -460,7 +440,7 @@ export default function AboutPage() {
           <Section id="registry-methodology" title="Registry Methodology">
             <div className="space-y-4">
               {[
-                { title: "Satellite and ownership layer", body: `The registry's satellite layer comes from the UCS Satellite Database (see Data Sources above). Clarke ingests all ${totalSats.toLocaleString()} satellites from the current snapshot across GEO, LEO, and MEO (${geoCount} are GEO), each queryable by operator and purpose. The GEO subset anchors the priced registry and congestion model; LEO and MEO appear as descriptive constellation presence on operator pages, not as priced positions.` },
+                { title: "Satellite and ownership layer", body: `The registry's satellite layer comes from the UCS Satellite Database (see Data Sources above). This build has ${census.ucsSatellites.toLocaleString("en-US")} UCS satellite rows across GEO, LEO, and MEO, of which ${census.ucsGeoRows.toLocaleString("en-US")} are GEO. ${formatRegistryCensusDetail(census)} LEO and MEO stay out of the GEO registry table.` },
                 { title: "Authorization layer", body: `FCC authorization records from the Approved Space Station List are ingested as a second layer on top of the UCS satellite data. For each GEO position, Clarke queries the FCC table for any authorization within 0.6 degrees of the nominal longitude. Where a match exists, the detail page for that position shows the FCC call sign, licensee name, authorized frequency bands, administration, and in-orbit date. Where no match exists, the position has no US FCC authorization, which is expected for satellites licensed under non-US administrations.` },
                 { title: "Co-location grouping", body: "Multiple satellites operating at the same nominal longitude are grouped together using a tolerance of 0.4 degrees on the occupancy longitude (Space-Track TLE when usable, otherwise UCS). This matches ITU co-location practice. The grouping is physical occupancy, not an FCC or ITU assignment: SES-1 stays at 101°W because its TLE agrees with UCS; MUOS-2, whose UCS row still says 100.1°W, occupies at its TLE near 172°E." },
                 { title: "Congestion scoring", body: "Congestion v0 is a labeled model on the Slot Terminal, not a recorded fact and not a registry column. It is a normalized 0 to 100 index blending three signals at a position: arc density (GEO satellites whose occupancy longitude is within 2 degrees), direct co-location (within 0.4 degrees), and contention (distinct operators). Occupancy longitude is TLE-primary, with the UCS catalog as fallback. Density contributes up to 50 points, co-location up to 30, and operator contention up to 20. A position packed by a single operator scores lower on contention than an equally dense arc contested by many operators, because multi-operator arcs carry a heavier interference-coordination burden. The tiers are Sparse for 0 to 14, Low for 15 to 34, Moderate for 35 to 54, High for 55 to 74, and Critical for 75 to 100. Scores reflect tracked hardware, not filed ITU positions, so they understate coordination pressure in arcs with heavy filing or squatting activity." },

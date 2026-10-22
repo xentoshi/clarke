@@ -16,7 +16,7 @@
 // - Every distinct source operator string is kept on operatorRaw.
 
 import type { OrbitalSlot } from "@/data/orbital-slots";
-import { isLaunchVehicleOperator, resolveSatelliteOperator } from "./operator-identity";
+import { isLaunchVehicleOperator, resolveSatelliteOperator, spacecraftIdentity } from "./operator-identity";
 import { countryFromOccupants } from "./slot-country";
 import { parseUcsLaunchYear } from "./occupancy-quality";
 import { formatLon, lonToSlug, slugToLon } from "./slot-utils";
@@ -34,6 +34,7 @@ export interface UcsClaimSatellite {
   noradId: string | null;
   comments: string | null;
   users: string | null;
+  catalogSource?: "ucs" | "tle-supplement";
 }
 
 export interface ClaimOperatorPick {
@@ -49,9 +50,18 @@ export function pickClaimOperator(sats: UcsClaimSatellite[]): ClaimOperatorPick 
   );
   const counts = new Map<string, number>();
   for (const sat of sats) {
+    const identity = spacecraftIdentity(sat.noradId);
+    if (identity) {
+      counts.set(identity.display, (counts.get(identity.display) ?? 0) + 1);
+      continue;
+    }
     const raw = (sat.operator ?? "").trim();
     if (!raw || isLaunchVehicleOperator(raw, sat.launchVehicle)) continue;
-    const display = resolveSatelliteOperator(raw, { ownerCountry: sat.ownerCountry, noradId: sat.noradId }).display;
+    const display = resolveSatelliteOperator(raw, {
+      ownerCountry: sat.ownerCountry,
+      noradId: sat.noradId,
+      launchVehicle: sat.launchVehicle,
+    }).display;
     if (!display) continue;
     counts.set(display, (counts.get(display) ?? 0) + 1);
   }
@@ -82,17 +92,29 @@ function sentence(text: string): string {
   return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
 }
 
-function singleDescription(sat: UcsClaimSatellite): string {
+function catalogNote(sat: UcsClaimSatellite, vintage: string | null): string {
+  const text = (sat.comments ?? "").trim();
+  if (!text) return "";
+  if (sat.catalogSource === "tle-supplement") return text;
+  const when = vintage ?? "unknown";
+  return `UCS catalog note (file vintage ${when}): ${text}`;
+}
+
+function singleDescription(sat: UcsClaimSatellite, vintage: string | null): string {
+  const identity = spacecraftIdentity(sat.noradId);
+  const launchVehicle = isLaunchVehicleOperator(sat.operator, sat.launchVehicle);
   return [
     sat.purpose && sat.detailedPurpose
       ? sentence(`${sat.purpose}: ${sat.detailedPurpose}`)
       : sentence(sat.purpose ?? ""),
-    sat.operator && !isLaunchVehicleOperator(sat.operator, sat.launchVehicle) ? `Operated by ${sat.operator}.` : "",
-    isLaunchVehicleOperator(sat.operator, sat.launchVehicle)
+    identity ? `Operator: ${identity.display}.` : "",
+    identity && identity.hostedPayloads.length ? `Hosted payload: ${identity.hostedPayloads.join(", ")}.` : "",
+    sat.operator && !launchVehicle && !identity ? `Operated by ${sat.operator}.` : "",
+    launchVehicle
       ? `UCS operator string "${(sat.operator ?? "").trim()}" matches the launch vehicle and is not used as the GEO operator.`
       : "",
     sat.launchVehicle ? `Launched on ${sat.launchVehicle}.` : "",
-    sat.comments ?? "",
+    catalogNote(sat, vintage),
   ]
     .filter(Boolean)
     .join(" ");
@@ -116,6 +138,7 @@ function claimDescription(sats: UcsClaimSatellite[], label: string, pick: ClaimO
 export function collapseUcsClaimSlots(
   sats: UcsClaimSatellite[],
   decayedNoradIds: Set<string>,
+  vintage: string | null = null,
 ): OrbitalSlot[] {
   const groups = new Map<string, UcsClaimSatellite[]>();
   for (const sat of sats) {
@@ -151,7 +174,7 @@ export function collapseUcsClaimSlots(
       satellite: names.join(", "),
       coverage: [],
       valueEstimate: "",
-      description: ordered.length === 1 ? singleDescription(ordered[0]) : claimDescription(ordered, label, pick),
+      description: ordered.length === 1 ? singleDescription(ordered[0], vintage) : claimDescription(ordered, label, pick),
       launched: ordered.length === 1 ? parseUcsLaunchYear(ordered[0].launchDate) ?? undefined : undefined,
       source: "ucs",
       ucsCount: ordered.length,

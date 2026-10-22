@@ -43,9 +43,10 @@ describe("UCS claim collapse", () => {
 
     const stp = rows.find((row) => row.noradIds?.includes("49817"));
     assert.ok(stp);
-    assert.equal(stp.operator, "");
+    assert.equal(stp.operator, "US Space Force / DoD STP");
     assert.equal(stp.operatorRaw, "Atlas 5");
     assert.match(stp.description, /launch vehicle/);
+    assert.match(stp.description, /Hosted payload: NASA LCRD/);
     assert.doesNotMatch(stp.operator, /Atlas/);
   });
 
@@ -106,11 +107,18 @@ describe("live registry claims (clarke.db)", () => {
     assert.equal(rows.some((row) => row.operator === "Atlas 5"), false);
     const stp = rows.find((row) => row.noradIds?.includes("49817") || /STPSat-6/.test(row.satellite ?? ""));
     assert.ok(stp);
-    assert.equal(stp.operator, "");
+    assert.equal(stp.operator, "US Space Force / DoD STP");
     assert.match(stp.operatorRaw, /Atlas 5/);
+    assert.match(stp.description, /UCS catalog note \(file vintage /);
+    assert.match(stp.description, /Second of four planned platforms|LCRD|launch vehicle/);
     const model = buildSlotTerminal(lonToSlug(stp.longitude));
     assert.ok(model);
-    assert.equal(model.operator, "");
+    assert.equal(model.operator, "US Space Force / DoD STP");
     assert.match(model.operatorRaw, /Atlas 5/);
+    assert.equal(model.label, "111.9°W");
+    const stpSat = model.satellites.find((sat) => sat.noradId === "49817");
+    assert.ok(stpSat);
+    assert.equal(stpSat.positionDisputed, false);
+    assert.equal(stpSat.positionDeltaDeg, null);
   });
 });

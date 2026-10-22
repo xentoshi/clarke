@@ -5,7 +5,7 @@ export const revalidate = false;
 
 export const metadata = buildMeta({
   title: "Pricing",
-  description: "Free GEO registry. Pro Slot Terminal seats for valuation breakdown, compare, export+, and API.",
+  description: "Registry access is currently free. For the paid seat, message @ClarkeBeltFi on X.",
   tag: "Pricing",
   path: "/pricing",
   image: "/og/page/pricing.png",

@@ -18,7 +18,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <div className="col-span-2 sm:col-span-1">
                   <div className="font-semibold text-ink text-lg mb-2">Clarke</div>
                   <p className="text-muted text-sm leading-relaxed">
-                    The registry for orbital infrastructure.
+                    A reference record of GEO longitudes.
                   </p>
                 </div>
                 <div>
@@ -62,7 +62,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                       rel="noopener noreferrer"
                       className="text-muted text-sm hover:text-ink transition-colors py-0.5"
                     >
-                      X / Twitter
+                      @ClarkeBeltFi
                     </a>
                   </div>
                 </div>

@@ -25,7 +25,7 @@ import { regionForLongitude } from "./regions";
 import { isSafeSlug } from "./slot-utils";
 import { cachedRead } from "./process-cache";
 import { summarizeOperators, type OperatorShare } from "./operator-mix";
-import { isLaunchVehicleOperator, resolveOperator, resolveSatelliteOperator } from "./operator-identity";
+import { resolveOperator, resolveSatelliteOperator } from "./operator-identity";
 import { countryFromOccupants } from "./slot-country";
 import { ituPresence, type ItuRecorded } from "./itu-presence";
 import { buildSlotPositionTrust, type SlotPositionTrust } from "./position-authority";
@@ -169,14 +169,10 @@ function buildSlotTerminalUncached(slug: string): SlotTerminalModel | null {
   const curated = lookupSlot(slug, lon);
   if (sats.length === 0 && fccAuths.length === 0 && !curated) return null;
 
-  const label = curated?.label ?? formatLon(lon);
+  const label = formatLon(lon);
   const holders = sats.filter((s) => !s.servicing);
-  const attributed = holders.map((s) => ({
-    ...s,
-    operator: isLaunchVehicleOperator(s.operator, s.launchVehicle) ? null : s.operator,
-  }));
-  const mix = summarizeOperators(attributed);
-  const occupancyMajority = occupancyMajorityOf(attributed);
+  const mix = summarizeOperators(holders);
+  const occupancyMajority = occupancyMajorityOf(holders);
   // Headline operator is the registry row, not the ±0.4° majority.
   // A blank registry operator stays blank (launch vehicle refused, or unlisted).
   // Do not fill it from a neighbor in the occupancy window.

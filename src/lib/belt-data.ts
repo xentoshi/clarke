@@ -1,7 +1,7 @@
 import { slots as curatedSlots } from "@/data/orbital-slots";
 import { COLOCATION_WINDOW_DEG } from "./position-authority";
-import { isLaunchVehicleOperator } from "./operator-identity";
-import { getAllRegistrySlugs, getGeoSatellites, lonToSlug, mergeWithUcs } from "./satellites";
+import { isLaunchVehicleOperator, spacecraftIdentity } from "./operator-identity";
+import { getAllRegistrySlugs, getGeoSatellites, lonToSlug, mergeWithUcs, type GeoSatellite } from "./satellites";
 import { formatLon } from "./slot-utils";
 import {
   beltCaption,
@@ -58,7 +58,7 @@ export function buildGeoBelt(): GeoBeltModel {
       id: sat.noradId ? `norad-${sat.noradId}` : `sat-${sat.id}`,
       name: sat.name,
       longitude: sat.longitudeGeo,
-      operator: isLaunchVehicleOperator(sat.operator, sat.launchVehicle) ? null : sat.operator?.trim() || null,
+      operator: beltOperator(sat),
       dispute: beltDisputeClass(sat.positionDisputed),
       deltaDeg: sat.positionDeltaDeg,
       ucsLongitude: sat.longitudeUcs,
@@ -80,4 +80,13 @@ export function buildGeoBelt(): GeoBeltModel {
     epochLabel,
     caption: beltCaption(epochLabel),
   };
+}
+
+/** Catalog operator string. Identity overrides and launch vehicles are the only exceptions. */
+function beltOperator(sat: GeoSatellite): string | null {
+  const identity = spacecraftIdentity(sat.noradId);
+  if (identity) return identity.display;
+  if (isLaunchVehicleOperator(sat.operator, sat.launchVehicle)) return null;
+  const raw = (sat.operator ?? "").trim();
+  return raw || null;
 }

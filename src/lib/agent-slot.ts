@@ -18,7 +18,7 @@ import {
   type GeoSatellite,
   type FccAuthorization,
 } from "./satellites";
-import { isLaunchVehicleOperator, resolveOperator, resolveSatelliteOperator } from "./operator-identity";
+import { resolveOperator, resolveSatelliteOperator } from "./operator-identity";
 import { countryFromOccupants } from "./slot-country";
 import { summarizeOperators, type OperatorShare } from "./operator-mix";
 import { ituPresence, type ItuRecorded } from "./itu-presence";
@@ -160,13 +160,17 @@ function lookupSlot(slug: string, lon: number): OrbitalSlot | undefined {
 }
 
 function toObservation(sat: GeoSatellite, now: Date): AgentOccupancyObservation {
-  const refused = isLaunchVehicleOperator(sat.operator, sat.launchVehicle);
   const raw = sat.operator;
+  const resolved = resolveSatelliteOperator(raw, {
+    ownerCountry: sat.ownerCountry,
+    noradId: sat.noradId,
+    launchVehicle: sat.launchVehicle,
+  });
   return {
     id: sat.id,
     name: sat.name,
     noradId: sat.noradId,
-    operator: refused || !raw ? null : resolveSatelliteOperator(raw, { ownerCountry: sat.ownerCountry, noradId: sat.noradId }).display,
+    operator: resolved.display || null,
     operatorRaw: raw,
     launchDate: sat.launchDate,
     tleLongitude: sat.longitudeTle,
@@ -219,11 +223,7 @@ function assemble(input: {
 }): AgentSlotPayload {
   const { slug, lon, curated, sats, fccAuths, allSats, freshness, asOf, now } = input;
   const holders = sats.filter((s) => !s.servicing);
-  const attributed = holders.map((s) => ({
-    ...s,
-    operator: isLaunchVehicleOperator(s.operator, s.launchVehicle) ? null : s.operator,
-  }));
-  const mix = summarizeOperators(attributed);
+  const mix = summarizeOperators(holders);
   const itu = ituPresence();
   const country = countryFromOccupants(sats.map((s) => s.ownerCountry));
   const status: SlotStatus = curated?.status ?? (sats.length > 0 ? "active" : "filed");
@@ -243,7 +243,7 @@ function assemble(input: {
 
   return {
     slug,
-    label: curated?.label ?? formatLon(lon),
+    label: formatLon(lon),
     longitude: lon,
     region: regionForLongitude(lon),
     operatorIdentity: operatorIdentityOf(mix),

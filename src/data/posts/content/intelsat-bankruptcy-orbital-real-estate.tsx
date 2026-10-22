@@ -5,7 +5,7 @@ export const toc: TocItem[] = [
   { id: "the-debt-trap",            label: "The debt trap" },
   { id: "c-band-the-reveal",        label: "C-band: the regulatory asset revealed" },
   { id: "the-acquisition",          label: "The SES acquisition as market verdict" },
-  { id: "what-this-tells-us",       label: "What this tells us about orbital real estate" },
+  { id: "what-this-tells-us",       label: "What the record shows" },
   { id: "sources",                  label: "Sources" },
 ];
 
@@ -45,11 +45,8 @@ export default function Post() {
         industry.
       </p>
       <p>
-        What made it instructive was not the collapse but the survival. Through two years of restructuring,
-        Intelsat&apos;s orbital slot portfolio emerged largely intact. The company deleveraged from $16 billion
-        to $7 billion in debt, and in 2025, SES acquired Intelsat for $3.1 billion. That acquisition price
-        is the market&apos;s answer to a question the industry had never been forced to price precisely: how much
-        are the regulatory rights to occupy a specific longitude in geostationary orbit actually worth?
+        Through two years of restructuring, Intelsat&apos;s GEO slot portfolio emerged largely intact. The company deleveraged from $16 billion
+        to $7 billion in debt, and in 2025, SES acquired Intelsat for $3.1 billion.
       </p>
 
       <h2 id="from-utility-to-asset">From Intergovernmental Utility to Commercial Asset</h2>
@@ -175,7 +172,7 @@ export default function Post() {
         depreciating hardware. The ITU filings were not.
       </p>
 
-      <h2 id="what-this-tells-us">What This Tells Us About Orbital Real Estate</h2>
+      <h2 id="what-this-tells-us">What the Record Shows</h2>
       <p>
         The Intelsat case establishes several facts about GEO orbital slots as an asset class that are
         difficult to derive from first principles alone.
@@ -202,11 +199,7 @@ export default function Post() {
         in the first place.
       </p>
       <p>
-        The SES acquisition was not a distressed opportunistic purchase. It was the market pricing a
-        mature, well-positioned portfolio of coordinated GEO slots with full knowledge of the technology
-        risk and revenue erosion that had preceded the bankruptcy. That price was $3.1 billion. The
-        question Clarke is built to answer is how to systematize that pricing before the next transaction
-        forces it into the open.
+        SES paid $3.1 billion for Intelsat in 2025. The GEO slot portfolio, the spectrum licenses, and the customer contracts were part of that transaction. Clarke records who sits at each longitude. It does not price the transaction.
       </p>
 
       <h2 id="sources">Sources</h2>

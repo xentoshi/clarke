@@ -111,10 +111,7 @@ export default function ChangesPage() {
         <div className="border border-line bg-surface px-6 py-10 text-center">
           <p className="text-muted text-sm mb-2">No changes recorded yet.</p>
           <p className="text-faint text-sm leading-relaxed max-w-md mx-auto">
-            Change tracking has no backfill — it only starts counting from the first ingest run after
-            this feed shipped. Re-run <span className="font-mono">npm run ingest:spacetrack</span> or{" "}
-            <span className="font-mono">npm run ingest:fcc</span> to check for updates against the
-            current registry.
+            Stored events start at the first ingest kept after this feed shipped.
           </p>
         </div>
       ) : (

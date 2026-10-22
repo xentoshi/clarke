@@ -130,7 +130,7 @@ describe("GEO belt layout and copy", () => {
     const caption = beltCaption(epoch!);
     assert.equal(
       caption,
-      "Positions from Space-Track TLE as of 2026-09-09 to 2026-09-21 · catalog names from UCS · not an ITU assignment.",
+      "Occupancy longitudes from Space-Track TLE as of 2026-09-09 to 2026-09-21 · catalog names from UCS · not an ITU assignment.",
     );
     assert.equal(caption.includes(EM_DASH), false);
     assert.equal(caption.includes(EN_DASH), false);

@@ -93,7 +93,7 @@ npm run seed:valuations   # persist 30-day v0 history into data/terminal.db
 npm run dev
 ```
 
-Open `/orbital` for the registry, `/orbital/101w` (or `/slot/101w`) for Slot Terminal, `/login` for a free or **Demo Pro** seat, `/pricing` for the gate.
+Open `/orbital` for the registry, `/orbital/101w` (or `/slot/101w`) for a slot page, `/login` for a free session, `/pricing` for access.
 
 Public methodology: [`/docs`](https://clarkebelt.finance/docs). Data trust, agent API, valuation v0, FCC SSAL refresh. Repo copies: [`docs/DATA_TRUST.md`](./docs/DATA_TRUST.md), [`docs/AGENT_API.md`](./docs/AGENT_API.md), [`docs/VALUATION.md`](./docs/VALUATION.md), [`docs/FCC_REFRESH.md`](./docs/FCC_REFRESH.md).
 
@@ -109,9 +109,9 @@ npm test                  # valuation v0 + TLE occupancy authority tests
 |---|---|---|
 | `NEXT_PUBLIC_URL` | Yes (prod) | Canonical URL |
 | `AUTH_SECRET` | Yes (prod) | HMAC secret for session cookies and API keys |
-| `STRIPE_SECRET_KEY` | No | Stripe secret for Pro Checkout. If unset, `/pricing` issues a labeled demo Pro seat |
+| `STRIPE_SECRET_KEY` | No | Stripe secret. Live billing is not wired, and `/pricing` does not call Checkout. |
 | `STRIPE_PRICE_ID` | No | Stripe Price id for a Terminal seat subscription |
-| `STRIPE_WEBHOOK_SECRET` | No | TODO: verify `checkout.session.completed` in `/api/billing/webhook` |
+| `STRIPE_WEBHOOK_SECRET` | No | Reserved for Stripe webhook signature checks. `/api/billing/webhook` does not verify signatures. |
 | `SPACETRACK_USERNAME` | No | Space-Track login (for `npm run ingest:spacetrack`) |
 | `SPACETRACK_PASSWORD` | No | Space-Track password (for `npm run ingest:spacetrack`) |
 | `PV_SECRET` | No | Legacy fallback HMAC secret when `AUTH_SECRET` is unset. The `/api/pv` beacon has been removed. |

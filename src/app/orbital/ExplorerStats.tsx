@@ -4,15 +4,15 @@ import type { ExplorerRow } from "./types";
 import { densestBySatelliteCount } from "@/lib/densest";
 
 export default function ExplorerStats({ rows, updated }: { rows: ExplorerRow[]; updated: string | null }) {
-  const active = rows.filter((r) => r.status === "active").length;
+  const onStation = rows.filter((r) => r.satCount > 0).length;
   const fccLicensed = rows.filter((r) => r.fccLicensed).length;
   const densest = densestBySatelliteCount(rows);
 
   const stats = [
-    { label: "positions", value: rows.length.toLocaleString(), mono: false },
-    { label: "on station", value: active.toLocaleString(), mono: false },
+    { label: "positions", value: rows.length.toLocaleString("en-US"), mono: false },
+    { label: "on station", value: onStation.toLocaleString("en-US"), mono: false },
     { label: "densest", value: densest ? densest.label : "n/a", mono: true },
-    { label: "FCC licensed", value: fccLicensed.toLocaleString(), mono: false },
+    { label: "FCC licensed positions", value: fccLicensed.toLocaleString("en-US"), mono: false },
   ];
 
   return (

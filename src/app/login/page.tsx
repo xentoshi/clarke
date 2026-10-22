@@ -4,7 +4,7 @@ import LoginForm from "./LoginForm";
 
 export const metadata = buildMeta({
   title: "Sign in",
-  description: "Clarke Terminal seats — free registry or Pro demo.",
+  description: "Sign in with an email for a free Clarke session.",
   tag: "Account",
   path: "/login",
   image: "/og/page/login.png",

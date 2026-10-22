@@ -7,7 +7,7 @@ import Link from "next/link";
 export default function LoginForm() {
   const router = useRouter();
   const next = useSearchParams().get("next") || "/orbital";
-  const [email, setEmail] = useState("analyst@clarke.demo");
+  const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -31,7 +31,8 @@ export default function LoginForm() {
       <p className="text-muted text-[14px] mb-3">Seats</p>
       <h1 className="text-4xl font-semibold text-ink tracking-tight mb-3">Sign in</h1>
       <p className="text-muted text-sm mb-6 leading-relaxed">
-        Passwordless stub for the MVP. Any email issues a session cookie. Use Demo Pro to review the paid Terminal without Stripe.
+        An email address opens a free session cookie for this browser. For the paid seat, message{" "}
+        <a href="https://x.com/ClarkeBeltFi" className="text-ink underline" target="_blank" rel="noopener noreferrer">@ClarkeBeltFi</a> on X.
       </p>
       <label className="block text-sm text-muted mb-1">Email</label>
       <input
@@ -46,13 +47,9 @@ export default function LoginForm() {
           className="bg-ink text-canvas rounded-sm px-4 py-2.5 text-sm font-semibold hover:bg-ink/85 disabled:opacity-50">
           Continue free
         </button>
-        <button disabled={pending} onClick={() => submit("pro")}
-          className="border border-line text-ink rounded-sm px-4 py-2.5 text-sm hover:border-line-strong disabled:opacity-50">
-          Enter Demo Pro seat
-        </button>
       </div>
       <p className="text-faint text-sm mt-6">
-        Paid Checkout lives on <Link href="/pricing" className="text-ink hover:text-muted underline">Pricing</Link> when Stripe keys are set.
+        Access is described on <Link href="/pricing" className="text-ink hover:text-muted underline">Pricing</Link>.
       </p>
     </div>
   );

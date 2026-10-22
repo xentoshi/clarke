@@ -142,9 +142,9 @@ export function GeoBeltMap({
       setActiveId((current) => stepBeltSelection(order, current, event.key === "ArrowRight" ? 1 : -1));
       return;
     }
-    if (event.key === "Enter" && active) {
+    if (event.key === "Enter" && active?.slotHref) {
       event.preventDefault();
-      window.location.assign(`/orbital/${active.slug}`);
+      window.location.assign(active.slotHref);
       return;
     }
     if (variant !== "full") return;
@@ -317,23 +317,8 @@ export function GeoBeltMap({
               const hitW = span <= 16 ? 12 : 7;
               const labelY = y - MARK_H - 4;
               const isolated = labelMarks && labelY > 12 && placed.every((o) => o.id === p.id || Math.abs(o.x - p.x) >= 46);
-              return (
-                <a
-                  key={mark.id}
-                  href={`/orbital/${mark.slug}`}
-                  data-belt-mark={mark.id}
-                  data-dispute={mark.dispute}
-                  data-longitude={mark.longitude}
-                  aria-label={markAria(mark)}
-                  onMouseEnter={() => {
-                    setActiveId(mark.id);
-                    setHoverId(mark.id);
-                  }}
-                  onFocus={() => setActiveId(mark.id)}
-                  onClick={(event) => {
-                    if (onSelectWindow) event.preventDefault();
-                  }}
-                >
+              const graphic = (
+                <>
                   <rect x={x - hitW / 2} y={y - MARK_H - 2} width={hitW} height={MARK_H + 6} fill="transparent" />
                   <MarkGlyph x={x} y={y} dispute={mark.dispute === "disputed"} opacity={dim} active={mark.id === activeId} />
                   {isolated && (
@@ -348,6 +333,42 @@ export function GeoBeltMap({
                       {shortName(mark.name)}
                     </text>
                   )}
+                </>
+              );
+              const activate = () => {
+                setActiveId(mark.id);
+                setHoverId(mark.id);
+              };
+              if (!mark.slotHref) {
+                return (
+                  <g
+                    key={mark.id}
+                    data-belt-mark={mark.id}
+                    data-dispute={mark.dispute}
+                    data-longitude={mark.longitude}
+                    aria-label={markAria(mark)}
+                    onMouseEnter={activate}
+                    onFocus={activate}
+                  >
+                    {graphic}
+                  </g>
+                );
+              }
+              return (
+                <a
+                  key={mark.id}
+                  href={mark.slotHref}
+                  data-belt-mark={mark.id}
+                  data-dispute={mark.dispute}
+                  data-longitude={mark.longitude}
+                  aria-label={markAria(mark)}
+                  onMouseEnter={activate}
+                  onFocus={activate}
+                  onClick={(event) => {
+                    if (onSelectWindow) event.preventDefault();
+                  }}
+                >
+                  {graphic}
                 </a>
               );
             })}
@@ -453,9 +474,13 @@ function BeltReader({ mark }: { mark: BeltMark | null }) {
       <span className="text-[13px] text-ink">{reader.name}</span>
       {reader.operator && <span className="font-mono text-[12px] text-muted">{reader.operator}</span>}
       {reader.epoch && <span className="font-mono text-[12px] text-faint">epoch {reader.epoch}</span>}
-      <Link href={reader.slotHref} className="font-mono text-[12px] text-muted transition-colors hover:text-ink">
-        slot {reader.slotLabel}
-      </Link>
+      {reader.slotHref ? (
+        <Link href={reader.slotHref} className="font-mono text-[12px] text-muted transition-colors hover:text-ink">
+          slot {reader.slotLabel}
+        </Link>
+      ) : (
+        <span className="font-mono text-[12px] text-muted">slot {reader.slotLabel}</span>
+      )}
       {reader.dispute === "disputed" && (
         <span className="rounded-full border border-stale/40 px-2 py-0.5 font-mono text-[11px] text-stale">
           UCS disagrees

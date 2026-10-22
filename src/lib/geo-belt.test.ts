@@ -158,6 +158,7 @@ describe("GEO belt layout and copy", () => {
       slug: "101w",
       slotId: "101w",
       slotLabel: "101°W",
+      slotHref: "/orbital/101w",
     };
     const disputed: BeltMark = {
       ...mark,
@@ -171,6 +172,7 @@ describe("GEO belt layout and copy", () => {
       slug: "171-5e",
       slotId: "ucs-39206",
       slotLabel: "171.5°E",
+      slotHref: "/orbital/171-5e",
     };
     const html = renderToStaticMarkup(
       createElement(GeoBeltMap, {
@@ -193,6 +195,34 @@ describe("GEO belt layout and copy", () => {
     const reader = beltReaderModel(disputed);
     assert.equal(reader.slotHref, "/orbital/171-5e");
     assert.match(reader.disputeDetail ?? "", /88\.40°/);
+  });
+
+  it("renders a mark with no slot page as text", () => {
+    const mark: BeltMark = {
+      id: "norad-1",
+      name: "Example",
+      longitude: 10,
+      operator: null,
+      dispute: "tle",
+      deltaDeg: null,
+      ucsLongitude: null,
+      epoch: "2026-09-21",
+      slug: "10-1e",
+      slotId: "x",
+      slotLabel: "10.1°E",
+      slotHref: null,
+    };
+    const html = renderToStaticMarkup(
+      createElement(GeoBeltMap, {
+        marks: [mark],
+        variant: "strip",
+        epochFallback: "2026-09-21",
+        initialMarkId: "norad-1",
+      }),
+    );
+    assert.equal(html.includes('href="/orbital/10-1e"'), false);
+    assert.match(html, /slot 10\.1°E/);
+    assert.equal(beltReaderModel(mark).slotHref, null);
   });
 });
 

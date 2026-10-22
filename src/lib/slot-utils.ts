@@ -26,3 +26,10 @@ export function formatLon(lon: number): string {
   if (lon >= 0) return `${lon}°E`;
   return `${Math.abs(lon)}°W`;
 }
+
+// Href for a longitude slug that has a static slot page. Unknown longitudes
+// stay plain text so a request cannot render and cache a page on demand.
+export function registryOrbitalHref(slug: string | null, built: ReadonlySet<string>): string | null {
+  if (!slug || !built.has(slug)) return null;
+  return `/orbital/${slug}`;
+}

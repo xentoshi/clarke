@@ -35,6 +35,8 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/", destination: "/orbital", permanent: true },
+      // Alias used to prerender one redirect page per slot, each with the full layout body.
+      { source: "/slot/:slug", destination: "/orbital/:slug", permanent: true },
       { source: "/research", destination: "/index", permanent: false },
       { source: "/data", destination: "/about", permanent: true },
       { source: "/api/og", destination: "/og/default.png", permanent: true },
@@ -67,6 +69,12 @@ const nextConfig: NextConfig = {
         source: "/og/:path*",
         headers: [
           { key: "Cache-Control", value: "public, max-age=86400, s-maxage=604800" },
+        ],
+      },
+      {
+        source: "/search-index.json",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800" },
         ],
       },
     ];

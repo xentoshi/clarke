@@ -5,7 +5,6 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import type { OrbitalSlot } from "@/data/orbital-slots";
 
 const SearchPalette = dynamic(() => import("./SearchPalette"), { ssr: false });
 
@@ -22,7 +21,7 @@ function navActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
+export default function Nav() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -96,7 +95,7 @@ export default function Nav({ slots }: { slots: OrbitalSlot[] }) {
         )}
       </header>
 
-      {searchOpen && <SearchPalette slots={slots} onClose={() => setSearchOpen(false)} />}
+      {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
     </>
   );
 }

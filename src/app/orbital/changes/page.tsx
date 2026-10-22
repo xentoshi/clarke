@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { buildMeta } from "@/lib/metadata";
 import { getRecentSlotEvents, type SlotEvent } from "@/lib/events";
-import { lonToSlug, formatLon } from "@/lib/slot-utils";
+import { lonToSlug, formatLon, registryOrbitalHref } from "@/lib/slot-utils";
+import { slots as curatedSlots } from "@/data/orbital-slots";
+import { getAllRegistrySlugs } from "@/lib/satellites";
 
 export const revalidate = false;
 
@@ -41,9 +43,10 @@ function ageLabel(detectedAt: string): string {
   return `${ageDays} days ago`;
 }
 
-function EventRow({ event }: { event: SlotEvent }) {
+function EventRow({ event, built }: { event: SlotEvent; built: ReadonlySet<string> }) {
   const meta = eventMeta(event.eventType);
   const slug = event.longitudeGeo !== null ? lonToSlug(event.longitudeGeo) : null;
+  const href = registryOrbitalHref(slug, built);
   return (
     <div className="flex items-start gap-3 py-3.5 border-b border-line last:border-b-0">
       <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ background: meta.color }} />
@@ -55,9 +58,13 @@ function EventRow({ event }: { event: SlotEvent }) {
           {slug && (
             <>
               <span className="text-xs text-faint">·</span>
-              <Link href={`/orbital/${slug}`} className="text-xs font-mono text-ink hover:text-muted transition-colors">
-                {formatLon(event.longitudeGeo!)} →
-              </Link>
+              {href ? (
+                <Link href={href} className="text-xs font-mono text-ink hover:text-muted transition-colors">
+                  {formatLon(event.longitudeGeo!)} →
+                </Link>
+              ) : (
+                <span className="text-xs font-mono text-ink">{formatLon(event.longitudeGeo!)} →</span>
+              )}
             </>
           )}
         </div>
@@ -73,6 +80,7 @@ function EventRow({ event }: { event: SlotEvent }) {
 
 export default function ChangesPage() {
   const events = getRecentSlotEvents(100);
+  const built = new Set(getAllRegistrySlugs(curatedSlots));
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
@@ -112,7 +120,7 @@ export default function ChangesPage() {
       ) : (
         <div className="border border-line bg-surface px-5">
           {events.map((e) => (
-            <EventRow key={e.id} event={e} />
+            <EventRow key={e.id} event={e} built={built} />
           ))}
         </div>
       )}

@@ -20,6 +20,9 @@
 # Prebuilt social cards. scripts/build-og.tsx writes these during npm run build.
 /public/og/
 
+# Command-palette index. scripts/build-search-index.ts writes this during dev and build.
+/public/search-index.json
+
 # production
 /build
 

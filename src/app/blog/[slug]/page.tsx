@@ -20,6 +20,10 @@ const contentMap: Record<string, ContentEntry> = {
   "becoming-multiplanetary": { Component: MultiplanetaryPost, toc: multiplanetaryToc },
 };
 
+// Posts are the files in src/data/posts. Unknown slugs 404 without an ISR write.
+export const revalidate = false;
+export const dynamicParams = false;
+
 type Params = { slug: string };
 
 export async function generateMetadata({ params }: { params: Promise<Params> }) {

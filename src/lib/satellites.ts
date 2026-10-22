@@ -287,21 +287,19 @@ export function getAllGeoSlugs(): string[] {
   return [...seen];
 }
 
-// Every slug that should have a working detail page. Deliberately additive
-// on top of getAllGeoSlugs() rather than derived from mergeWithUcs()'s own
-// slug set: a UCS satellite within 0.4° of a curated slot is absorbed into
-// that slot's row in the merged registry (by design — see /orbital/faq), so
-// its own raw-longitude slug (e.g. a satellite at 19.3° near curated 19.2°E)
-// doesn't appear as a separate merged row. getAllGeoSlugs() still generates
-// a page for it. Rederiving from mergeWithUcs() here would silently drop
-// those pages; this only adds the FCC-only positions that have no page at
-// all today.
+// Every slug that should have a working static detail page.
+//
+// Satellite longitudes stay in the set even when a bird is absorbed into a
+// nearby curated row (see /orbital/faq). Those raw slugs are not merged rows,
+// and dropping them would remove pages that already exist.
+//
+// Merged rows are included too. A curated longitude such as 72°E can differ
+// from the rounded occupancy slug (72.1°E → 72-1e). The explorer, belt, and
+// index link to the merged slug. FCC-only rows are merged rows, so they are
+// covered here without a separate filter.
 export function getAllRegistrySlugs(curatedSlots: OrbitalSlot[]): string[] {
-  const base = getAllGeoSlugs();
-  const fccOnly = mergeWithUcs(curatedSlots)
-    .filter((s) => s.source === "fcc")
-    .map((s) => lonToSlug(s.longitude));
-  return [...new Set([...base, ...fccOnly])];
+  const merged = mergeWithUcs(curatedSlots).map((s) => lonToSlug(s.longitude));
+  return [...new Set([...getAllGeoSlugs(), ...merged])];
 }
 
 export function getSatellitesBySlug(slug: string): GeoSatellite[] {

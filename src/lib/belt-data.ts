@@ -1,7 +1,7 @@
 import { slots as curatedSlots } from "@/data/orbital-slots";
 import { COLOCATION_WINDOW_DEG } from "./position-authority";
 import { isLaunchVehicleOperator } from "./operator-identity";
-import { getGeoSatellites, lonToSlug, mergeWithUcs } from "./satellites";
+import { getAllRegistrySlugs, getGeoSatellites, lonToSlug, mergeWithUcs } from "./satellites";
 import { formatLon } from "./slot-utils";
 import {
   beltCaption,
@@ -23,6 +23,7 @@ export type { GeoBeltModel };
 export function buildGeoBelt(): GeoBeltModel {
   const sats = getGeoSatellites();
   const merged = mergeWithUcs(curatedSlots);
+  const built = new Set(getAllRegistrySlugs(curatedSlots));
   const slots: RegistrySlotRef[] = [];
   const slotLabel = new Map<string, string>();
   for (const slot of merged) {
@@ -65,6 +66,7 @@ export function buildGeoBelt(): GeoBeltModel {
       slug: slot.slug,
       slotId: slot.id,
       slotLabel: slotLabel.get(slot.id) ?? formatLon(slot.longitude),
+      slotHref: built.has(slot.slug) ? `/orbital/${slot.slug}` : null,
     });
   }
 

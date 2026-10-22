@@ -38,6 +38,8 @@ export interface BeltMark {
   slug: string;
   slotId: string;
   slotLabel: string;
+  /** Set only when `slug` is a prerendered slot page. Otherwise the mark is text. */
+  slotHref: string | null;
 }
 
 export function beltDisputeClass(positionDisputed: boolean): BeltDisputeClass {
@@ -340,7 +342,7 @@ export interface BeltReaderModel {
   operator: string | null;
   epoch: string | null;
   slotLabel: string;
-  slotHref: string;
+  slotHref: string | null;
   dispute: BeltDisputeClass;
   disputeDetail: string | null;
 }
@@ -352,7 +354,7 @@ export function beltReaderModel(mark: BeltMark): BeltReaderModel {
     operator: mark.operator,
     epoch: mark.epoch ? mark.epoch.slice(0, 10) : null,
     slotLabel: mark.slotLabel,
-    slotHref: `/orbital/${mark.slug}`,
+    slotHref: mark.slotHref,
     dispute: mark.dispute,
     disputeDetail: mark.dispute === "disputed" ? formatDisputeDetail(mark.deltaDeg, mark.ucsLongitude) : null,
   };

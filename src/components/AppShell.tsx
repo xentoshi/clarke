@@ -1,15 +1,14 @@
 import Nav from "@/components/Nav";
 import Link from "next/link";
-import type { OrbitalSlot } from "@/data/orbital-slots";
 import { PageBackdrop } from "@/components/PageBackdrop";
 
-export default function AppShell({ children, slots }: { children: React.ReactNode; slots: OrbitalSlot[] }) {
+export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen bg-canvas">
       <PageBackdrop />
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        <Nav slots={slots} />
+        <Nav />
         <main className="flex-1">{children}</main>
 
         <footer className="relative mt-24">

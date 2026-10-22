@@ -11,7 +11,9 @@ import { SlotTerminalView } from "@/components/terminal/SlotTerminalView";
 type Params = { slot: string };
 
 // Slot HTML is baked from committed data/clarke.db. Rebuild on deploy only.
+// Unknown slugs 404 from the static shell. Rendering them on demand writes an ISR entry per bot URL.
 export const revalidate = false;
+export const dynamicParams = false;
 
 const loadSlotTerminal = cache((slot: string) => buildSlotTerminal(slot));
 

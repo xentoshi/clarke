@@ -1,0 +1,27 @@
+name: Page budget
+
+# Fails the pull request when a prerendered slot page grows back toward the
+# full-registry payload (previously ~410 KB HTML / ~332 KB RSC on /orbital/101w).
+
+on:
+  pull_request:
+
+jobs:
+  budget:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build and slot page budget
+        run: npm run build

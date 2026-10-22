@@ -18,11 +18,28 @@ describe("ISR write guards", () => {
       "src/app/pricing/page.tsx",
       "src/app/robots.ts",
       "src/app/sitemap.ts",
+      "src/app/blog/[slug]/page.tsx",
     ]) {
       const text = source(file);
       assert.match(text, /export const revalidate = false/, file);
       assert.doesNotMatch(text, /export const revalidate = \d+/, file);
     }
+  });
+
+  it("404s unknown slot and blog slugs instead of rendering them on demand", () => {
+    for (const file of ["src/app/orbital/[slot]/page.tsx", "src/app/blog/[slug]/page.tsx"]) {
+      const text = source(file);
+      assert.match(text, /export const dynamicParams = false/, file);
+      assert.match(text, /generateStaticParams/, file);
+    }
+    assert.equal(fs.existsSync(path.join(process.cwd(), "src/app/slot/[slug]/page.tsx")), false);
+    const config = source("next.config.ts");
+    assert.match(config, /\/slot\/:slug/);
+    assert.match(config, /\/orbital\/:slug/);
+    const layout = source("src/app/layout.tsx");
+    assert.doesNotMatch(layout, /mergeWithUcs/);
+    assert.doesNotMatch(layout, /allSlots/);
+    assert.match(source("src/components/SearchPalette.tsx"), /search-index\.json/);
   });
 
   it("does not opt public agent reads into route-level ISR", () => {

@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "tsx scripts/build-og.tsx && next build",
+    "dev": "tsx scripts/build-search-index.ts && next dev",
+    "build": "tsx scripts/build-og.tsx && tsx scripts/build-search-index.ts && next build && tsx scripts/check-page-budget.ts",
     "start": "next start",
     "lint": "eslint",
     "ingest": "ts-node --project tsconfig.scripts.json scripts/ingest-ucs.ts",

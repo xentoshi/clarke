@@ -19,6 +19,7 @@ describe("GEO belt from clarke.db", () => {
     assert.equal(belt.marks.some((m) => m.id === "norad-28187"), false);
     for (const mark of belt.marks) {
       assert.equal(slugs.has(mark.slug), true, mark.slug);
+      assert.equal(mark.slotHref, `/orbital/${mark.slug}`, mark.slug);
       assert.ok(mark.longitude > -180 && mark.longitude <= 180);
       assert.ok(mark.dispute === "tle" || mark.dispute === "disputed");
     }

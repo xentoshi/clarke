@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type { OrbitalSlot } from "@/data/orbital-slots";
-import { lonToSlug } from "@/lib/slot-utils";
+import type { SearchIndexEntry } from "@/lib/search-index";
 
 type Result = {
   type: "slot" | "page";
@@ -34,7 +33,7 @@ const pages = [
   { label: "About Clarke", sub: "How it works, data sources, methodology, and the agents API", href: "/about" },
 ];
 
-function search(q: string, slots: OrbitalSlot[]): Result[] {
+function search(q: string, slots: SearchIndexEntry[]): Result[] {
   if (!q.trim()) return [];
   const lq = q.toLowerCase();
 
@@ -42,7 +41,7 @@ function search(q: string, slots: OrbitalSlot[]): Result[] {
     ...slots
       .filter((s) => s.label.toLowerCase().includes(lq) || s.operator.toLowerCase().includes(lq) || (s.operatorRaw ?? "").toLowerCase().includes(lq) || s.country.toLowerCase().includes(lq))
       .slice(0, 6)
-      .map((s) => ({ type: "slot" as const, label: s.label, sub: s.valueEstimate ? `${s.operator} · hand estimate ${s.valueEstimate}` : s.operator, href: `/orbital/${lonToSlug(s.longitude)}` })),
+      .map((s) => ({ type: "slot" as const, label: s.label, sub: s.valueEstimate ? `${s.operator} · hand estimate ${s.valueEstimate}` : s.operator, href: `/orbital/${s.slug}` })),
 
     ...pages
       .filter((p) => p.label.toLowerCase().includes(lq) || p.sub.toLowerCase().includes(lq))
@@ -51,13 +50,33 @@ function search(q: string, slots: OrbitalSlot[]): Result[] {
   ].slice(0, 12);
 }
 
-export default function SearchPalette({ slots, onClose }: { slots: OrbitalSlot[]; onClose: () => void }) {
+export default function SearchPalette({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState("");
+  const [slots, setSlots] = useState<SearchIndexEntry[] | null>(null);
   const [selected, setSelected] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  const results = search(query, slots);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/search-index.json")
+      .then((res) => {
+        if (!res.ok) throw new Error(String(res.status));
+        return res.json();
+      })
+      .then((data: unknown) => {
+        if (!cancelled) setSlots(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setSlots([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const ready = slots !== null;
+  const results = ready ? search(query, slots) : [];
 
   const close = useCallback(() => { setQuery(""); setSelected(0); onClose(); }, [onClose]);
   const navigate = useCallback((href: string) => { router.push(href); close(); }, [router, close]);
@@ -103,7 +122,7 @@ export default function SearchPalette({ slots, onClose }: { slots: OrbitalSlot[]
           <kbd className="text-[10px] text-faint bg-canvas border border-line px-1.5 py-0.5 rounded font-mono">ESC</kbd>
         </div>
 
-        {results.length > 0 && (
+        {ready && results.length > 0 && (
           <div className="py-2 max-h-80 overflow-y-auto">
             {results.map((result, i) => (
               <button key={`${result.type}-${i}`} onClick={() => navigate(result.href)} onMouseEnter={() => setSelected(i)}
@@ -118,8 +137,8 @@ export default function SearchPalette({ slots, onClose }: { slots: OrbitalSlot[]
           </div>
         )}
 
-        {query && results.length === 0 && <div className="py-10 text-center text-muted text-sm">No results for &quot;{query}&quot;</div>}
-        {!query && <div className="py-6 text-center text-faint text-sm">Search orbital slots and pages</div>}
+        {ready && query && results.length === 0 && <div className="py-10 text-center text-muted text-sm">No results for &quot;{query}&quot;</div>}
+        {(!ready || !query) && <div className="py-6 text-center text-faint text-sm">Search orbital slots and pages</div>}
       </div>
     </div>
   );

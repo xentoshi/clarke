@@ -289,7 +289,7 @@ describe("agent and MCP routes keep their responses", () => {
         headers: { "x-forwarded-for": "203.0.113.90", "user-agent": "slot-list" },
       }));
       assert.equal(res.status, 200);
-      assert.match(res.headers.get("cache-control") ?? "", /public, max-age=60, s-maxage=3600/);
+      assert.match(res.headers.get("cache-control") ?? "", /public, max-age=60, s-maxage=86400/);
       assert.equal(res.headers.get("set-cookie"), null);
       const body = await res.json() as { data: unknown; meta: { view?: string } };
       assert.equal(body.meta.view, "compact");

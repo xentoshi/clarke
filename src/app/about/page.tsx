@@ -3,6 +3,9 @@ import Link from "next/link";
 import { formatRegistryCountAsOf, getDataFreshness } from "@/lib/freshness";
 import { formatRegistryCensusDetail, getRegistryCensus } from "@/lib/registry-census";
 
+// Counts come from committed data/clarke.db. Rebuild on deploy only.
+export const revalidate = false;
+
 export const metadata = buildMeta({
   title: "About",
   description: "Clarke is a reference record of who sits at each GEO longitude, with FCC filings, orbit freshness, and disputes.",
@@ -239,7 +242,7 @@ export default function AboutPage() {
             <h3 className="text-ink text-sm font-semibold mb-3">Response shape</h3>
             <div className="border border-line rounded-xl p-5 bg-surface mb-6">
               <p className="text-muted text-xs leading-relaxed mb-3">
-                Every successful response is a JSON envelope with a versioned <span className="font-mono text-ink">data</span> field and a <span className="font-mono text-ink">meta</span> object: API version, <span className="font-mono text-ink">generated_at</span>, and on list routes a <span className="font-mono text-ink">count</span> equal to the number of rows in <span className="font-mono text-ink">data</span>. The slot list also sends <span className="font-mono text-ink">total</span>, <span className="font-mono text-ink">offset</span>, <span className="font-mono text-ink">limit</span>, and <span className="font-mono text-ink">next_offset</span>. Slot routes include <span className="font-mono text-ink">meta.data_freshness</span>. Responses set <span className="font-mono text-ink">ETag</span> and <span className="font-mono text-ink">Cache-Control: public, max-age=60, s-maxage=3600, stale-while-revalidate=86400</span>. <span className="font-mono text-ink">Vary</span> is <span className="font-mono text-ink">Accept-Encoding</span> only. A matching <span className="font-mono text-ink">If-None-Match</span> returns 304.
+                Every successful response is a JSON envelope with a versioned <span className="font-mono text-ink">data</span> field and a <span className="font-mono text-ink">meta</span> object: API version, <span className="font-mono text-ink">generated_at</span>, and on list routes a <span className="font-mono text-ink">count</span> equal to the number of rows in <span className="font-mono text-ink">data</span>. The slot list also sends <span className="font-mono text-ink">total</span>, <span className="font-mono text-ink">offset</span>, <span className="font-mono text-ink">limit</span>, and <span className="font-mono text-ink">next_offset</span>. Slot routes include <span className="font-mono text-ink">meta.data_freshness</span>. Responses set <span className="font-mono text-ink">ETag</span> and <span className="font-mono text-ink">Cache-Control: public, max-age=60, s-maxage=86400, stale-while-revalidate=604800</span>. <span className="font-mono text-ink">Vary</span> is <span className="font-mono text-ink">Accept-Encoding</span> only. A matching <span className="font-mono text-ink">If-None-Match</span> returns 304.
               </p>
               <pre className="text-muted text-xs font-mono bg-canvas border border-line rounded p-3 overflow-x-auto">{`{
   "data": [],

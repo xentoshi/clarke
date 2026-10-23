@@ -15,10 +15,20 @@ describe("ISR write guards", () => {
       "src/app/orbital/map/page.tsx",
       "src/app/orbital/compare/page.tsx",
       "src/app/orbital/changes/page.tsx",
+      "src/app/orbital/faq/page.tsx",
       "src/app/pricing/page.tsx",
+      "src/app/about/page.tsx",
+      "src/app/index/page.tsx",
+      "src/app/blog/page.tsx",
+      "src/app/blog/[slug]/page.tsx",
+      "src/app/docs/page.tsx",
+      "src/app/docs/agent-api/page.tsx",
+      "src/app/docs/data-trust/page.tsx",
+      "src/app/docs/fcc-refresh/page.tsx",
+      "src/app/docs/valuation/page.tsx",
+      "src/app/login/page.tsx",
       "src/app/robots.ts",
       "src/app/sitemap.ts",
-      "src/app/blog/[slug]/page.tsx",
     ]) {
       const text = source(file);
       assert.match(text, /export const revalidate = false/, file);
@@ -83,6 +93,11 @@ describe("ISR write guards", () => {
     assert.match(config, /\/api\/og/);
     assert.match(config, /ssal\.xlsx/);
     assert.match(config, /terminal\.db/);
+    assert.match(config, /clarke\.db/);
+    assert.match(config, /"\/orbital\/\*\*": DATABASE_FILES/);
+    assert.match(config, /"\/sitemap.xml": DATABASE_FILES/);
+    assert.match(config, /"\/blog\/\*\*": DATABASE_FILES/);
+    assert.match(config, /"\/api\/v1\/openapi": \["\.\/data\/terminal\.db", "\.\/data\/clarke\.db"\]/);
     assert.equal(fs.existsSync(path.join(process.cwd(), "public/clarke.db")), false);
     assert.equal(fs.existsSync(path.join(process.cwd(), "public/ssal.xlsx")), false);
     assert.doesNotMatch(source("src/lib/metadata.ts"), /\/api\/og/);

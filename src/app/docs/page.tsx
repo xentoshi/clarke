@@ -8,6 +8,9 @@ import { CLARKE_SITE, formatCitationVintage } from "@/lib/citation";
 import { formatRegistryCountAsOf, getDataFreshness } from "@/lib/freshness";
 import { formatRegistryCensusDetail, getRegistryCensus } from "@/lib/registry-census";
 
+// Census copy is the committed registry. Rebuild on deploy only.
+export const revalidate = false;
+
 export const metadata = buildMeta({
   title: "Docs",
   description:

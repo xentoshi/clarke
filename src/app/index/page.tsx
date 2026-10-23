@@ -7,6 +7,9 @@ import { TableOfContents } from "@/components/TableOfContents";
 import { OperatorName } from "@/components/terminal/OperatorName";
 import { operatorDisplay } from "@/lib/operator-identity";
 
+// The index is the committed registry. Rebuild on deploy only.
+export const revalidate = false;
+
 export const metadata = buildMeta({
   title: "GEO Slot Index #1",
   description: "Method note: occupancy enter/leave, UCS–TLE dispute flips, and FCC license deltas. Not a price index.",

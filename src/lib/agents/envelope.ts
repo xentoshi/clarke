@@ -34,10 +34,10 @@ export interface Envelope<T> {
   };
 }
 
-/** Public CDN policy. Browser may reuse for a minute. The edge keeps the body for an hour. */
-export const PUBLIC_CACHE_CONTROL = "public, max-age=60, s-maxage=3600, stale-while-revalidate=86400";
+/** Public CDN policy. Browser may reuse for a minute. The edge keeps the body for a day. Data refreshes monthly. */
+export const PUBLIC_CACHE_CONTROL = "public, max-age=60, s-maxage=86400, stale-while-revalidate=604800";
 export const PUBLIC_VARY = "Accept-Encoding";
-export const VERCEL_CDN_CACHE_CONTROL = "public, s-maxage=3600, stale-while-revalidate=86400";
+export const VERCEL_CDN_CACHE_CONTROL = "public, s-maxage=86400, stale-while-revalidate=604800";
 
 interface OkOptions {
   count?: number;
@@ -62,6 +62,8 @@ interface CachedResponse {
   body: string;
   etag: string;
   cacheControl: string;
+  /** Same bytes gzipSync would produce. Repeat hits skip the compress. */
+  gzip: Buffer | null;
 }
 
 const responseCache = new Map<string, CachedResponse>();
@@ -72,14 +74,20 @@ function cacheControlFor(opts: OkOptions, cacheSeconds: number, staleSeconds: nu
   return `public, s-maxage=${cacheSeconds}, stale-while-revalidate=${staleSeconds}`;
 }
 
+function gzipBody(serialized: string): Buffer | null {
+  if (serialized.length < 860) return null;
+  return gzipSync(Buffer.from(serialized), { level: 6 });
+}
+
 function payloadFor(
   serialized: string,
   acceptEncoding: string | null | undefined,
   status: number,
+  gzip: Buffer | null,
 ): { body: BodyInit | null; encoding: string | null } {
   if (status === 304) return { body: null, encoding: null };
-  if (serialized.length >= 860 && acceptEncoding && /\bgzip\b/.test(acceptEncoding)) {
-    return { body: gzipSync(Buffer.from(serialized), { level: 6 }), encoding: "gzip" };
+  if (gzip && acceptEncoding && /\bgzip\b/.test(acceptEncoding)) {
+    return { body: new Uint8Array(gzip), encoding: "gzip" };
   }
   return { body: serialized, encoding: null };
 }
@@ -96,8 +104,9 @@ function jsonResponse(
   status = 200,
   acceptEncoding: string | null = null,
   shared = true,
+  gzip: Buffer | null = null,
 ): NextResponse {
-  const encoded = payloadFor(serialized, acceptEncoding, status);
+  const encoded = payloadFor(serialized, acceptEncoding, status, gzip);
   const headers: Record<string, string> = {
     "Content-Type": "application/json; charset=utf-8",
     "Cache-Control": cacheControl,
@@ -122,8 +131,8 @@ export function ok<T>(data: T, opts: OkOptions = {}): NextResponse {
     const hit = responseCache.get(opts.cacheKey);
     if (hit && hit.token === token) {
       const accept = opts.acceptEncoding ?? null;
-      if (etagMatches(opts.ifNoneMatch, hit.etag)) return jsonResponse(hit.body, hit.etag, hit.cacheControl, 304, accept, !opts.private);
-      return jsonResponse(hit.body, hit.etag, hit.cacheControl, 200, accept, !opts.private);
+      if (etagMatches(opts.ifNoneMatch, hit.etag)) return jsonResponse(hit.body, hit.etag, hit.cacheControl, 304, accept, !opts.private, hit.gzip);
+      return jsonResponse(hit.body, hit.etag, hit.cacheControl, 200, accept, !opts.private, hit.gzip);
     }
   }
 
@@ -156,11 +165,12 @@ export function ok<T>(data: T, opts: OkOptions = {}): NextResponse {
     );
   }
   const etag = `W/"${crypto.createHash("sha1").update(serialized).digest("hex")}"`;
-  if (opts.cacheKey) responseCache.set(opts.cacheKey, { token, body: serialized, etag, cacheControl });
+  const gzip = gzipBody(serialized);
+  if (opts.cacheKey) responseCache.set(opts.cacheKey, { token, body: serialized, etag, cacheControl, gzip });
   const shared = !opts.private;
   const accept = opts.acceptEncoding ?? null;
-  if (etagMatches(opts.ifNoneMatch, etag)) return jsonResponse(serialized, etag, cacheControl, 304, accept, shared);
-  return jsonResponse(serialized, etag, cacheControl, 200, accept, shared);
+  if (etagMatches(opts.ifNoneMatch, etag)) return jsonResponse(serialized, etag, cacheControl, 304, accept, shared, gzip);
+  return jsonResponse(serialized, etag, cacheControl, 200, accept, shared, gzip);
 }
 
 export function notFound(message: string): NextResponse {

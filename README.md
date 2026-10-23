@@ -27,7 +27,7 @@ Clarke normalizes public data across GEO, LEO, and MEO to build the orbital asse
 
 Clarke exposes its registry as machine-readable data for LLM agents and tools.
 
-**HTTP API:** versioned, read-only, rate-limited, CORS-enabled, and ETag-cached. Responses are wrapped in a `{ data, meta }` envelope, where `meta.data_freshness` reports when each source was last ingested. Successful agent responses set `Cache-Control: public, s-maxage=3600, stale-while-revalidate=60`.
+**HTTP API:** versioned, read-only, rate-limited, CORS-enabled, and ETag-cached. Responses are wrapped in a `{ data, meta }` envelope, where `meta.data_freshness` reports when each source was last ingested. Successful agent responses set `Cache-Control: public, max-age=60, s-maxage=86400, stale-while-revalidate=604800`.
 
 | Endpoint | Returns |
 |---|---|

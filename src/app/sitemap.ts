@@ -2,10 +2,13 @@ import type { MetadataRoute } from "next";
 import { slots as curatedSlots } from "@/data/orbital-slots";
 import { posts } from "@/data/posts";
 import { DOC_PAGES } from "@/lib/docs";
+import { registryGeneratedAt } from "@/lib/process-cache";
 import { getAllRegistrySlugs } from "@/lib/satellites";
 
 export const runtime = "nodejs";
-// Slug list is the committed registry. Rebuild on deploy only.
+// Slug list is the committed registry. One static file per deploy.
+// lastModified is the ingest clock, so a rebuild does not mark every URL as changed.
+export const dynamic = "force-static";
 export const revalidate = false;
 
 const RESERVED_SLOT_PATHS = new Set(["map", "faq", "compare", "changes"]);
@@ -16,7 +19,7 @@ function siteOrigin(): string {
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const origin = siteOrigin();
-  const now = new Date();
+  const modified = new Date(registryGeneratedAt());
   const paths = [
     "/orbital",
     "/orbital/map",
@@ -35,7 +38,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
   return paths.map((path) => ({
     url: `${origin}${path}`,
-    lastModified: now,
+    lastModified: modified,
     changeFrequency: "monthly" as const,
     priority: path === "/orbital" ? 1 : 0.6,
   }));

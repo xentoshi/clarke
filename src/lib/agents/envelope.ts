@@ -34,10 +34,16 @@ export interface Envelope<T> {
   };
 }
 
-/** Public CDN policy. Browser may reuse for a minute. The edge keeps the body for a day. Data refreshes monthly. */
-export const PUBLIC_CACHE_CONTROL = "public, max-age=60, s-maxage=86400, stale-while-revalidate=604800";
+/**
+ * Public CDN policy. Browser may reuse for a minute, so a new deploy is visible
+ * without waiting out the edge TTL. The edge keeps the body for 30 days.
+ * A production deploy uses a new CDN cache key, so this does not outlive the
+ * monthly redeploy. age_days and the 45-day stale flags stay on the wall clock
+ * of the request that filled the cache.
+ */
+export const PUBLIC_CACHE_CONTROL = "public, max-age=60, s-maxage=2592000, stale-while-revalidate=2592000";
 export const PUBLIC_VARY = "Accept-Encoding";
-export const VERCEL_CDN_CACHE_CONTROL = "public, s-maxage=86400, stale-while-revalidate=604800";
+export const VERCEL_CDN_CACHE_CONTROL = "public, s-maxage=2592000, stale-while-revalidate=2592000";
 
 interface OkOptions {
   count?: number;

@@ -130,7 +130,7 @@ export async function handleMcpHttp(req: Request): Promise<Response> {
       status: 204,
       headers: {
         ...CORS,
-        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+        "Cache-Control": "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=2592000",
       },
     });
   }
@@ -158,10 +158,10 @@ export async function handleMcpHttp(req: Request): Promise<Response> {
           "Method Not Allowed. This endpoint is stateless Streamable HTTP. POST JSON-RPC messages here. GET returns 405 because this host does not keep a server-push SSE stream. Clients continue with POST.",
           {
             Allow: "POST, DELETE, OPTIONS",
-            "Vercel-CDN-Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
+            "Vercel-CDN-Cache-Control": "public, s-maxage=2592000, stale-while-revalidate=2592000",
           },
         ),
-        "public, max-age=86400, stale-while-revalidate=604800",
+        "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=2592000",
       ),
     );
   }

@@ -73,37 +73,37 @@ const nextConfig: NextConfig = {
       {
         source: "/robots.txt",
         headers: [
-          { key: "Cache-Control", value: "public, s-maxage=86400, stale-while-revalidate=604800" },
+          { key: "Cache-Control", value: "public, s-maxage=2592000, stale-while-revalidate=2592000" },
         ],
       },
       {
         source: "/sitemap.xml",
         headers: [
-          { key: "Cache-Control", value: "public, s-maxage=86400, stale-while-revalidate=604800" },
+          { key: "Cache-Control", value: "public, s-maxage=2592000, stale-while-revalidate=2592000" },
         ],
       },
       {
         source: "/data/:path*",
         headers: [
-          { key: "Cache-Control", value: "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=31536000" },
+          { key: "Cache-Control", value: "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=31536000" },
         ],
       },
       {
         source: "/llms.txt",
         headers: [
-          { key: "Cache-Control", value: "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800" },
+          { key: "Cache-Control", value: "public, max-age=3600, s-maxage=2592000, stale-while-revalidate=2592000" },
         ],
       },
       {
         source: "/og/:path*",
         headers: [
-          { key: "Cache-Control", value: "public, max-age=86400, s-maxage=604800" },
+          { key: "Cache-Control", value: "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=2592000" },
         ],
       },
       {
         source: "/search-index.json",
         headers: [
-          { key: "Cache-Control", value: "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800" },
+          { key: "Cache-Control", value: "public, max-age=3600, s-maxage=2592000, stale-while-revalidate=2592000" },
         ],
       },
     ];

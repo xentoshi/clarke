@@ -31,7 +31,7 @@ const spec = {
       get: {
         tags: ["Agents"],
         summary: "List orbital slots",
-        description: "Compact page by default (50 rows): slug, label, longitude, region, operatorIdentity, country, status, satCount. view=full returns the slot record (operatorMix, occupancy, FCC rows, disputes, source vintage) in pages of 10, max 25. all=1 is the explicit full list for that view. offset pages the result. The slot record uses operatorIdentity and operatorMix, not a single headline operator. ituRecorded is not_in_product (ITU filings are not in this product). Valuation and congestion live only as labeled models on the human Slot Terminal. Bid/ask, comps, and dollar strings live on that Terminal surface. Cache-Control is public, max-age=60, s-maxage=3600. Vary is Accept-Encoding. Gzip when the client accepts gzip. ETag 304s. view=full and all=1 are 12 requests per minute per IP.",
+        description: "Compact page by default (50 rows): slug, label, longitude, region, operatorIdentity, country, status, satCount. view=full returns the slot record (operatorMix, occupancy, FCC rows, disputes, source vintage) in pages of 10, max 25. all=1 is the explicit full list for that view. offset pages the result. The slot record uses operatorIdentity and operatorMix, not a single headline operator. ituRecorded is not_in_product (ITU filings are not in this product). Valuation and congestion live only as labeled models on the human Slot Terminal. Bid/ask, comps, and dollar strings live on that Terminal surface. Cache-Control is public, max-age=60, s-maxage=2592000, stale-while-revalidate=2592000. Vary is Accept-Encoding. Gzip when the client accepts gzip. ETag 304s. view=full and all=1 are 12 requests per minute per IP.",
         responses: { "200": { description: "{ data, meta } envelope. meta.data_freshness includes last_run plus file_vintage / source_as_of / TLE epoch (not ingest clock alone)." } },
       },
     },
@@ -48,7 +48,7 @@ const spec = {
         tags: ["Agents"],
         summary: "Occupancy, FCC, and dispute change feed",
         description:
-          "Slot Index delta feed (edition 2). On-ingest diffs of registry snapshots. coverage is bootstrap until a second snapshot exists: FCC call-sign events already in slot_events are included, and occupancy or dispute changes are not invented, including tle_epoch. Once a later snapshot exists, tle_epoch records a TLE epoch change or a 45 day stale transition on a TLE used for occupancy. When both snapshots store parsed data/ssal.xlsx rows, FCC filing diffs for that interval are new, removed, and changed. satellite_relocated rows are a TLE-to-TLE log, separate from occupancy changes. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. Valuation and congestion live only as labeled models on the human Slot Terminal. Bid/ask, comps, and dollar strings live on that Terminal surface. changes are paged at 40 rows and about 48 KB. A large timestamp is split. truncated and nextAfter continue the page. since is an exclusive time filter. nextSince is set only on a timestamp boundary. Responses above 2.5 MB are refused. Cache-Control is public, max-age=60, s-maxage=3600. Vary is Accept-Encoding.",
+          "Slot Index delta feed (edition 2). On-ingest diffs of registry snapshots. coverage is bootstrap until a second snapshot exists: FCC call-sign events already in slot_events are included, and occupancy or dispute changes are not invented, including tle_epoch. Once a later snapshot exists, tle_epoch records a TLE epoch change or a 45 day stale transition on a TLE used for occupancy. When both snapshots store parsed data/ssal.xlsx rows, FCC filing diffs for that interval are new, removed, and changed. satellite_relocated rows are a TLE-to-TLE log, separate from occupancy changes. ITU filings are not in this product. ITU Space Explorer is the current ITU source. SNS Online shut down in January 2025. Valuation and congestion live only as labeled models on the human Slot Terminal. Bid/ask, comps, and dollar strings live on that Terminal surface. changes are paged at 40 rows and about 48 KB. A large timestamp is split. truncated and nextAfter continue the page. since is an exclusive time filter. nextSince is set only on a timestamp boundary. Responses above 2.5 MB are refused. Cache-Control is public, max-age=60, s-maxage=2592000, stale-while-revalidate=2592000. Vary is Accept-Encoding.",
         parameters: [
           { name: "slug", in: "query", schema: { type: "string", example: "101w" } },
           { name: "domain", in: "query", schema: { type: "string", enum: ["occupancy", "fcc", "dispute"] } },
@@ -156,7 +156,8 @@ export function GET() {
     headers: {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
-      "Cache-Control": "public, s-maxage=3600",
+      "Cache-Control": "public, max-age=60, s-maxage=2592000, stale-while-revalidate=2592000",
+      "Vercel-CDN-Cache-Control": "public, s-maxage=2592000, stale-while-revalidate=2592000",
     },
   });
 }

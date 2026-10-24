@@ -1,4 +1,5 @@
 import { getDb } from "./db";
+import { registryCacheToken } from "./process-cache";
 import {
   ageDaysFrom,
   deriveTleEpochRangeFromDb,
@@ -20,29 +21,40 @@ export interface SourceFreshness {
   stale: boolean;
 }
 
-function tableExists(name: string): boolean {
+interface PreparedIngest {
+  source: string;
+  lastRun: string;
+  rowCount: number;
+  note: string | null;
+  fileVintage: string | null;
+  sourceAsOf: string | null;
+  tleEpochMin: string | null;
+  tleEpochMax: string | null;
+}
+
+// SQL rows for one registry token. Ages are applied per call so a passed `now`
+// still moves age_days. Repeat reads do not reopen ingest_meta.
+let preparedMemo: { token: string; rows: PreparedIngest[] | null } | null = null;
+
+function preparedIngestRows(): PreparedIngest[] | null {
+  const token = registryCacheToken();
+  if (preparedMemo && preparedMemo.token === token) return preparedMemo.rows;
+
   const db = getDb();
-  if (!db) return false;
-  const row = db
+  if (!db) {
+    preparedMemo = { token, rows: null };
+    return null;
+  }
+  const table = db
     .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?")
-    .get(name) as { name: string } | undefined;
-  return !!row;
-}
-
-function ingestMetaColumns(): Set<string> {
-  const db = getDb();
-  if (!db) return new Set();
-  const rows = db.prepare("PRAGMA table_info(ingest_meta)").all() as { name: string }[];
-  return new Set(rows.map((r) => r.name));
-}
-
-// Reads the ingest_meta table populated by the ingest scripts. Returns an empty
-// array if the table doesn't exist yet (DB ingested before freshness tracking).
-export function getDataFreshness(now: Date = new Date()): SourceFreshness[] {
-  const db = getDb();
-  if (!db || !tableExists("ingest_meta")) return [];
-
-  const cols = ingestMetaColumns();
+    .get("ingest_meta") as { name: string } | undefined;
+  if (!table) {
+    preparedMemo = { token, rows: null };
+    return null;
+  }
+  const cols = new Set(
+    (db.prepare("PRAGMA table_info(ingest_meta)").all() as { name: string }[]).map((row) => row.name),
+  );
   const hasVintage = cols.has("file_vintage");
   const sql = hasVintage
     ? `SELECT source, last_run as lastRun, row_count as rowCount, note,
@@ -63,25 +75,24 @@ export function getDataFreshness(now: Date = new Date()): SourceFreshness[] {
     tleEpochMax?: string | null;
   }[];
 
-  const ucsDerived = rows.some((r) => r.source === "UCS" && !(r.fileVintage || r.sourceAsOf))
+  const ucsDerived = rows.some((row) => row.source === "UCS" && !(row.fileVintage || row.sourceAsOf))
     ? deriveUcsVintageFromDb()
     : null;
-  const tleRange = rows.some((r) => r.source === "Space-Track TLE" && !(r.tleEpochMin && r.tleEpochMax))
+  const tleRange = rows.some((row) => row.source === "Space-Track TLE" && !(row.tleEpochMin && row.tleEpochMax))
     ? deriveTleEpochRangeFromDb()
     : { min: null, max: null };
 
-  return rows.map((r) => {
-    const ingestAge = ageDaysFrom(r.lastRun, now);
-    let fileVintage = r.fileVintage ?? null;
-    let sourceAsOf = r.sourceAsOf ?? fileVintage;
-    let tleEpochMin = r.tleEpochMin ?? null;
-    let tleEpochMax = r.tleEpochMax ?? null;
+  const prepared = rows.map((row) => {
+    let fileVintage = row.fileVintage ?? null;
+    let sourceAsOf = row.sourceAsOf ?? fileVintage;
+    let tleEpochMin = row.tleEpochMin ?? null;
+    let tleEpochMax = row.tleEpochMax ?? null;
 
-    if (r.source === "UCS" && !fileVintage && ucsDerived) {
+    if (row.source === "UCS" && !fileVintage && ucsDerived) {
       fileVintage = ucsDerived;
       sourceAsOf = ucsDerived;
     }
-    if (r.source === "Space-Track TLE") {
+    if (row.source === "Space-Track TLE") {
       tleEpochMin = tleEpochMin ?? tleRange.min;
       tleEpochMax = tleEpochMax ?? tleRange.max;
       if (!fileVintage && tleEpochMax) {
@@ -89,25 +100,45 @@ export function getDataFreshness(now: Date = new Date()): SourceFreshness[] {
         sourceAsOf = tleEpochMax;
       }
     }
-    if (r.source === "FCC-SSAL" && !fileVintage && sourceAsOf) {
+    if (row.source === "FCC-SSAL" && !fileVintage && sourceAsOf) {
       fileVintage = sourceAsOf;
     }
 
-    const vintageAgeDays = ageDaysFrom(sourceAsOf ?? fileVintage, now);
-    const stale = r.source === "FCC-SSAL" && fccIsStale(fileVintage ?? sourceAsOf, now);
-
     return {
-      source: r.source,
-      lastRun: r.lastRun,
-      rowCount: r.rowCount,
-      note: r.note,
-      ageDays: ingestAge,
+      source: row.source,
+      lastRun: row.lastRun,
+      rowCount: row.rowCount,
+      note: row.note,
       fileVintage,
       sourceAsOf: sourceAsOf ?? fileVintage,
-      vintageAgeDays,
       tleEpochMin,
       tleEpochMax,
-      stale,
+    };
+  });
+  preparedMemo = { token, rows: prepared };
+  return prepared;
+}
+
+// Reads the ingest_meta table populated by the ingest scripts. Returns an empty
+// array if the table doesn't exist yet (DB ingested before freshness tracking).
+export function getDataFreshness(now: Date = new Date()): SourceFreshness[] {
+  const rows = preparedIngestRows();
+  if (!rows) return [];
+
+  return rows.map((row) => {
+    const sourceAsOf = row.sourceAsOf ?? row.fileVintage;
+    return {
+      source: row.source,
+      lastRun: row.lastRun,
+      rowCount: row.rowCount,
+      note: row.note,
+      ageDays: ageDaysFrom(row.lastRun, now),
+      fileVintage: row.fileVintage,
+      sourceAsOf,
+      vintageAgeDays: ageDaysFrom(sourceAsOf ?? row.fileVintage, now),
+      tleEpochMin: row.tleEpochMin,
+      tleEpochMax: row.tleEpochMax,
+      stale: row.source === "FCC-SSAL" && fccIsStale(row.fileVintage ?? sourceAsOf, now),
     };
   });
 }

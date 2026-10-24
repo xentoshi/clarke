@@ -3,6 +3,9 @@ import Link from "next/link";
 import { posts } from "@/data/posts";
 import { buildMeta } from "@/lib/metadata";
 
+// Posts are source files. Rebuild on deploy only.
+export const revalidate = false;
+
 export const metadata: Metadata = buildMeta({
   title: "Blog",
   description: "Thinking on space infrastructure, orbital economics, and the companies building the multiplanetary stack.",

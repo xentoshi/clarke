@@ -22,7 +22,7 @@ describe("public read cache and delta page", () => {
     const first = await getSlots(slotsRequest("203.0.113.80"));
     const mid = processCacheStats();
     assert.equal(first.status, 200);
-    assert.match(first.headers.get("cache-control") ?? "", /public, max-age=60, s-maxage=3600/);
+    assert.match(first.headers.get("cache-control") ?? "", /public, max-age=60, s-maxage=2592000, stale-while-revalidate=2592000/);
     const etag = first.headers.get("etag");
     assert.ok(etag);
     const body = await first.json() as {
@@ -41,7 +41,7 @@ describe("public read cache and delta page", () => {
     assert.ok(JSON.stringify(body).length < 32_000);
     assert.doesNotMatch(first.headers.get("vary") ?? "", /cookie/i);
     assert.match(first.headers.get("vary") ?? "", /Accept-Encoding/);
-    assert.equal(first.headers.get("vercel-cdn-cache-control")?.includes("s-maxage=3600"), true);
+    assert.equal(first.headers.get("vercel-cdn-cache-control")?.includes("s-maxage=2592000"), true);
     assert.ok(mid.misses > before.misses);
 
     const second = await getSlots(slotsRequest("203.0.113.81", { "if-none-match": etag }));
@@ -110,7 +110,7 @@ describe("public read cache and delta page", () => {
       },
     }));
     assert.equal(probe.status, 405);
-    assert.match(probe.headers.get("cache-control") ?? "", /public, max-age=3600/);
+    assert.match(probe.headers.get("cache-control") ?? "", /public, max-age=86400/);
 
     const pad = "a".repeat(MAX_MCP_REQUEST_BYTES);
     const res = await POST(new NextRequest("https://www.clarkebelt.finance/api/v1/mcp", {

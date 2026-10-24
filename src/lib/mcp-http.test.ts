@@ -9,7 +9,7 @@ import { listDeltas } from "./agents/operations";
 import { checkRateLimit } from "./agents/rate-limit";
 import { DELETE, GET, OPTIONS, POST } from "../app/api/v1/mcp/route";
 import { MCP_SATELLITE_DEFAULT_LIMIT } from "../mcp/server";
-import { MCP_PUBLIC_PATH, MCP_PUBLIC_URL, handleMcpHttp } from "./mcp-http";
+import { MCP_PUBLIC_PATH, MCP_PUBLIC_URL, handleMcpHttp, mcpResponseCacheStats } from "./mcp-http";
 
 const ACCEPT = "application/json, text/event-stream";
 const PROTOCOL = "2025-11-25";
@@ -201,6 +201,27 @@ describe("public MCP Streamable HTTP", () => {
     } finally {
       await client.close();
     }
+  });
+
+  it("reuses the process cache for an identical JSON-RPC body and still returns no-store", async () => {
+    const before = mcpResponseCacheStats();
+    const first = await POST(mcpRequest("POST", initializeBody(41), "203.0.113.41"));
+    const mid = mcpResponseCacheStats();
+    const firstText = await first.text();
+    assert.equal(first.status, 200);
+    assert.equal(first.headers.get("cache-control"), "no-store");
+    assert.equal(mid.misses, before.misses + 1);
+
+    const second = await POST(mcpRequest("POST", initializeBody(41), "203.0.113.42", { "accept-encoding": "gzip" }));
+    const after = mcpResponseCacheStats();
+    assert.equal(second.status, 200);
+    assert.equal(second.headers.get("cache-control"), "no-store");
+    assert.equal(after.misses, mid.misses);
+    assert.equal(after.hits, mid.hits + 1);
+    const secondText = second.headers.get("content-encoding") === "gzip"
+      ? (await import("node:zlib")).gunzipSync(Buffer.from(await second.arrayBuffer())).toString("utf8")
+      : await second.text();
+    assert.equal(secondText, firstText);
   });
 
   it("accepts DELETE on the stateless endpoint", async () => {

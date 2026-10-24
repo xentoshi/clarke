@@ -4,6 +4,8 @@ import DocArticle from "@/components/docs/DocArticle";
 
 const doc = loadDoc("agent-api");
 
+export const revalidate = false;
+
 export const metadata = buildMeta({
   title: doc.title,
   description: doc.description,

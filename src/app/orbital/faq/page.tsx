@@ -4,6 +4,9 @@ import { formatRegistryCountAsOf } from "@/lib/freshness";
 import { formatRegistryCensusDetail, getRegistryCensus } from "@/lib/registry-census";
 import FaqList from "./FaqList";
 
+// FAQ census lines come from committed data/clarke.db. Rebuild on deploy only.
+export const revalidate = false;
+
 export const metadata = buildMeta({
   title: "Orbital Registry — FAQ",
   description:

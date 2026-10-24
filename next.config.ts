@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const DATABASE_FILES = ["./data/clarke.db", "./data/terminal.db"];
+
 const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
@@ -9,19 +11,34 @@ const nextConfig: NextConfig = {
     "/docs": ["./docs/*.md"],
     "/docs/**": ["./docs/*.md"],
   },
-  // Large files that runtime routes do not read. clarke.db stays traced where code opens it.
-  // terminal.db is only needed by Terminal routes and slot history, not by public agent reads.
+  // Large files that runtime routes do not read.
+  // clarke.db stays on the agent, MCP, and terminal functions, which open it.
+  // HTML for slots, blog, and docs is baked at build. Unknown URLs 404, so the
+  // database is not traced into those functions. ssal.xlsx is an ingest input.
   outputFileTracingExcludes: {
     "*": [
       "./data/ssal.xlsx",
-      "./public/nasa-main.jpg",
-      "./public/nasa-footer.jpg",
-      "./public/textures/**/*",
       "./public/og/**/*",
+      "./public/data/**/*",
     ],
     "/api/v1/agents/**": ["./data/terminal.db"],
     "/api/v1/mcp": ["./data/terminal.db"],
     "/api/v1/openapi": ["./data/terminal.db", "./data/clarke.db"],
+    "/api/v1/keys": DATABASE_FILES,
+    "/api/auth/**": DATABASE_FILES,
+    "/api/billing/**": DATABASE_FILES,
+    "/account": DATABASE_FILES,
+    "/login": DATABASE_FILES,
+    "/about": DATABASE_FILES,
+    "/pricing": DATABASE_FILES,
+    "/index": DATABASE_FILES,
+    "/blog": DATABASE_FILES,
+    "/blog/**": DATABASE_FILES,
+    "/docs": DATABASE_FILES,
+    "/docs/**": DATABASE_FILES,
+    "/orbital": DATABASE_FILES,
+    "/orbital/**": DATABASE_FILES,
+    "/sitemap.xml": DATABASE_FILES,
   },
   images: {
     remotePatterns: [
@@ -56,25 +73,37 @@ const nextConfig: NextConfig = {
       {
         source: "/robots.txt",
         headers: [
-          { key: "Cache-Control", value: "public, s-maxage=3600, stale-while-revalidate=86400" },
+          { key: "Cache-Control", value: "public, s-maxage=2592000, stale-while-revalidate=2592000" },
         ],
       },
       {
         source: "/sitemap.xml",
         headers: [
-          { key: "Cache-Control", value: "public, s-maxage=3600, stale-while-revalidate=86400" },
+          { key: "Cache-Control", value: "public, s-maxage=2592000, stale-while-revalidate=2592000" },
+        ],
+      },
+      {
+        source: "/data/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=31536000" },
+        ],
+      },
+      {
+        source: "/llms.txt",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=3600, s-maxage=2592000, stale-while-revalidate=2592000" },
         ],
       },
       {
         source: "/og/:path*",
         headers: [
-          { key: "Cache-Control", value: "public, max-age=86400, s-maxage=604800" },
+          { key: "Cache-Control", value: "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=2592000" },
         ],
       },
       {
         source: "/search-index.json",
         headers: [
-          { key: "Cache-Control", value: "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800" },
+          { key: "Cache-Control", value: "public, max-age=3600, s-maxage=2592000, stale-while-revalidate=2592000" },
         ],
       },
     ];

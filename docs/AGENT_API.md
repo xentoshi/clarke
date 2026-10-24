@@ -52,7 +52,7 @@ The fence is the key shape. `count` and the empty freshness array are not a live
 | `total`, `offset`, `limit`, `next_offset`, `view` | Slot list and satellite list | Page window. `view` is only on the slot list (`compact` or `full`). `limit` is null when `all=1`. `next_offset` is null on the last page. |
 | `data_freshness` | Slot list, slot detail, and the delta feed | Ingest rows. See freshness below. The satellites route does not send this array. |
 
-Headers on 200: `Content-Type: application/json; charset=utf-8`, `ETag`, `Cache-Control: public, max-age=60, s-maxage=3600, stale-while-revalidate=86400`, `Vary: Accept-Encoding`, `Vercel-CDN-Cache-Control` with that same edge lifetime, `Access-Control-Allow-Origin: *`. The cache key is the URL. It does not vary on cookies or client IP. A request that sends `Accept-Encoding: gzip` gets `Content-Encoding: gzip`. The ETag is the uncompressed JSON. A matching `If-None-Match` returns 304 with an empty body.
+Headers on 200: `Content-Type: application/json; charset=utf-8`, `ETag`, `Cache-Control: public, max-age=60, s-maxage=2592000, stale-while-revalidate=2592000`, `Vary: Accept-Encoding`, `Vercel-CDN-Cache-Control` with that same edge lifetime, `Access-Control-Allow-Origin: *`. The cache key is the URL. It does not vary on cookies or client IP. A request that sends `Accept-Encoding: gzip` gets `Content-Encoding: gzip`. The ETag is the uncompressed JSON. A matching `If-None-Match` returns 304 with an empty body.
 
 Errors are `{ "error": "..." }`, not the envelope.
 
@@ -292,6 +292,8 @@ HTTP `meta.data_freshness` is a different object, snake_case, one row per `inges
 
 Slot `sourceVintage.fccStale` is the field to trust for "is this slot's FCC workbook old." `meta.data_freshness` does not include `fccStale`.
 
+`age_days` and `vintage_age_days` count whole days from those dates to the wall clock of the request that wrote the cached body. The edge keeps that body for 30 days. A new production deployment uses a new CDN cache key, so the monthly redeploy fills them again. The same request clock sets `sourceVintage.fccStale`, `sourceVintage.tleStale`, each occupancy row's `tleStale`, and satellite `tleAgeDays`. A body filled on the 1st still shows that day's ages and booleans at month end. A source that crosses 45 days later in the month stays not stale until the next deploy, or until one background refresh after the 30 day edge lifetime if that deploy has not happened. These fields stay on the request clock on purpose. Computing them at ingest time would leave the 45 day flags false for a late month that never redeploys. Absolute fields do not move with that clock: `generated_at` (newest ingest), `last_run`, `file_vintage`, `source_as_of`, `tleEpoch`, `fccStaleAfterDays`, and `tleStaleAfterDays`. Delta `before` and `after` `tleStale` uses the two snapshot times. `tleUsable` uses the 30 day ingest gate.
+
 ## Provenance
 
 | Key | `source` | `note` |
@@ -362,7 +364,7 @@ Filters do not change `baseline`. `since` drops every change at or before that t
 
 Public responses page `changes` at 40 rows and about 48 KB of change JSON. A timestamp with thousands of rows is split. `truncated` is true when more matches remain. `nextAfter` is the exclusive id for the next page. `nextSince` is set only when the page ended on a timestamp boundary, and is null when the page split a timestamp. Pass `after` from `nextAfter` to continue. A body above 2.5 MB is refused. One slot record fits under that cap. The explicit full slot list (`all=1` and `view=full`) is the large list and is gzip compressed. Satellite `limit` stays 1 to 1000. The satellite default is 100.
 
-Those reads are cached in the server process until `data/clarke.db` changes. The process cache key is the query, not the client IP. HTTP sends `Cache-Control: public, max-age=60, s-maxage=3600, stale-while-revalidate=86400` and `Vary: Accept-Encoding`. A matching `If-None-Match` returns 304. Compact slot pages are 60 requests per minute per IP on each instance. Full slot pages and explicit full lists are 12 per minute. Remote MCP POST stays `no-store` because the body is JSON-RPC. A gzip `Accept-Encoding` still compresses that POST body. `initialize` and `tools/list` do not build the registry. Tool results reuse the same process cache. GET and OPTIONS on `/api/v1/mcp` send a public `Cache-Control` max-age. MCP request bodies above 64 KB are refused. Documented agent routes stay reachable. `robots.txt` asks crawlers to skip the delta feed, the satellite list, compare, and `/api/og`. It does not ask them to skip `/api/v1/agents/slots` or `/api/v1/mcp`.
+Those reads are cached in the server process until `data/clarke.db` changes. The process cache key is the query, not the client IP. HTTP sends `Cache-Control: public, max-age=60, s-maxage=2592000, stale-while-revalidate=2592000` and `Vary: Accept-Encoding`. A matching `If-None-Match` returns 304. Compact slot pages are 60 requests per minute per IP on each instance. Full slot pages and explicit full lists are 12 per minute. Remote MCP POST stays `no-store` because the body is JSON-RPC. A gzip `Accept-Encoding` still compresses that POST body. `initialize` and `tools/list` do not build the registry. Tool results reuse the same process cache. GET and OPTIONS on `/api/v1/mcp` send a public `Cache-Control` max-age. MCP request bodies above 64 KB are refused. Documented agent routes stay reachable. `robots.txt` asks crawlers to skip the delta feed, the satellite list, compare, and `/api/og`. It does not ask them to skip `/api/v1/agents/slots` or `/api/v1/mcp`.
 
 ## Usage logs
 
@@ -380,4 +382,4 @@ These lines do not challenge or block clients. A scraper can still spend CPU on 
 
 - [Data trust](./DATA_TRUST.md): TLE gates, registry row identity, V/M/S audit.
 - [Valuation v0](./VALUATION.md): the labeled model on the human Slot Terminal. Not this payload.
-- [FCC SSAL refresh](./FCC_REFRESH.md): workbook vintage and the 14-day stale rule.
+- [FCC SSAL refresh](./FCC_REFRESH.md): workbook vintage and the 45-day stale rule.
